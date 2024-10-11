@@ -46,7 +46,7 @@ group :development, :test do
   gem "factory_bot_rails", "~> 6.4"
 
   # RSpec- and Minitest-compatible one-liners to test common Rails functionality [https://github.com/thoughtbot/shoulda-matchers]
-  gem "shoulda-matchers", "~> 5.0"
+  gem "shoulda-matchers", "~> 6.4"
 
   # Library for generating fake data such as names, addresses, and phone numbers. [https://github.com/faker-ruby/faker]
   gem "faker", "~> 3.5"

@@ -320,7 +320,7 @@ GEM
       rubocop-rails
     ruby-progressbar (1.13.0)
     securerandom (0.3.1)
-    shoulda-matchers (5.3.0)
+    shoulda-matchers (6.4.0)
       activesupport (>= 5.2.0)
     solargraph (0.50.0)
       backport (~> 1.2)
@@ -389,7 +389,7 @@ DEPENDENCIES
   rspec-rails (~> 7.0)
   rswag (~> 2.15)
   rubocop-rails-omakase
-  shoulda-matchers (~> 5.0)
+  shoulda-matchers (~> 6.4)
   solargraph (~> 0.50.0)
   tzinfo-data
 
