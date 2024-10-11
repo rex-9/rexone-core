@@ -105,6 +105,7 @@ RSpec.describe 'Users API', type: :request do
     post 'Sign in a user with a token' do
       tags 'Authentication'
       consumes 'application/json'
+      produces 'application/json'
       parameter name: :token, in: :body, schema: {
         type: :object,
         properties: {
@@ -150,6 +151,7 @@ RSpec.describe 'Users API', type: :request do
     post 'Sign in a user with a Google token' do
       tags 'Authentication'
       consumes 'application/json'
+      produces 'application/json'
       parameter name: :token, in: :body, schema: {
         type: :object,
         properties: {

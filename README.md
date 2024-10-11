@@ -20,6 +20,7 @@
     - [Setup](#setup)
     - [Run](#run)
     - [Test](#test)
+    - [Doc](#doc)
 
 <!-- PROJECT DESCRIPTION -->
 
@@ -123,7 +124,19 @@ set up rspec for once
 execute tests
 
 ```sh
-> sh exec_tests.sh
+> sh tests_exec.sh
 ```
+
+### Doc
+
+generate swagger documentation
+
+```sh
+> sh rswag_gen.sh
+```
+
+view the API documentation at
+
+http://localhost:3000/api-docs/index.html
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

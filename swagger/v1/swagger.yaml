@@ -70,6 +70,55 @@ components:
       scheme: bearer
       bearerFormat: JWT
 paths:
+  "/users/current":
+    get:
+      summary: Get current user
+      tags:
+      - Users
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: current user fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    "$ref": "#/components/schemas/success_status"
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        "$ref": "#/components/schemas/user"
+                    required:
+                    - user
+                required:
+                - status
+                - data
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                      message:
+                        type: string
+                      error:
+                        type: string
+                    required:
+                    - code
+                    - message
+                    - error
+                required:
+                - status
   "/signin":
     post:
       summary: Sign in a user
@@ -137,8 +186,65 @@ paths:
       responses:
         '200':
           description: signed in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    "$ref": "#/components/schemas/success_status"
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        "$ref": "#/components/schemas/user"
+                      token:
+                        type: string
+                    required:
+                    - user
+                    - token
+                required:
+                - status
+                - data
         '401':
           description: invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    "$ref": "#/components/schemas/error_status"
+                required:
+                - status
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required:
+              - token
+  "/signin/google":
+    post:
+      summary: Sign in a user with a Google token
+      tags:
+      - Authentication
+      parameters: []
+      responses:
+        '401':
+          description: Google authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    "$ref": "#/components/schemas/error_status"
+                required:
+                - status
       requestBody:
         content:
           application/json:
@@ -156,7 +262,7 @@ paths:
       - Authentication
       parameters: []
       responses:
-        '200':
+        '201':
           description: signed up successfully
           content:
             application/json:
@@ -168,7 +274,7 @@ paths:
                     properties:
                       code:
                         type: integer
-                        example: 200
+                        example: 201
                       success:
                         type: boolean
                       message:
