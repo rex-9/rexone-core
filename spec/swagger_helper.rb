@@ -67,10 +67,10 @@ RSpec.configure do |config|
       paths: {},
       servers: [
         {
-          url: 'https://{defaultHost}', # Update the host accordingly
+          url: 'https://{defaultHost}', # TODO: Update the host accordingly
           variables: {
             defaultHost: {
-              default: 'www.example.com' # Update the domain accordingly
+              default: 'www.example.com' # TODO: Update the domain accordingly
             }
           }
         }

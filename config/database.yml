@@ -18,10 +18,11 @@ default: &default
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  host: localhost
+  # docker db
+  host: db
   port: 5432
-  username: rex
-  password: postgres
+  username: postgres
+  password: password
 
 development:
   <<: *default
@@ -81,6 +82,8 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
+
+# TODO: update prod credentials
 production:
   <<: *default
   database: auth_service_api_production

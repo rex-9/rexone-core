@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Generate the swagger documentation
-rake rswag:specs:swaggerize
+docker-compose exec web rake rswag:specs:swaggerize

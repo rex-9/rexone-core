@@ -1,0 +1,14 @@
+version: "3"
+services:
+  web:
+    build:
+      dockerfile: dev.dockerfile
+    environment:
+      RAILS_ENV: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/rails
+  db:
+    ports:
+      - "5433:5432" # Avoid conflict with local PostgreSQL

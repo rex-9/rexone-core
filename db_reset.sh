@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Drop the database
-rails db:drop
+docker-compose exec web rails db:drop
 
 # Create a new database
-rails db:create
+docker-compose exec web rails db:create
 
 # Run migrations to create new tables
-rails db:migrate
+docker-compose exec web rails db:migrate
 
 # Seed the database (optional)
-rails db:seed
+docker-compose exec web rails db:seed

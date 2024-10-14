@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Execute tests
-bundle exec rspec
+docker-compose exec web bundle exec rspec

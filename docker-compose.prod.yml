@@ -1,0 +1,15 @@
+version: "3"
+services:
+  web:
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgres://user:password@db:5432/auth_service_api_production # TODO: update credentials
+      RAILS_APP_CLIENT_BASE_URL: http://localhost:5173 # TODO: update client base URL
+      RAILS_APP_SERVER_BASE_URL: http://localhost:3000 # TODO: update server base URL
+    ports:
+      - "80:3000" # Expose on port 80 for production
+  db:
+    environment:
+      POSTGRES_PASSWORD: securepassword # TODO: update password
+    ports:
+      - "5432:5432"

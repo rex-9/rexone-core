@@ -1,4 +1,5 @@
 module AppConfig
+  SECRET_KEY_BASE = ENV.fetch("RAILS_APP_SECRET_KEY_BASE")
   JWT_SECRET_KEY = ENV.fetch("RAILS_APP_JWT_SECRET_KEY") { "auth-service" }
   CLIENT_BASE_URL = ENV.fetch("RAILS_APP_CLIENT_BASE_URL") { "http://localhost:5173" }
   SERVER_BASE_URL = ENV.fetch("RAILS_APP_SERVER_BASE_URL") { "http://localhost:3000" }
