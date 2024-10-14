@@ -33,6 +33,6 @@ module AuthServiceApi
     config.middleware.use ActionDispatch::Session::CookieStore
 
     # Load the secret key base from the credentials file or fallback to the old
-    Rails.application.config.secret_key_base = Rails.application.credentials.secret_key_base || AppConfig::SECRET_KEY_BASE
+    Rails.application.config.secret_key_base = Rails.application.credentials.secret_key_base || ENV["RAILS_APP_SECRET_KEY_BASE"]
   end
 end

@@ -72,7 +72,7 @@ Rails.application.configure do
   config.logger = ActiveSupport::Logger.new(STDOUT)
 
   # Generate secret key base for test environment
-  config.secret_key_base = Rails.application.credentials.secret_key_base || AppConfig::SECRET_KEY_BASE
+  config.secret_key_base = Rails.application.credentials.secret_key_base || ENV["RAILS_APP_SECRET_KEY_BASE"]
 
   # Allow requests from www.example.com
   config.hosts << "www.example.com" # TODO: Update the domain accordingly
