@@ -2,7 +2,7 @@ version: "3"
 services:
   web:
     build:
-      dockerfile: dev.dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       RAILS_ENV: development
     ports:
