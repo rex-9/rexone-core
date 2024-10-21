@@ -49,7 +49,7 @@ group :development, :test do
   gem "shoulda-matchers", "~> 5.0"
 
   # Library for generating fake data such as names, addresses, and phone numbers. [https://github.com/faker-ruby/faker]
-  gem "faker", "~> 3.2"
+  gem "faker", "~> 3.5"
 end
 
 gem "bcrypt", "~> 3.1"
