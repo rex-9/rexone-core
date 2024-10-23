@@ -23,13 +23,15 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
       else
         render_json_response(
           status_code: 404,
-          message: Messages::EMAIL_ALREADY_CONFIRMED
+          message: Messages::EMAIL_ALREADY_CONFIRMED,
+          error: Messages::EMAIL_ALREADY_CONFIRMED,
         )
       end
     else
       render_json_response(
         status_code: 404,
-        message: Messages::USER_NOT_FOUND
+        message: Messages::USER_NOT_FOUND,
+        error: Messages::USER_NOT_FOUND
       )
     end
   end

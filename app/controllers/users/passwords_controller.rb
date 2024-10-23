@@ -13,7 +13,8 @@ class Users::PasswordsController < Devise::PasswordsController
     else
       render_json_response(
         status_code: 404,
-        message: Messages::EMAIL_NOT_FOUND
+        message: Messages::EMAIL_NOT_FOUND,
+        error: Messages::EMAIL_NOT_FOUND
       )
     end
   end
