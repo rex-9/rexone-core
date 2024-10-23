@@ -7,6 +7,8 @@ class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :omniauthable
 
+  before_create :generate_confirmation_code
+
   self.primary_key = "id"
 
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }, uniqueness: true
@@ -14,6 +16,20 @@ class User < ApplicationRecord
   validates :password_confirmation, presence: true, if: -> { (new_record? || !password.nil?) && provider != "google" }
   validates :name, length: { maximum: 50 }, format: { without: /[<>:;?]/ }, allow_blank: true
   validate :photo_must_be_a_valid_url, if: -> { photo.present? }
+
+  def generate_confirmation_code
+    self.confirmation_code = SecureRandom.random_number(10**6).to_s.rjust(6, "0")
+    self.confirmation_code_sent_at = Time.current
+  end
+
+  def confirm_with_code(code)
+    if self.confirmation_code == code && self.confirmation_code_sent_at > 10.minutes.ago
+      confirm
+    else
+      errors.add(:confirmation_code, "is invalid or has expired")
+      false
+    end
+  end
 
   private
 

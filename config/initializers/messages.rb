@@ -10,7 +10,9 @@ module Messages
   USER_ALREADY_REGISTERED_WITH_EMAIL = ->(email) { "#{email} is already registered. Please log in with your Password." }
   VERIFICATION_EMAIL_SENT = ->(email) { "Verification email sent to #{email} successfully." }
   FAILED_TO_SEND_VERIFICATION_EMAIL = ->(email) { "Failed to send verification email to #{email}. Please try again." }
-  EMAIL_ALREADY_CONFIRMED = "Email already confirmed."
+  EMAIL_ALREADY_CONFIRMED = "Email already confirmed. Please sign in."
+  EMAIL_FAILED_TO_CONFIRM = "Email Confirmation Failed."
+  EMAIL_CONFIRMED_SUCCESSFULLY = "Email Confirmed Successfully."
   USER_NOT_FOUND = "User not found."
   EMAIL_NOT_FOUND = "Email not found."
   ACTIVE_SESSION_NOT_FOUND = "Active session not found."

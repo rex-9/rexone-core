@@ -15,6 +15,7 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
     user = User.find_by(email: params[:email])
     if user
       if !user.confirmed?
+        user.generate_confirmation_code
         user.send_confirmation_instructions
         render_json_response(
           status_code: 200,
@@ -22,7 +23,7 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
         )
       else
         render_json_response(
-          status_code: 404,
+          status_code: 422,
           message: Messages::EMAIL_ALREADY_CONFIRMED,
           error: Messages::EMAIL_ALREADY_CONFIRMED,
         )
@@ -32,6 +33,36 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
         status_code: 404,
         message: Messages::USER_NOT_FOUND,
         error: Messages::USER_NOT_FOUND
+      )
+    end
+  end
+
+  # POST /confirmation/confirm_with_code
+  def confirm_with_code
+    resource = User.find_by(email: params[:email])
+    if resource
+      if resource.confirm_with_code(params[:confirmation_code])
+        sign_in(resource) # Automatically sign in the resource
+        render_json_response(
+          status_code: 200,
+          message: Messages::EMAIL_CONFIRMED_SUCCESSFULLY,
+          data: {
+            user: resource,
+            token: resource.jti
+          }
+        )
+      else
+        render_json_response(
+          status_code: 422,
+          message: Messages::EMAIL_FAILED_TO_CONFIRM,
+          error: resource.errors.full_messages.to_sentence,
+        )
+      end
+    else
+      render_json_response(
+        status_code: 422,
+        message: Messages::EMAIL_FAILED_TO_CONFIRM,
+        error: Messages::USER_NOT_FOUND,
       )
     end
   end

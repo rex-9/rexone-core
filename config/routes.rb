@@ -16,6 +16,7 @@ Rails.application.routes.draw do
     post "signin/google", to: "users/sessions#google_sign_in"
     post "signin/token", to: "users/sessions#token_sign_in"
     post "confirmation/resend", to: "users/confirmations#resend"
+    post "confirmation/confirm_with_code", to: "users/confirmations#confirm_with_code"
     post "password/forgot", to: "users/passwords#create"
     put "password/reset", to: "users/passwords#update"
   end

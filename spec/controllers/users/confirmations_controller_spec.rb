@@ -41,10 +41,10 @@ RSpec.describe Users::ConfirmationsController, type: :controller do
     end
 
     context 'with confirmed user' do
-      it 'returns a not found response' do
+      it 'returns an unprocessable entity response' do
         post :resend, params: { email: confirmed_user.email }
-        expect(response).to have_http_status(:not_found)
-        expect(json_response['status']['code']).to eq(404)
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(json_response['status']['code']).to eq(422)
         expect(json_response['status']['message']).to eq(Messages::EMAIL_ALREADY_CONFIRMED)
       end
     end
@@ -55,6 +55,51 @@ RSpec.describe Users::ConfirmationsController, type: :controller do
         expect(response).to have_http_status(:not_found)
         expect(json_response['status']['code']).to eq(404)
         expect(json_response['status']['message']).to eq(Messages::USER_NOT_FOUND)
+      end
+    end
+  end
+
+  describe 'POST #confirm_with_code' do
+    context 'with valid confirmation code' do
+      it 'confirms the user and returns a success response' do
+        user.generate_confirmation_code
+        user.save
+        post :confirm_with_code, params: { email: user.email, confirmation_code: user.confirmation_code }
+        expect(response).to have_http_status(:ok)
+        expect(json_response['status']['code']).to eq(200)
+        expect(json_response['status']['message']).to eq(Messages::EMAIL_CONFIRMED_SUCCESSFULLY)
+        expect(json_response['data']['user']['email']).to eq(user.email)
+        expect(json_response['data']['token']).to eq(user.reload.jti)
+      end
+    end
+
+    context 'with invalid confirmation code' do
+      it 'returns an unprocessable entity response' do
+        post :confirm_with_code, params: { email: user.email, confirmation_code: 'invalid_code' }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(json_response['status']['code']).to eq(422)
+        expect(json_response['status']['message']).to eq(Messages::EMAIL_FAILED_TO_CONFIRM)
+      end
+    end
+
+    context 'with expired confirmation code' do
+      it 'returns an unprocessable entity response' do
+        user.generate_confirmation_code
+        user.confirmation_code_sent_at = 11.minutes.ago
+        user.save
+        post :confirm_with_code, params: { email: user.email, confirmation_code: user.confirmation_code }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(json_response['status']['code']).to eq(422)
+        expect(json_response['status']['message']).to eq(Messages::EMAIL_FAILED_TO_CONFIRM)
+      end
+    end
+
+    context 'with non-existent email' do
+      it 'returns an unprocessable entity response' do
+        post :confirm_with_code, params: { email: 'nonexistent@example.com', confirmation_code: '123456' }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(json_response['status']['code']).to eq(422)
+        expect(json_response['status']['message']).to eq(Messages::EMAIL_FAILED_TO_CONFIRM)
       end
     end
   end

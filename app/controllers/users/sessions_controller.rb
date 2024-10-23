@@ -18,6 +18,7 @@ class Users::SessionsController < Devise::SessionsController
               }
             )
           else
+            user.generate_confirmation_code
             if user.send_confirmation_instructions
               render_json_response(
                 status_code: 200,
