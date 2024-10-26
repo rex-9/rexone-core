@@ -48,7 +48,7 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
           message: Messages::EMAIL_CONFIRMED_SUCCESSFULLY,
           data: {
             user: resource,
-            token: resource.jti
+            token: AppConfig::JWT_TOKEN.call(resource)
           }
         )
       else
