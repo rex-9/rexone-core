@@ -27,7 +27,7 @@
 
 # 📖 Auth Service Api <a name="about-project"></a>
 
-**Auth Service Api** is the server application for [Auth Service](https://google.com/) to contribute the society.
+**Auth Service Api** serves as the backend application for [Auth Service](https://google.com/) providing a robust foundation for diverse product development needs. You can find the corresponding frontend application here: [Auth Service Web](https://github.com/rex-9/auth-service-web).
 
 ## 🛠 Built With <a name="built-with"></a>
 
