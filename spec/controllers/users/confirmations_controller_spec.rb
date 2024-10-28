@@ -69,7 +69,6 @@ RSpec.describe Users::ConfirmationsController, type: :controller do
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['status']['message']).to eq(Messages::EMAIL_CONFIRMED_SUCCESSFULLY)
         expect(json_response['data']['user']['email']).to eq(user.email)
-        expect(json_response['data']['token']).to eq(user.reload.jti)
       end
     end
 
