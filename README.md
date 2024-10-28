@@ -13,6 +13,11 @@
 - [auth-service-api](#auth-service-api)
 - [📗 Table of Contents](#-table-of-contents)
 - [📖 Auth Service Api ](#-auth-service-api-)
+  - [🚀 Featuring!](#-featuring)
+    - [🌟 Modern Tech Stack](#-modern-tech-stack)
+    - [🗃️ Testing \& Quality Assurance](#️-testing--quality-assurance)
+    - [🏗️ Design Patterns \& Architecture](#️-design-patterns--architecture)
+    - [🔐 Authentication \& Security](#-authentication--security)
   - [🛠 Built With ](#-built-with-)
     - [Tech Stack ](#tech-stack-)
   - [💻 Getting Started ](#-getting-started-)
@@ -27,7 +32,33 @@
 
 # 📖 Auth Service Api <a name="about-project"></a>
 
-**Auth Service Api** serves as the backend application for [Auth Service](https://google.com/) providing a robust foundation for diverse product development needs. You can find the corresponding frontend application here: [Auth Service Web](https://github.com/rex-9/auth-service-web).
+**Auth Service Api** is a robust backend framework for authenticated web applications, offering a solid foundation for diverse product development needs. This repository also serves as an excellent learning resource for anyone looking to master backend development. It emphasizes best practices on the server side, enabling developers to write simple yet clean code. You can find the corresponding frontend application here: [Auth Service Web](https://github.com/rex-9/auth-service-web).
+
+## 🚀 Featuring!
+
+### 🌟 Modern Tech Stack
+
+- **Ruby on Rails API**: Built as an API-only application for efficient server-side processing.
+- **PostgreSQL**: Utilized for robust and scalable database management.
+- **Devise for Authentication**: Provides a secure and flexible user authentication system.
+- **Swagger for API Documentation**: Clear and interactive API documentation for easy integration.
+
+### 🗃️ Testing & Quality Assurance
+
+- **RSpec**: Comprehensive automated testing framework to ensure application reliability and performance.
+
+### 🏗️ Design Patterns & Architecture
+
+- **MVC Design Pattern**: Maintains a clean separation of concerns with the Model-View-Controller design pattern.
+- **Dockerized**: Facilitates easy deployment and management of the application using Docker.
+- **Clean Architecture**: Promotes maintainability and scalability with a modular architecture.
+
+### 🔐 Authentication & Security
+
+- **Email-Password Authentication**: Securely authenticate users with email and password.
+- **Google Authentication**: Provide a seamless login experience with Google OAuth.
+- **Forgot Password & Reset Password**: Allow users to recover their accounts with ease.
+- **Email Confirmation**: Verify user email addresses to enhance security.
 
 ## 🛠 Built With <a name="built-with"></a>
 
@@ -47,6 +78,7 @@
   <summary>Server</summary>
   <ul>
     <li><a href="https://rubyonrails.org/">Ruby on Rails</a></li>
+    <li><a href="https://rubygems.org/gems/devise/">Devise</a></li>
   </ul>
 </details>
 
