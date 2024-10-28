@@ -170,7 +170,7 @@ generate swagger documentation
 
 view the API documentation at
 
-http://localhost:3000/api-docs/index.html
+`/api-docs/index.html`
 
 # ☕ Support <a name="support"></a>
 
