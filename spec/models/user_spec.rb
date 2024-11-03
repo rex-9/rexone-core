@@ -4,7 +4,10 @@ RSpec.describe User, type: :model do
   describe 'validations' do
     # username
     it { should validate_presence_of(:username) }
-    it { should validate_uniqueness_of(:username).case_insensitive }
+    it 'validates uniqueness of username case insensitively' do
+      create(:user, username: 'testusername')
+      should validate_uniqueness_of(:username).case_insensitive
+    end
     it { should validate_length_of(:username).is_at_least(3).is_at_most(30) }
     it { should allow_value('valid_username').for(:username) }
     it { should_not allow_value('invalid username!').for(:username) }
@@ -27,7 +30,11 @@ RSpec.describe User, type: :model do
 
     # email
     it { should validate_presence_of(:email) }
-    it { should validate_uniqueness_of(:email).case_insensitive }
+
+    it 'validates uniqueness of email case insensitively' do
+      create(:user, email: 'test@example.com')
+      should validate_uniqueness_of(:email).case_insensitive
+    end
     it { should allow_value('user@example.com').for(:email) }
     it { should_not allow_value('user').for(:email) }
 
@@ -74,9 +81,5 @@ RSpec.describe User, type: :model do
         expect(user).to be_valid
       end
     end
-  end
-
-  before(:all) do
-    create(:user, email: 'unique@example.com', username: 'unique_user')
   end
 end
