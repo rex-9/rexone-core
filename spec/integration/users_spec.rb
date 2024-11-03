@@ -83,8 +83,8 @@ RSpec.describe 'Users API', type: :request do
           },
           required: [ 'status', 'data' ]
 
-        let(:existing_user) { create(:user, email: 'existing@user.com', password: 'password', confirmed_at: Time.now) }
-        let(:user) { { user: { email: existing_user.email, password: existing_user.password } } }
+        let(:existing_user) { create(:user, username: 'username', email: 'existing@user.com', password: 'password', confirmed_at: Time.now) }
+        let(:user) { { user: { login_key: existing_user.email, password: existing_user.password } } }
         run_test!
       end
 
@@ -95,7 +95,7 @@ RSpec.describe 'Users API', type: :request do
           },
           required: [ 'status' ]
 
-        let(:user) { { user: { email: 'nonexistent@user.com', password: 'wrongpassword' } } }
+        let(:user) { { user: { username: 'username', email: 'nonexistent@user.com', password: 'wrongpassword' } } }
         run_test!
       end
     end
@@ -216,11 +216,12 @@ RSpec.describe 'Users API', type: :request do
           user: {
             type: :object,
             properties: {
+              username: { type: :string },
               email: { type: :string },
               password: { type: :string },
               password_confirmation: { type: :string }
             },
-            required: [ 'email', 'password', 'password_confirmation' ]
+            required: [ 'username', 'email', 'password', 'password_confirmation' ]
           }
         },
         required: [ 'user' ]
@@ -248,7 +249,7 @@ RSpec.describe 'Users API', type: :request do
           },
           required: [ 'status', 'data' ]
 
-        let(:user) { { user: { email: 'user@example.com', password: 'password', password_confirmation: 'password' } } }
+        let(:user) { { user: { username: 'username', email: 'user@example.com', password: 'password', password_confirmation: 'password' } } }
         run_test!
       end
 
@@ -268,7 +269,7 @@ RSpec.describe 'Users API', type: :request do
           },
           required: [ 'status' ]
 
-        let(:user) { { user: { email: 'user@example.com', password: 'password', password_confirmation: 'mismatch' } } }
+        let(:user) { { user: { username: 'username', email: 'user@example.com', password: 'password', password_confirmation: 'mismatch' } } }
         run_test!
       end
     end

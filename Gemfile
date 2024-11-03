@@ -73,3 +73,5 @@ gem "devise-jwt", "~> 0.12.1"
 gem "jsonapi-serializer", "~> 2.2"
 
 gem "rswag", "~> 2.15"
+
+gem "database_cleaner-active_record", "~> 2.2"

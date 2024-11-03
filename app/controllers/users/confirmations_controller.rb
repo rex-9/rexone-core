@@ -12,7 +12,7 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
 
   # POST /confirmation/resend
   def resend
-    user = User.find_by(email: params[:email])
+    user = User.find_by("email = :login_key OR username = :login_key", login_key: params[:login_key])
     if user
       if !user.confirmed?
         user.generate_confirmation_code
@@ -39,7 +39,7 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
 
   # POST /confirmation/confirm_with_code
   def confirm_with_code
-    resource = User.find_by(email: params[:email])
+    resource = User.find_by("email = :login_key OR username = :login_key", login_key: params[:login_key])
     if resource
       if resource.confirm_with_code(params[:confirmation_code])
         sign_in(resource) # Automatically sign in the resource

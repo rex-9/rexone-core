@@ -4,7 +4,11 @@ class Users::SessionsController < Devise::SessionsController
 
   # POST /signin
   def create
-    user = User.find_by(email: params[:user][:email])
+    user = User.find_by("email = :login_key OR username = :login_key", login_key: params[:user][:login_key])
+    # resource = User.find_by(email: params[:login_key]) || User.find_by(username: params[:login_key])
+    # resource = User.find_by { email == params[:login_key] || username == params[:login_key] }
+    # users = User.arel_table
+    # resource = User.where(users[:email].eq(params[:login_key]).or(users[:username].eq(params[:login_key]))).first
     if user
       if user.provider == "email"
         if user.valid_password?(params[:user][:password])
@@ -36,7 +40,7 @@ class Users::SessionsController < Devise::SessionsController
           render_json_response(
             status_code: 401,
             message: Messages::FAILED_TO_SIGN_IN,
-            error: Messages::INVALID_EMAIL_OR_PASSWORD
+            error: Messages::INVALID_LOGIN_CREDENTIALS
           )
         end
       else
@@ -108,8 +112,9 @@ class Users::SessionsController < Devise::SessionsController
       end
     else
       user = User.create(
-        name: user_info["name"],
         email: user_info["email"],
+        username: user_info["email"].split("@").first,
+        name: user_info["name"],
         photo: user_info["picture"],
         password: Devise.friendly_token[0, 20],
         provider: "google",

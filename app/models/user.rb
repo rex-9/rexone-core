@@ -15,6 +15,7 @@ class User < ApplicationRecord
   validates :password, presence: true, confirmation: true, length: { minimum: 6 }, if: -> { new_record? || !password.nil? }
   validates :password_confirmation, presence: true, if: -> { (new_record? || !password.nil?) && provider != "google" }
   validates :name, length: { maximum: 50 }, format: { without: /[<>:;?]/ }, allow_blank: true
+  validates :username, presence: true, uniqueness: { case_sensitive: false }, length: { in: 3..30 }, format: { with: /\A[a-zA-Z0-9_]+\z/, message: "can only contain lowercase letters, numbers, and underscores" }
   validate :photo_must_be_a_valid_url, if: -> { photo.present? }
 
   def generate_confirmation_code

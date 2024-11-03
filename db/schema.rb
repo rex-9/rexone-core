@@ -16,6 +16,7 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_23_094527) do
   enable_extension "uuid-ossp"
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "username", null: false
     t.string "name"
     t.string "provider"
     t.string "photo"
@@ -46,5 +47,6 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_23_094527) do
     t.index ["jti"], name: "index_users_on_jti", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+    t.index ["username"], name: "index_users_on_username", unique: true
   end
 end

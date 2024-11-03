@@ -29,6 +29,7 @@ components:
           format: date-time
       required:
       - id
+      - username
       - email
       - provider
       - created_at
@@ -330,6 +331,8 @@ paths:
                 user:
                   type: object
                   properties:
+                    username:
+                      type: string
                     email:
                       type: string
                     password:
@@ -337,6 +340,7 @@ paths:
                     password_confirmation:
                       type: string
                   required:
+                  - username
                   - email
                   - password
                   - password_confirmation

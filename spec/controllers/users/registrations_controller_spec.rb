@@ -6,6 +6,7 @@ RSpec.describe Users::RegistrationsController, type: :controller do
   let(:valid_attributes) do
     {
       user: {
+        username: 'testusername',
         email: 'test@example.com',
         password: 'password',
         password_confirmation: 'password'
@@ -16,6 +17,7 @@ RSpec.describe Users::RegistrationsController, type: :controller do
   let(:invalid_attributes) do
     {
       user: {
+        username: 'testusername',
         email: 'test@example.com',
         password: 'password',
         password_confirmation: 'wrong_password'

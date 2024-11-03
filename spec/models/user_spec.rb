@@ -2,9 +2,34 @@ require 'rails_helper'
 
 RSpec.describe User, type: :model do
   describe 'validations' do
+    # username
+    it { should validate_presence_of(:username) }
+    it { should validate_uniqueness_of(:username).case_insensitive }
+    it { should validate_length_of(:username).is_at_least(3).is_at_most(30) }
+    it { should allow_value('valid_username').for(:username) }
+    it { should_not allow_value('invalid username!').for(:username) }
+
+    context 'when username includes special characters' do
+      let(:user) { build(:user, username: 'invalid username!') }
+
+      it 'should not allow special characters in username' do
+        expect(user).not_to be_valid
+      end
+    end
+
+    context 'when username is valid' do
+      let(:user) { build(:user, username: 'valid_username') }
+
+      it 'should allow valid username' do
+        expect(user).to be_valid
+      end
+    end
+
     # email
     it { should validate_presence_of(:email) }
     it { should validate_uniqueness_of(:email).case_insensitive }
+    it { should allow_value('user@example.com').for(:email) }
+    it { should_not allow_value('user').for(:email) }
 
     context 'when email is not the email format' do
       let(:user) { build(:user, email: 'user') }
@@ -49,5 +74,9 @@ RSpec.describe User, type: :model do
         expect(user).to be_valid
       end
     end
+  end
+
+  before(:all) do
+    create(:user, email: 'unique@example.com', username: 'unique_user')
   end
 end

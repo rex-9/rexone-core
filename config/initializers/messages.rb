@@ -19,7 +19,7 @@ module Messages
   PASSWORD_RESET_INSTRUCTIONS_SENT = ->(email) { "Password reset instructions have been sent to your #{email}." }
   PASSWORD_RESET_SUCCESSFULLY = "Password has been reset successfully. Sign in with your new password."
   FAILED_TO_RESET_PASSWORD = "Failed to reset password."
-  INVALID_EMAIL_OR_PASSWORD = "Invalid email or password"
+  INVALID_LOGIN_CREDENTIALS = "Invalid login credentials."
   INVALID_AUTHENTICATION_TOKEN = "Invalid authentication token"
   ACCOUNT_CREATED_AND_SIGNED_IN_SUCCESSFULLY = "Account created and signed in successfully."
   ACCOUNT_DELETED_SUCCESSFULLY = "Account deleted successfully."

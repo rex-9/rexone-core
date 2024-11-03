@@ -34,7 +34,7 @@ RSpec.configure do |config|
               created_at: { type: :string, format: 'date-time' },
               updated_at: { type: :string, format: 'date-time' }
             },
-            required: [ 'id', 'email', 'provider', 'created_at', 'updated_at' ]
+            required: [ 'id', 'username', 'email', 'provider', 'created_at', 'updated_at' ]
           },
           success_status: {
             type: :object,
