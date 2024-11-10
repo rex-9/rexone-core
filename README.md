@@ -26,6 +26,7 @@
     - [Run](#run)
     - [Test](#test)
     - [Doc](#doc)
+    - [Performance](#performance)
 - [☕ Support ](#-support-)
 
 <!-- PROJECT DESCRIPTION -->
@@ -79,6 +80,7 @@
   <ul>
     <li><a href="https://rubyonrails.org/">Ruby on Rails</a></li>
     <li><a href="https://rubygems.org/gems/devise/">Devise</a></li>
+    <li><a href="https://redis.io/">Redis</a></li>
   </ul>
 </details>
 
@@ -171,6 +173,12 @@ generate swagger documentation
 view the API documentation at
 
 `/api-docs/index.html`
+
+### Performance
+
+view the performance dashboard at
+
+`/rails/perf`
 
 # ☕ Support <a name="support"></a>
 

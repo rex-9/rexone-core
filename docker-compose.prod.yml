@@ -1,5 +1,5 @@
 services:
-  web:
+  api:
     environment:
       RAILS_ENV: production
       DATABASE_URL: postgres://user:password@db:5432/auth_service_api_production # TODO: update credentials

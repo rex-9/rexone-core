@@ -1,6 +1,14 @@
 Rails.application.routes.draw do
+  # Rswag Route
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
+
+  # Rails Performance Route
+  # authenticate :user, ->(user) { user.admin? } do
+  mount RailsPerformance::Engine, at: "rails/perf"
+  # end
+
+  # Devise Routes
   devise_for :users, path: "", path_names: {
     sign_in: "signin",
     sign_out: "signout",
@@ -20,6 +28,8 @@ Rails.application.routes.draw do
     post "password/forgot", to: "users/passwords#create"
     put "password/reset", to: "users/passwords#update"
   end
+
+  # App Routes
   get "users/current", to: "users/users#get_current_user"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
