@@ -151,5 +151,33 @@ RSpec.describe Users::SessionsController, type: :controller do
         expect(json_response['status']['error']).to eq(Messages::USER_ALREADY_REGISTERED_WITH_EMAIL.call(existing_user.email))
       end
     end
+
+    context 'with various email formats' do
+      it 'sanitizes email and creates a new user' do
+        emails = [
+          'john.doe@example.com',
+          'Jane-Doe123@example.com',
+          'user+alias@example.com',
+          'user.name@domain.com',
+          'user@domain.com'
+        ]
+
+        emails.each do |email|
+          allow(controller).to receive(:get_google_user_info).with(valid_google_token).and_return(google_user_info.merge("email" => email))
+          post :google_sign_in, params: { token: valid_google_token }
+          expect(response).to have_http_status(:created)
+          sanitized_username = email.split('@').first.downcase.gsub(/[^a-z0-9_]/, '_')
+          expect(json_response['data']['user']['username']).to start_with(sanitized_username)
+        end
+      end
+
+      it 'appends a random number if sanitized username already exists' do
+        create(:user, username: 'existing_user')
+        allow(controller).to receive(:get_google_user_info).with(valid_google_token).and_return(google_user_info.merge("email" => 'existing.user@example.com'))
+        post :google_sign_in, params: { token: valid_google_token }
+        expect(response).to have_http_status(:created)
+        expect(json_response['data']['user']['username']).to match(/^existing_user_\d{6}$/)
+      end
+    end
   end
 end

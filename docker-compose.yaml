@@ -1,0 +1,54 @@
+services:
+  api:
+    container_name: ${RAILS_CONTAINER_NAME}
+    build:
+      context: .
+      dockerfile: ${RAILS_DOCKERFILE}
+    environment:
+      RAILS_ENV: ${RAILS_ENV}
+      RAILS_DATABASE_URL: ${RAILS_DATABASE_URL}
+      RAILS_CLIENT_BASE_URL: ${RAILS_CLIENT_BASE_URL}
+      RAILS_SERVER_BASE_URL: ${RAILS_SERVER_BASE_URL}
+    ports:
+      - ${RAILS_PORT_MAP}
+    depends_on:
+      - db
+      - redis
+    labels:
+      - coolify.traefik.middlewares=cors@file
+
+  db:
+    container_name: ${DB_CONTAINER_NAME}
+    image: postgres:17-alpine
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${PG_DATABASE}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_HOST: ${PG_HOST}
+      POSTGRES_PORT: ${PG_PORT}
+    ports:
+      - ${PG_PORT_MAP}
+    healthcheck:
+      test: "pg_isready -U ${PG_USER} -h 127.0.0.1"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    container_name: ${REDIS_CONTAINER_NAME}
+    image: redis:latest
+    volumes:
+      - redis:/data
+    ports:
+      - ${REDIS_PORT_MAP}
+    healthcheck:
+      test: redis-cli ping
+      interval: 5s
+      retries: 10
+      timeout: 2s
+
+volumes:
+  postgres:
+  redis:

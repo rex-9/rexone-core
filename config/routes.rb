@@ -1,11 +1,14 @@
 Rails.application.routes.draw do
+  # Rails Admin Route
+  mount RailsAdmin::Engine => "/admin", as: "rails_admin"
+
   # Rswag Route
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
   # Rails Performance Route
   # authenticate :user, ->(user) { user.admin? } do
-  mount RailsPerformance::Engine, at: "rails/perf"
+  mount RailsPerformance::Engine, at: "/performance"
   # end
 
   # Devise Routes

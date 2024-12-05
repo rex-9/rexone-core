@@ -111,9 +111,10 @@ class Users::SessionsController < Devise::SessionsController
         )
       end
     else
+      sanitized_username = sanitize_email(user_info["email"])
       user = User.create(
         email: user_info["email"],
-        username: user_info["email"].split("@").first,
+        username: sanitized_username,
         name: user_info["name"],
         photo: user_info["picture"],
         password: Devise.friendly_token[0, 20],

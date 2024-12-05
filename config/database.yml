@@ -83,9 +83,6 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 
-# TODO: update prod credentials
 production:
   <<: *default
-  database: auth_service_api_production
-  username: rex
-  password: <%= ENV["AUTH_SERVICE_API_DATABASE_PASSWORD"] %>
+  url: <%= ENV["RAILS_DATABASE_URL"] %>

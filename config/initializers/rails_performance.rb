@@ -1,7 +1,7 @@
 if defined?(RailsPerformance)
   RailsPerformance.setup do |config|
     # Redis configuration
-    config.redis = Redis.new(url: ENV["RAILS_APP_REDIS_URL"].presence || "redis://redis:6379/0")
+    config.redis = Redis.new(url: ENV["RAILS_REDIS_URL"].presence || "redis://redis:6379/0")
 
     # All data we collect
     config.duration = 4.hours
@@ -19,7 +19,7 @@ if defined?(RailsPerformance)
     config.enabled = true
 
     # default path where to mount gem
-    config.mount_at = "/rails/perf"
+    config.mount_at = "/performance"
 
     # protect your Performance Dashboard with HTTP BASIC password
     config.http_basic_authentication_enabled = false
@@ -36,7 +36,7 @@ if defined?(RailsPerformance)
 
     # You can ignore request paths by specifying the beginning of the path.
     # For example, all routes starting with '/admin' can be ignored:
-    config.ignored_paths = [ "/rails/perf" ]
+    config.ignored_paths = [ "/performance" ]
 
     # store custom data for the request
     # config.custom_data_proc = proc do |env|

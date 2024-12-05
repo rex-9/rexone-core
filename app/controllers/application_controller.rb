@@ -15,6 +15,17 @@ class ApplicationController < ActionController::API
     render json: response, status: map_status_code(status_code)
   end
 
+  # Helper method to sanitize email addresses from Google sign-in
+  def sanitize_email(email)
+    local_part = email.split("@").first.downcase
+    sanitized_username = local_part.gsub(/[^a-z0-9_]/, "_")
+    if User.exists?(username: sanitized_username)
+      "#{sanitized_username}_#{format('%06d', SecureRandom.random_number(10**6))}"
+    else
+      sanitized_username
+    end
+  end
+
   private
 
   def map_status_code(status_code)

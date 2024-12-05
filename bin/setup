@@ -2,7 +2,7 @@
 require "fileutils"
 
 APP_ROOT = File.expand_path("..", __dir__)
-APP_NAME = "auth-service-api"
+APP_NAME = "meritbox-api"
 
 def system!(*args)
   system(*args, exception: true)

@@ -23,10 +23,12 @@
   - [💻 Getting Started ](#-getting-started-)
     - [Prerequisites](#prerequisites)
     - [Setup](#setup)
+    - [Scripts](#scripts)
     - [Run](#run)
     - [Test](#test)
     - [Doc](#doc)
     - [Performance](#performance)
+    - [Explore More Open Source Projects](#explore-more-open-source-projects)
 - [☕ Support ](#-support-)
 
 <!-- PROJECT DESCRIPTION -->
@@ -72,6 +74,7 @@
     <li><a href="https://tailwindcss.com/">TailwindCSS</a></li>
     <li><a href="https://www.typescriptlang.org/">TypeScript</a></li>
     <li><a href="https://vitejs.dev/">Vite</a></li>
+    <li><a href="https://www.docker.com/">Docker</a> (for development)</li>
   </ul>
 </details>
 
@@ -81,6 +84,7 @@
     <li><a href="https://rubyonrails.org/">Ruby on Rails</a></li>
     <li><a href="https://rubygems.org/gems/devise/">Devise</a></li>
     <li><a href="https://redis.io/">Redis</a></li>
+    <li><a href="https://www.docker.com/">Docker</a> (for development)</li>
   </ul>
 </details>
 
@@ -99,9 +103,9 @@ To get a local copy up and running, follow these steps.
 
 ### Prerequisites
 
-In order to run this project you need [ruby-on-rails](https://www.ruby-lang.org/en/downloads/) and [postgresql](https://www.postgresql.org/) set up on your computer:
+In order to run this project you need [ruby-on-rails](https://www.ruby-lang.org/en/downloads/) and [postgresql](https://www.postgresql.org/) set up on your computer or just a [docker](https://www.docker.com/):
 
-Check your ruby and postgresql installations are complete.
+Check your ruby and postgresql installations are complete if you are not using docker.
 
 ```sh
   ruby --version && postgres --version
@@ -140,12 +144,16 @@ Run database migrations:
 > rails db:migrate
 ```
 
+### Scripts
+
+Explore them under `/scripts ` folder.
+
 ### Run
 
 run the app.
 
 ```sh
-> sh run_dev.sh
+> sh scripts/run_dev.sh
 ```
 
 ### Test
@@ -159,7 +167,7 @@ set up rspec for once
 execute tests
 
 ```sh
-> sh tests_exec.sh
+> sh scripts/exec_tests.sh
 ```
 
 ### Doc
@@ -167,7 +175,7 @@ execute tests
 generate swagger documentation
 
 ```sh
-> sh rswag_gen.sh
+> sh scripts/gen_rswag.sh
 ```
 
 view the API documentation at
@@ -178,7 +186,13 @@ view the API documentation at
 
 view the performance dashboard at
 
-`/rails/perf`
+`/performance`
+
+### Explore More Open Source Projects
+
+If you are interested in exploring more open source projects, check out Instacart's GitHub page:
+
+[Instacart Open Source Projects](https://github.com/instacart)
 
 # ☕ Support <a name="support"></a>
 

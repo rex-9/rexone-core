@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 7.2.1"
+gem "rails", "~> 7.2.2"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.5"
 # Use the Puma web server [https://github.com/puma/puma]
@@ -40,7 +40,7 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 
   # RSpec is a testing tool for Ruby, created for behavior-driven development (BDD) [https://rspec.info/]
-  gem "rspec-rails", "~> 7.0"
+  gem "rspec-rails", "~> 7.1"
 
   # FactoryBot is a fixtures replacement with a straightforward definition syntax, support for multiple build strategies (saved instances, unsaved instances, attribute hashes, and stubbed objects), and support for multiple factories for the same class (user, admin_user, and so on), including factory inheritance [
   gem "factory_bot_rails", "~> 6.4"
@@ -76,6 +76,10 @@ gem "rswag", "~> 2.15"
 
 gem "database_cleaner-active_record", "~> 2.2"
 
-gem "rails_performance", "~> 1.3"
+gem "rails_performance", "~> 1.4"
 
 gem "redis", "~> 5.3"
+
+gem "rails_admin", "~> 3.2"
+
+gem "sassc-rails", "~> 2.1"

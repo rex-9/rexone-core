@@ -28,6 +28,15 @@ RSpec.describe User, type: :model do
       end
     end
 
+    context 'when username contains uppercase letters' do
+      let(:user) { build(:user, username: 'InvalidUsername') }
+
+      it 'should not allow uppercase letters in username' do
+        expect(user).not_to be_valid
+        expect(user.errors[:username].first).to include('can only contain lowercase letters')
+      end
+    end
+
     # email
     it { should validate_presence_of(:email) }
 
