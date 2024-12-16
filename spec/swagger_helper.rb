@@ -30,7 +30,7 @@ RSpec.configure do |config|
               email: { type: :string },
               name: { type: :string, nullable: true },
               provider: { type: :string },
-              photo: { type: :string, nullable: true },
+              bio: { type: :string, nullable: true },
               created_at: { type: :string, format: 'date-time' },
               updated_at: { type: :string, format: 'date-time' }
             },

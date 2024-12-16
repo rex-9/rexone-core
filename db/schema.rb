@@ -10,16 +10,35 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2024_10_23_094527) do
+ActiveRecord::Schema[7.2].define(version: 2024_12_05_100829) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "uuid-ossp"
 
+  create_table "assets", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "name", null: false
+    t.string "url", null: false
+    t.string "category", null: false
+    t.string "format", null: false
+    t.bigint "size", null: false
+    t.string "source", default: "upload", null: false
+    t.string "extension"
+    t.string "record_type"
+    t.uuid "record_id"
+    t.uuid "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_assets_on_name", unique: true
+    t.index ["record_type", "record_id"], name: "index_assets_on_record"
+    t.index ["url"], name: "index_assets_on_url", unique: true
+    t.index ["user_id"], name: "index_assets_on_user_id"
+  end
+
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "username", null: false
     t.string "name"
+    t.text "bio"
     t.string "provider"
-    t.string "photo"
     t.string "jti", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -49,4 +68,6 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_23_094527) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
     t.index ["username"], name: "index_users_on_username", unique: true
   end
+
+  add_foreign_key "assets", "users"
 end

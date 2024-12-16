@@ -116,20 +116,37 @@ class Users::SessionsController < Devise::SessionsController
         email: user_info["email"],
         username: sanitized_username,
         name: user_info["name"],
-        photo: user_info["picture"],
         password: Devise.friendly_token[0, 20],
         provider: "google",
         confirmed_at: Time.now
       )
       if user.save
-        render_json_response(
-          status_code: 201,
-          message: Messages::ACCOUNT_CREATED_AND_SIGNED_IN_SUCCESSFULLY,
-          data: {
-            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-            token: AppConfig::JWT_TOKEN.call(user)
-          }
+        # Create an Asset record for the Google profile picture
+        asset = Asset.create(
+          name: "profile_google_of_user_#{user.id}",
+          url: user_info["picture"],
+          category: "profile",
+          format: "image",
+          size: 0, # Size is unknown, set to 0 or fetch if possible
+          source: "google",
+          user: user,
         )
+        if asset.save
+          render_json_response(
+            status_code: 201,
+            message: Messages::ACCOUNT_CREATED_AND_SIGNED_IN_SUCCESSFULLY,
+            data: {
+              user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+              token: AppConfig::JWT_TOKEN.call(user)
+            }
+          )
+        else
+          render_json_response(
+            status_code: 422,
+            message: Messages::FAILED_TO_SAVE_GOOGLE_PHOTO,
+            error: asset.errors.full_messages.uniq.to_sentence
+          )
+        end
       else
         render_json_response(
           status_code: 422,

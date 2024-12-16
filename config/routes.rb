@@ -34,6 +34,8 @@ Rails.application.routes.draw do
 
   # App Routes
   get "users/current", to: "users/users#get_current_user"
+  post "media/upload", to: "assets#upload"
+  # resources :assets, only: [ :index, :show, :create, :update, :destroy ]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

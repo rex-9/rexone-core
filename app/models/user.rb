@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   include Devise::JWT::RevocationStrategies::JTIMatcher
+  has_many :assets, dependent: :destroy
 
   devise :database_authenticatable, :registerable, :validatable, :confirmable,
   :recoverable, :rememberable, :lockable, :trackable, :timeoutable,
@@ -16,7 +17,6 @@ class User < ApplicationRecord
   validates :password_confirmation, presence: true, if: -> { (new_record? || !password.nil?) && provider != "google" }
   validates :name, length: { maximum: 50 }, format: { without: /[<>:;?]/ }, allow_blank: true
   validates :username, presence: true, uniqueness: { case_sensitive: false }, length: { in: 3..30 }, format: { with: /\A[a-z0-9_]+\z/, message: "can only contain lowercase letters, numbers, and underscores" }
-  validate :photo_must_be_a_valid_url, if: -> { photo.present? }
 
   def generate_confirmation_code
     self.confirmation_code = SecureRandom.random_number(10**6).to_s.rjust(6, "0")
@@ -32,14 +32,12 @@ class User < ApplicationRecord
     end
   end
 
-  private
-
-  def photo_must_be_a_valid_url
-    uri = URI.parse(photo)
-    unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
-      errors.add(:photo, "must be a valid URL")
-    end
-  rescue URI::InvalidURIError
-    errors.add(:photo, "must be a valid URL")
+  def get_profile_pic_url
+    # get 'upload' first and then 'google'
+    profile_picture = assets
+                      .where(user_id: id, category: "profile")
+                      .order(Arel.sql("CASE WHEN source = 'upload' THEN 1 ELSE 2 END"))
+                      .first
+    profile_picture&.url
   end
 end

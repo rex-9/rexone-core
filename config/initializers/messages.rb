@@ -22,5 +22,6 @@ module Messages
   INVALID_LOGIN_CREDENTIALS = "Invalid login credentials."
   INVALID_AUTHENTICATION_TOKEN = "Invalid authentication token"
   ACCOUNT_CREATED_AND_SIGNED_IN_SUCCESSFULLY = "Account created and signed in successfully."
+  FAILED_TO_SAVE_GOOGLE_PHOTO = "Failed to save Google Profile Picture."
   ACCOUNT_DELETED_SUCCESSFULLY = "Account deleted successfully."
 end

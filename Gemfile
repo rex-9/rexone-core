@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 7.2.2"
+gem "rails", "~> 7.2.2.1"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.5"
 # Use the Puma web server [https://github.com/puma/puma]
@@ -62,9 +62,9 @@ gem "rest-client", "~> 2.1"
 
 gem "solargraph", "~> 0.50.0"
 
-gem "activesupport", "~> 7.2"
+gem "activesupport", "~> 7.2.2.1"
 
-gem "dotenv-rails", "~> 3.1"
+gem "dotenv-rails", "~> 3.1.6"
 
 gem "devise", "~> 4.9"
 
@@ -80,6 +80,8 @@ gem "rails_performance", "~> 1.4"
 
 gem "redis", "~> 5.3"
 
-gem "rails_admin", "~> 3.2"
+gem "rails_admin", "~> 3.3"
 
 gem "sassc-rails", "~> 2.1"
+
+gem "cloudinary", "~> 2.2"

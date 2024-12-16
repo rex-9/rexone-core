@@ -100,9 +100,9 @@ RSpec.describe Users::SessionsController, type: :controller do
     let(:invalid_google_token) { 'invalid_google_token' }
     let(:google_user_info) do
       {
-        "email" => "google@example.com",
-        "name" => "Google User",
-        "picture" => "https://google_picture_url"
+      "email" => "google@example.com",
+      "name" => "Google User",
+      "picture" => "https://res.cloudinary.com/meritbox/image/upload/v1733153191/cld-sample-4.jpg"
       }
     end
 
@@ -162,8 +162,9 @@ RSpec.describe Users::SessionsController, type: :controller do
           'user@domain.com'
         ]
 
-        emails.each do |email|
-          allow(controller).to receive(:get_google_user_info).with(valid_google_token).and_return(google_user_info.merge("email" => email))
+        emails.each_with_index do |email, index|
+          pic = "https://res.cloudinary.com/meritbox/image/upload/v1733153191/cld-sample-#{index}.jpg" # Just to avoid duplication error
+          allow(controller).to receive(:get_google_user_info).with(valid_google_token).and_return(google_user_info.merge("email" => email, "picture" => pic))
           post :google_sign_in, params: { token: valid_google_token }
           expect(response).to have_http_status(:created)
           sanitized_username = email.split('@').first.downcase.gsub(/[^a-z0-9_]/, '_')

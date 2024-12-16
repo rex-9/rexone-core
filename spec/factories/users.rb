@@ -6,6 +6,6 @@ FactoryBot.define do
     password { "password" }
     password_confirmation { "password" }
     provider { "email" }
-    photo { 'https://www.google.com/' }
+    bio { "Hi, It's me!" }
   end
 end

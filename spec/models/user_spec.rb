@@ -75,20 +75,5 @@ RSpec.describe User, type: :model do
         expect(user).not_to be_valid
       end
     end
-
-    # photo
-    context 'when photo is not valid url' do
-      let(:user) { build(:user, photo: 'testing.com') }
-      it 'photo should not be invalid url' do
-        expect(user).not_to be_valid
-      end
-    end
-
-    context 'when photo is a valid url' do
-      let(:user) { build(:user, photo: 'https://www.google.com/') }
-      it 'photo should be valid url' do
-        expect(user).to be_valid
-      end
-    end
   end
 end
