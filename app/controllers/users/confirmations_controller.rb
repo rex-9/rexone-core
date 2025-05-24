@@ -25,14 +25,12 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
         render_json_response(
           status_code: 422,
           message: Messages::EMAIL_ALREADY_CONFIRMED,
-          error: Messages::EMAIL_ALREADY_CONFIRMED,
         )
       end
     else
       render_json_response(
         status_code: 404,
         message: Messages::USER_NOT_FOUND,
-        error: Messages::USER_NOT_FOUND
       )
     end
   end
@@ -54,15 +52,13 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
       else
         render_json_response(
           status_code: 422,
-          message: Messages::EMAIL_FAILED_TO_CONFIRM,
-          error: resource.errors.full_messages.to_sentence,
+          message: resource.errors.full_messages.to_sentence,
         )
       end
     else
       render_json_response(
         status_code: 422,
-        message: Messages::EMAIL_FAILED_TO_CONFIRM,
-        error: Messages::USER_NOT_FOUND,
+        message: resource.errors.full_messages.to_sentence,
       )
     end
   end

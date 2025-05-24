@@ -12,8 +12,7 @@ class Users::UsersController < ApplicationController
     else
       render_json_response(
         status_code: 401,
-        message: "User not authenticated.",
-        error: "No current user found."
+        message: "No current user found."
       )
     end
   end

@@ -15,8 +15,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     if user && user.provider == "google"
       render_json_response(
         status_code: 422,
-        message: Messages::FAILED_TO_SIGN_UP,
-        error: Messages::USER_ALREADY_REGISTERED_WITH_GOOGLE.call(user.email)
+        message: Messages::USER_ALREADY_REGISTERED_WITH_GOOGLE.call(user.email)
       )
     end
   end
@@ -38,8 +37,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     else
       render_json_response(
         status_code: 422,
-        message: Messages::FAILED_TO_SIGN_UP,
-        error: resource.errors.full_messages.uniq.to_sentence
+        message: resource.errors.full_messages.uniq.to_sentence
       )
     end
   end

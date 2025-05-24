@@ -39,22 +39,19 @@ class Users::SessionsController < Devise::SessionsController
         else
           render_json_response(
             status_code: 401,
-            message: Messages::FAILED_TO_SIGN_IN,
-            error: Messages::INVALID_LOGIN_CREDENTIALS
+            message: Messages::INVALID_LOGIN_CREDENTIALS
           )
         end
       else
         render_json_response(
           status_code: 401,
-          message: Messages::FAILED_TO_SIGN_IN,
-          error: Messages::USER_ALREADY_REGISTERED_WITH_GOOGLE.call(user.email)
+          message: Messages::USER_ALREADY_REGISTERED_WITH_GOOGLE.call(user.email)
         )
       end
     else
       render_json_response(
         status_code: 401,
-        message: Messages::FAILED_TO_SIGN_IN,
-        error: Messages::USER_NOT_FOUND
+        message: Messages::USER_NOT_FOUND
       )
     end
   end
@@ -75,8 +72,7 @@ class Users::SessionsController < Devise::SessionsController
     else
       render_json_response(
         status_code: 401,
-        message: Messages::INVALID_AUTHENTICATION_TOKEN,
-        error: Messages::INVALID_AUTHENTICATION_TOKEN
+        message: Messages::INVALID_AUTHENTICATION_TOKEN
       )
     end
   end
@@ -88,8 +84,7 @@ class Users::SessionsController < Devise::SessionsController
     if not user_info
       return render_json_response(
         status_code: 401,
-        message: Messages::GOOGLE_AUTHENTICATION_FAILED,
-        error: Messages::GOOGLE_AUTHENTICATION_FAILED
+        message: Messages::GOOGLE_AUTHENTICATION_FAILED
       )
     end
     user = User.find_by(email: user_info["email"])
@@ -106,8 +101,7 @@ class Users::SessionsController < Devise::SessionsController
       else
         render_json_response(
           status_code: 401,
-          message: Messages::GOOGLE_AUTHENTICATION_FAILED,
-          error: Messages::USER_ALREADY_REGISTERED_WITH_EMAIL.call(user.email)
+          message: Messages::USER_ALREADY_REGISTERED_WITH_EMAIL.call(user.email)
         )
       end
     else
@@ -143,15 +137,13 @@ class Users::SessionsController < Devise::SessionsController
         else
           render_json_response(
             status_code: 422,
-            message: Messages::FAILED_TO_SAVE_GOOGLE_PHOTO,
-            error: asset.errors.full_messages.uniq.to_sentence
+            message: asset.errors.full_messages.uniq.to_sentence
           )
         end
       else
         render_json_response(
           status_code: 422,
-          message: Messages::GOOGLE_AUTHENTICATION_FAILED,
-          error: user.errors.full_messages.uniq.to_sentence
+          message: user.errors.full_messages.uniq.to_sentence
         )
       end
     end
@@ -172,8 +164,7 @@ class Users::SessionsController < Devise::SessionsController
     else
       render_json_response(
         status_code: 422,
-        message: Messages::FAILED_TO_SIGN_IN,
-        error: resource.errors.full_messages.uniq.to_sentence
+        message: resource.errors.full_messages.uniq.to_sentence
       )
     end
   end
@@ -188,8 +179,7 @@ class Users::SessionsController < Devise::SessionsController
     else
       render_json_response(
         status_code: 401,
-        message: Messages::FAILED_TO_SIGN_OUT,
-        error: Messages::ACTIVE_SESSION_NOT_FOUND
+        message: Messages::ACTIVE_SESSION_NOT_FOUND
       )
     end
   end

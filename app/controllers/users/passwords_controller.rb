@@ -13,8 +13,7 @@ class Users::PasswordsController < Devise::PasswordsController
     else
       render_json_response(
         status_code: 404,
-        message: Messages::EMAIL_NOT_FOUND,
-        error: Messages::EMAIL_NOT_FOUND
+        message: Messages::EMAIL_NOT_FOUND
       )
     end
   end
@@ -30,8 +29,7 @@ class Users::PasswordsController < Devise::PasswordsController
     else
       render_json_response(
         status_code: 422,
-        message: Messages::FAILED_TO_RESET_PASSWORD,
-        error: user.errors.full_messages.uniq.to_sentence
+        message: user.errors.full_messages.uniq.to_sentence
       )
     end
   end
