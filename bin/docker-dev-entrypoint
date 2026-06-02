@@ -5,6 +5,9 @@ if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*/libjemalloc.so.2 ]; then
   export LD_PRELOAD="$(echo /usr/lib/*/libjemalloc.so.2)"
 fi
 
+# Remove old Puma PID file (if server is already running)
+rm -f /rails/tmp/pids/server.pid
+
 # Check if the database exists. If not, create it.
 if [ "$RAILS_ENV" == "development" ]; then
   echo "Preparing database..."

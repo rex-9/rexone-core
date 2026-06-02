@@ -18,9 +18,6 @@ components:
           nullable: true
         provider:
           type: string
-        bio:
-          type: string
-          nullable: true
         created_at:
           type: string
           format: date-time
@@ -28,12 +25,12 @@ components:
           type: string
           format: date-time
       required:
-      - id
-      - username
-      - email
-      - provider
-      - created_at
-      - updated_at
+        - id
+        - username
+        - email
+        - provider
+        - created_at
+        - updated_at
     success_status:
       type: object
       properties:
@@ -45,9 +42,9 @@ components:
         message:
           type: string
       required:
-      - code
-      - success
-      - message
+        - code
+        - success
+        - message
     error_status:
       type: object
       properties:
@@ -61,10 +58,10 @@ components:
         error:
           type: string
       required:
-      - code
-      - success
-      - message
-      - error
+        - code
+        - success
+        - message
+        - error
   securitySchemes:
     bearerAuth:
       type: http
@@ -75,11 +72,11 @@ paths:
     get:
       summary: Get current user
       tags:
-      - Users
+        - Users
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: current user fetched successfully
           content:
             application/json:
@@ -94,11 +91,11 @@ paths:
                       user:
                         "$ref": "#/components/schemas/user"
                     required:
-                    - user
+                      - user
                 required:
-                - status
-                - data
-        '401':
+                  - status
+                  - data
+        "401":
           description: unauthorized
           content:
             application/json:
@@ -115,19 +112,19 @@ paths:
                       error:
                         type: string
                     required:
-                    - code
-                    - message
-                    - error
+                      - code
+                      - message
+                      - error
                 required:
-                - status
+                  - status
   "/signin":
     post:
       summary: Sign in a user
       tags:
-      - Authentication
+        - Authentication
       parameters: []
       responses:
-        '200':
+        "200":
           description: signed in successfully
           content:
             application/json:
@@ -144,12 +141,12 @@ paths:
                       token:
                         type: string
                     required:
-                    - user
-                    - token
+                      - user
+                      - token
                 required:
-                - status
-                - data
-        '401':
+                  - status
+                  - data
+        "401":
           description: failed to sign in
           content:
             application/json:
@@ -159,7 +156,7 @@ paths:
                   status:
                     "$ref": "#/components/schemas/error_status"
                 required:
-                - status
+                  - status
       requestBody:
         content:
           application/json:
@@ -174,18 +171,18 @@ paths:
                     password:
                       type: string
                   required:
-                  - email
-                  - password
+                    - email
+                    - password
               required:
-              - user
+                - user
   "/signin/token":
     post:
       summary: Sign in a user with a token
       tags:
-      - Authentication
+        - Authentication
       parameters: []
       responses:
-        '200':
+        "200":
           description: signed in successfully
           content:
             application/json:
@@ -202,12 +199,12 @@ paths:
                       token:
                         type: string
                     required:
-                    - user
-                    - token
+                      - user
+                      - token
                 required:
-                - status
-                - data
-        '401':
+                  - status
+                  - data
+        "401":
           description: invalid authentication token
           content:
             application/json:
@@ -217,7 +214,7 @@ paths:
                   status:
                     "$ref": "#/components/schemas/error_status"
                 required:
-                - status
+                  - status
       requestBody:
         content:
           application/json:
@@ -227,15 +224,15 @@ paths:
                 token:
                   type: string
               required:
-              - token
+                - token
   "/signin/google":
     post:
       summary: Sign in a user with a Google token
       tags:
-      - Authentication
+        - Authentication
       parameters: []
       responses:
-        '401':
+        "401":
           description: Google authentication failed
           content:
             application/json:
@@ -245,7 +242,7 @@ paths:
                   status:
                     "$ref": "#/components/schemas/error_status"
                 required:
-                - status
+                  - status
       requestBody:
         content:
           application/json:
@@ -255,15 +252,15 @@ paths:
                 token:
                   type: string
               required:
-              - token
+                - token
   "/signup":
     post:
       summary: Sign up a new user
       tags:
-      - Authentication
+        - Authentication
       parameters: []
       responses:
-        '201':
+        "201":
           description: signed up successfully
           content:
             application/json:
@@ -282,20 +279,20 @@ paths:
                         type: string
                         example: Signed up successfully.
                     required:
-                    - code
-                    - success
-                    - message
+                      - code
+                      - success
+                      - message
                   data:
                     type: object
                     properties:
                       user:
                         "$ref": "#/components/schemas/user"
                     required:
-                    - user
+                      - user
                 required:
-                - status
-                - data
-        '422':
+                  - status
+                  - data
+        "422":
           description: failed to sign up
           content:
             application/json:
@@ -316,12 +313,12 @@ paths:
                       error:
                         type: string
                     required:
-                    - code
-                    - success
-                    - message
-                    - error
+                      - code
+                      - success
+                      - message
+                      - error
                 required:
-                - status
+                  - status
       requestBody:
         content:
           application/json:
@@ -340,14 +337,14 @@ paths:
                     password_confirmation:
                       type: string
                   required:
-                  - username
-                  - email
-                  - password
-                  - password_confirmation
+                    - username
+                    - email
+                    - password
+                    - password_confirmation
               required:
-              - user
+                - user
 servers:
-- url: https://{defaultHost}
-  variables:
-    defaultHost:
-      default: www.example.com
+  - url: https://{defaultHost}
+    variables:
+      defaultHost:
+        default: www.example.com

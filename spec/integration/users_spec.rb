@@ -84,7 +84,7 @@ RSpec.describe 'Users API', type: :request do
           required: [ 'status', 'data' ]
 
         let(:existing_user) { create(:user, username: 'username', email: 'existing@user.com', password: 'password', confirmed_at: Time.now) }
-        let(:user) { { user: { login_key: existing_user.email, password: existing_user.password } } }
+        let(:user) { { user: { signin_key: existing_user.email, password: existing_user.password } } }
         run_test!
       end
 

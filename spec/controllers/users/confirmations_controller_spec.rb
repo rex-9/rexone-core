@@ -30,24 +30,24 @@ RSpec.describe Users::ConfirmationsController, type: :controller do
     end
   end
 
-  describe 'POST #resend' do
-    context 'with valid login key and unconfirmed user' do
-      it 'with email, resends confirmation instructions and returns a success response' do
-        post :resend, params: { login_key: user.email }
+  describe 'POST #send' do
+    context 'with valid signin key and unconfirmed user' do
+      it 'with email, sends confirmation instructions and returns a success response' do
+        post :send, params: { signin_key: user.email }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['status']['message']).to eq(Messages::VERIFICATION_EMAIL_SENT.call(user.email))
       end
 
-      it 'with username, resends confirmation instructions and returns a success response' do
-        post :resend, params: { login_key: user.username }
+      it 'with username, sends confirmation instructions and returns a success response' do
+        post :send, params: { signin_key: user.username }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['status']['message']).to eq(Messages::VERIFICATION_EMAIL_SENT.call(user.email))
       end
 
       it 'returns an error if the user is already confirmed' do
-        post :resend, params: { login_key: confirmed_user.email }
+        post :send, params: { signin_key: confirmed_user.email }
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response['status']['code']).to eq(422)
         expect(json_response['status']['message']).to eq(Messages::EMAIL_ALREADY_CONFIRMED)
@@ -55,9 +55,9 @@ RSpec.describe Users::ConfirmationsController, type: :controller do
     end
 
 
-    context 'with invalid login key' do
+    context 'with invalid signin key' do
       it 'returns a not found response' do
-        post :resend, params: { login_key: 'nonexistent@example.com' }
+        post :send, params: { signin_key: 'nonexistent@example.com' }
         expect(response).to have_http_status(:not_found)
         expect(json_response['status']['code']).to eq(404)
         expect(json_response['status']['message']).to eq(Messages::USER_NOT_FOUND)
@@ -65,12 +65,12 @@ RSpec.describe Users::ConfirmationsController, type: :controller do
     end
   end
 
-  describe 'POST #confirm_with_code' do
+  describe 'POST #confirm_code' do
     context 'with valid confirmation code' do
       it 'confirms the user and returns a success response' do
         user.generate_confirmation_code
         user.save
-        post :confirm_with_code, params: { login_key: user.email, confirmation_code: user.confirmation_code }
+        post :confirm_code, params: { signin_key: user.email, confirmation_code: user.confirmation_code }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['status']['message']).to eq(Messages::EMAIL_CONFIRMED_SUCCESSFULLY)
@@ -81,7 +81,7 @@ RSpec.describe Users::ConfirmationsController, type: :controller do
 
     context 'with invalid confirmation code' do
       it 'returns an unprocessable entity response' do
-        post :confirm_with_code, params: { login_key: user.email, confirmation_code: 'invalid_code' }
+        post :confirm_code, params: { signin_key: user.email, confirmation_code: 'invalid_code' }
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response['status']['code']).to eq(422)
         expect(json_response['status']['message']).to eq(Messages::EMAIL_FAILED_TO_CONFIRM)
@@ -93,16 +93,16 @@ RSpec.describe Users::ConfirmationsController, type: :controller do
         user.generate_confirmation_code
         user.confirmation_code_sent_at = 11.minutes.ago
         user.save
-        post :confirm_with_code, params: { login_key: user.email, confirmation_code: user.confirmation_code }
+        post :confirm_code, params: { signin_key: user.email, confirmation_code: user.confirmation_code }
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response['status']['code']).to eq(422)
         expect(json_response['status']['message']).to eq(Messages::EMAIL_FAILED_TO_CONFIRM)
       end
     end
 
-    context 'with invalid login key' do
+    context 'with invalid signin key' do
       it 'returns an unprocessable entity response' do
-        post :confirm_with_code, params: { login_key: 'nonexistent@example.com', confirmation_code: '123456' }
+        post :confirm_code, params: { signin_key: 'nonexistent@example.com', confirmation_code: '123456' }
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response['status']['code']).to eq(422)
         expect(json_response['status']['message']).to eq(Messages::EMAIL_FAILED_TO_CONFIRM)

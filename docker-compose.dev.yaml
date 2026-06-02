@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: ${RAILS_DOCKERFILE}
+    environment:
+      RAILS_REDIS_URL: ${RAILS_REDIS_URL}
     volumes:
       - .:/rails
     ports:

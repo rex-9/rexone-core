@@ -6,6 +6,5 @@ FactoryBot.define do
     password { "password" }
     password_confirmation { "password" }
     provider { "email" }
-    bio { "Hi, It's me!" }
   end
 end

@@ -5,17 +5,27 @@
 
 # Read more: https://github.com/cyu/rack-cors
 
+# Rails.application.config.middleware.insert_before 0, Rack::Cors do
+#   allow do
+#     origins "example.com"
+#
+#     resource "*",
+#       headers: :any,
+#       methods: [:get, :post, :put, :patch, :delete, :options, :head]
+#   end
+# end
+
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "http://localhost:5173", # For dev
-            "https://uat.auth-service.me", # For uat
-            "http://uat.auth-service.me",
-            "https://www.uat.auth-service.me",
-            "http://www.uat.auth-service.me",
-            "https://auth-service.me", # For prod
-            "http://auth-service.me",
-            "https://www.auth-service.me",
-            "http://www.auth-service.me"
+    origins "http://localhost:4002", # For dev
+            "https://uat.meritbox.me", # For uat
+            "http://uat.meritbox.me",
+            "https://www.uat.meritbox.me",
+            "http://www.uat.meritbox.me",
+            "https://meritbox.me", # For prod
+            "http://meritbox.me",
+            "https://www.meritbox.me",
+            "http://www.meritbox.me"
 
     resource "*",
       headers: :any,

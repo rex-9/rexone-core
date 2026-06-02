@@ -6,10 +6,10 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-module AuthServiceApi
+module MeritboxApi
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.2
+    config.load_defaults 8.1
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
@@ -29,13 +29,13 @@ module AuthServiceApi
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
-    config.middleware.use ActionDispatch::Cookies
-    config.middleware.use ActionDispatch::Session::CookieStore
-
     # Load the secret key base from the credentials file or fallback to the old
     Rails.application.config.secret_key_base = Rails.application.credentials.secret_key_base || ENV["RAILS_SECRET_KEY_BASE"]
 
     # rails_admin config
+    config.assets.enabled = true
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore
     config.middleware.use ActionDispatch::Flash
     config.middleware.use Rack::MethodOverride
   end

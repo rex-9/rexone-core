@@ -23,7 +23,7 @@ class User < ApplicationRecord
     self.confirmation_code_sent_at = Time.current
   end
 
-  def confirm_with_code(code)
+  def confirm_code(code)
     if self.confirmation_code == code && self.confirmation_code_sent_at > 10.minutes.ago
       confirm
     else

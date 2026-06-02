@@ -53,13 +53,13 @@ RSpec.describe Users::RegistrationsController, type: :controller do
       end
     end
 
-    context 'with email registered with Google' do
+    context 'with email signed up with Google' do
       it 'returns an unprocessable entity response' do
         post :create, params: { user: { email: google_user.email, password: 'password', password_confirmation: 'password' } }
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response['status']['code']).to eq(422)
         expect(json_response['status']['message']).to eq(Messages::FAILED_TO_SIGN_UP)
-        expect(json_response['status']['error']).to eq(Messages::USER_ALREADY_REGISTERED_WITH_GOOGLE.call(google_user.email))
+        expect(json_response['status']['error']).to eq(Messages::USER_ALREADY_SIGNEDUP_WITH_GOOGLE.call(google_user.email))
       end
     end
   end

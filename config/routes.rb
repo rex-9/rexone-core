@@ -25,17 +25,18 @@ Rails.application.routes.draw do
   }
   devise_scope :user do
     post "signin/google", to: "users/sessions#google_sign_in"
+    post "signin/google/complete", to: "users/sessions#google_sign_in_complete"
     post "signin/token", to: "users/sessions#token_sign_in"
-    post "confirmation/resend", to: "users/confirmations#resend"
-    post "confirmation/confirm_with_code", to: "users/confirmations#confirm_with_code"
+    post "confirmation/send_code", to: "users/confirmations#send_code"
+    post "confirmation/confirm_code", to: "users/confirmations#confirm_code"
     post "password/forgot", to: "users/passwords#create"
     put "password/reset", to: "users/passwords#update"
   end
 
   # App Routes
-  get "users/current", to: "users/users#get_current_user"
-  post "media/upload", to: "assets#upload"
-  # resources :assets, only: [ :index, :show, :create, :update, :destroy ]
+  get  "users/current", to: "users/users#get_current_user"
+  get  "users/peek",    to: "users/users#peek_user"
+  post "media/upload",  to: "assets#upload"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

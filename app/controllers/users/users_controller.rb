@@ -1,5 +1,5 @@
 class Users::UsersController < ApplicationController
-  before_action :authenticate_user!
+  before_action :authenticate_user!, except: [ :peek_user ]  # Skip authentication for this action
 
   # GET /users/current
   def get_current_user
@@ -12,8 +12,32 @@ class Users::UsersController < ApplicationController
     else
       render_json_response(
         status_code: 401,
-        message: "No current user found."
+        message: "User not authenticated.",
+        error: "No current user found."
       )
     end
+  end
+
+  # GET /users/peek?email=user@example.com
+  # or POST /users/peek
+  def peek_user
+    email = params[:email]
+
+    if email.blank?
+      render_json_response(
+        status_code: 400,
+        message: "Email parameter is required.",
+        error: "Missing email address."
+      )
+      return
+    end
+
+    user_exists = User.exists?(email: email.to_s.downcase.strip)  # Case-insensitive check
+
+    render_json_response(
+      status_code: 200,
+      message: "User existence checked successfully.",
+      data: { user_exists: user_exists }
+    )
   end
 end

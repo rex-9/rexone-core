@@ -4,6 +4,7 @@ RSpec.describe Users::PasswordsController, type: :controller do
   include Devise::Test::ControllerHelpers
 
   let(:user) { create(:user) }
+  let(:google_user) { create(:user, email: 'google.reset@example.com', provider: 'google', password: 'password', password_confirmation: 'password', confirmed_at: Time.current) }
   let(:unconfirmed_user) { create(:user, confirmed_at: nil) }
 
   before do
@@ -16,11 +17,20 @@ RSpec.describe Users::PasswordsController, type: :controller do
 
   describe 'POST #create' do
     context 'with valid email' do
-      it 'sends reset password instructions and returns a success response' do
+      it 'sends reset passcode instructions and returns a success response' do
         post :create, params: { email: user.email }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['status']['message']).to eq(Messages::PASSWORD_RESET_INSTRUCTIONS_SENT.call(user.email))
+      end
+    end
+
+    context 'with Google user email' do
+      it 'also sends reset passcode instructions' do
+        post :create, params: { email: google_user.email }
+        expect(response).to have_http_status(:ok)
+        expect(json_response['status']['code']).to eq(200)
+        expect(json_response['status']['message']).to eq(Messages::PASSWORD_RESET_INSTRUCTIONS_SENT.call(google_user.email))
       end
     end
 
@@ -37,8 +47,8 @@ RSpec.describe Users::PasswordsController, type: :controller do
   describe 'PUT #update' do
     let(:reset_password_token) { user.send_reset_password_instructions }
 
-    context 'with valid reset password token' do
-      it 'resets the password and returns a success response' do
+    context 'with valid reset passcode token' do
+      it 'resets the passcode and returns a success response' do
         put :update, params: { user: { reset_password_token: reset_password_token, password: 'newpassword', password_confirmation: 'newpassword' } }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
@@ -46,7 +56,7 @@ RSpec.describe Users::PasswordsController, type: :controller do
       end
     end
 
-    context 'with invalid reset password token' do
+    context 'with invalid reset passcode token' do
       it 'returns an unprocessable entity response' do
         put :update, params: { user: { reset_password_token: 'invalid_token', password: 'newpassword', password_confirmation: 'newpassword' } }
         expect(response).to have_http_status(:unprocessable_entity)
@@ -59,7 +69,7 @@ RSpec.describe Users::PasswordsController, type: :controller do
   describe 'GET #edit' do
     let(:reset_password_token) { user.send_reset_password_instructions }
 
-    it 'redirects to the client with reset password token' do
+    it 'redirects to the client with reset passcode token' do
       get :edit, params: { reset_password_token: reset_password_token }
       expect(response).to redirect_to("#{AppConfig::CLIENT_BASE_URL}/password/reset?reset_password_token=#{reset_password_token}")
     end

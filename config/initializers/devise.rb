@@ -24,7 +24,7 @@ Devise.setup do |config|
   # Configure the e-mail address which will be shown in Devise::Mailer,
   # note that it will be overwritten if you use your own mailer class
   # with default "from" parameter.
-  config.mailer_sender = "rex@auth-service.me" # SMTP mailer username
+  config.mailer_sender = "rex@meritbox.me" # SMTP mailer username
 
   # Configure the class responsible to send e-mails.
   # config.mailer = 'Devise::Mailer'
@@ -143,7 +143,7 @@ Devise.setup do |config|
   # without confirming their account.
   # Default is 0.days, meaning the user cannot access the website without
   # confirming their account.
-  config.allow_unconfirmed_access_for = 2.days
+  config.allow_unconfirmed_access_for = AppConfig::ALLOW_UNCONFIRMED_ACCESS_FOR
 
   # A period that the user is allowed to confirm their account before their
   # token becomes invalid. For example, if set to 3.days, the user can confirm
@@ -188,7 +188,7 @@ Devise.setup do |config|
   # ==> Configuration for :timeoutable
   # The time you want to timeout the user session without activity. After this
   # time the user will be asked for credentials again. Default is 30 minutes.
-  config.timeout_in = 30.days
+  config.timeout_in = AppConfig::SESSION_TIMEOUT
 
   # ==> Configuration for :lockable
   # Defines which strategy will be used to lock an account.
@@ -201,7 +201,7 @@ Devise.setup do |config|
 
   # Defines which strategy will be used to unlock an account.
   # :email = Sends an unlock link to the user email
-  # :time  = Re-enables login after a certain amount of time (see :unlock_in below)
+  # :time  = Re-enables signin after a certain amount of time (see :unlock_in below)
   # :both  = Enables both strategies
   # :none  = No unlock strategy. You should handle unlocking by yourself.
   # config.unlock_strategy = :both
@@ -224,7 +224,7 @@ Devise.setup do |config|
   # Time interval you can reset your password with a reset password key.
   # Don't put a too small interval or your users won't have the time to
   # change their passwords.
-  config.reset_password_within = 6.hours
+  config.reset_password_within = AppConfig::PASSWORD_RESET_WITHIN
 
   # When set to false, does not sign a user in automatically after their password is
   # reset. Defaults to true, so a user is signed in automatically after a reset.
@@ -318,13 +318,18 @@ Devise.setup do |config|
   # config.sign_in_after_change_password = true
 
   config.jwt do |jwt|
-    jwt.secret = Rails.application.credentials.secret_key_base || ENV["RAILS_SECRET_KEY_BASE"]
+    # Use a dedicated JWT secret and ensure it's a String for HMAC algorithms.
+    jwt.secret = AppConfig::JWT_SECRET_KEY.to_s
     jwt.dispatch_requests = [
       [ "POST", %r{^/signin$} ]
     ]
     jwt.revocation_requests = [
       [ "DELETE", %r{^/signout$} ]
     ]
-    jwt.expiration_time = 30.days.to_i
+    jwt.expiration_time = AppConfig::JWT_EXPIRATION.to_i
+  end
+
+  Warden::JWTAuth.configure do |jwt|
+    jwt.secret = AppConfig::JWT_SECRET_KEY.to_s
   end
 end

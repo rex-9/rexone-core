@@ -10,24 +10,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2024_12_05_100829) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_16_034016) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
+  enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
 
   create_table "assets", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "name", null: false
-    t.string "url", null: false
     t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.string "extension"
     t.string "format", null: false
+    t.string "name", null: false
+    t.uuid "record_id"
+    t.string "record_type"
     t.bigint "size", null: false
     t.string "source", default: "upload", null: false
-    t.string "extension"
-    t.string "record_type"
-    t.uuid "record_id"
-    t.uuid "user_id"
-    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.uuid "user_id"
     t.index ["name"], name: "index_assets_on_name", unique: true
     t.index ["record_type", "record_id"], name: "index_assets_on_record"
     t.index ["url"], name: "index_assets_on_url", unique: true
@@ -35,32 +35,32 @@ ActiveRecord::Schema[7.2].define(version: 2024_12_05_100829) do
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "username", null: false
-    t.string "name"
-    t.text "bio"
-    t.string "provider"
-    t.string "jti", null: false
-    t.string "email", default: "", null: false
-    t.string "encrypted_password", default: "", null: false
-    t.string "reset_password_token"
-    t.datetime "reset_password_sent_at"
-    t.datetime "remember_created_at"
-    t.integer "sign_in_count", default: 0, null: false
-    t.datetime "current_sign_in_at"
-    t.datetime "last_sign_in_at"
-    t.string "current_sign_in_ip"
-    t.string "last_sign_in_ip"
-    t.string "confirmation_token"
-    t.datetime "confirmed_at"
-    t.datetime "confirmation_sent_at"
-    t.string "unconfirmed_email"
-    t.integer "failed_attempts", default: 0, null: false
-    t.string "unlock_token"
-    t.datetime "locked_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.string "confirmation_code"
     t.datetime "confirmation_code_sent_at"
+    t.datetime "confirmation_sent_at"
+    t.string "confirmation_token"
+    t.datetime "confirmed_at"
+    t.datetime "created_at", null: false
+    t.datetime "current_sign_in_at"
+    t.string "current_sign_in_ip"
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.integer "failed_attempts", default: 0, null: false
+    t.string "jti", null: false
+    t.datetime "last_sign_in_at"
+    t.string "last_sign_in_ip"
+    t.datetime "locked_at"
+    t.string "name"
+    t.string "photo"
+    t.string "provider"
+    t.datetime "remember_created_at"
+    t.datetime "reset_password_sent_at"
+    t.string "reset_password_token"
+    t.integer "sign_in_count", default: 0, null: false
+    t.string "unconfirmed_email"
+    t.string "unlock_token"
+    t.datetime "updated_at", null: false
+    t.string "username", null: false
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["jti"], name: "index_users_on_jti", unique: true

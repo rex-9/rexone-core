@@ -1,18 +1,18 @@
-# auth-service-api
+# meritbox-api
 
 <a name="readme-top"></a>
 
 <div align="center">
-  <h3><b>Auth Service Api</b></h3>
+  <h3><b>Meritbox Api</b></h3>
 </div>
 
 <!-- TABLE OF CONTENTS -->
 
 # 📗 Table of Contents
 
-- [auth-service-api](#auth-service-api)
+- [meritbox-api](#meritbox-api)
 - [📗 Table of Contents](#-table-of-contents)
-- [📖 Auth Service Api ](#-auth-service-api-)
+- [📖 Meritbox Api ](#-meritbox-api-)
   - [🚀 Featuring!](#-featuring)
     - [🌟 Modern Tech Stack](#-modern-tech-stack)
     - [🗃️ Testing \& Quality Assurance](#️-testing--quality-assurance)
@@ -33,9 +33,9 @@
 
 <!-- PROJECT DESCRIPTION -->
 
-# 📖 Auth Service Api <a name="about-project"></a>
+# 📖 Meritbox Api <a name="about-project"></a>
 
-**Auth Service Api** is a robust backend framework for authenticated web applications, offering a solid foundation for diverse product development needs. This repository also serves as an excellent learning resource for anyone looking to master backend development. It emphasizes best practices on the server side, enabling developers to write simple yet clean code. You can find the corresponding frontend application here: [Auth Service Web](https://github.com/rex-9/auth-service-web).
+**Meritbox Api** is a robust backend framework for authenticated web applications, offering a solid foundation for diverse product development needs. This repository also serves as an excellent learning resource for anyone looking to master backend development. It emphasizes best practices on the server side, enabling developers to write simple yet clean code. You can find the corresponding frontend application here: [Meritbox Web](https://github.com/rex-9/meritbox-me-web).
 
 ## 🚀 Featuring!
 
@@ -59,7 +59,7 @@
 ### 🔐 Authentication & Security
 
 - **Email-Password Authentication**: Securely authenticate users with email and password.
-- **Google Authentication**: Provide a seamless login experience with Google OAuth.
+- **Google Authentication**: Provide a seamless sign in experience with Google OAuth.
 - **Forgot Password & Reset Password**: Allow users to recover their accounts with ease.
 - **Email Confirmation**: Verify user email addresses to enhance security.
 
@@ -117,13 +117,13 @@ Clone this repository or download as a zip file to your desired folder:
 
 ```sh
   cd my-folder
-  git clone git@github.com:auth-service/auth-service-api.git
+  git clone git@github.com:meritbox-me/meritbox-api.git
 ```
 
 Enter the Root level of the project
 
 ```sh
-  cd auth-service-api
+  cd meritbox-api
 ```
 
 Install the dependencies using yarn or npm:
@@ -153,7 +153,7 @@ Explore them under `/scripts ` folder.
 run the app.
 
 ```sh
-> sh scripts/run_dev.sh
+> sh scripts/dev.sh
 ```
 
 ### Test
@@ -167,7 +167,7 @@ set up rspec for once
 execute tests
 
 ```sh
-> sh scripts/exec_tests.sh
+> sh scripts/tests.sh
 ```
 
 ### Doc
@@ -175,7 +175,7 @@ execute tests
 generate swagger documentation
 
 ```sh
-> sh scripts/gen_rswag.sh
+> sh scripts/rswag.sh
 ```
 
 view the API documentation at
@@ -198,7 +198,7 @@ If you are interested in exploring more open source projects, check out Instacar
 
 If you like this project, please consider giving it a star on GitHub and buying me a coffee to support its development: 🌟
 
-[![GitHub Stars](https://img.shields.io/github/stars/rex-9/auth-service-api.svg?style=social&label=Star)](https://github.com/rex-9/auth-service-api)
+[![GitHub Stars](https://img.shields.io/github/stars/meritbox-me/meritbox-api.svg?style=social&label=Star)](https://github.com/rex-9/meritbox-api)
 
 <div align="center">
   <a href="https://buymeacoffee.com/rex9" target="_blank">
