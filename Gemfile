@@ -62,7 +62,7 @@ group :development, :test do
   gem "faker", "~> 3.8"
 
   gem "database_cleaner-active_record", "~> 2.2"
-  gem "solargraph", "~> 0.59.2"
+  gem "solargraph", "~> 0.60.2"
   gem "dotenv-rails", "~> 3.2"
 end
 
