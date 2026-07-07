@@ -4,6 +4,12 @@ services:
     build:
       context: .
       dockerfile: ${RAILS_DOCKERFILE}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       RAILS_ENV: ${RAILS_ENV}
       RAILS_SECRET_KEY_BASE: ${RAILS_SECRET_KEY_BASE}
@@ -16,17 +22,20 @@ services:
       RAILS_ADMIN_PASSWORD: ${RAILS_ADMIN_PASSWORD}
     ports:
       - ${RAILS_PORT_MAP}
-    depends_on:
-      - db
-      - redis
     labels:
       - coolify.traefik.middlewares=cors@file
 
   db:
     container_name: ${DB_CONTAINER_NAME}
-    image: postgres:17-alpine
+    image: postgres:18-alpine
+    restart: unless-stopped
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -h 127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       POSTGRES_DB: ${PG_DATABASE}
       POSTGRES_USER: ${PG_USER}
@@ -35,24 +44,20 @@ services:
       POSTGRES_PORT: ${PG_PORT}
     ports:
       - ${PG_PORT_MAP}
-    healthcheck:
-      test: "pg_isready -U ${PG_USER} -h 127.0.0.1"
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   redis:
     container_name: ${REDIS_CONTAINER_NAME}
-    image: redis:latest
+    image: redis:8.8-alpine
+    restart: unless-stopped
     volumes:
       - redis:/data
-    ports:
-      - ${REDIS_PORT_MAP}
     healthcheck:
-      test: redis-cli ping
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 10
       timeout: 2s
+    ports:
+      - ${REDIS_PORT_MAP}
 
 volumes:
   postgres:

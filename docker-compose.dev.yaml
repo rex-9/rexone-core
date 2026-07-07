@@ -1,3 +1,5 @@
+name: auth-service-api
+
 services:
   api:
     build:
@@ -10,17 +12,34 @@ services:
     ports:
       - ${RAILS_PORT_MAP}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   db:
-    image: postgres
+    image: postgres:18-alpine
+    volumes:
+      - postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       POSTGRES_PASSWORD: ${PG_PASSWORD}
     ports:
       - ${PG_PORT_MAP}
 
   redis:
-    image: redis:latest
+    image: redis:8.8-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
     ports:
       - ${REDIS_PORT_MAP}
+
+volumes:
+  postgres:
