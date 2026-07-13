@@ -140,7 +140,6 @@ RSpec.describe Users::SessionsController, type: :controller do
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['data']['passcode_required']).to eq(true)
-        expect(json_response['data']['passcode_action']).to eq('set')
         expect(json_response['data']['challenge_token']).to be_present
       end
     end

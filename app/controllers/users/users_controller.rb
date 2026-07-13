@@ -32,12 +32,15 @@ class Users::UsersController < ApplicationController
       return
     end
 
-    user_exists = User.exists?(email: email.to_s.downcase.strip)  # Case-insensitive check
+    user = User.find_by(email: email.to_s.downcase.strip)
 
     render_json_response(
       status_code: 200,
       message: "User existence checked successfully.",
-      data: { user_exists: user_exists }
+      data: {
+        user_exists: user.present?,
+        confirmed: user&.confirmed? || false,
+      }
     )
   end
 end

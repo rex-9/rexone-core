@@ -1,5 +1,4 @@
 class Users::RegistrationsController < Devise::RegistrationsController
-  include RackSessionFix
   respond_to :json
 
   before_action :check_email_provider, only: [ :create ]

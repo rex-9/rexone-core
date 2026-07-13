@@ -1,5 +1,4 @@
 class Users::SessionsController < Devise::SessionsController
-  include RackSessionFix
   respond_to :json
 
   skip_before_action :enforce_active_platform_session!, only: [ :create, :token_sign_in, :google_sign_in, :google_sign_in_complete ]
@@ -8,93 +7,68 @@ class Users::SessionsController < Devise::SessionsController
   # POST /signin
   def create
     user = User.find_by("email = :signin_key OR username = :signin_key", signin_key: params[:user][:signin_key])
-    # resource = User.find_by(email: params[:signin_key]) || User.find_by(username: params[:signin_key])
-    # resource = User.find_by { email == params[:signin_key] || username == params[:signin_key] }
-    # users = User.arel_table
-    # resource = User.where(users[:email].eq(params[:signin_key]).or(users[:username].eq(params[:signin_key]))).first
-    if user
-      password_service = PasswordAttemptService.new(
-        user_id: user.id,
-        device_id: request.headers["X-Device-ID"],
-        ip: request.remote_ip
-      )
 
-      lock_status = password_service.status
-      if lock_status[:locked]
-        render_json_response(
-          status_code: 429,
-          message: Messages::FAILED_TO_SIGN_IN,
-          error: Messages::PASSWORD_TOO_MANY_ATTEMPTS,
-          data: {
-            failed_attempts: lock_status[:failed_attempts],
-            remaining_attempts: attempts_remaining_before_cooldown(lock_status[:failed_attempts]),
-            attempts_remaining_before_cooldown: attempts_remaining_before_cooldown(lock_status[:failed_attempts]),
-            cooldown_remaining: lock_status[:cooldown_remaining],
-            retry_after: lock_status[:cooldown_remaining]
-          }
-        )
-        return
-      end
-
-      if user.valid_password?(params[:user][:password])
-        password_service.record_success
-
-        if user.confirmed?
-          token = AppConfig::JWT_TOKEN.call(user)
-          signup_active_session!(user: user, token: token)
-
-          render_json_response(
-            status_code: 200,
-            message: Messages::SIGNED_IN_SUCCESSFULLY,
-            data: {
-              user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-              token: token,
-              remaining_attempts: attempts_remaining_before_cooldown(0),
-              attempts_remaining_before_cooldown: attempts_remaining_before_cooldown(0),
-              cooldown_remaining: 0,
-              retry_after: 0
-            }
-          )
-        else
-          user.generate_confirmation_code
-          if user.send_confirmation_instructions
-            render_json_response(
-              status_code: 200,
-              message: Messages::VERIFICATION_EMAIL_SENT.call(user.email)
-            )
-          else
-            render_json_response(
-              status_code: 422,
-              message: Messages::FAILED_TO_SEND_VERIFICATION_EMAIL.call(user.email),
-              error: user.errors.full_messages.uniq.to_sentence
-            )
-          end
-        end
-      else
-        failure_result = password_service.record_failure
-        cooldown_active = failure_result[:cooldown_remaining].to_i.positive?
-        status_code = cooldown_active ? 429 : 401
-        response_message = Messages::FAILED_TO_SIGN_IN
-        response_error = cooldown_active ? Messages::PASSWORD_TOO_MANY_ATTEMPTS : Messages::INVALID_SIGNIN_CREDENTIALS
-
-        render_json_response(
-          status_code: status_code,
-          message: response_message,
-          error: response_error,
-          data: {
-            failed_attempts: failure_result[:failed_attempts],
-            remaining_attempts: cooldown_active ? 0 : attempts_remaining_before_cooldown(failure_result[:failed_attempts]),
-            attempts_remaining_before_cooldown: cooldown_active ? 0 : attempts_remaining_before_cooldown(failure_result[:failed_attempts]),
-            cooldown_remaining: failure_result[:cooldown_remaining],
-            retry_after: failure_result[:cooldown_remaining]
-          }
-        )
-      end
-    else
+    if user.nil?
       render_json_response(
         status_code: 401,
         message: Messages::FAILED_TO_SIGN_IN,
         error: Messages::USER_NOT_FOUND
+      )
+      return
+    end
+
+    limiter = PasswordAttemptService.new(user.id)
+    unless limiter.allowed?
+      render_json_response(
+        status_code: 429,
+        message: Messages::FAILED_TO_SIGN_IN,
+        error: "Too many attempts. Please wait #{limiter.cooldown_remaining} seconds.",
+        data: {
+          remaining_attempts: 0,
+          cooldown_remaining: limiter.cooldown_remaining
+        }
+      )
+      return
+    end
+
+    if user.valid_password?(params[:user][:password])
+      limiter.record_success
+
+      if user.confirmed?
+        token = AppConfig::JWT_TOKEN.call(user)
+        signup_active_session!(user: user, token: token)
+
+        render_json_response(
+          status_code: 200,
+          message: Messages::SIGNED_IN_SUCCESSFULLY,
+          data: {
+            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+            token: token,
+            remaining_attempts: 3,
+            cooldown_remaining: 0
+          }
+        )
+      else
+        user.generate_confirmation_code
+        user.send_confirmation_instructions
+
+        render_json_response(
+          status_code: 200,
+          message: Messages::VERIFICATION_EMAIL_SENT.call(user.email),
+          data: { otp_sent: true }
+        )
+      end
+    else
+      failure_data = limiter.record_failure
+
+      render_json_response(
+        status_code: failure_data[:cooldown_active] ? 429 : 401,
+        message: Messages::FAILED_TO_SIGN_IN,
+        error: failure_data[:cooldown_active] ? "Too many attempts" : Messages::INVALID_SIGNIN_CREDENTIALS,
+        data: {
+          remaining_attempts: failure_data[:remaining_attempts],
+          cooldown_remaining: failure_data[:cooldown_remaining] || 0
+        }
       )
     end
   end
@@ -144,26 +118,25 @@ class Users::SessionsController < Devise::SessionsController
       token = AppConfig::JWT_TOKEN.call(user)
       signup_active_session!(user: user, token: token)
 
+      # Existing user - just return user + token
       render_json_response(
         status_code: 200,
         message: Messages::SIGNED_IN_SUCCESSFULLY,
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-          token: token,
-          passcode_required: false,
-          existing_user: true
+          token: token
         }
       )
       return
     end
 
+    # New user - return challenge token
     challenge_token = SecureRandom.urlsafe_base64(32)
 
     challenge_payload = {
       email: user_info["email"],
       name: user_info["name"],
-      picture: user_info["picture"],
-      existing_user: false
+      picture: user_info["picture"]
     }
 
     store_google_challenge!(challenge_token, challenge_payload)
@@ -172,10 +145,8 @@ class Users::SessionsController < Devise::SessionsController
       status_code: 200,
       message: "Set a passcode to complete account creation.",
       data: {
-        passcode_required: true,
-        challenge_token: challenge_token,
-        existing_user: false,
-        passcode_action: "set"
+        password_required: true,
+        challenge_token: challenge_token
       }
     )
   end
@@ -183,7 +154,7 @@ class Users::SessionsController < Devise::SessionsController
   # POST /signin/google/complete
   def google_sign_in_complete
     challenge_token = params[:challenge_token]
-    password = params[:passcode].presence || params[:password].presence
+    password = params[:password].presence || params[:password].presence
 
     if challenge_token.blank? || password.blank?
       render_json_response(
@@ -206,6 +177,7 @@ class Users::SessionsController < Devise::SessionsController
 
     user = User.find_by(email: challenge_data["email"])
 
+    # If user already exists (shouldn't happen, but handle gracefully)
     if user
       clear_google_challenge!(challenge_token)
       token = AppConfig::JWT_TOKEN.call(user)
@@ -216,14 +188,13 @@ class Users::SessionsController < Devise::SessionsController
         message: Messages::SIGNED_IN_SUCCESSFULLY,
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-          token: token,
-          passcode_required: false,
-          existing_user: true
+          token: token
         }
       )
       return
     end
 
+    # Create new Google user
     sanitized_username = sanitize_email(challenge_data["email"])
     user = User.create(
       email: challenge_data["email"],
@@ -243,6 +214,7 @@ class Users::SessionsController < Devise::SessionsController
       return
     end
 
+    # Save google profile picture
     asset = Asset.create(
       name: "profile_google_of_user_#{user.id}",
       url: challenge_data["picture"],
@@ -254,12 +226,15 @@ class Users::SessionsController < Devise::SessionsController
     )
 
     unless asset.save
-      render_json_response(
-        status_code: 422,
-        message: Messages::FAILED_TO_SAVE_GOOGLE_PHOTO,
-        error: asset.errors.full_messages.uniq.to_sentence
-      )
-      return
+      # Log but don't fail the request - user can upload later
+      Rails.logger.warn("Failed to save Google profile picture for user #{user.id}: #{asset.errors.full_messages}")
+
+      # render_json_response(
+      #   status_code: 422,
+      #   message: Messages::FAILED_TO_SAVE_GOOGLE_PHOTO,
+      #   error: asset.errors.full_messages.uniq.to_sentence
+      # )
+      # return
     end
 
     clear_google_challenge!(challenge_token)
@@ -356,18 +331,6 @@ class Users::SessionsController < Devise::SessionsController
     end
   rescue Redis::BaseError => e
     Rails.logger.error("[Auth] Failed to clear active session: #{e.message}")
-  end
-
-  def cooldown_threshold
-    PasswordAttemptService::LOCK_LEVELS.first[:max_failures].to_i
-  end
-
-  def attempts_remaining_before_cooldown(failed_attempts)
-    attempts = failed_attempts.to_i
-    return [ cooldown_threshold - attempts, 0 ].max if attempts < 3
-    return [ 6 - attempts, 0 ].max if attempts < 6
-
-    0
   end
 
   def get_google_user_info(token)

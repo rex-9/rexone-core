@@ -18,4 +18,7 @@ module AppConfig
 
   # Unconfirmed access
   ALLOW_UNCONFIRMED_ACCESS_FOR = 2.days
+
+  # Rack::Attack
+  RACK_ATTACK_CACHE_EXPIRY = 10.minutes
 end

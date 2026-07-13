@@ -30,10 +30,10 @@ class AssetsController < ApplicationController
       if asset.save
         render json: { url: asset.url }, status: :created
       else
-        render json: asset.errors, status: :unprocessable_entity
+        render json: asset.errors, status: :unprocessable_content
       end
     else
-      render json: { error: "No file uploaded" }, status: :unprocessable_entity
+      render json: { error: "No file uploaded" }, status: :unprocessable_content
     end
   end
 
@@ -44,7 +44,7 @@ class AssetsController < ApplicationController
     if @asset.save
       render json: @asset, status: :created, location: @asset
     else
-      render json: @asset.errors, status: :unprocessable_entity
+      render json: @asset.errors, status: :unprocessable_content
     end
   end
 
@@ -53,7 +53,7 @@ class AssetsController < ApplicationController
     if @asset.update(asset_params)
       render json: @asset
     else
-      render json: @asset.errors, status: :unprocessable_entity
+      render json: @asset.errors, status: :unprocessable_content
     end
   end
 

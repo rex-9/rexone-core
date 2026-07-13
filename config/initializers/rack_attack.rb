@@ -1,3 +1,6 @@
+# config/initializers/rack_attack.rb
+require "active_support/core_ext/numeric/time"
+
 # IP-level rate limiting using Rack::Attack.
 # This is a first-line defence against request flooding and scripted attacks.
 # It operates at the Rack layer — before any Rails controller code runs —
@@ -13,31 +16,36 @@ Rails.application.config.middleware.use Rack::Attack
 Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(
   url:       ENV.fetch("RAILS_REDIS_URL", "redis://localhost:6379/0"),
   namespace: "rack_attack",
-  expires_in: 10.minutes
+  expires_in: AppConfig::RACK_ATTACK_CACHE_EXPIRY
 )
 
 class Rack::Attack
   # ── Throttles ────────────────────────────────────────────────────────────────
 
-  # Allow up to 60 requests/min per IP to any password endpoint.
+  # Allow up to 60 requests/min per IP to any signin/password endpoint.
   # Catches general flooding before it reaches the application.
-  throttle("password/req/ip", limit: 60, period: 1.minute) do |req|
-    req.ip if req.path.start_with?("/password")
+  throttle("auth/req/ip", limit: 60, period: 1.minute) do |req|
+    req.ip if req.path.start_with?("/signin", "/signup", "/confirmation", "/password")
   end
 
   # Strict limit: 10 POST attempts per IP per 5 minutes.
   # Prevents an attacker from cycling through users from a single IP.
-  throttle("password/verify/ip", limit: 10, period: 5.minutes) do |req|
-    req.ip if req.path == "/password/verify" && req.post?
+  throttle("auth/signin/ip", limit: 10, period: 5.minutes) do |req|
+    req.ip if req.path == "/signin" && req.post?
   end
 
-  # Per-user throttle derived from a stable token in the request body/header.
+  # Per-user throttle derived from email in request body.
   # Complements the PasswordAttemptService lock (which is also per-user) but
   # operates without needing a DB/Redis lookup for the User record.
-  throttle("password/verify/user_token", limit: 15, period: 5.minutes) do |req|
-    if req.path == "/password/verify" && req.post?
-      # Use X-Device-ID if present; fall back to IP so the throttle always fires.
-      req.get_header("HTTP_X_DEVICE_ID").presence || req.ip
+  throttle("auth/signin/user", limit: 15, period: 5.minutes) do |req|
+    if req.path == "/signin" && req.post?
+      begin
+        body = JSON.parse(req.body.read)
+        req.body.rewind # Reset for Rails to read
+        body.dig("user", "signin_key") || req.ip
+      rescue
+        req.ip
+      end
     end
   end
 
@@ -54,11 +62,15 @@ class Rack::Attack
         "Content-Type" => "application/json",
         "Retry-After"  => retry_after
       },
-      [ {
-          success:     false,
-          message:     "Too many requests. Please slow down.",
-          retry_after: retry_after.to_i
-        }.to_json ]
+      [{
+        status: {
+          code: 429,
+          success: false,
+          message: "Too many requests. Please slow down.",
+          error: "Rate limit exceeded"
+        },
+        retry_after: retry_after.to_i
+      }.to_json]
     ]
   end
 
@@ -66,7 +78,13 @@ class Rack::Attack
     [
       403,
       { "Content-Type" => "application/json" },
-      [ { success: false, message: "Request blocked." }.to_json ]
+      [{
+        status: {
+          code: 403,
+          success: false,
+          message: "Request blocked."
+        }
+      }.to_json]
     ]
   end
 end

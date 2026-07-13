@@ -61,7 +61,7 @@ class ApplicationController < ActionController::API
     when 401 then :unauthorized
     when 429 then :too_many_requests
     when 404 then :not_found
-    when 422 then :unprocessable_entity
+    when 422 then :unprocessable_content
     else status_code
     end
   end

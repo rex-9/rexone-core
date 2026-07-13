@@ -1,3 +1,5 @@
+# config/initializers/redis.rb
+
 # Dedicated Redis client for password attempt tracking.
 # Isolated from Action Cable's Redis connection to prevent cross-contamination
 # of failure state data with pub/sub traffic.
@@ -8,3 +10,10 @@ PASSWORD_REDIS = Redis.new(
   timeout: 2,
   reconnect_attempts: 2
 )
+
+# Test connection on startup
+begin
+  PASSWORD_REDIS.ping
+rescue Redis::BaseError => e
+  Rails.logger.error("[Redis] Password Redis connection failed: #{e.message}")
+end

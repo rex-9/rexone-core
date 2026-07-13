@@ -3,10 +3,11 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
   def show
     self.resource = resource_class.confirm_by_token(params[:confirmation_token])
     if resource.errors.empty?
-      sign_in(resource) # Automatically sign in the user
-      redirect_to AppConfig::CLIENT_BASE_URL + "/signin?auth_token=#{resource.jti}", allow_other_host: true
+      sign_in(resource) # Auto sign in user
+      # Redirect to /email/confirm with auth_token
+      redirect_to "#{AppConfig::CLIENT_BASE_URL}/email/confirm?auth_token=#{resource.jti}", allow_other_host: true
     else
-      redirect_to AppConfig::CLIENT_BASE_URL + "/signin?error=#{resource.errors.full_messages.to_sentence}", allow_other_host: true
+      redirect_to "#{AppConfig::CLIENT_BASE_URL}/email/confirm?error=#{resource.errors.full_messages.to_sentence}", allow_other_host: true
     end
   end
 
