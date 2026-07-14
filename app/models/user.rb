@@ -20,11 +20,11 @@ class User < ApplicationRecord
 
   def generate_confirmation_code
     self.confirmation_code = SecureRandom.random_number(10**6).to_s.rjust(6, "0")
-    self.confirmation_code_sent_at = Time.current
+    self.confirmation_sent_at = Time.current
   end
 
   def confirm_code(code)
-    if self.confirmation_code == code && self.confirmation_code_sent_at > 10.minutes.ago
+    if self.confirmation_code == code && self.confirmation_sent_at > AppConfig::CONFIRM_CODE_WITHIN.ago
       confirm
     else
       errors.add(:confirmation_code, "is invalid or has expired")

@@ -37,8 +37,8 @@ class Users::PasswordsController < Devise::PasswordsController
   end
 
   # GET /password/edit?reset_password_token=abcdef
-  def edit
-    redirect_to AppConfig::CLIENT_BASE_URL +  "/password/reset?reset_password_token=#{params[:reset_password_token]}", allow_other_host: true
+  def edit # client route => /passcode
+    redirect_to AppConfig::CLIENT_BASE_URL +  "/passcode/reset?reset_password_token=#{params[:reset_password_token]}", allow_other_host: true
   end
 
   private
