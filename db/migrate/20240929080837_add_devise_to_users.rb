@@ -21,6 +21,7 @@ class AddDeviseToUsers < ActiveRecord::Migration[7.2]
 
       ## Confirmable
       t.string   :confirmation_token
+      t.string   :confirmation_code
       t.datetime :confirmed_at
       t.datetime :confirmation_sent_at
       t.string   :unconfirmed_email # Only if using reconfirmable

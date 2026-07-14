@@ -94,8 +94,9 @@ gem "rack-attack", "~> 6.8"
 
 gem "cloudinary", "~> 2.4"
 
-gem "rails_admin", "~> 3.3"
-gem "sprockets-rails", "~> 3.5"
-gem "sassc-rails"
-
 gem "cgi", "~> 0.5.2"
+
+gem "administrate", "~> 1.0"
+gem "sprockets-rails", "~> 3.5"
+gem "sassc-rails", "~> 2.1"
+gem "csv", "~> 3.3"

@@ -36,7 +36,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_16_034016) do
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "confirmation_code"
-    t.datetime "confirmation_code_sent_at"
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
     t.datetime "confirmed_at"

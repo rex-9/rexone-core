@@ -1,7 +1,10 @@
 Rails.application.routes.draw do
-  # Rails Admin Route
-  mount RailsAdmin::Engine => "/admin", as: "rails_admin"
+  namespace :admin do
+      resources :assets
+      resources :users
 
+      root to: "users#index"
+    end
   # Rswag Route
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
