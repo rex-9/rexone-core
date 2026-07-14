@@ -28,6 +28,9 @@
     - [Test](#test)
     - [Doc](#doc)
     - [Performance](#performance)
+    - [Admin Dashboard](#admin-dashboard)
+      - [Authentication](#authentication)
+      - [Routes](#routes)
     - [Explore More Open Source Projects](#explore-more-open-source-projects)
 - [☕ Support ](#-support-)
 
@@ -193,6 +196,34 @@ view the API documentation at
 view the performance dashboard at
 
 `/performance`
+
+### Admin Dashboard
+
+**Administrate** is available at `/admin` for managing users and other resources.
+
+#### Authentication
+
+The admin panel is secured with HTTP Basic Authentication:
+
+```
+Username: admin
+Password: password
+```
+
+These credentials are configurable via environment variables:
+
+```bash
+RAILS_ADMIN_USERNAME=admin
+RAILS_ADMIN_PASSWORD=password
+```
+
+#### Routes
+
+| Path            | Description      |
+| --------------- | ---------------- |
+| `/admin`        | Admin dashboard  |
+| `/admin/users`  | User management  |
+| `/admin/assets` | Asset management |
 
 ### Explore More Open Source Projects
 
