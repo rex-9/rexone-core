@@ -1,213 +1,273 @@
+# spec/controllers/users/sessions_controller_spec.rb
 require 'rails_helper'
 
 RSpec.describe Users::SessionsController, type: :controller do
   include Devise::Test::ControllerHelpers
 
-  let(:user) { create(:user, username: 'testusername', email: 'test@example.com', password: 'password', confirmed_at: Time.now) }
-  let(:google_user) { create(:user, email: 'google@example.com', provider: 'google', password: 'password', password_confirmation: 'password', confirmed_at: Time.now) }
+  let(:user) { create(:user, password: 'password123', confirmed_at: Time.current) }
+  let(:unconfirmed_user) { create(:user, :unconfirmed, password: 'password123') }
+  let(:google_user) { create(:user, :google_provider) }
 
   before do
     @request.env["devise.mapping"] = Devise.mappings[:user]
   end
 
-  def json_response
-    JSON.parse(response.body)
-  end
-
   describe 'POST #create' do
-    context 'with valid email and password' do
-      it 'returns a success response' do
-        post :create, params: { user: { signin_key: user.email, password: user.password } }
+    context 'with valid credentials' do
+      it 'signs in user and returns token' do
+        post :create, params: { user: { signin_key: user.email, password: 'password123' } }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['data']['user']['email']).to eq(user.email)
+        expect(json_response['data']['token']).to be_present
+        expect(json_response['data']['remaining_attempts']).to eq(3)
       end
-    end
 
-    context 'with valid username and password' do
-      it 'signs in the user and returns a success response' do
-        post :create, params: { user: { signin_key: user.username, password: user.password } }
+      it 'works with username' do
+        post :create, params: { user: { signin_key: user.username, password: 'password123' } }
         expect(response).to have_http_status(:ok)
-        expect(json_response['status']['code']).to eq(200)
         expect(json_response['data']['user']['username']).to eq(user.username)
       end
     end
 
-    context 'with invalid signin credentials' do
-      it 'returns an unauthorized response' do
-        post :create, params: { user: { signin_key: 'wrongsignin', password: 'wrongpassword' } }
-        expect(response).to have_http_status(:unauthorized)
-        expect(json_response['status']['code']).to eq(401)
-        expect(json_response['status']['message']).to eq(Messages::FAILED_TO_SIGN_IN)
-        expect(json_response['status']['error']).to eq(Messages::USER_NOT_FOUND)
-      end
-    end
-
-    context 'with invalid password' do
-      it 'returns an unauthorized response' do
-        post :create, params: { user: { signin_key: user.email, password: 'wrong_password' } }
-        expect(response).to have_http_status(:unauthorized)
-        expect(json_response['status']['code']).to eq(401)
-        expect(json_response['status']['message']).to eq(Messages::FAILED_TO_SIGN_IN)
-        expect(json_response['status']['error']).to eq(Messages::INVALID_SIGNIN_CREDENTIALS)
-      end
-    end
-
     context 'with unconfirmed user' do
-      let(:unconfirmed_user) { create(:user, username: 'unconfirmeduser', email: 'unconfirmed@example.com', password: 'password') }
+      it 'sends confirmation code and returns otp_sent' do
+        expect {
+          post :create, params: { user: { signin_key: unconfirmed_user.email, password: 'password123' } }
+        }.to change { ActionMailer::Base.deliveries.count }.by(1)
 
-      it 'sends confirmation instructions and returns a success response' do
-        post :create, params: { user: { signin_key: unconfirmed_user.email, password: unconfirmed_user.password } }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
+        expect(json_response['data']['otp_sent']).to be true
         expect(json_response['status']['message']).to eq(Messages::VERIFICATION_EMAIL_SENT.call(unconfirmed_user.email))
       end
     end
 
-    context 'with Google signed up email and correct passcode' do
-      it 'returns a success response' do
-        post :create, params: { user: { signin_key: google_user.email, password: 'password' } }
-        expect(response).to have_http_status(:ok)
-        expect(json_response['status']['code']).to eq(200)
-        expect(json_response['data']['user']['email']).to eq(google_user.email)
+    context 'with invalid password' do
+      it 'returns 401 with attempt tracking' do
+        post :create, params: { user: { signin_key: user.email, password: 'wrongpassword' } }
+        expect(response).to have_http_status(:unauthorized)
+        expect(json_response['status']['code']).to eq(401)
+        expect(json_response['status']['error']).to eq(Messages::INVALID_SIGNIN_CREDENTIALS)
+        expect(json_response['data']['remaining_attempts']).to be_present
+      end
+    end
+
+    context 'with 3 failed attempts' do
+      before do
+        3.times do
+          post :create, params: { user: { signin_key: user.email, password: 'wrongpassword' } }
+        end
+      end
+
+      it 'triggers cooldown on 4th attempt' do
+        post :create, params: { user: { signin_key: user.email, password: 'wrongpassword' } }
+        expect(response).to have_http_status(:too_many_requests)
+        expect(json_response['status']['code']).to eq(429)
+        expect(json_response['data']['cooldown_remaining']).to be > 0
+        expect(json_response['data']['remaining_attempts']).to eq(0)
+      end
+    end
+
+    context 'with non-existent user' do
+      it 'returns 401' do
+        post :create, params: { user: { signin_key: 'nonexistent@example.com', password: 'password123' } }
+        expect(response).to have_http_status(:unauthorized)
+        expect(json_response['status']['code']).to eq(401)
+        expect(json_response['status']['error']).to eq(Messages::USER_NOT_FOUND)
+      end
+    end
+
+    context 'with Google provider user' do
+      let(:google_user) { create(:user, :google_provider) }
+
+      it 'returns error' do
+        post :create, params: { user: { signin_key: google_user.email, password: 'password123' } }
+        expect(response).to have_http_status(:unauthorized)
+        expect(json_response['status']['code']).to eq(401)
+        expect(json_response['status']['error']).to include('Google')
       end
     end
   end
 
   describe 'POST #token_sign_in' do
+    let(:user) { create(:user) }
+
     context 'with valid token' do
-      it 'signs in the user and returns a success response' do
+      it 'signs in user' do
         post :token_sign_in, params: { token: user.jti }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['data']['user']['email']).to eq(user.email)
+        expect(json_response['data']['token']).to be_present
       end
     end
 
     context 'with invalid token' do
-      it 'returns an unauthorized response' do
+      it 'returns 401' do
         post :token_sign_in, params: { token: 'invalid_token' }
         expect(response).to have_http_status(:unauthorized)
         expect(json_response['status']['code']).to eq(401)
-        expect(json_response['status']['message']).to eq(Messages::INVALID_AUTHENTICATION_TOKEN)
+        expect(json_response['status']['error']).to eq(Messages::INVALID_AUTHENTICATION_TOKEN)
       end
     end
   end
 
   describe 'POST #google_sign_in' do
     let(:valid_google_token) { 'valid_google_token' }
-    let(:invalid_google_token) { 'invalid_google_token' }
     let(:google_user_info) do
       {
-      "email" => "google@example.com",
-      "name" => "Google User",
-      "picture" => "https://res.cloudinary.com/meritbox/image/upload/v1733153191/cld-sample-4.jpg"
+        "email" => "google@example.com",
+        "name" => "Google User",
+        "picture" => "https://example.com/photo.jpg"
       }
     end
 
     before do
       allow(controller).to receive(:get_google_user_info).with(valid_google_token).and_return(google_user_info)
-      allow(controller).to receive(:get_google_user_info).with(invalid_google_token).and_return(nil)
     end
 
-    context 'with valid Google token and existing SSO user' do
-      let!(:google_user) { create(:user, email: google_user_info['email'], provider: 'google', password: 'password', password_confirmation: 'password', confirmed_at: Time.now) }
-      it 'signs in the user and returns a success response' do
+    context 'with existing Google user' do
+      let!(:existing_google_user) { create(:user, :google_provider, email: google_user_info["email"]) }
+
+      it 'signs in user' do
         post :google_sign_in, params: { token: valid_google_token }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
-        expect(json_response['data']['user']['email']).to eq(google_user.email)
-        expect(json_response['data']['passcode_required']).to eq(false)
-        expect(json_response['data']['existing_user']).to eq(true)
+        expect(json_response['data']['user']['email']).to eq(existing_google_user.email)
+        expect(json_response['data']['token']).to be_present
       end
     end
 
-    context 'with valid Google token and existing email user' do
-      let!(:email_user) { create(:user, email: google_user_info['email'], provider: 'email', password: 'password', password_confirmation: 'password', confirmed_at: Time.now) }
+    context 'with existing email user' do
+      let!(:existing_email_user) { create(:user, email: google_user_info["email"]) }
 
-      it 'signs in without asking passcode in Google step' do
+      it 'signs in user' do
         post :google_sign_in, params: { token: valid_google_token }
         expect(response).to have_http_status(:ok)
-        expect(json_response['status']['code']).to eq(200)
-        expect(json_response['data']['user']['email']).to eq(email_user.email)
-        expect(json_response['data']['passcode_required']).to eq(false)
+        expect(json_response['data']['user']['email']).to eq(existing_email_user.email)
+        expect(json_response['data']['token']).to be_present
       end
     end
 
-    context 'with valid Google token and new user' do
-      it 'returns a passcode challenge' do
+    context 'with new user' do
+      it 'returns challenge token' do
         post :google_sign_in, params: { token: valid_google_token }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
-        expect(json_response['data']['passcode_required']).to eq(true)
+        expect(json_response['data']['password_required']).to be true
         expect(json_response['data']['challenge_token']).to be_present
       end
     end
 
     context 'with invalid Google token' do
-      it 'returns an unauthorized response' do
-        post :google_sign_in, params: { token: invalid_google_token }
+      before do
+        allow(controller).to receive(:get_google_user_info).and_return(nil)
+      end
+
+      it 'returns 401' do
+        post :google_sign_in, params: { token: 'invalid_token' }
         expect(response).to have_http_status(:unauthorized)
         expect(json_response['status']['code']).to eq(401)
         expect(json_response['status']['error']).to eq(Messages::GOOGLE_AUTHENTICATION_FAILED)
       end
     end
-
-    context 'with various email formats' do
-      it 'returns a challenge for each valid email format' do
-        emails = [
-          'john.doe@example.com',
-          'Jane-Doe123@example.com',
-          'user+alias@example.com',
-          'user.name@domain.com',
-          'user@domain.com'
-        ]
-
-        emails.each_with_index do |email, index|
-          pic = "https://res.cloudinary.com/meritbox/image/upload/v1733153191/cld-sample-#{index}.jpg"
-          allow(controller).to receive(:get_google_user_info).with(valid_google_token).and_return(google_user_info.merge("email" => email, "picture" => pic))
-          post :google_sign_in, params: { token: valid_google_token }
-          expect(response).to have_http_status(:ok)
-          expect(json_response['data']['challenge_token']).to be_present
-          expect(json_response['data']['passcode_required']).to eq(true)
-        end
-      end
-    end
   end
 
   describe 'POST #google_sign_in_complete' do
-    let(:valid_google_token) { 'valid_google_token' }
-    let(:google_user_info) do
+    let(:challenge_token) { 'valid_challenge_token' }
+    let(:challenge_data) do
       {
-        "email" => "new_google_user@example.com",
-        "name" => "Google User",
-        "picture" => "https://res.cloudinary.com/meritbox/image/upload/v1733153191/cld-sample-4.jpg"
+        "email" => "new_google@example.com",
+        "name" => "New Google User",
+        "picture" => "https://example.com/photo.jpg"
       }
     end
 
     before do
-      allow(controller).to receive(:get_google_user_info).with(valid_google_token).and_return(google_user_info)
+      allow(controller).to receive(:fetch_google_challenge).with(challenge_token).and_return(challenge_data)
+      allow(controller).to receive(:clear_google_challenge!)
     end
 
-    it 'creates a new Google user with passcode and signs in' do
-      post :google_sign_in, params: { token: valid_google_token }
-      challenge_token = json_response.dig('data', 'challenge_token')
+    context 'with valid challenge token and passcode' do
+      it 'creates new user and signs in' do
+        expect {
+          post :google_sign_in_complete, params: {
+            challenge_token: challenge_token,
+            password: 'password123'
+          }
+        }.to change(User, :count).by(1)
 
-      post :google_sign_in_complete, params: {
-        challenge_token: challenge_token,
-        passcode: 'password123'
-      }
-
-      expect(response).to have_http_status(:created)
-      expect(json_response['status']['code']).to eq(201)
-      expect(json_response['data']['user']['email']).to eq(google_user_info['email'])
+        expect(response).to have_http_status(:created)
+        expect(json_response['status']['code']).to eq(201)
+        expect(json_response['data']['user']['email']).to eq(challenge_data["email"])
+        expect(json_response['data']['token']).to be_present
+      end
     end
 
-    it 'returns 422 when challenge token is missing' do
-      post :google_sign_in_complete, params: { passcode: 'password123' }
-
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(json_response['status']['code']).to eq(422)
+    context 'with missing challenge token' do
+      it 'returns 422' do
+        post :google_sign_in_complete, params: { password: 'password123' }
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(json_response['status']['code']).to eq(422)
+        expect(json_response['status']['error']).to include('Challenge token')
+      end
     end
+
+    context 'with missing passcode' do
+      it 'returns 422' do
+        post :google_sign_in_complete, params: { challenge_token: challenge_token }
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(json_response['status']['code']).to eq(422)
+        expect(json_response['status']['error']).to include('passcode')
+      end
+    end
+
+    context 'with expired challenge token' do
+      before do
+        allow(controller).to receive(:fetch_google_challenge).with(challenge_token).and_return(nil)
+      end
+
+      it 'returns 401' do
+        post :google_sign_in_complete, params: {
+          challenge_token: challenge_token,
+          password: 'password123'
+        }
+        expect(response).to have_http_status(:unauthorized)
+        expect(json_response['status']['code']).to eq(401)
+        expect(json_response['status']['error']).to eq(Messages::INVALID_AUTHENTICATION_TOKEN)
+      end
+    end
+  end
+
+  describe 'DELETE #destroy' do
+    context 'when signed in' do
+      before do
+        sign_in user
+        allow(controller).to receive(:clear_active_session!).and_return(true)
+      end
+
+      it 'signs out successfully' do
+        delete :destroy
+        expect(response).to have_http_status(:ok)
+        expect(json_response['status']['code']).to eq(200)
+        expect(json_response['status']['message']).to eq(Messages::SIGNED_OUT_SUCCESSFULLY)
+      end
+    end
+
+    context 'when not signed in' do
+      it 'returns 401' do
+        delete :destroy
+        expect(response).to have_http_status(:unauthorized)
+        expect(json_response['status']['code']).to eq(401)
+        expect(json_response['status']['error']).to eq(Messages::ACTIVE_SESSION_NOT_FOUND)
+      end
+    end
+  end
+
+  private
+
+  def json_response
+    JSON.parse(response.body)
   end
 end

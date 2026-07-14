@@ -16,6 +16,9 @@ module AppConfig
   # Password reset
   PASSWORD_RESET_WITHIN = 6.hours
 
+  # Confirm code before
+  CONFIRM_CODE_WITHIN = 10.minutes
+
   # Unconfirmed access
   ALLOW_UNCONFIRMED_ACCESS_FOR = 2.days
 

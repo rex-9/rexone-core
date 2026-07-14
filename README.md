@@ -167,7 +167,13 @@ set up rspec for once
 execute tests
 
 ```sh
-> sh scripts/tests.sh
+> sh scripts/test.sh
+```
+
+watch tests
+
+```sh
+> sh scripts/test_watch.sh
 ```
 
 ### Doc

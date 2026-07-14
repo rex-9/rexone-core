@@ -36,6 +36,10 @@ gem "image_processing", "~> 2.0"
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 
+group :development do
+  gem "solargraph", "~> 0.60.2"
+end
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
@@ -62,8 +66,8 @@ group :development, :test do
   gem "faker", "~> 3.8"
 
   gem "database_cleaner-active_record", "~> 2.2"
-  gem "solargraph", "~> 0.60.2"
   gem "dotenv-rails", "~> 3.2"
+  gem "guard-rspec", "~> 4.7"
 end
 
 gem "redis", "~> 5.4"
@@ -93,3 +97,5 @@ gem "cloudinary", "~> 2.4"
 gem "rails_admin", "~> 3.3"
 gem "sprockets-rails", "~> 3.5"
 gem "sassc-rails"
+
+gem "cgi", "~> 0.5.2"

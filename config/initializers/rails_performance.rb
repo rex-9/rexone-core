@@ -23,8 +23,8 @@ if defined?(RailsPerformance)
 
     # protect your Performance Dashboard with HTTP BASIC password
     config.http_basic_authentication_enabled = false
-    config.http_basic_authentication_user_name = "admin"
-    config.http_basic_authentication_password = "password"
+    config.http_basic_authentication_user_name = ENV["RAILS_ADMIN_USERNAME"]
+    config.http_basic_authentication_password = ENV["RAILS_ADMIN_PASSWORD"]
 
     # if you need an additional rules to check user permissions
     config.verify_access_proc = proc { |controller| true }
@@ -52,5 +52,8 @@ if defined?(RailsPerformance)
     config.skipable_rake_tasks = [ "webpacker:compile" ]
     config.include_rake_tasks = false
     config.include_custom_events = true
+
+    # test debug warning
+    $rails_performance_running_mode = 'test' unless defined?($rails_performance_running_mode)
   end
 end

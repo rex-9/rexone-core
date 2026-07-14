@@ -76,7 +76,7 @@ RSpec.describe "/assets", type: :request do
       it "renders a JSON response with errors for the new asset" do
         post assets_url,
              params: { asset: invalid_attributes }, headers: valid_headers, as: :json
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.content_type).to match(a_string_including("application/json"))
       end
     end
@@ -110,7 +110,7 @@ RSpec.describe "/assets", type: :request do
         asset = Asset.create! valid_attributes
         patch asset_url(asset),
               params: { asset: invalid_attributes }, headers: valid_headers, as: :json
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.content_type).to match(a_string_including("application/json"))
       end
     end
