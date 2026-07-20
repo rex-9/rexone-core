@@ -2,9 +2,9 @@ Rails.application.routes.draw do
   namespace :admin do
       resources :assets
       resources :users
-
       root to: "users#index"
     end
+
   # Rswag Route
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
@@ -36,10 +36,16 @@ Rails.application.routes.draw do
     put "password/reset", to: "users/passwords#update"
   end
 
-  # App Routes
-  get  "users/current", to: "users/users#get_current_user"
-  get  "users/peek",    to: "users/users#peek_user"
-  post "media/upload",  to: "assets#upload"
+  # Users
+  get "users/current", to: "users/users#get_current_user"
+  get "users/peek", to: "users/users#peek_user"
+
+  # Media
+  post "media/upload", to: "assets#upload"
+
+  # Notifications
+  post "notifications/push", to: "notifications#push"
+  post "notifications/email", to: "notifications#email"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

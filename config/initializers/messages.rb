@@ -8,8 +8,7 @@ module Messages
   GOOGLE_AUTHENTICATION_FAILED = "Google authentication failed."
   USER_ALREADY_SIGNEDUP_WITH_GOOGLE = ->(email) { "#{email} is already signed up with Google. Please sign in using Google." }
   USER_ALREADY_SIGNEDUP_WITH_EMAIL = ->(email) { "#{email} is already signed up. Please log in with your Passcode." }
-  VERIFICATION_EMAIL_SENT = ->(email) { "Verification email sent to #{email} successfully." }
-  FAILED_TO_SEND_VERIFICATION_EMAIL = ->(email) { "Failed to send verification email to #{email}. Please try again." }
+  CONFIRMATION_EMAIL_SENT = ->(email) { "Verification email sent to #{email} successfully." }
   EMAIL_ALREADY_CONFIRMED = "Email already confirmed. Please sign in."
   EMAIL_FAILED_TO_CONFIRM = "Email Confirmation Failed."
   EMAIL_CONFIRMED_SUCCESSFULLY = "Email Confirmed Successfully."
@@ -26,4 +25,26 @@ module Messages
   ACCOUNT_DELETED_SUCCESSFULLY = "Account deleted successfully."
 
   PASSWORD_TOO_MANY_ATTEMPTS = "Too many incorrect passcode attempts."
+
+  # ===== PUSH NOTIFICATION MESSAGES =====
+  PUSH_WELCOME_TITLE = "Welcome aboard! 🎉"
+  PUSH_WELCOME_BODY = ->(name:) { "Hey #{name}, thanks for joining! We're excited to have you." }
+
+  PUSH_SIGN_IN_ALERT_TITLE = "New Sign In"
+  PUSH_SIGN_IN_ALERT_BODY = ->(name:) { "Hi #{name}, we noticed a new sign-in to your account." }
+
+  # ===== EMAIL MESSAGES =====
+  EMAIL_CONFIRMATION_SUBJECT = "Verify your email address"
+  EMAIL_CONFIRMATION_BODY = ->(code:, email:) {
+    "Your verification code is: #{code}\n\n" \
+    "Enter this code in the app to verify your email.\n\n" \
+    "If you didn't request this, please ignore this email."
+  }
+
+  EMAIL_PASSWORD_RESET_SUBJECT = "Reset your password"
+  EMAIL_PASSWORD_RESET_BODY = ->(token:) {
+    "Click here to reset your password: " \
+    "#{AppConfig::CLIENT_BASE_URL}/password/reset?reset_password_token=#{token}\n\n" \
+    "This link will expire in 6 hours."
+  }
 end

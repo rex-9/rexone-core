@@ -38,6 +38,11 @@ class Users::SessionsController < Devise::SessionsController
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
 
+        PushNotiService::Client.sign_in_alert(
+          user_id: user.id,
+          name: user.name || user.username
+        )
+
         render_json_response(
           status_code: 200,
           message: Messages::SIGNED_IN_SUCCESSFULLY,
@@ -51,10 +56,15 @@ class Users::SessionsController < Devise::SessionsController
       else
         user.generate_confirmation_code
         user.send_confirmation_instructions
+        # EmailService::Client.send_email(
+        #   to: user.email,
+        #   subject: Messages::EMAIL_CONFIRMATION_SUBJECT,
+        #   body: Messages::EMAIL_CONFIRMATION_BODY.call(code: user.confirmation_code, email: user.email)
+        # )
 
         render_json_response(
           status_code: 200,
-          message: Messages::VERIFICATION_EMAIL_SENT.call(user.email),
+          message: Messages::CONFIRMATION_EMAIL_SENT.call(user.email),
           data: { otp_sent: true }
         )
       end
@@ -117,6 +127,10 @@ class Users::SessionsController < Devise::SessionsController
     if user
       token = AppConfig::JWT_TOKEN.call(user)
       signup_active_session!(user: user, token: token)
+      PushNotiService::Client.sign_in_alert(
+        user_id: user.id,
+        name: user.name || user.username
+      )
 
       # Existing user - just return user + token
       render_json_response(
@@ -241,6 +255,11 @@ class Users::SessionsController < Devise::SessionsController
 
     token = AppConfig::JWT_TOKEN.call(user)
     signup_active_session!(user: user, token: token)
+
+    # PushNotiService::Client.welcome(
+    #   user_id: user.id,
+    #   name: user.name || user.username
+    # )
 
     render_json_response(
       status_code: 201,

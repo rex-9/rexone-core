@@ -38,6 +38,7 @@ Rails.application.configure do
   # Tell Action Mailer not to deliver emails to the real world.
   # The :test delivery method accumulates sent emails in the
   # ActionMailer::Base.deliveries array.
+  config.action_mailer.raise_delivery_errors = false
   config.action_mailer.delivery_method = :test
 
   # Set host to be used by links generated in mailer templates.

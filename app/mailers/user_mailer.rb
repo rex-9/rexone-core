@@ -1,9 +1,9 @@
 class UserMailer < ApplicationMailer
   default from: "no-reply@example.com"
 
-  def send_email_verification_mail(user)
+  def send_email_confirmation_mail(user)
     @user = user
-    @url = @user.verify_email_url
+    @url = @user.confirm_email_url
     mail(to: @user.email, subject: "Email Verification")
   end
 

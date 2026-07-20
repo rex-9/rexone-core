@@ -53,7 +53,7 @@ RSpec.describe Users::ConfirmationsController, type: :controller do
 
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
-        expect(json_response['status']['message']).to eq(Messages::VERIFICATION_EMAIL_SENT.call(user.email))
+        expect(json_response['status']['message']).to eq(Messages::CONFIRMATION_EMAIL_SENT.call(user.email))
       end
     end
 

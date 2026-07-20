@@ -39,7 +39,7 @@ RSpec.describe Users::SessionsController, type: :controller do
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['data']['otp_sent']).to be true
-        expect(json_response['status']['message']).to eq(Messages::VERIFICATION_EMAIL_SENT.call(unconfirmed_user.email))
+        expect(json_response['status']['message']).to eq(Messages::CONFIRMATION_EMAIL_SENT.call(unconfirmed_user.email))
       end
     end
 

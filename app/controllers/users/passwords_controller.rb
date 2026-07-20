@@ -6,6 +6,12 @@ class Users::PasswordsController < Devise::PasswordsController
     user = User.find_by(email: params[:email])
     if user
       user.send_reset_password_instructions
+      # EmailService::Client.send_email(
+      #   to: user.email,
+      #   subject: Messages::EMAIL_PASSWORD_RESET_SUBJECT,
+      #   body: Messages::EMAIL_PASSWORD_RESET_BODY.call(token: user.reset_password_token)
+      # )
+
       render_json_response(
         status_code: 200,
         message: Messages::PASSWORD_RESET_INSTRUCTIONS_SENT.call(user.email)
