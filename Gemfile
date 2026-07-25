@@ -100,3 +100,5 @@ gem "administrate", "~> 1.0"
 gem "sprockets-rails", "~> 3.5"
 gem "sassc-rails", "~> 2.1"
 gem "csv", "~> 3.3"
+
+gem "stripe", "~> 19.3"

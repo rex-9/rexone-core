@@ -39,7 +39,7 @@ class Users::UsersController < ApplicationController
       message: "User existence checked successfully.",
       data: {
         user_exists: user.present?,
-        confirmed: user&.confirmed? || false,
+        confirmed: user&.confirmed? || false
       }
     )
   end
