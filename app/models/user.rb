@@ -1,6 +1,9 @@
 class User < ApplicationRecord
   include Devise::JWT::RevocationStrategies::JTIMatcher
   has_many :assets, dependent: :destroy
+  has_many :subscriptions, class_name: "Payment::Subscription", dependent: :destroy
+  has_many :transactions, class_name: "Payment::Transaction", dependent: :destroy
+  has_many :accesses, dependent: :destroy
 
   devise :database_authenticatable, :registerable, :validatable, :confirmable,
   :recoverable, :rememberable, :lockable, :trackable, :timeoutable,
@@ -39,5 +42,17 @@ class User < ApplicationRecord
                       .order(Arel.sql("CASE WHEN source = 'upload' THEN 1 ELSE 2 END"))
                       .first
     profile_picture&.url
+  end
+
+  def stripe_customer
+    return stripe_customer_id if stripe_customer_id.present?
+
+    # Create Stripe customer if not exists
+    customer = Stripe::Customer.create(email: email, metadata: { user_id: id })
+    update(stripe_customer_id: customer.id)
+    customer.id
+  rescue Stripe::StripeError => e
+    Rails.logger.error("[Stripe] Failed to create customer: #{e.message}")
+    nil
   end
 end

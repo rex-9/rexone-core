@@ -4,9 +4,9 @@ require "rest-client"
 module PushNotiService
   class OneSignal < Base
     def initialize
-      @app_id = ENV.fetch("ONE_SIGNAL_APP_ID")
-      @api_key = ENV.fetch("ONE_SIGNAL_API_KEY")
-      @default_sound = ENV.fetch("ONE_SIGNAL_DEFAULT_SOUND", "default")
+      @app_id = AppConfig::ONE_SIGNAL_APP_ID
+      @api_key = AppConfig::ONE_SIGNAL_API_KEY
+      @default_sound = AppConfig::ONE_SIGNAL_DEFAULT_SOUND
 
       if @app_id.blank? || @api_key.blank?
         Rails.logger.info("[OneSignal] not configured - push notifications disabled")

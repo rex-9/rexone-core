@@ -1,20 +1,41 @@
 Rails.application.routes.draw do
-  namespace :admin do
-      resources :assets
-      resources :users
-      root to: "users#index"
-    end
+  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
-  # Rswag Route
+  # Defines the root path route ("/")
+  # root "posts#index"
+
+  # ===== HEALTH CHECK =====
+  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
+  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  get "up", to: "rails/health#show", as: :rails_health_check
+  # get "up" => "rails/health#show", as: :rails_health_check
+
+  # ===== API DOCS - RSWAG =====
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
+  # ===== PERFORMANCE =====
   # Rails Performance Route
   # authenticate :user, ->(user) { user.admin? } do
   mount RailsPerformance::Engine, at: "/performance"
   # end
 
-  # Devise Routes
+  # ===== ADMINISTRATE =====
+  namespace :admin do
+    resources :assets
+    resources :users
+    resources :accesses
+
+    namespace :payment do
+      resources :products
+      resources :subscriptions
+      resources :transactions
+    end
+
+    root to: "users#index"
+  end
+
+  # ===== AUTH (Devise) =====
   devise_for :users, path: "", path_names: {
     sign_in: "signin",
     sign_out: "signout",
@@ -26,6 +47,7 @@ Rails.application.routes.draw do
     confirmations: "users/confirmations",
     passwords: "users/passwords"
   }
+
   devise_scope :user do
     post "signin/google", to: "users/sessions#google_sign_in"
     post "signin/google/complete", to: "users/sessions#google_sign_in_complete"
@@ -36,23 +58,43 @@ Rails.application.routes.draw do
     put "password/reset", to: "users/passwords#update"
   end
 
-  # Users
+  # ===== USERS =====
   get "users/current", to: "users/users#get_current_user"
   get "users/peek", to: "users/users#peek_user"
 
-  # Media
+  # ===== MEDIA =====
   post "media/upload", to: "assets#upload"
 
-  # Notifications
+  # ===== NOTIFICATIONS =====
   post "notifications/push", to: "notifications#push"
   post "notifications/email", to: "notifications#email"
 
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  # ===== WEBHOOKS =====
+  post "webhooks/stripe", to: "webhooks/stripe#create"
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
-  get "up" => "rails/health#show", as: :rails_health_check
+  # ===== PAYMENTS - Client =====
+  namespace :payment do
+    resources :products, only: [ :index, :show ]
+    resources :subscriptions, only: [ :index, :show, :destroy ] do
+      member do
+        post :pause
+        post :resume
+      end
+    end
+    resources :transactions, only: [ :index, :show ] do
+      collection do
+        get :recent
+      end
+    end
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+    # Checkout
+    post "session", to: "payments#create"
+    get "session/:session_id", to: "payments#status"
+  end
+
+  # ===== ACCESS =====
+  get "access", to: "access#index"
+  get "access/active", to: "access#active"
+  get "access/check", to: "access#check"
+  delete "access/:id", to: "access#destroy"
 end

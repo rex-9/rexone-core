@@ -9,6 +9,7 @@ class UserDashboard < Administrate::BaseDashboard
   # on pages throughout the dashboard.
   ATTRIBUTE_TYPES = {
     id: Field::String,
+    accesses: Field::HasMany,
     assets: Field::HasMany,
     confirmation_code: Field::String,
     confirmation_sent_at: Field::DateTime,
@@ -24,12 +25,14 @@ class UserDashboard < Administrate::BaseDashboard
     last_sign_in_ip: Field::String,
     locked_at: Field::DateTime,
     name: Field::String,
-    photo: Field::String,
     provider: Field::String,
     remember_created_at: Field::DateTime,
     reset_password_sent_at: Field::DateTime,
     reset_password_token: Field::String,
     sign_in_count: Field::Number,
+    stripe_customer_id: Field::String,
+    subscriptions: Field::HasMany,
+    transactions: Field::HasMany,
     unconfirmed_email: Field::String,
     unlock_token: Field::String,
     username: Field::String,
@@ -44,6 +47,7 @@ class UserDashboard < Administrate::BaseDashboard
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
     id
+    accesses
     assets
     confirmation_code
   ].freeze
@@ -52,6 +56,7 @@ class UserDashboard < Administrate::BaseDashboard
   # an array of attributes that will be displayed on the model's show page.
   SHOW_PAGE_ATTRIBUTES = %i[
     id
+    accesses
     assets
     confirmation_code
     confirmation_sent_at
@@ -67,12 +72,14 @@ class UserDashboard < Administrate::BaseDashboard
     last_sign_in_ip
     locked_at
     name
-    photo
     provider
     remember_created_at
     reset_password_sent_at
     reset_password_token
     sign_in_count
+    stripe_customer_id
+    subscriptions
+    transactions
     unconfirmed_email
     unlock_token
     username
@@ -84,6 +91,7 @@ class UserDashboard < Administrate::BaseDashboard
   # an array of attributes that will be displayed
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
+    accesses
     assets
     confirmation_code
     confirmation_sent_at
@@ -99,12 +107,14 @@ class UserDashboard < Administrate::BaseDashboard
     last_sign_in_ip
     locked_at
     name
-    photo
     provider
     remember_created_at
     reset_password_sent_at
     reset_password_token
     sign_in_count
+    stripe_customer_id
+    subscriptions
+    transactions
     unconfirmed_email
     unlock_token
     username

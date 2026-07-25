@@ -6,16 +6,14 @@
 # you're free to overwrite the RESTful controller actions.
 module Admin
   class ApplicationController < Administrate::ApplicationController
-    # before_action :authenticate_admin
+    before_action :authenticate_admin
 
-    http_basic_authenticate_with(
-      name: ENV.fetch("RAILS_ADMIN_USERNAME"),
-      password: ENV.fetch("RAILS_ADMIN_PASSWORD")
-    )
-
-    # def authenticate_admin
-    #   # TODO Add authentication logic here.
-    # end
+    def authenticate_admin
+      http_basic_authenticate_or_request_with(
+        name: AppConfig::RAILS_ADMIN_USERNAME,
+        password: AppConfig::RAILS_ADMIN_PASSWORD
+      )
+    end
 
     # Override this value to specify the number of elements to display at a time
     # on index pages. Defaults to 20.
