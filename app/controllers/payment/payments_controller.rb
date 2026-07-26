@@ -6,6 +6,16 @@ class Payment::PaymentsController < ApplicationController
   def create
     product = Payment::Product.find(params[:product_id])
 
+    # Check if user already has active subscription
+    if product.recurring? && current_user.subscriptions.active.exists?(product_id: product.id)
+      render_json_response(
+        status_code: 422,
+        message: "Already subscribed",
+        error: "You already have an active subscription to this product. You can cancel it first."
+      )
+      return
+    end
+
     result = PaymentService::Client.create_checkout_session(
       user_id: current_user.id,
       product_id: product.id,
@@ -46,26 +56,6 @@ class Payment::PaymentsController < ApplicationController
         status_code: 200,
         message: "Session status",
         data: result
-      )
-    end
-  end
-
-  def cancel_subscription
-    subscription = current_user.subscriptions.find(params[:id])
-
-    result = PaymentService::Client.cancel_subscription(subscription.stripe_subscription_id)
-
-    if result[:error]
-      render_json_response(
-        status_code: 422,
-        message: "Failed to cancel",
-        error: result[:error]
-      )
-    else
-      subscription.cancel!
-      render_json_response(
-        status_code: 200,
-        message: "Subscription canceled"
       )
     end
   end

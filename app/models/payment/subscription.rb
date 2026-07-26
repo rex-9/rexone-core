@@ -14,8 +14,8 @@ class Payment::Subscription < ApplicationRecord
     canceled: "canceled",           # User canceled (may still be active until period ends)
     incomplete_expired: "incomplete_expired",  # the first invoice is not paid within 23 hours
     unpaid: "unpaid",               # Payment failed and no retry
-    paused: "paused",               # Subscription Paused
-    trialing: "trialing"            # In a trial period
+    trialing: "trialing",           # In a trial period
+    paused: "paused"                # Paused after trial with no pay
   }
 
   enum :cycle, {
@@ -46,12 +46,16 @@ class Payment::Subscription < ApplicationRecord
     status == "active"
   end
 
-  def paused?
-    status == "paused"
+  def scheduled_for_cancellation?
+    canceled_at.present? && status == "active"
   end
 
   def canceled?
     status == "canceled"
+  end
+
+  def ended?
+    ended_at.present? || status == "canceled"
   end
 
   def past_due?
@@ -63,16 +67,13 @@ class Payment::Subscription < ApplicationRecord
   end
 
   def cancel!
-    return if canceled?
-    update(status: "canceled", canceled_at: Time.current, ended_at: Time.current)
+    return if canceled_at.present?
+    update(canceled_at: Time.current)
   end
 
-  def pause!
-    update(status: "paused", paused_at: Time.current) if active?
-  end
-
-  def resume!
-    update(status: "active", paused_at: nil) if paused?
+  def resume_from_cancellation!
+    return unless scheduled_for_cancellation?
+    update(canceled_at: nil)
   end
 
   def days_until_renewal
@@ -94,7 +95,6 @@ class Payment::Subscription < ApplicationRecord
 
   def payment_method_display
     return "Unknown" if payment_method_id.blank?
-
     brand = card_brand&.capitalize || payment_method_type&.capitalize || "Other"
     card_last4.present? ? "#{brand} ending in #{card_last4}" : brand
   end

@@ -77,8 +77,8 @@ Rails.application.routes.draw do
     resources :products, only: [ :index, :show ]
     resources :subscriptions, only: [ :index, :show, :destroy ] do
       member do
-        post :pause
         post :resume
+        post :cancel # Cancel sub at period end
       end
     end
     resources :transactions, only: [ :index, :show ] do

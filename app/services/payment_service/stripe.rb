@@ -402,6 +402,7 @@ module PaymentService
       return unless record
 
       old_status = record.status
+
       record.update(
         status: subscription.status,
         next_billing_at: Time.at(subscription.current_period_end),
@@ -409,13 +410,18 @@ module PaymentService
         canceled_at: subscription.canceled_at ? Time.at(subscription.canceled_at) : nil,
       )
 
-      # Send email if status changed to something important
+      # Send email on status changes
       if old_status != subscription.status
         case subscription.status
         when "canceled"
           send_subscription_canceled_email(record.user, record.product, record)
         when "past_due"
           send_payment_failed_email(record.user, record.product, record)
+        when "active"
+          # If it was canceled and becomes active again (resume)
+          if old_status == "canceled"
+            send_subscription_renewal_email(record.user, record.product, record)
+          end
         end
       end
     end
