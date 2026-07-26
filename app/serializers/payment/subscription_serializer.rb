@@ -1,9 +1,9 @@
 class Payment::SubscriptionSerializer
   include JSONAPI::Serializer
 
-  attributes :id, :stripe_subscription_id, :status, :cycle,
+  attributes :id, :stripe_subscription_id, :status, :payment_method_id, :cycle,
              :started_at, :next_billing_at, :ended_at, :canceled_at, :paused_at,
-             :created_at, :updated_at
+             :created_at, :updated_at, :user_id, :product_id
 
   belongs_to :user, serializer: UserSerializer
   belongs_to :product, serializer: Payment::ProductSerializer
