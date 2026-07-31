@@ -57,6 +57,10 @@ class Payment::SubscriptionsController < ApplicationController
 
     subscription.update(canceled_at: Time.current)
 
+    NotificationService.subscription_canceled(
+      subscription.user, subscription.product, subscription
+    )
+
     render_json_response(
       status_code: 200,
       message: "Subscription will be canceled at the end of billing period",
@@ -89,6 +93,10 @@ class Payment::SubscriptionsController < ApplicationController
     end
 
     subscription.update(canceled_at: nil)
+
+    NotificationService.subscription_resumed(
+      subscription.user, subscription.product, subscription
+    )
 
     render_json_response(
       status_code: 200,

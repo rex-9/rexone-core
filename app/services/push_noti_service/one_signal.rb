@@ -73,26 +73,6 @@ module PushNotiService
       false
     end
 
-    # ===== Notification Templates =====
-
-    def welcome(user_id:, name:)
-      send_to_user(
-        user_id: user_id,
-        title: Messages::PUSH_WELCOME_TITLE,
-        body: Messages::PUSH_WELCOME_BODY.call(name: name),
-        data: { type: "welcome" }
-      )
-    end
-
-    def sign_in_alert(user_id:, name:)
-      send_to_user(
-        user_id: user_id,
-        title: Messages::PUSH_SIGN_IN_ALERT_TITLE,
-        body: Messages::PUSH_SIGN_IN_ALERT_BODY.call(name: name),
-        data: { type: "sign_in_alert" }
-      )
-    end
-
     private
 
     def send_notification(payload)

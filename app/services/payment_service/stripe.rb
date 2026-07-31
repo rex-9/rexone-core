@@ -92,14 +92,8 @@ module PaymentService
         handle_subscription_paused(event.data.object)
       when "customer.subscription.resumed"
         handle_subscription_resumed(event.data.object)
-      when "invoice.payment_succeeded"
-        handle_invoice_paid(event.data.object)
-      when "invoice.payment_failed"
-        handle_invoice_failed(event.data.object)
-      when "charge.refunded"
-        handle_refund(event.data.object)
-      when "charge.dispute.created"
-        handle_dispute_created(event.data.object)
+      # when "charge.refunded"
+      #   handle_refund(event.data.object)
 
       # ===== PRODUCT EVENTS =====
       when "product.created"
@@ -286,8 +280,10 @@ module PaymentService
           expires_at: product.cycle_in_duration.from_now
         )
 
-        # Send email - subscription confirmation
-        send_subscription_confirmation_email(user, product, subscription)
+        # Notify for subscription created
+        NotificationService.subscription_created(
+          user, product, subscription
+        )
 
       else
         # One-time purchase - get payment method from payment intent
@@ -324,8 +320,10 @@ module PaymentService
           expires_at: nil
         )
 
-        # Send email - purchase confirmation
-        send_purchase_confirmation_email(user, product, transaction)
+        # Notify for one time purchase
+        NotificationService.payment_success(
+          user, product, transaction
+        )
       end
     end
 
@@ -355,15 +353,11 @@ module PaymentService
       # Send email on status changes
       if old_status != subscription.status
         case subscription.status
-        when "canceled"
-          send_subscription_canceled_email(record.user, record.product, record)
         when "past_due"
-          send_payment_failed_email(record.user, record.product, record)
-        when "active"
-          # If it was canceled and becomes active again (resume)
-          if old_status == "canceled"
-            send_subscription_renewal_email(record.user, record.product, record)
-          end
+          # Notify for payment failure
+          NotificationService.payment_failed(
+            record.user, record.product, record
+          )
         end
       end
     end
@@ -371,9 +365,6 @@ module PaymentService
     def handle_subscription_deleted(subscription)
       record = Payment::Subscription.find_by(stripe_subscription_id: subscription.id)
       return unless record
-
-      user = record.user
-      product = record.product
 
       record.update(
         status: "canceled",
@@ -386,109 +377,45 @@ module PaymentService
           user_id: record.user_id,
           product_id: record.product_id
         )
-
-        # Send email - subscription canceled
-        send_subscription_canceled_email(user, product, record)
       end
     end
 
     def handle_subscription_paused(subscription)
-      record = Payment::Subscription.find_by(stripe_subscription_id: subscription.id)
-      return unless record
-      record.pause!
-      # Optional: Send pause confirmation email
+      # When the free trial ends...
+      # record = Payment::Subscription.find_by(stripe_subscription_id: subscription.id)
+      # return unless record
     end
 
     def handle_subscription_resumed(subscription)
-      record = Payment::Subscription.find_by(stripe_subscription_id: subscription.id)
-      return unless record
-      record.resume!
-      # Optional: Send resume confirmation email
+      # Not sure... Lol...
+      # record = Payment::Subscription.find_by(stripe_subscription_id: subscription.id)
+      # return unless record
     end
 
-    def handle_invoice_paid(invoice)
-      subscription = Payment::Subscription.find_by(stripe_subscription_id: invoice.subscription)
-      return unless subscription
+    # def handle_refund(charge)
+    #   transaction = Payment::Transaction.find_by(stripe_payment_intent: charge.payment_intent)
+    #   return unless transaction
 
-      user = subscription.user
-      product = subscription.product
+    #   transaction.update(
+    #     status: "refunded",
+    #     refunded_at: Time.at(charge.created)
+    #   )
 
-      # Extend access
-      AccessService.grant(
-        user_id: subscription.user_id,
-        product_id: product.id,
-        expires_at: product.cycle_in_duration.from_now
-      )
+    #   # Revoke access if fully refunded
+    #   if charge.refunded
+    #     AccessService.revoke(
+    #       user_id: transaction.user_id,
+    #       product_id: transaction.product_id
+    #     )
 
-      subscription.update(next_billing_at: Time.at(invoice.period_end))
-
-      # Send email - renewal success
-      send_subscription_renewal_email(user, product, subscription)
-    end
-
-    def handle_invoice_failed(invoice)
-      subscription = Payment::Subscription.find_by(stripe_subscription_id: invoice.subscription)
-      return unless subscription
-
-      user = subscription.user
-      product = subscription.product
-
-      subscription.update(status: "past_due")
-
-      # Send email - payment failed
-      send_payment_failed_email(user, product, subscription)
-    end
-
-    def handle_refund(charge)
-      transaction = Payment::Transaction.find_by(stripe_payment_intent: charge.payment_intent)
-      return unless transaction
-
-      transaction.update(
-        status: "refunded",
-        refunded_at: Time.at(charge.created)
-      )
-
-      # Revoke access if fully refunded
-      if charge.refunded
-        AccessService.revoke(
-          user_id: transaction.user_id,
-          product_id: transaction.product_id
-        )
-
-        # Send refund confirmation email
-        user = transaction.user
-        product = transaction.product
-        send_refund_confirmation_email(user, product, transaction)
-      end
-    end
-
-    def handle_dispute_created(dispute)
-      transaction = Payment::Transaction.find_by(stripe_payment_intent: dispute.payment_intent)
-      return unless transaction
-
-      transaction.update(status: "disputed")
-
-      # Notify admin (you could also email user)
-      # AdminNotificationService.send_dispute_alert(transaction)
-    end
+    #     # Send refund confirmation email
+    #     user = transaction.user
+    #     product = transaction.product
+    #     send_refund_confirmation_email(user, product, transaction)
+    #   end
+    # end
 
     # ===== EMAIL NOTIFICATIONS =====
-
-    def send_subscription_confirmation_email(user, product, subscription)
-      EmailService::Client.send_template(
-        to: user.email,
-        template_id: "payment_subscription_confirmation",  # Onesignal template key
-        template_data: {
-          user_name: user.name || user.username,
-          product_name: product.name,
-          start_date: subscription.started_at.strftime("%B %d, %Y"),
-          next_billing: subscription.next_billing_at.strftime("%B %d, %Y"),
-          period: product.period_label
-        }
-      )
-    rescue => e
-      Rails.logger.error("[Email] Failed to send subscription confirmation: #{e.message}")
-    end
 
     # Template Example on Onesignal dashboard
     #     <h1>Welcome aboard, {{user_name}}! 🎉</h1>
@@ -511,77 +438,19 @@ module PaymentService
     # <p>Thank you for your trust! 🙏</p>
     # <p><strong>The Meritbox Team</strong></p>
 
-    def send_purchase_confirmation_email(user, product, transaction)
-      EmailService::Client.send_template(
-        to: user.email,
-        template_id: "payment_purchase_confirmation",
-        template_data: {
-          user_name: user.name || user.username,
-          product_name: product.name,
-          amount: product.display_price,
-          date: transaction.paid_at.strftime("%B %d, %Y")
-        }
-      )
-    rescue => e
-      Rails.logger.error("[Email] Failed to send purchase confirmation: #{e.message}")
-    end
-
-    def send_subscription_canceled_email(user, product, subscription)
-      EmailService::Client.send_template(
-        to: user.email,
-        template_id: "payment_subscription_canceled",
-        template_data: {
-          user_name: user.name || user.username,
-          product_name: product.name,
-          canceled_on: subscription.canceled_at&.strftime("%B %d, %Y") || "Today",
-          valid_until: subscription.ended_at&.strftime("%B %d, %Y") || "End of period"
-        }
-      )
-    rescue => e
-      Rails.logger.error("[Email] Failed to send subscription canceled: #{e.message}")
-    end
-
-    def send_subscription_renewal_email(user, product, subscription)
-      EmailService::Client.send_template(
-        to: user.email,
-        template_id: "payment_subscription_renewal",
-        template_data: {
-          user_name: user.name || user.username,
-          product_name: product.name,
-          next_billing: subscription.next_billing_at.strftime("%B %d, %Y")
-        }
-      )
-    rescue => e
-      Rails.logger.error("[Email] Failed to send renewal: #{e.message}")
-    end
-
-    def send_payment_failed_email(user, product, subscription)
-      EmailService::Client.send_template(
-        to: user.email,
-        template_id: "payment_failed",
-        template_data: {
-          user_name: user.name || user.username,
-          product_name: product.name,
-          due_date: subscription.next_billing_at.strftime("%B %d, %Y")
-        }
-      )
-    rescue => e
-      Rails.logger.error("[Email] Failed to send payment failed: #{e.message}")
-    end
-
-    def send_refund_confirmation_email(user, product, transaction)
-      EmailService::Client.send_template(
-        to: user.email,
-        template_id: "payment_refund_confirmation",
-        template_data: {
-          user_name: user.name || user.username,
-          product_name: product.name,
-          amount: product.display_price,
-          refunded_on: transaction.refunded_at.strftime("%B %d, %Y")
-        }
-      )
-    rescue => e
-      Rails.logger.error("[Email] Failed to send refund confirmation: #{e.message}")
-    end
+    # def send_refund_confirmation_email(user, product, transaction)
+    #   EmailService::Client.send_template(
+    #     to: user.email,
+    #     template_id: "payment_refund_confirmation",
+    #     template_data: {
+    #       user_name: user.name || user.username,
+    #       product_name: product.name,
+    #       amount: product.display_price,
+    #       refunded_on: transaction.refunded_at.strftime("%B %d, %Y")
+    #     }
+    #   )
+    # rescue => e
+    #   Rails.logger.error("[Email] Failed to send refund confirmation: #{e.message}")
+    # end
   end
 end

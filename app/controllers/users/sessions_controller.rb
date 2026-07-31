@@ -38,7 +38,7 @@ class Users::SessionsController < Devise::SessionsController
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
 
-        PushNotiService::Client.sign_in_alert(
+        NotificationService.sign_in_alert(
           user_id: user.id,
           name: user.name || user.username
         )
@@ -56,11 +56,11 @@ class Users::SessionsController < Devise::SessionsController
       else
         user.generate_confirmation_code
         user.send_confirmation_instructions
-        # EmailService::Client.send_email(
-        #   to: user.email,
-        #   subject: Messages::EMAIL_CONFIRMATION_SUBJECT,
-        #   body: Messages::EMAIL_CONFIRMATION_BODY.call(code: user.confirmation_code, email: user.email)
-        # )
+
+        NotificationService.confirmation_email(
+          email: user.email,
+          code: user.confirmation_code
+        )
 
         render_json_response(
           status_code: 200,
@@ -127,7 +127,7 @@ class Users::SessionsController < Devise::SessionsController
     if user
       token = AppConfig::JWT_TOKEN.call(user)
       signup_active_session!(user: user, token: token)
-      PushNotiService::Client.sign_in_alert(
+      NotificationService.sign_in_alert(
         user_id: user.id,
         name: user.name || user.username
       )
@@ -256,10 +256,10 @@ class Users::SessionsController < Devise::SessionsController
     token = AppConfig::JWT_TOKEN.call(user)
     signup_active_session!(user: user, token: token)
 
-    # PushNotiService::Client.welcome(
-    #   user_id: user.id,
-    #   name: user.name || user.username
-    # )
+    NotificationService.welcome(
+      user_id: user.id,
+      name: user.name || user.username
+    )
 
     render_json_response(
       status_code: 201,

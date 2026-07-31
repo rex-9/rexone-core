@@ -6,8 +6,6 @@ module PushNotiService
       delegate :send_to_device,
                :send_to_user,
                :send_to_segment,
-               :welcome,
-               :sign_in_alert,
                to: :provider
 
       private

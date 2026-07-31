@@ -39,7 +39,7 @@ class Payment::Subscription < ApplicationRecord
   scope :active, -> { where(status: "active") }
   scope :canceled, -> { where(status: "canceled") }
   scope :past_due, -> { where(status: "past_due") }
-  scope :expiring_soon, -> { where("next_billing_at < ?", 7.days.from_now) }
+  scope :expiring_soon, -> { active.where("next_billing_at < ?", 7.days.from_now) }
 
   # ===== INSTANCE METHODS =====
   def active?

@@ -18,11 +18,10 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
       if !user.confirmed?
         user.generate_confirmation_code
         user.send_confirmation_instructions
-        # EmailService::Client.send_email(
-        #   to: user.email,
-        #   subject: Messages::EMAIL_CONFIRMATION_SUBJECT,
-        #   body: Messages::EMAIL_CONFIRMATION_BODY.call(code: user.confirmation_code, email: user.email)
-        # )
+        NotificationService.confirmation_email(
+          email: user.email,
+          code: user.confirmation_code
+        )
 
         render_json_response(
           status_code: 200,
@@ -50,10 +49,10 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
     if resource
       if resource.confirm_code(params[:confirmation_code])
         sign_in(resource) # Automatically sign in the resource
-        # PushNotiService::Client.welcome(
-        #   user_id: resource.id,
-        #   name: resource.name || resource.username
-        # )
+        NotificationService.welcome(
+          user_id: resource.id,
+          name: resource.name || resource.username
+        )
         render_json_response(
           status_code: 200,
           message: Messages::EMAIL_CONFIRMED_SUCCESSFULLY,

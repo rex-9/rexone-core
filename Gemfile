@@ -70,6 +70,9 @@ group :development, :test do
   gem "guard-rspec", "~> 4.7"
 end
 
+gem "cgi", "~> 0.5.2"
+gem "ruby-vips", "~> 2.3"
+
 gem "redis", "~> 5.4"
 
 gem "bcrypt", "~> 3.1"
@@ -93,8 +96,6 @@ gem "rails_performance", "~> 1.6"
 gem "rack-attack", "~> 6.8"
 
 gem "cloudinary", "~> 2.4"
-
-gem "cgi", "~> 0.5.2"
 
 gem "administrate", "~> 1.0"
 gem "sprockets-rails", "~> 3.5"
