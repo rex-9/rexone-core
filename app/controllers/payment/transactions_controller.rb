@@ -1,3 +1,4 @@
+# app/controllers/payment/transactions_controller.rb
 class Payment::TransactionsController < ApplicationController
   before_action :authenticate_user!
 
@@ -32,5 +33,11 @@ class Payment::TransactionsController < ApplicationController
       message: "Recent transactions fetched successfully.",
       data: Payment::TransactionSerializer.new(transactions).serializable_hash[:data]
     )
+  end
+
+  private
+
+  def transaction_params
+    params.permit(:id)
   end
 end
