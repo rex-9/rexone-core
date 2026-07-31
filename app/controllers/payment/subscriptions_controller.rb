@@ -1,3 +1,4 @@
+# app/controllers/payment/subscriptions_controller.rb
 class Payment::SubscriptionsController < ApplicationController
   before_action :authenticate_user!
 
@@ -104,5 +105,11 @@ class Payment::SubscriptionsController < ApplicationController
       status_code: 200,
       message: "Subscription removed successfully"
     )
+  end
+
+  private
+
+  def subscription_params
+    params.permit(:id)
   end
 end

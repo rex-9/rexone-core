@@ -4,7 +4,7 @@ class Payment::PaymentsController < ApplicationController
 
   # POST /payment/session
   def create
-    product = Payment::Product.find(params[:product_id])
+    product = Payment::Product.find(payment_params[:product_id])
 
     # Check if user already has active subscription
     if product.recurring? && current_user.subscriptions.active.exists?(product_id: product.id)
@@ -19,8 +19,8 @@ class Payment::PaymentsController < ApplicationController
     result = PaymentService::Client.create_checkout_session(
       user_id: current_user.id,
       product_id: product.id,
-      success_url: params[:success_url],
-      cancel_url: params[:cancel_url],
+      success_url: payment_params[:success_url],
+      cancel_url: payment_params[:cancel_url],
     )
 
     if result[:error]
@@ -58,5 +58,11 @@ class Payment::PaymentsController < ApplicationController
         data: result
       )
     end
+  end
+
+  private
+
+  def payment_params
+    params.permit(:product_id, :success_url, :cancel_url)
   end
 end
