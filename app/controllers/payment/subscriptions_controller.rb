@@ -7,9 +7,7 @@ class Payment::SubscriptionsController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Subscriptions fetched successfully.",
-      data: {
-        subscriptions: Payment::SubscriptionSerializer.new(subscriptions).serializable_hash[:data]
-      }
+      data: Payment::SubscriptionSerializer.new(subscriptions).serializable_hash[:data]
     )
   end
 
@@ -19,9 +17,7 @@ class Payment::SubscriptionsController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Subscription fetched successfully.",
-      data: {
-        subscription: Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data][:attributes]
-      }
+      data: Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data][:attributes]
     )
   end
 
@@ -63,9 +59,7 @@ class Payment::SubscriptionsController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Subscription will be canceled at the end of billing period",
-      data: {
-        subscription: Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data][:attributes]
-      }
+      data: Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data][:attributes]
     )
   end
 
@@ -98,9 +92,7 @@ class Payment::SubscriptionsController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Subscription resumed successfully",
-      data: {
-        subscription: Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data][:attributes]
-      }
+      data: Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data][:attributes]
     )
   end
 

@@ -13,8 +13,8 @@ module PaymentService
       raise NotImplementedError, "#{self.class} must implement #cancel_subscription"
     end
 
-    def get_subscription(subscription_id)
-      raise NotImplementedError, "#{self.class} must implement #get_subscription"
+    def resume_subscription(subscription_id)
+      raise NotImplementedError, "#{self.class} must implement #resume_subscription"
     end
 
     def handle_webhook(payload, signature)

@@ -5,12 +5,8 @@ module PaymentService
       delegate :create_checkout_session,
                :get_session,
                :cancel_subscription,
-               :pause_subscription,
                :resume_subscription,
-               :get_subscription,
-               :refund_payment,
-               :create_product,
-               :update_product,
+               #  :refund_payment,
                :handle_webhook,
                to: :provider
 

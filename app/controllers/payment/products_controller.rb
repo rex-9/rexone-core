@@ -6,9 +6,7 @@ class Payment::ProductsController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Products fetched successfully.",
-      data: {
-        products: Payment::ProductSerializer.new(products).serializable_hash[:data]
-      }
+      data: Payment::ProductSerializer.new(products).serializable_hash[:data]
     )
   end
 
@@ -19,9 +17,7 @@ class Payment::ProductsController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Product fetched successfully.",
-      data: {
-        product: Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
-      }
+      data: Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
     )
   end
 end

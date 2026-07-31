@@ -23,7 +23,7 @@ class CreateAccesses < ActiveRecord::Migration[8.1]
 
     add_index :accesses, :status
     add_index :accesses, :expires_at
-    add_index :accesses, [ :user_id, :product_id ], unique: true
+    add_index :accesses, [ :user_id, :product_id ], unique: true # TODO: improve
     add_index :accesses, [ :user_id, :status ]
   end
 end
