@@ -44,28 +44,11 @@ module PaymentService
     end
 
     # ===== SUBSCRIPTION =====
-    def get_subscription(subscription_id)
-      with_stripe_error("Get Subscription") do
-        subscription = Stripe::Subscription.retrieve(subscription_id)
-        { status: subscription.status, current_period_end: subscription.current_period_end }
-      end
-    end
-
     def cancel_subscription(subscription_id)
       with_stripe_error("Cancel Subscription") do
         subscription = Stripe::Subscription.update(
           subscription_id,
           cancel_at_period_end: true
-        )
-        { subscription_id: subscription.id, status: subscription.status }
-      end
-    end
-
-    def pause_subscription(subscription_id)
-      with_stripe_error("Pause Subscription") do
-        subscription = Stripe::Subscription.update(
-          subscription_id,
-          pause_collection: { behavior: "void" }
         )
         { subscription_id: subscription.id, status: subscription.status }
       end
@@ -82,56 +65,15 @@ module PaymentService
     end
 
     # ===== REFUND =====
-    def refund_payment(payment_intent_id, amount: nil)
-      with_stripe_error("Refund Payment") do
-        params = { payment_intent: payment_intent_id }
-        params[:amount] = amount if amount.present? # Partial refund
+    # def refund_payment(payment_intent_id, amount: nil)
+    #   with_stripe_error("Refund Payment") do
+    #     params = { payment_intent: payment_intent_id }
+    #     params[:amount] = amount if amount.present? # Partial refund
 
-        refund = Stripe::Refund.create(params)
-        { refund_id: refund.id, status: refund.status }
-      end
-    end
-
-    # ===== PRODUCT =====
-    def create_product(name:, description:, price_unit_amount:, currency:, cycle: nil)
-      with_stripe_error("Create Product") do
-        product = Stripe::Product.create(
-          name: name,
-          description: description,
-        )
-
-        price_params = {
-          product: product.id,
-          unit_amount: price_unit_amount,
-          currency: currency
-        }
-
-        if cycle.present?
-          price_params[:recurring] = { cycle: cycle }
-        end
-
-        price = Stripe::Price.create(price_params)
-
-        {
-          product_id: product.id,
-          price_id: price.id,
-          product: product,
-          price: price
-        }
-      end
-    end
-
-    def update_product(product_id:, name: nil, description: nil, active: nil)
-      with_stripe_error("Update Product") do
-        params = {}
-        params[:name] = name if name.present?
-        params[:description] = description if description.present?
-        params[:active] = active unless active.nil?
-
-        product = Stripe::Product.update(product_id, params)
-        { product_id: product.id, active: product.active }
-      end
-    end
+    #     refund = Stripe::Refund.create(params)
+    #     { refund_id: refund.id, status: refund.status }
+    #   end
+    # end
 
     # ===== WEBHOOK =====
     def handle_webhook(payload, signature)

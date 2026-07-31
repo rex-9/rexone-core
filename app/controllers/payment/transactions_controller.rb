@@ -8,9 +8,7 @@ class Payment::TransactionsController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Transactions fetched successfully.",
-      data: {
-        transactions: Payment::TransactionSerializer.new(transactions).serializable_hash[:data]
-      }
+      data: Payment::TransactionSerializer.new(transactions).serializable_hash[:data]
     )
   end
 
@@ -21,9 +19,7 @@ class Payment::TransactionsController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Transaction fetched successfully.",
-      data: {
-        transaction: Payment::TransactionSerializer.new(transaction).serializable_hash[:data][:attributes]
-      }
+      data: Payment::TransactionSerializer.new(transaction).serializable_hash[:data][:attributes]
     )
   end
 
@@ -34,9 +30,7 @@ class Payment::TransactionsController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Recent transactions fetched successfully.",
-      data: {
-        transactions: Payment::TransactionSerializer.new(transactions).serializable_hash[:data]
-      }
+      data: Payment::TransactionSerializer.new(transactions).serializable_hash[:data]
     )
   end
 end
