@@ -13,7 +13,6 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     canceled_at: Field::DateTime,
     ended_at: Field::DateTime,
     next_billing_at: Field::DateTime,
-    paused_at: Field::DateTime,
     product: Field::BelongsTo,
     started_at: Field::DateTime,
     status: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
@@ -43,7 +42,6 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     canceled_at
     ended_at
     next_billing_at
-    paused_at
     product
     started_at
     status
@@ -61,7 +59,6 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     canceled_at
     ended_at
     next_billing_at
-    paused_at
     product
     started_at
     status

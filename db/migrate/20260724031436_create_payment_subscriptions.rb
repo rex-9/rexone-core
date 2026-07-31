@@ -15,7 +15,6 @@ class CreatePaymentSubscriptions < ActiveRecord::Migration[8.1]
       t.datetime :next_billing_at
       t.datetime :started_at
       t.datetime :ended_at
-      t.datetime :paused_at
       t.datetime :canceled_at
 
       t.timestamps

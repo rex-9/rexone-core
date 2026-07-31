@@ -17,22 +17,25 @@ class NotificationsController < ApplicationController
 
     result = case type
     when PushNotiTemplates::WELCOME
-      PushNotiService::Client.welcome(user_id: user.id, name: user.name || user.username)
+      NotificationService.welcome(user_id: user.id, name: user.name || user.username)
     when PushNotiTemplates::SIGN_IN_ALERT
-      PushNotiService::Client.sign_in_alert(user_id: user.id, name: user.name || user.username)
+      NotificationService.sign_in_alert(user_id: user.id, name: user.name || user.username)
     else
-      PushNotiService::Client.send_to_user(
+      NotificationService.custom(
         user_id: user.id,
         title: params[:title] || "Notification",
-        body: params[:body] || "You have a new notification.",
-        data: params[:data] || {}
+        message: params[:body] || "You have a new notification.",
+        data: params[:data] || {},
+        send_push: true,
+        send_socket: false,
+        send_email: false
       )
     end
 
     render_json_response(
       status_code: 200,
       message: "Push notification sent.",
-      data: { delivered: result != false }
+      data: { delivered: result[:push] != false }
     )
   rescue => e
     render_json_response(
@@ -58,18 +61,10 @@ class NotificationsController < ApplicationController
     result = case type
     when MailTemplates::CONFIRMATION
       code = user.confirmation_code || user.generate_confirmation_code
-      EmailService::Client.send_email(
-        to: user.email,
-        subject: Messages::EMAIL_CONFIRMATION_SUBJECT,
-        body: Messages::EMAIL_CONFIRMATION_BODY.call(code: code, email: user.email)
-      )
+      NotificationService.confirmation_email(user_id: user.id, code: code)
     when MailTemplates::PASSWORD_RESET
       user.send_reset_password_instructions
-      EmailService::Client.send_email(
-        to: user.email,
-        subject: Messages::EMAIL_PASSWORD_RESET_SUBJECT,
-        body: Messages::EMAIL_PASSWORD_RESET_BODY.call(email: user.email)
-      )
+      NotificationService.password_reset_email(user_id: user.id, token: user.reset_password_token)
     else
       EmailService::Client.send_email(
         to: user.email,

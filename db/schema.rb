@@ -73,7 +73,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_035612) do
     t.string "cycle", null: false
     t.datetime "ended_at"
     t.datetime "next_billing_at"
-    t.datetime "paused_at"
     t.jsonb "payment_method_details", default: {}
     t.string "payment_method_id"
     t.string "payment_method_type"

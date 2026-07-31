@@ -1,0 +1,41 @@
+# app/services/socket_service/action_cable.rb
+
+module SocketService
+  class ActionCable < Base
+    ActionCable = ::ActionCable
+
+    def broadcast(user_id:, message:, data: {})
+      # Broadcast to user's channel without storing
+      ActionCable.server.broadcast(
+        "user_#{user_id}_notifications",
+        {
+          type: "notification",
+          message: message,
+          data: data,
+          created_at: Time.current.iso8601
+        }
+      )
+
+      true
+    rescue => e
+      Rails.logger.error("[Socket] Broadcast error: #{e.message}")
+      nil
+    end
+
+    def broadcast_to_channel(channel:, message:, data: {})
+      ActionCable.server.broadcast(
+        channel,
+        {
+          type: "message",
+          message: message,
+          data: data
+        }
+      )
+    rescue => e
+      Rails.logger.error("[Socket] Channel broadcast error: #{e.message}")
+      nil
+    end
+  end
+
+  class Error < StandardError; end
+end
