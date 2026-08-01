@@ -4,6 +4,9 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
 
+  # Default Action Cable mounts the WebSocket server at /cable
+  # mount ActionCable.server => '/cable'
+
   # ===== HEALTH CHECK =====
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
@@ -30,6 +33,11 @@ Rails.application.routes.draw do
       resources :products
       resources :subscriptions
       resources :transactions
+    end
+
+    namespace :chat do
+      resources :rooms
+      resources :messages
     end
 
     root to: "users#index"
@@ -97,4 +105,16 @@ Rails.application.routes.draw do
   get "access/active", to: "access#active"
   get "access/check", to: "access#check"
   delete "access/:id", to: "access#destroy"
+
+  # ===== AI =====
+  post "ai/chat", to: "ai#chat"
+  get "ai/history", to: "ai#history"
+  delete "ai/clear", to: "ai#clear"
+  put "ai/rename", to: "ai#rename"
+  get "ai/rooms", to: "ai#rooms"
+  post "ai/rooms", to: "ai#create_room"
+  delete "ai/rooms/:id", to: "ai#destroy_room"
+  post "ai/summarize", to: "ai#summarize"
+  post "ai/translate", to: "ai#translate"
+  post "ai/analyze", to: "ai#analyze"
 end

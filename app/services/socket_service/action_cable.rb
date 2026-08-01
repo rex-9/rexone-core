@@ -4,6 +4,18 @@ module SocketService
   class ActionCable < Base
     ActionCable = ::ActionCable
 
+    # NotificationChannel transmitting {
+    #   "type" => "notification",
+    #   "message" => "Your subscription to Monthly Subscription has been canceled.",
+    #   "data" => {
+    #     "type" => "subscription_canceled",
+    #     "product_name" => "Monthly Subscription",
+    #     "active_until" => nil
+    #   },
+    #   "created_at" => "2026-08-01T02:15:17Z"
+    # }
+    # (via streamed from user_0917b97f-b7cb-4d03-a6fb-f36ba1421731_notifications)
+
     def broadcast(user_id:, message:, data: {})
       # Broadcast to user's channel without storing
       ActionCable.server.broadcast(
