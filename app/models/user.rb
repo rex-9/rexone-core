@@ -5,6 +5,10 @@ class User < ApplicationRecord
   has_many :transactions, class_name: "Payment::Transaction", dependent: :destroy
   has_many :accesses, dependent: :destroy
 
+  # Chat
+  has_many :chat_rooms, class_name: "Chat::Room", dependent: :destroy
+  has_many :chat_messages, through: :chat_rooms, class_name: "Chat::Message"
+
   devise :database_authenticatable, :registerable, :validatable, :confirmable,
   :recoverable, :rememberable, :lockable, :trackable, :timeoutable,
   :jwt_authenticatable, jwt_revocation_strategy: self

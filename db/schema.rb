@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_24_035612) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_25_035613) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -52,6 +52,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_035612) do
     t.index ["user_id"], name: "index_assets_on_user_id"
   end
 
+  create_table "chat_messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}
+    t.string "role", null: false
+    t.uuid "room_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["room_id", "created_at"], name: "index_chat_messages_on_room_id_and_created_at"
+    t.index ["room_id"], name: "index_chat_messages_on_room_id"
+  end
+
+  create_table "chat_rooms", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}
+    t.string "title", default: "New Conversation"
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["user_id", "created_at"], name: "index_chat_rooms_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_chat_rooms_on_user_id"
+  end
+
   create_table "payment_products", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -73,6 +94,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_035612) do
     t.string "cycle", null: false
     t.datetime "ended_at"
     t.datetime "next_billing_at"
+    t.datetime "paused_at"
     t.jsonb "payment_method_details", default: {}
     t.string "payment_method_id"
     t.string "payment_method_type"
@@ -151,6 +173,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_035612) do
   add_foreign_key "accesses", "payment_products", column: "product_id"
   add_foreign_key "accesses", "users"
   add_foreign_key "assets", "users"
+  add_foreign_key "chat_messages", "chat_rooms", column: "room_id"
+  add_foreign_key "chat_rooms", "users"
   add_foreign_key "payment_subscriptions", "payment_products", column: "product_id"
   add_foreign_key "payment_subscriptions", "users"
   add_foreign_key "payment_transactions", "payment_products", column: "product_id"
