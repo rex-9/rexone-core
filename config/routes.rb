@@ -25,19 +25,19 @@ Rails.application.routes.draw do
 
   # ===== ADMINISTRATE =====
   namespace :admin do
-    resources :assets
-    resources :users
-    resources :accesses
+    resources :assets, only: %i[index show new create edit update destroy]
+    resources :users, only: %i[index show new create edit update destroy]
+    resources :accesses, only: %i[index show new create edit update destroy]
 
     namespace :payment do
-      resources :products
-      resources :subscriptions
-      resources :transactions
+      resources :products, only: %i[index show new create edit update destroy]
+      resources :subscriptions, only: %i[index show new create edit update destroy]
+      resources :transactions, only: %i[index show new create edit update destroy]
     end
 
     namespace :chat do
-      resources :rooms
-      resources :messages
+      resources :rooms, only: %i[index show new create edit update destroy]
+      resources :messages, only: %i[index show new create edit update destroy]
     end
 
     root to: "users#index"
