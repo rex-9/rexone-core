@@ -3,11 +3,15 @@ require "stripe"
 
 module PaymentService
   class Stripe < Base
+    Stripe = ::Stripe
+
     def initialize
+      Stripe.api_key = AppConfig::STRIPE_SECRET_KEY
+      Stripe.max_network_retries = 2
+      Stripe.log_level = "info" if Rails.env.development?
       @webhook_secret = AppConfig::STRIPE_WEBHOOK_SECRET
     end
 
-    Stripe = ::Stripe
 
     # ===== SESSION =====
     def create_checkout_session(user_id:, product_id:, success_url: nil, cancel_url: nil)

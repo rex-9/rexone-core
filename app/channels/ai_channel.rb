@@ -40,9 +40,9 @@ class AiChannel < ApplicationCable::Channel
 
   def get_or_create_room(room_id)
     if room_id.present?
-      current_user.chat_rooms.find(room_id)
+      current_user.rooms.find(room_id)
     else
-      current_user.chat_rooms.first_or_create(
+      current_user.rooms.first_or_create(
         title: "New Conversation"
       )
     end

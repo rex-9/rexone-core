@@ -1,3 +1,5 @@
+# app/models/user.rb
+
 class User < ApplicationRecord
   include Devise::JWT::RevocationStrategies::JTIMatcher
   has_many :assets, dependent: :destroy
@@ -66,10 +68,19 @@ class User < ApplicationRecord
   end
 
   def has_permission?(action, resource)
-    roles.joins(:permissions).exists?(iam_permissions: { action: action, resource: resource })
+    roles.joins(:permissions).exists?(
+      iam_permissions: {
+        action: action.to_s,
+        resource: resource.to_s
+      }
+    )
   end
 
   def can?(action, resource)
+    # Super admin can do anything
+    return true if super_admin?
+
+    # Check specific permission
     has_permission?(action, resource)
   end
 
@@ -82,7 +93,10 @@ class User < ApplicationRecord
   end
 
   def permissions
-    Iam::Permission.joins(roles: :user_roles).where(iam_user_roles: { user_id: id }).distinct
+    # Get all permissions directly through roles
+    Iam::Permission.joins(roles: :user_roles)
+                   .where(iam_user_roles: { user_id: id })
+                   .distinct
   end
 
   # Serializer helper

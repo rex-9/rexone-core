@@ -117,7 +117,7 @@ class AiController < ApplicationController
 
   # GET /ai/rooms
   def rooms
-    rooms = current_user.chat_rooms.recent.includes(:messages)
+    rooms = current_user.rooms.recent.includes(:messages)
 
     render_json_response(
       status_code: 200,
@@ -130,7 +130,7 @@ class AiController < ApplicationController
 
   # POST /ai/rooms
   def create_room
-    room = current_user.chat_rooms.create!(
+    room = current_user.rooms.create!(
       title: params[:title] || "New Conversation"
     )
 
@@ -145,7 +145,7 @@ class AiController < ApplicationController
 
   # DELETE /ai/rooms/:id
   def destroy_room
-    room = current_user.chat_rooms.find(params[:id])
+    room = current_user.rooms.find(params[:id])
     room.destroy
 
     render_json_response(
@@ -296,9 +296,9 @@ class AiController < ApplicationController
     room_id = params[:room_id]
 
     if room_id.present?
-      @room = current_user.chat_rooms.find(room_id)
+      @room = current_user.rooms.find(room_id)
     else
-      @room = current_user.chat_rooms.first_or_create(
+      @room = current_user.rooms.first_or_create(
         title: "New Conversation"
       )
     end

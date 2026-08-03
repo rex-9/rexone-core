@@ -8,6 +8,9 @@ module Authorization
   end
 
   def authorize_action!
+    # SUPER ADMIN: Skip all permission checks
+    return if current_user.super_admin?
+
     resource = controller_name.to_sym
     action = action_name.to_sym
 
