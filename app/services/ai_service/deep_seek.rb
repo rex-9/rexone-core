@@ -7,9 +7,9 @@ require "uri"
 module AiService
   class DeepSeek < Base
     def initialize
-      @api_key = ENV.fetch("DEEPSEEK_API_KEY")
-      @base_url = ENV.fetch("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-      @default_model = ENV.fetch("DEEPSEEK_MODEL", "deepseek-chat")
+      @api_key = AppConfig::DEEPSEEK_API_KEY
+      @base_url = AppConfig::DEEPSEEK_BASE_URL
+      @default_model = AppConfig::DEEPSEEK_MODEL
     end
 
     def chat(messages:, model: nil, temperature: 0.7, max_tokens: 2000)

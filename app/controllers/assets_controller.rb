@@ -41,17 +41,33 @@ class AssetsController < ApplicationController
       return
     end
 
-    public_id = "profile_upload_#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}"
-    result = Cloudinary::Uploader.upload(file.path, public_id: public_id)
+    # Generate public_id
+    public_id = "#{params[:category] || 'profile'}/#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}_#{Time.now.to_i}"
 
-    asset = Asset.find_or_initialize_by(url: result["secure_url"])
+    # Upload to storage service
+    result = StorageService::Client.upload(
+      file,
+      public_id: public_id,
+      folder: params[:category] || "profile",
+      resource_type: determine_resource_type(file),
+      metadata: {
+        user_id: current_user.id.to_s,
+        original_filename: file.original_filename
+      }
+    )
+
+    # Find or create asset
+    asset = Asset.find_or_initialize_by(public_id: result[:public_id])
     asset.assign_attributes(
-      name: result["public_id"],
+      name: result[:public_id],
+      url: result[:url],
       category: params[:category] || "profile",
-      format: "image",
-      size: result["bytes"],
+      format: result[:format] || determine_resource_type(file),
+      size: result[:bytes],
       source: "upload",
-      user: current_user
+      user: current_user,
+      public_id: result[:public_id],
+      extension: result[:format] || File.extname(file.original_filename).delete(".")
     )
 
     if asset.save
@@ -59,20 +75,28 @@ class AssetsController < ApplicationController
         status_code: 201,
         message: "Asset uploaded successfully",
         data: {
-          asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes]
+          asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes],
+          storage_details: {
+            public_id: result[:public_id],
+            bytes: result[:bytes],
+            format: result[:format]
+          }
         }
       )
     else
+      # Try to delete from storage if database save fails
+      StorageService::Client.delete(public_id) rescue nil
+
       render_json_response(
         status_code: 422,
         message: "Failed to save asset",
         error: asset.errors.full_messages.to_sentence
       )
     end
-  rescue Cloudinary::Error => e
+  rescue StorageService::Error => e
     render_json_response(
       status_code: 500,
-      message: "Cloudinary upload failed",
+      message: "Storage upload failed",
       error: e.message
     )
   end
@@ -125,15 +149,81 @@ class AssetsController < ApplicationController
       status_code: 200,
       message: "Asset deleted successfully"
     )
+  rescue ActiveRecord::RecordNotDestroyed => e
+    render_json_response(
+      status_code: 422,
+      message: "Failed to delete asset",
+      error: e.message
+    )
+  end
+
+  # POST /assets/:id/refresh_url
+  def refresh_url
+    set_asset
+
+    if @asset.refresh_url
+      render_json_response(
+        status_code: 200,
+        message: "Asset URL refreshed successfully",
+        data: {
+          asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes]
+        }
+      )
+    else
+      render_json_response(
+        status_code: 422,
+        message: "Failed to refresh asset URL"
+      )
+    end
+  end
+
+  # GET /assets/list
+  def list
+    prefix = params[:prefix] || ""
+    assets = StorageService::Client.list(prefix)
+
+    render_json_response(
+      status_code: 200,
+      message: "Storage assets listed successfully",
+      data: {
+        assets: assets
+      }
+    )
+  rescue StorageService::Error => e
+    render_json_response(
+      status_code: 500,
+      message: "Failed to list storage assets",
+      error: e.message
+    )
   end
 
   private
 
   def set_asset
     @asset = Asset.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    render_json_response(
+      status_code: 404,
+      message: "Asset not found"
+    )
   end
 
   def asset_params
-    params.require(:asset).permit(:name, :url, :category, :format, :extension, :size, :source, :record_id, :record_type, :user_id)
+    params.require(:asset).permit(:name, :url, :category, :format, :extension, :size, :source, :record_id, :record_type, :user_id, :public_id)
+  end
+
+  def determine_resource_type(file)
+    extension = File.extname(file.original_filename).delete(".").downcase
+
+    case extension
+    when "jpg", "jpeg", "png", "gif", "webp", "svg"
+      "image"
+    when "mp4", "mov", "avi", "webm", "mkv"
+      "video"
+    when "pdf", "doc", "docx", "txt", "rtf"
+      "doc"
+    else
+      "auto"
+    end
   end
 end
