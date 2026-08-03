@@ -73,7 +73,7 @@ end
 gem "cgi", "~> 0.5.2"
 gem "ruby-vips", "~> 2.3"
 
-gem "redis", "~> 5.4"
+gem "redis", "~> 6.0"
 
 gem "bcrypt", "~> 3.1"
 
