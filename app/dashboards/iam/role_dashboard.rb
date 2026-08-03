@@ -1,6 +1,11 @@
 require "administrate/base_dashboard"
 
-class Iam::RoleDashboard < Administrate::BaseDashboard
+class Iam::RoleDashboard < Administrate::BaseDashboard  # Display Resource
+  # Display Resource
+  def display_resource(role)
+    role.name
+  end
+
   # ATTRIBUTE_TYPES
   # a hash that describes the type of each of the model's fields.
   #
@@ -17,7 +22,7 @@ class Iam::RoleDashboard < Administrate::BaseDashboard
     user_roles: Field::HasMany,
     users: Field::HasMany,
     created_at: Field::DateTime,
-    updated_at: Field::DateTime,
+    updated_at: Field::DateTime
   }.freeze
 
   # COLLECTION_ATTRIBUTES

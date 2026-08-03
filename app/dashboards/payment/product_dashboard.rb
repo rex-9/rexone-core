@@ -1,6 +1,11 @@
 require "administrate/base_dashboard"
 
 class Payment::ProductDashboard < Administrate::BaseDashboard
+  # Display Resource
+  def display_resource(product)
+    product.name
+  end
+
   # ATTRIBUTE_TYPES
   # a hash that describes the type of each of the model's fields.
   #
@@ -21,7 +26,7 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
     subscriptions: Field::HasMany,
     transactions: Field::HasMany,
     created_at: Field::DateTime,
-    updated_at: Field::DateTime,
+    updated_at: Field::DateTime
   }.freeze
 
   # COLLECTION_ATTRIBUTES

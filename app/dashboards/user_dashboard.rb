@@ -1,6 +1,11 @@
 require "administrate/base_dashboard"
 
 class UserDashboard < Administrate::BaseDashboard
+  # Display Resource
+  def display_resource(user)
+    user.email
+  end
+
   # ATTRIBUTE_TYPES
   # a hash that describes the type of each of the model's fields.
   #
@@ -41,7 +46,7 @@ class UserDashboard < Administrate::BaseDashboard
     user_roles: Field::HasMany,
     username: Field::String,
     created_at: Field::DateTime,
-    updated_at: Field::DateTime,
+    updated_at: Field::DateTime
   }.freeze
 
   # COLLECTION_ATTRIBUTES
