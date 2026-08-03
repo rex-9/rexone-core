@@ -24,17 +24,21 @@ class UserDashboard < Administrate::BaseDashboard
     last_sign_in_at: Field::DateTime,
     last_sign_in_ip: Field::String,
     locked_at: Field::DateTime,
+    messages: Field::HasMany,
     name: Field::String,
     provider: Field::String,
     remember_created_at: Field::DateTime,
     reset_password_sent_at: Field::DateTime,
     reset_password_token: Field::String,
+    roles: Field::HasMany,
+    rooms: Field::HasMany,
     sign_in_count: Field::Number,
     stripe_customer_id: Field::String,
     subscriptions: Field::HasMany,
     transactions: Field::HasMany,
     unconfirmed_email: Field::String,
     unlock_token: Field::String,
+    user_roles: Field::HasMany,
     username: Field::String,
     created_at: Field::DateTime,
     updated_at: Field::DateTime,
@@ -71,17 +75,21 @@ class UserDashboard < Administrate::BaseDashboard
     last_sign_in_at
     last_sign_in_ip
     locked_at
+    messages
     name
     provider
     remember_created_at
     reset_password_sent_at
     reset_password_token
+    roles
+    rooms
     sign_in_count
     stripe_customer_id
     subscriptions
     transactions
     unconfirmed_email
     unlock_token
+    user_roles
     username
     created_at
     updated_at
@@ -106,17 +114,21 @@ class UserDashboard < Administrate::BaseDashboard
     last_sign_in_at
     last_sign_in_ip
     locked_at
+    messages
     name
     provider
     remember_created_at
     reset_password_sent_at
     reset_password_token
+    roles
+    rooms
     sign_in_count
     stripe_customer_id
     subscriptions
     transactions
     unconfirmed_email
     unlock_token
+    user_roles
     username
   ].freeze
 

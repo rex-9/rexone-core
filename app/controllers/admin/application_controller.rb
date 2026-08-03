@@ -8,11 +8,24 @@ module Admin
   class ApplicationController < Administrate::ApplicationController
     before_action :authenticate_admin
 
+    attr_reader :current_user
+
+    private
+
     def authenticate_admin
-      http_basic_authenticate_or_request_with(
-        name: AppConfig::RAILS_ADMIN_USERNAME,
-        password: AppConfig::RAILS_ADMIN_PASSWORD
-      )
+      authenticate_or_request_with_http_basic("Admin Area") do |username, password|
+        user = User.find_by(username: username)
+
+        next false unless user&.valid_password?(password)
+        next false unless user.admin?
+
+        @current_user = user
+      end
+
+      # http_basic_authenticate_or_request_with(
+      #   name: AppConfig::RAILS_ADMIN_USERNAME,
+      #   password: AppConfig::RAILS_ADMIN_PASSWORD
+      # )
     end
 
     # Override this value to specify the number of elements to display at a time

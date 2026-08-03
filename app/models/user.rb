@@ -4,10 +4,10 @@ class User < ApplicationRecord
   has_many :subscriptions, class_name: "Payment::Subscription", dependent: :destroy
   has_many :transactions, class_name: "Payment::Transaction", dependent: :destroy
   has_many :accesses, dependent: :destroy
-
-  # Chat
-  has_many :chat_rooms, class_name: "Chat::Room", dependent: :destroy
-  has_many :chat_messages, through: :chat_rooms, class_name: "Chat::Message"
+  has_many :rooms, class_name: "Chat::Room", dependent: :destroy
+  has_many :messages, through: :rooms, class_name: "Chat::Message"
+  has_many :user_roles, class_name: "Iam::UserRole", dependent: :destroy
+  has_many :roles, through: :user_roles, class_name: "Iam::Role"
 
   devise :database_authenticatable, :registerable, :validatable, :confirmable,
   :recoverable, :rememberable, :lockable, :trackable, :timeoutable,
@@ -58,5 +58,35 @@ class User < ApplicationRecord
   rescue Stripe::StripeError => e
     Rails.logger.error("[Stripe] Failed to create customer: #{e.message}")
     nil
+  end
+
+  # IAM
+  def has_role?(role_name)
+    roles.exists?(name: role_name.to_s)
+  end
+
+  def has_permission?(action, resource)
+    roles.joins(:permissions).exists?(iam_permissions: { action: action, resource: resource })
+  end
+
+  def can?(action, resource)
+    has_permission?(action, resource)
+  end
+
+  def admin?
+    has_role?("super_admin") || has_role?("admin")
+  end
+
+  def super_admin?
+    has_role?("super_admin")
+  end
+
+  def permissions
+    Iam::Permission.joins(roles: :user_roles).where(iam_user_roles: { user_id: id }).distinct
+  end
+
+  # Serializer helper
+  def role_names
+    roles.pluck(:name)
   end
 end

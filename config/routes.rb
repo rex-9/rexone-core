@@ -29,6 +29,13 @@ Rails.application.routes.draw do
     resources :users, only: %i[index show new create edit update destroy]
     resources :accesses, only: %i[index show new create edit update destroy]
 
+    namespace :iam do
+      resources :permissions, only: %i[index show new create edit update destroy]
+      resources :roles, only: %i[index show new create edit update destroy]
+      resources :user_roles, only: %i[index show new create edit update destroy]
+      resources :role_permissions, only: %i[index show new create edit update destroy]
+    end
+
     namespace :payment do
       resources :products, only: %i[index show new create edit update destroy]
       resources :subscriptions, only: %i[index show new create edit update destroy]
@@ -41,6 +48,16 @@ Rails.application.routes.draw do
     end
 
     root to: "users#index"
+  end
+
+  # ===== IAM =====
+  namespace :iam do
+    resources :permissions, only: [ :index, :show ]
+    resources :roles, only: [ :index, :show, :create, :update, :destroy ]
+
+    resources :users, only: [] do
+      resources :roles, only: [ :index, :create, :destroy ], controller: "user_roles"
+    end
   end
 
   # ===== AUTH (Devise) =====
@@ -68,6 +85,7 @@ Rails.application.routes.draw do
 
   # ===== USERS =====
   get "users/current", to: "users/users#get_current_user"
+  get "users/current/iam", to: "users/users#get_current_iam"
   get "users/peek", to: "users/users#peek_user"
 
   # ===== MEDIA =====

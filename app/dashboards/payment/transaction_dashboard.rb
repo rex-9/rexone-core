@@ -11,7 +11,9 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     id: Field::String,
     currency: Field::String,
     paid_at: Field::DateTime,
-    payment_method: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
+    payment_method_details: Field::String.with_options(searchable: false),
+    payment_method_id: Field::String,
+    payment_method_type: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     price_unit_amount: Field::Number,
     product: Field::BelongsTo,
     refunded_at: Field::DateTime,
@@ -31,7 +33,7 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     id
     currency
     paid_at
-    payment_method
+    payment_method_details
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES
@@ -40,7 +42,9 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     id
     currency
     paid_at
-    payment_method
+    payment_method_details
+    payment_method_id
+    payment_method_type
     price_unit_amount
     product
     refunded_at
@@ -57,7 +61,9 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
   FORM_ATTRIBUTES = %i[
     currency
     paid_at
-    payment_method
+    payment_method_details
+    payment_method_id
+    payment_method_type
     price_unit_amount
     product
     refunded_at
