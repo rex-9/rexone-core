@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_25_035613) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_03_045926) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -73,6 +73,45 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_035613) do
     t.index ["user_id"], name: "index_chat_rooms_on_user_id"
   end
 
+  create_table "iam_permissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "resource", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_iam_permissions_on_name", unique: true
+    t.index ["resource", "action"], name: "index_iam_permissions_on_resource_and_action", unique: true
+  end
+
+  create_table "iam_role_permissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "permission_id", null: false
+    t.uuid "role_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["permission_id"], name: "index_iam_role_permissions_on_permission_id"
+    t.index ["role_id", "permission_id"], name: "index_iam_role_permissions_on_role_id_and_permission_id", unique: true
+    t.index ["role_id"], name: "index_iam_role_permissions_on_role_id"
+  end
+
+  create_table "iam_roles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.boolean "system", default: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_iam_roles_on_name", unique: true
+  end
+
+  create_table "iam_user_roles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "role_id", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["role_id"], name: "index_iam_user_roles_on_role_id"
+    t.index ["user_id", "role_id"], name: "index_iam_user_roles_on_user_id_and_role_id", unique: true
+    t.index ["user_id"], name: "index_iam_user_roles_on_user_id"
+  end
+
   create_table "payment_products", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -94,7 +133,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_035613) do
     t.string "cycle", null: false
     t.datetime "ended_at"
     t.datetime "next_billing_at"
-    t.datetime "paused_at"
     t.jsonb "payment_method_details", default: {}
     t.string "payment_method_id"
     t.string "payment_method_type"
@@ -175,6 +213,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_25_035613) do
   add_foreign_key "assets", "users"
   add_foreign_key "chat_messages", "chat_rooms", column: "room_id"
   add_foreign_key "chat_rooms", "users"
+  add_foreign_key "iam_role_permissions", "iam_permissions", column: "permission_id"
+  add_foreign_key "iam_role_permissions", "iam_roles", column: "role_id"
+  add_foreign_key "iam_user_roles", "iam_roles", column: "role_id"
+  add_foreign_key "iam_user_roles", "users"
   add_foreign_key "payment_subscriptions", "payment_products", column: "product_id"
   add_foreign_key "payment_subscriptions", "users"
   add_foreign_key "payment_transactions", "payment_products", column: "product_id"

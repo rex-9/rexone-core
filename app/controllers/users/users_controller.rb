@@ -18,6 +18,19 @@ class Users::UsersController < ApplicationController
     end
   end
 
+  # GET /users/current/iam
+  def get_current_iam
+    render_json_response(
+      status_code: 200,
+      message: "User IAM fetched",
+      data: {
+        user: UserSerializer.new(current_user).serializable_hash[:data][:attributes],
+        roles: Iam::RoleSerializer.new(current_user.roles).serializable_hash[:data],
+        permissions: Iam::PermissionSerializer.new(current_user.permissions).serializable_hash[:data]
+      }
+    )
+  end
+
   # GET /users/peek?email=user@example.com
   # or POST /users/peek
   def peek_user

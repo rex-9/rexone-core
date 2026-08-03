@@ -1,6 +1,6 @@
 require "administrate/base_dashboard"
 
-class Payment::ProductDashboard < Administrate::BaseDashboard
+class Iam::UserRoleDashboard < Administrate::BaseDashboard
   # ATTRIBUTE_TYPES
   # a hash that describes the type of each of the model's fields.
   #
@@ -9,17 +9,8 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
   # on pages throughout the dashboard.
   ATTRIBUTE_TYPES = {
     id: Field::String,
-    accesses: Field::HasMany,
-    active: Field::Boolean,
-    currency: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
-    cycle: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
-    description: Field::Text,
-    name: Field::String,
-    price_unit_amount: Field::Number,
-    stripe_price_id: Field::String,
-    stripe_product_id: Field::String,
-    subscriptions: Field::HasMany,
-    transactions: Field::HasMany,
+    role: Field::BelongsTo,
+    user: Field::BelongsTo,
     created_at: Field::DateTime,
     updated_at: Field::DateTime,
   }.freeze
@@ -31,26 +22,17 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
     id
-    accesses
-    active
-    currency
+    role
+    user
+    created_at
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES
   # an array of attributes that will be displayed on the model's show page.
   SHOW_PAGE_ATTRIBUTES = %i[
     id
-    accesses
-    active
-    currency
-    cycle
-    description
-    name
-    price_unit_amount
-    stripe_price_id
-    stripe_product_id
-    subscriptions
-    transactions
+    role
+    user
     created_at
     updated_at
   ].freeze
@@ -59,17 +41,8 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
   # an array of attributes that will be displayed
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
-    accesses
-    active
-    currency
-    cycle
-    description
-    name
-    price_unit_amount
-    stripe_price_id
-    stripe_product_id
-    subscriptions
-    transactions
+    role
+    user
   ].freeze
 
   # COLLECTION_FILTERS
@@ -84,10 +57,10 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
   #   }.freeze
   COLLECTION_FILTERS = {}.freeze
 
-  # Overwrite this method to customize how products are displayed
+  # Overwrite this method to customize how user roles are displayed
   # across all pages of the admin dashboard.
   #
-  # def display_resource(product)
-  #   "Payment::Product ##{product.id}"
+  # def display_resource(user_role)
+  #   "Iam::UserRole ##{user_role.id}"
   # end
 end

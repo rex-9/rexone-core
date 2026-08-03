@@ -74,7 +74,7 @@ class AiController < ApplicationController
       status_code: 200,
       message: "Conversation history",
       data: {
-        messages: messages.map { |m| message_json(m) },
+        messages: Chat::MessageSerializer.new(messages).serializable_hash[:data],
         room_id: @room.id,
         room_title: @room.title
       }
@@ -109,19 +109,21 @@ class AiController < ApplicationController
     render_json_response(
       status_code: 200,
       message: "Room renamed",
-      data: { title: @room.title }
+      data: {
+        room: Chat::RoomSerializer.new(@room).serializable_hash[:data][:attributes]
+      }
     )
   end
 
   # GET /ai/rooms
   def rooms
-    rooms = current_user.chat_rooms.recent
+    rooms = current_user.chat_rooms.recent.includes(:messages)
 
     render_json_response(
       status_code: 200,
       message: "Chat rooms",
       data: {
-        rooms: rooms.map { |r| room_json(r) }
+        rooms: Chat::RoomSerializer.new(rooms).serializable_hash[:data]
       }
     )
   end
@@ -135,7 +137,9 @@ class AiController < ApplicationController
     render_json_response(
       status_code: 201,
       message: "Room created",
-      data: { room: room_json(room) }
+      data: {
+        room: Chat::RoomSerializer.new(room).serializable_hash[:data][:attributes]
+      }
     )
   end
 
@@ -294,7 +298,6 @@ class AiController < ApplicationController
     if room_id.present?
       @room = current_user.chat_rooms.find(room_id)
     else
-      # Get or create default room
       @room = current_user.chat_rooms.first_or_create(
         title: "New Conversation"
       )
@@ -317,25 +320,5 @@ class AiController < ApplicationController
     end
 
     messages
-  end
-
-  def message_json(message)
-    {
-      id: message.id,
-      role: message.role,
-      content: message.content,
-      created_at: message.created_at
-    }
-  end
-
-  def room_json(room)
-    {
-      id: room.id,
-      title: room.title,
-      message_count: room.message_count,
-      last_message: room.last_message&.content,
-      created_at: room.created_at,
-      updated_at: room.updated_at
-    }
   end
 end

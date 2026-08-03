@@ -1,3 +1,5 @@
+# app/controllers/access_controller.rb:
+
 class AccessController < ApplicationController
   before_action :authenticate_user!
 
@@ -9,7 +11,7 @@ class AccessController < ApplicationController
       status_code: 200,
       message: "Access retrieved",
       data: {
-        accesses: accesses.map { |a| access_json(a) }
+        accesses: AccessSerializer.new(accesses).serializable_hash[:data]
       }
     )
   end
@@ -22,7 +24,7 @@ class AccessController < ApplicationController
       status_code: 200,
       message: "Active access retrieved",
       data: {
-        accesses: accesses.map { |a| access_json(a) }
+        accesses: AccessSerializer.new(accesses).serializable_hash[:data]
       }
     )
   end
@@ -64,20 +66,5 @@ class AccessController < ApplicationController
       status_code: 200,
       message: "Access revoked"
     )
-  end
-
-  private
-
-  def access_json(access)
-    {
-      id: access.id,
-      product_id: access.product_id,
-      product_name: access.product&.name,
-      status: access.status,
-      granted_at: access.granted_at,
-      expires_at: access.expires_at,
-      days_remaining: access.days_remaining,
-      active: access.active?
-    }
   end
 end

@@ -9,17 +9,20 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
   # on pages throughout the dashboard.
   ATTRIBUTE_TYPES = {
     id: Field::String,
-    cycle: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     canceled_at: Field::DateTime,
+    cycle: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     ended_at: Field::DateTime,
     next_billing_at: Field::DateTime,
+    payment_method_details: Field::String.with_options(searchable: false),
+    payment_method_id: Field::String,
+    payment_method_type: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     product: Field::BelongsTo,
     started_at: Field::DateTime,
     status: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     stripe_subscription_id: Field::String,
     user: Field::BelongsTo,
     created_at: Field::DateTime,
-    updated_at: Field::DateTime
+    updated_at: Field::DateTime,
   }.freeze
 
   # COLLECTION_ATTRIBUTES
@@ -29,8 +32,8 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
     id
-    cycle
     canceled_at
+    cycle
     ended_at
   ].freeze
 
@@ -38,10 +41,13 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
   # an array of attributes that will be displayed on the model's show page.
   SHOW_PAGE_ATTRIBUTES = %i[
     id
-    cycle
     canceled_at
+    cycle
     ended_at
     next_billing_at
+    payment_method_details
+    payment_method_id
+    payment_method_type
     product
     started_at
     status
@@ -55,10 +61,13 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
   # an array of attributes that will be displayed
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
-    cycle
     canceled_at
+    cycle
     ended_at
     next_billing_at
+    payment_method_details
+    payment_method_id
+    payment_method_type
     product
     started_at
     status
