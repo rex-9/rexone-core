@@ -22,9 +22,9 @@ if defined?(RailsPerformance)
     config.mount_at = "/performance"
 
     # protect your Performance Dashboard with HTTP BASIC password
-    config.http_basic_authentication_enabled = false
-    config.http_basic_authentication_user_name = ENV["RAILS_ADMIN_USERNAME"]
-    config.http_basic_authentication_password = ENV["RAILS_ADMIN_PASSWORD"]
+    config.http_basic_authentication_enabled = true
+    config.http_basic_authentication_user_name = ENV["RAILS_PERFORMANCE_USERNAME"]
+    config.http_basic_authentication_password = ENV["RAILS_PERFORMANCE_PASSWORD"]
 
     # if you need an additional rules to check user permissions
     config.verify_access_proc = proc { |controller| true }
@@ -54,6 +54,6 @@ if defined?(RailsPerformance)
     config.include_custom_events = true
 
     # test debug warning
-    $rails_performance_running_mode = 'test' unless defined?($rails_performance_running_mode)
+    $rails_performance_running_mode = "test" unless defined?($rails_performance_running_mode)
   end
 end
