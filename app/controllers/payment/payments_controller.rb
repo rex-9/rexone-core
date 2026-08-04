@@ -42,7 +42,7 @@ class Payment::PaymentsController < ApplicationController
   end
 
   # GET /payment/session/:session_id
-  def status
+  def read_status
     result = PaymentService::Client.get_session(params[:session_id])
 
     if result[:error]

@@ -189,10 +189,10 @@ class Users::SessionsController < Devise::SessionsController
       return
     end
 
-    user = User.find_by(email: challenge_data["email"])
+    user = User.find_or_initialize_by(email: challenge_data["email"])
 
-    # If user already exists (shouldn't happen, but handle gracefully)
-    if user
+    if user.persisted?
+      # User exists - just sign them in
       clear_google_challenge!(challenge_token)
       token = AppConfig::JWT_TOKEN.call(user)
       signup_active_session!(user: user, token: token)
@@ -208,67 +208,68 @@ class Users::SessionsController < Devise::SessionsController
       return
     end
 
-    # Create new Google user
+    # New user - create them
     sanitized_username = sanitize_email(challenge_data["email"])
-    user = User.create(
-      email: challenge_data["email"],
+    user.assign_attributes(
       username: sanitized_username,
       name: challenge_data["name"],
       password: password,
+      password_confirmation: password,
       provider: "google",
-      confirmed_at: Time.now
+      confirmed_at: Time.current
     )
 
-    unless user.save
+    if user.save
+      # The after_create callback will assign the default role
+
+      # Save google profile picture
+      asset = Asset.new(
+        name: "profile_google_of_user_#{user.id}",
+        url: challenge_data["picture"],
+        category: "profile",
+        format: "image",
+        size: 0,
+        source: "google",
+        user: user,
+      )
+
+      unless asset.save
+      # Log but don't fail the request - user can upload later
+      Rails.logger.warn("Failed to save Google profile picture for user #{user.id}: #{asset.errors.full_messages}")
+
+        # render_json_response(
+        #   status_code: 422,
+        #   message: Messages::FAILED_TO_SAVE_GOOGLE_PHOTO,
+        #   error: asset.errors.full_messages.uniq.to_sentence
+        # )
+        # return
+      end
+
+      clear_google_challenge!(challenge_token)
+
+      token = AppConfig::JWT_TOKEN.call(user)
+      signup_active_session!(user: user, token: token)
+
+      NotificationService.welcome(
+        user_id: user.id,
+        name: user.name || user.username
+      )
+
+      render_json_response(
+        status_code: 201,
+        message: Messages::ACCOUNT_CREATED_AND_SIGNED_IN_SUCCESSFULLY,
+        data: {
+          user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+          token: token
+        }
+      )
+    else
       render_json_response(
         status_code: 422,
         message: Messages::GOOGLE_AUTHENTICATION_FAILED,
         error: user.errors.full_messages.uniq.to_sentence
       )
-      return
     end
-
-    # Save google profile picture
-    asset = Asset.create(
-      name: "profile_google_of_user_#{user.id}",
-      url: challenge_data["picture"],
-      category: "profile",
-      format: "image",
-      size: 0,
-      source: "google",
-      user: user,
-    )
-
-    unless asset.save
-      # Log but don't fail the request - user can upload later
-      Rails.logger.warn("Failed to save Google profile picture for user #{user.id}: #{asset.errors.full_messages}")
-
-      # render_json_response(
-      #   status_code: 422,
-      #   message: Messages::FAILED_TO_SAVE_GOOGLE_PHOTO,
-      #   error: asset.errors.full_messages.uniq.to_sentence
-      # )
-      # return
-    end
-
-    clear_google_challenge!(challenge_token)
-
-    token = AppConfig::JWT_TOKEN.call(user)
-    signup_active_session!(user: user, token: token)
-
-    NotificationService.welcome(
-      user_id: user.id,
-      name: user.name || user.username
-    )
-
-    render_json_response(
-      status_code: 201,
-      message: Messages::ACCOUNT_CREATED_AND_SIGNED_IN_SUCCESSFULLY,
-      data: {
-        user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-        token: token
-      }
-    )
   end
 
   def respond_with(resource, _opts = {})

@@ -21,7 +21,7 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     stripe_payment_intent: Field::String,
     user: Field::BelongsTo,
     created_at: Field::DateTime,
-    updated_at: Field::DateTime,
+    updated_at: Field::DateTime
   }.freeze
 
   # COLLECTION_ATTRIBUTES
@@ -30,10 +30,11 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
   # By default, it's limited to four items to reduce clutter on index pages.
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
-    id
     currency
+    price_unit_amount
+    product
+    user
     paid_at
-    payment_method_details
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES

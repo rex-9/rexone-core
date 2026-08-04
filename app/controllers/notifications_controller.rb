@@ -2,7 +2,8 @@
 class NotificationsController < ApplicationController
   before_action :authenticate_user!
 
-  def push
+  # POST /notifications/push
+  def create_push
     user = User.find(params[:user_id])
     type = params[:type] || PushNotiTemplates::CUSTOM
 
@@ -45,7 +46,8 @@ class NotificationsController < ApplicationController
     )
   end
 
-  def email
+  # POST /notifications/email
+  def create_email
     user = User.find(params[:user_id])
     type = params[:type] || MailTemplates::CUSTOM
 

@@ -4,12 +4,12 @@ require 'rails_helper'
 RSpec.describe Users::UsersController, type: :controller do
   let(:user) { create(:user) }
 
-  describe 'GET #get_current_user' do
+  describe 'GET #read_current_user' do
     context 'when authenticated' do
       before { sign_in user }
 
       it 'returns current user' do
-        get :get_current_user
+        get :read_current_user
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['data']['user']['email']).to eq(user.email)
@@ -18,7 +18,7 @@ RSpec.describe Users::UsersController, type: :controller do
 
     context 'when not authenticated' do
       it 'returns 401' do
-        get :get_current_user
+        get :read_current_user
         expect(response).to have_http_status(:unauthorized)
         expect(json_response['status']['code']).to eq(401)
         expect(json_response['status']['error']).to eq('No current user found.')
@@ -32,18 +32,18 @@ RSpec.describe Users::UsersController, type: :controller do
         # Simulate expired session
         sign_in user
         user.update(jti: 'new_jti')
-        get :get_current_user
+        get :read_current_user
         expect(response).to have_http_status(:unauthorized)
       end
     end
   end
 
-  describe 'GET #peek_user' do
+  describe 'GET #read_peek_user' do
     context 'with valid email' do
       before { create(:user, email: 'test@example.com') }
 
       it 'returns user_exists: true' do
-        get :peek_user, params: { email: 'test@example.com' }
+        get :read_peek_user, params: { email: 'test@example.com' }
         expect(response).to have_http_status(:ok)
         expect(json_response['status']['code']).to eq(200)
         expect(json_response['data']['user_exists']).to be true
@@ -51,7 +51,7 @@ RSpec.describe Users::UsersController, type: :controller do
       end
 
       it 'returns user_exists: false for non-existent email' do
-        get :peek_user, params: { email: 'nonexistent@example.com' }
+        get :read_peek_user, params: { email: 'nonexistent@example.com' }
         expect(response).to have_http_status(:ok)
         expect(json_response['data']['user_exists']).to be false
       end
@@ -61,7 +61,7 @@ RSpec.describe Users::UsersController, type: :controller do
       let!(:unconfirmed_user) { create(:user, :unconfirmed) }
 
       it 'returns confirmed: false' do
-        get :peek_user, params: { email: unconfirmed_user.email }
+        get :read_peek_user, params: { email: unconfirmed_user.email }
         expect(response).to have_http_status(:ok)
         expect(json_response['data']['user_exists']).to be true
         expect(json_response['data']['confirmed']).to be false
@@ -70,7 +70,7 @@ RSpec.describe Users::UsersController, type: :controller do
 
     context 'with blank email' do
       it 'returns 400' do
-        get :peek_user, params: { email: '' }
+        get :read_peek_user, params: { email: '' }
         expect(response).to have_http_status(:bad_request)
         expect(json_response['status']['code']).to eq(400)
         expect(json_response['status']['error']).to eq('Missing email address.')
@@ -81,7 +81,7 @@ RSpec.describe Users::UsersController, type: :controller do
       before { create(:user, email: 'test@example.com') }
 
       it 'finds user regardless of case' do
-        get :peek_user, params: { email: 'TEST@EXAMPLE.COM' }
+        get :read_peek_user, params: { email: 'TEST@EXAMPLE.COM' }
         expect(response).to have_http_status(:ok)
         expect(json_response['data']['user_exists']).to be true
       end
@@ -91,7 +91,7 @@ RSpec.describe Users::UsersController, type: :controller do
       before { create(:user, email: 'test@example.com') }
 
       it 'trims whitespace' do
-        get :peek_user, params: { email: '  test@example.com  ' }
+        get :read_peek_user, params: { email: '  test@example.com  ' }
         expect(response).to have_http_status(:ok)
         expect(json_response['data']['user_exists']).to be true
       end

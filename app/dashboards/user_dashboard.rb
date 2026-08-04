@@ -14,6 +14,9 @@ class UserDashboard < Administrate::BaseDashboard
   # on pages throughout the dashboard.
   ATTRIBUTE_TYPES = {
     id: Field::String,
+    username: Field::String,
+    email: Field::String,
+    name: Field::String,
     accesses: Field::HasMany,
     assets: Field::HasMany,
     confirmation_code: Field::String,
@@ -22,7 +25,6 @@ class UserDashboard < Administrate::BaseDashboard
     confirmed_at: Field::DateTime,
     current_sign_in_at: Field::DateTime,
     current_sign_in_ip: Field::String,
-    email: Field::String,
     encrypted_password: Field::String,
     failed_attempts: Field::Number,
     jti: Field::String,
@@ -30,7 +32,6 @@ class UserDashboard < Administrate::BaseDashboard
     last_sign_in_ip: Field::String,
     locked_at: Field::DateTime,
     messages: Field::HasMany,
-    name: Field::String,
     provider: Field::String,
     remember_created_at: Field::DateTime,
     reset_password_sent_at: Field::DateTime,
@@ -44,7 +45,6 @@ class UserDashboard < Administrate::BaseDashboard
     unconfirmed_email: Field::String,
     unlock_token: Field::String,
     user_roles: Field::HasMany,
-    username: Field::String,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
@@ -55,10 +55,10 @@ class UserDashboard < Administrate::BaseDashboard
   # By default, it's limited to four items to reduce clutter on index pages.
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
-    id
-    accesses
-    assets
-    confirmation_code
+    username
+    email
+    name
+    provider
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES

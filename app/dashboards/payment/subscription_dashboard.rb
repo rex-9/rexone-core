@@ -22,7 +22,7 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     stripe_subscription_id: Field::String,
     user: Field::BelongsTo,
     created_at: Field::DateTime,
-    updated_at: Field::DateTime,
+    updated_at: Field::DateTime
   }.freeze
 
   # COLLECTION_ATTRIBUTES
@@ -31,10 +31,11 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
   # By default, it's limited to four items to reduce clutter on index pages.
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
-    id
-    canceled_at
     cycle
-    ended_at
+    next_billing_at
+    product
+    user
+    status
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES

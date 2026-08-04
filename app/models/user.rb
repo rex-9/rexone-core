@@ -18,12 +18,13 @@ class User < ApplicationRecord
   # :omniauthable
 
   before_create :generate_confirmation_code
+  after_create :assign_default_user_role, if: -> { roles.empty? }
 
   self.primary_key = "id"
 
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }, uniqueness: true
   validates :password, presence: true, confirmation: true, length: { minimum: 6 }, if: -> { new_record? || !password.nil? }
-  validates :password_confirmation, presence: true, if: -> { (new_record? || !password.nil?) && provider != "google" }
+  validates :password_confirmation, presence: true, if: -> { (new_record? || !password.nil?) }
   validates :name, length: { maximum: 50 }, format: { without: /[<>:;?]/ }, allow_blank: true
   validates :username, presence: true, uniqueness: { case_sensitive: false }, length: { in: 3..30 }, format: { with: /\A[a-z0-9_]+\z/, message: "can only contain lowercase letters, numbers, and underscores" }
 
@@ -102,5 +103,14 @@ class User < ApplicationRecord
   # Serializer helper
   def role_names
     roles.pluck(:name)
+  end
+
+  private
+
+  def assign_default_user_role
+    default_role = Iam::Role.find_by(name: "user")
+    if default_role
+      Iam::UserRole.find_or_create_by!(user: self, role: default_role)
+    end
   end
 end

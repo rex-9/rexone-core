@@ -1,8 +1,8 @@
 class Users::UsersController < ApplicationController
-  before_action :authenticate_user!, except: [ :peek_user ]  # Skip authentication for this action
+  before_action :authenticate_user!, except: [ :read_peek_user ]  # Skip authentication for this action
 
   # GET /users/current
-  def get_current_user
+  def read_current_user
     if current_user
       render_json_response(
         status_code: 200,
@@ -19,7 +19,7 @@ class Users::UsersController < ApplicationController
   end
 
   # GET /users/current/iam
-  def get_current_iam
+  def read_current_iam
     render_json_response(
       status_code: 200,
       message: "User IAM fetched",
@@ -32,8 +32,7 @@ class Users::UsersController < ApplicationController
   end
 
   # GET /users/peek?email=user@example.com
-  # or POST /users/peek
-  def peek_user
+  def read_peek_user
     email = params[:email]
 
     if email.blank?

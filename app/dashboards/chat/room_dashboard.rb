@@ -14,7 +14,7 @@ class Chat::RoomDashboard < Administrate::BaseDashboard
     title: Field::String,
     user: Field::BelongsTo,
     created_at: Field::DateTime,
-    updated_at: Field::DateTime,
+    updated_at: Field::DateTime
   }.freeze
 
   # COLLECTION_ATTRIBUTES
@@ -23,10 +23,10 @@ class Chat::RoomDashboard < Administrate::BaseDashboard
   # By default, it's limited to four items to reduce clutter on index pages.
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
-    id
+    user
+    title
     messages
     metadata
-    title
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES

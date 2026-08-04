@@ -17,7 +17,7 @@ class AccessController < ApplicationController
   end
 
   # GET /access/active
-  def active
+  def read_active
     accesses = AccessService.get_active_access(current_user.id)
 
     render_json_response(
@@ -30,7 +30,7 @@ class AccessController < ApplicationController
   end
 
   # GET /access/check
-  def check
+  def read_check
     product_id = params[:product_id]
     has_access = AccessService.has_access?(
       user_id: current_user.id,

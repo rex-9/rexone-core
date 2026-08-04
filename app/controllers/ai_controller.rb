@@ -5,7 +5,7 @@ class AiController < ApplicationController
   before_action :set_room, only: [ :chat, :history, :clear, :rename ]
 
   # POST /ai/chat
-  def chat
+  def create_chat
     message = params[:message]
 
     if message.blank?
@@ -67,7 +67,7 @@ class AiController < ApplicationController
   end
 
   # GET /ai/history
-  def history
+  def read_history
     messages = @room.messages.chronological
 
     render_json_response(
@@ -82,7 +82,7 @@ class AiController < ApplicationController
   end
 
   # DELETE /ai/clear
-  def clear
+  def destroy_clear
     @room.messages.destroy_all
 
     render_json_response(
@@ -92,7 +92,7 @@ class AiController < ApplicationController
   end
 
   # PUT /ai/rename
-  def rename
+  def update_rename
     title = params[:title]
 
     if title.blank?
@@ -116,7 +116,7 @@ class AiController < ApplicationController
   end
 
   # GET /ai/rooms
-  def rooms
+  def read_rooms
     rooms = current_user.rooms.recent.includes(:messages)
 
     render_json_response(
@@ -155,7 +155,7 @@ class AiController < ApplicationController
   end
 
   # POST /ai/summarize
-  def summarize
+  def create_summarize
     text = params[:text]
 
     if text.blank?
@@ -196,7 +196,7 @@ class AiController < ApplicationController
   end
 
   # POST /ai/translate
-  def translate
+  def create_translate
     text = params[:text]
     target_language = params[:target_language] || "English"
 
@@ -238,7 +238,7 @@ class AiController < ApplicationController
   end
 
   # POST /ai/analyze
-  def analyze
+  def create_analyze
     text = params[:text]
     analysis_type = params[:type] || "sentiment"
 

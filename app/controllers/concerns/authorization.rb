@@ -9,23 +9,28 @@ module Authorization
 
   def authorize_action!
     # SUPER ADMIN: Skip all permission checks
-    return if current_user.super_admin?
+    # return if current_user.super_admin?
 
     resource = controller_name.to_sym
     action = action_name.to_sym
 
-    # Generic mapping - works for any resource
-    permission_action = case action
-    when :index, :show, :history, :recent
-      :read
-    when :new, :create
+    # Map action to permission based on prefix
+    permission_action = case action.to_s
+    when /\Acreate_/i, /\Anew\z/i, /\Anew_\z/i
       :create
-    when :edit, :update
+    when /\Aread_/i, /\Aindex\z/i, /\Aindex_\z/i, /\Ashow\z/i, /\Ashow_\z/i, /\Aget/i, /\Aget_/i
+      :read
+    when /\Aupdate_/i, /\Aedit\z/i, /\Aedit_\z/i
       :update
-    when :destroy, :clear
+    when /\Adelete_/i, /\Adestroy\z/i, /\Adestroy_\z/i
       :delete
     else
-      :read
+      # Fallback: check the actual action name if it matches create/read/update/delete
+      if %w[create read update delete].include?(action.to_s)
+        action.to_sym
+      else
+        :read
+      end
     end
 
     # Skip authorization for admin controllers (they use their own)

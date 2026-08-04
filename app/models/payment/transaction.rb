@@ -1,4 +1,7 @@
 # app/models/payment/transaction.rb
+# Stripe has Transaction Object... we better use it???
+# https://docs.stripe.com/api/issuing/transactions/object
+
 class Payment::Transaction < ApplicationRecord
   self.table_name = "payment_transactions"
 

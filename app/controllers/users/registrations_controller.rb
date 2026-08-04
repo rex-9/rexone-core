@@ -23,12 +23,22 @@ class Users::RegistrationsController < Devise::RegistrationsController
   def respond_with(resource, _opts = {})
     if request.method == "POST" && resource.persisted?
       resource.provider = "email"
-      resource.save
-      render_json_response(
-        status_code: 201,
-        message: Messages::SIGNED_UP_SUCCESSFULLY,
-        data: { user: UserSerializer.new(resource).serializable_hash[:data][:attributes] }
-      )
+
+      # Save resource first, then assign role
+      if resource.save
+        # The after_create callback will assign the default role
+        render_json_response(
+          status_code: 201,
+          message: Messages::SIGNED_UP_SUCCESSFULLY,
+          data: { user: UserSerializer.new(resource).serializable_hash[:data][:attributes] }
+        )
+      else
+        render_json_response(
+          status_code: 422,
+          message: Messages::FAILED_TO_SIGN_UP,
+          error: resource.errors.full_messages.uniq.to_sentence
+        )
+      end
     elsif request.method == "DELETE"
       render_json_response(
         status_code: 200,

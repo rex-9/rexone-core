@@ -1,25 +1,5 @@
-# db/seeds.rb
-
 # ===== IAM PERMISSIONS =====
 puts "🌱 Seeding IAM permissions..."
-
-# These are CONTROLLER names (what the Authorization concern uses)
-RESOURCES = %w[
-  users
-  roles
-  permissions
-  products
-  payments
-  subscriptions
-  transactions
-  accesses
-  chat
-  assets
-  dashboard
-  ai
-].freeze
-
-ACTIONS = %w[read create update delete].freeze
 
 # Clear existing data in the correct order
 puts "🗑️  Clearing existing IAM data..."
@@ -30,22 +10,15 @@ Iam::Permission.delete_all
 
 puts "✅ IAM data cleared"
 
-# Create all permissions (4 actions × 12 resources = 48 permissions)
+# Seed all permissions
 puts "🌱 Creating all permissions..."
-permissions = []
 
-RESOURCES.each do |resource|
-  ACTIONS.each do |action|
-    permissions << {
-      name: "#{action}_#{resource}",
-      action: action,
-      resource: resource
-    }
+Iam::Permission::RESOURCES.each do |resource|
+  Iam::Permission::ACTIONS.each do |action|
+    Iam::Permission.find_or_create_by!(action: action, resource: resource) do |perm|
+      perm.name = "#{action}_#{resource}"
+    end
   end
-end
-
-permissions.each do |p|
-  Iam::Permission.create!(p)
 end
 
 puts "✅ #{Iam::Permission.count} permissions created"
@@ -65,21 +38,10 @@ admin = Iam::Role.create!(
   system: true
 )
 
-manager = Iam::Role.create!(
-  name: "manager",
-  description: "Manage users and chat",
-  system: true
-)
-
-support = Iam::Role.create!(
-  name: "support",
-  description: "Support staff",
-  system: true
-)
-
-viewer = Iam::Role.create!(
-  name: "viewer",
-  description: "Read-only access",
+# Default user role - assigned to all new users
+default_user = Iam::Role.create!(
+  name: "user",
+  description: "Default user role for all registered users",
   system: true
 )
 
@@ -98,57 +60,60 @@ Iam::Permission.where.not(resource: "roles").each do |perm|
   Iam::RolePermission.create!(role: admin, permission: perm)
 end
 
-# Manager: read/update users, read/update chat, view dashboard, create users
-%w[users chat].each do |resource|
-  Iam::Permission.where(resource: resource, action: %w[read update]).each do |perm|
-    Iam::RolePermission.create!(role: manager, permission: perm)
-  end
-end
-Iam::Permission.find_by(resource: "users", action: "create")&.tap do |perm|
-  Iam::RolePermission.create!(role: manager, permission: perm)
-end
-Iam::Permission.find_by(resource: "dashboard", action: "read")&.tap do |perm|
-  Iam::RolePermission.create!(role: manager, permission: perm)
-end
+# Default User Role Permissions
+puts "🌱 Assigning permissions to default user role..."
 
-# Support: read/create/update chat, read users
-Iam::Permission.where(resource: "chat", action: %w[read create update]).each do |perm|
-  Iam::RolePermission.create!(role: support, permission: perm)
-end
-Iam::Permission.find_by(resource: "users", action: "read")&.tap do |perm|
-  Iam::RolePermission.create!(role: support, permission: perm)
-end
+user_permissions = [
+  # Products - read only
+  { resource: "products", actions: [ "read" ] },
+  # Payments - create only
+  { resource: "payments", actions: [ "create" ] },
+  # Subscriptions - read only
+  { resource: "subscriptions", actions: [ "read" ] },
+  # Transactions - read only
+  { resource: "transactions", actions: [ "read" ] },
+  # Accesses - read only
+  { resource: "accesses", actions: [ "read" ] },
+  # Assets - full CRUD
+  { resource: "assets", actions: [ "read", "create", "update", "delete" ] },
+  # AI - full CRUD
+  { resource: "ai", actions: [ "read", "create", "update", "delete" ] }
+]
 
-# Viewer: read payments, subscriptions, transactions, products, dashboard
-%w[payments subscriptions transactions products dashboard].each do |resource|
-  Iam::Permission.find_by(resource: resource, action: "read")&.tap do |perm|
-    Iam::RolePermission.create!(role: viewer, permission: perm)
+user_permissions.each do |entry|
+  entry[:actions].each do |action|
+    perm = Iam::Permission.find_by(resource: entry[:resource], action: action)
+    if perm
+      Iam::RolePermission.create!(role: default_user, permission: perm)
+    else
+      puts "⚠️  Warning: Permission #{action}_#{entry[:resource]} not found"
+    end
   end
 end
 
 puts "✅ #{Iam::RolePermission.count} role-permission assignments created"
 
-# ===== DEFAULT ADMIN USER =====
+# ===== DEFAULT ADMIN USERS =====
 puts "🌱 Creating default admin users..."
 
 User.where(email: [ "super@admin.com", "just@admin.com" ]).destroy_all
 
 super_admin_user = User.create!(
   email: "super@admin.com",
-  username: "super_admin",
+  username: "superadmin",
   name: "Super Admin User",
-  password: "123456",
-  password_confirmation: "123456",
+  password: "111111",
+  password_confirmation: "111111",
   confirmed_at: Time.current
 )
 
 Iam::UserRole.create!(user: super_admin_user, role: super_admin)
 
-puts "✅ Super Admin user created: super@admin.com / 123456"
+puts "✅ Super Admin user created: super@admin.com / 111111"
 
 admin_user = User.create!(
   email: "just@admin.com",
-  username: "just_admin",
+  username: "justadmin",
   name: "Just Admin User",
   password: "123456",
   password_confirmation: "123456",
@@ -158,4 +123,23 @@ admin_user = User.create!(
 Iam::UserRole.create!(user: admin_user, role: admin)
 
 puts "✅ Admin user created: just@admin.com / 123456"
+
+# ===== AUTO-ASSIGN USER ROLE TO ALL EXISTING USERS =====
+puts "🌱 Assigning default user role to all users without roles..."
+
+User.all.each do |user|
+  if user.user_roles.empty?
+    Iam::UserRole.create!(user: user, role: default_user)
+  end
+end
+
+puts "✅ #{User.count} users have roles assigned"
+
 puts "✅ Seeding complete!"
+
+puts "\n📋 Summary:"
+puts "  - #{Iam::Permission.count} permissions"
+puts "  - #{Iam::Role.count} roles"
+puts "  - #{Iam::RolePermission.count} role-permission assignments"
+puts "  - #{Iam::UserRole.count} user-role assignments"
+puts "  - #{User.count} users"

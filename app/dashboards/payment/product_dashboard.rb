@@ -35,10 +35,11 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
   # By default, it's limited to four items to reduce clutter on index pages.
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
-    id
-    accesses
-    active
+    name
+    cycle
+    price_unit_amount
     currency
+    active
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES

@@ -25,7 +25,7 @@ class Payment::TransactionsController < ApplicationController
   end
 
   # GET /payment/transactions/recent
-  def recent
+  def read_recent
     transactions = current_user.transactions.includes(:product).successful.recent
 
     render_json_response(

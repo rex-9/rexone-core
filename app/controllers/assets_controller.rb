@@ -29,7 +29,7 @@ class AssetsController < ApplicationController
   end
 
   # POST /assets/upload
-  def upload
+  def create_upload
     file = params[:file]
 
     if file.blank?
@@ -158,7 +158,7 @@ class AssetsController < ApplicationController
   end
 
   # POST /assets/:id/refresh_url
-  def refresh_url
+  def create_refresh_url
     set_asset
 
     if @asset.refresh_url
@@ -178,7 +178,7 @@ class AssetsController < ApplicationController
   end
 
   # GET /assets/list
-  def list
+  def read_list
     prefix = params[:prefix] || ""
     assets = StorageService::Client.list(prefix)
 

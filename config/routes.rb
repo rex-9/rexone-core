@@ -84,16 +84,16 @@ Rails.application.routes.draw do
   end
 
   # ===== USERS =====
-  get "users/current", to: "users/users#get_current_user"
-  get "users/current/iam", to: "users/users#get_current_iam"
-  get "users/peek", to: "users/users#peek_user"
+  get "users/current", to: "users/users#read_current_user"
+  get "users/current/iam", to: "users/users#read_current_iam"
+  get "users/peek", to: "users/users#read_peek_user"
 
   # ===== MEDIA =====
-  post "media/upload", to: "assets#upload"
+  post "media/upload", to: "assets#create_upload"
 
   # ===== NOTIFICATIONS =====
-  post "notifications/push", to: "notifications#push"
-  post "notifications/email", to: "notifications#email"
+  post "notifications/push", to: "notifications#create_push"
+  post "notifications/email", to: "notifications#create_email"
 
   # ===== WEBHOOKS =====
   post "webhooks/stripe", to: "webhooks/stripe#create"
@@ -103,36 +103,36 @@ Rails.application.routes.draw do
     resources :products, only: [ :index, :show ]
     resources :subscriptions, only: [ :index, :show, :destroy ] do
       member do
-        post :resume
-        post :cancel # Cancel sub at period end
+        post :create_resume
+        post :create_cancel # Cancel sub at period end
       end
     end
     resources :transactions, only: [ :index, :show ] do
       collection do
-        get :recent
+        get :read_recent
       end
     end
 
     # Checkout
     post "session", to: "payments#create"
-    get "session/:session_id", to: "payments#status"
+    get "session/:session_id", to: "payments#read_status"
   end
 
   # ===== ACCESS =====
   get "access", to: "access#index"
-  get "access/active", to: "access#active"
-  get "access/check", to: "access#check"
+  get "access/active", to: "access#read_active"
+  get "access/check", to: "access#read_check"
   delete "access/:id", to: "access#destroy"
 
   # ===== AI =====
-  post "ai/chat", to: "ai#chat"
-  get "ai/history", to: "ai#history"
-  delete "ai/clear", to: "ai#clear"
-  put "ai/rename", to: "ai#rename"
-  get "ai/rooms", to: "ai#rooms"
+  post "ai/chat", to: "ai#create_chat"
+  get "ai/history", to: "ai#read_history"
+  delete "ai/clear", to: "ai#destroy_clear"
+  put "ai/rename", to: "ai#update_rename"
+  get "ai/rooms", to: "ai#read_rooms"
   post "ai/rooms", to: "ai#create_room"
   delete "ai/rooms/:id", to: "ai#destroy_room"
-  post "ai/summarize", to: "ai#summarize"
-  post "ai/translate", to: "ai#translate"
-  post "ai/analyze", to: "ai#analyze"
+  post "ai/summarize", to: "ai#create_summarize"
+  post "ai/translate", to: "ai#create_translate"
+  post "ai/analyze", to: "ai#create_analyze"
 end

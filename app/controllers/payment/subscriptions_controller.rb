@@ -23,7 +23,7 @@ class Payment::SubscriptionsController < ApplicationController
   end
 
   # POST /payment/subscriptions/:id/cancel - Cancel at period end
-  def cancel
+  def create_cancel
     subscription = current_user.subscriptions.find(params[:id])
 
     if subscription.canceled_at.present?
@@ -69,7 +69,7 @@ class Payment::SubscriptionsController < ApplicationController
   end
 
   # POST /payment/subscriptions/:id/resume - Resume from cancellation
-  def resume
+  def create_resume
     subscription = current_user.subscriptions.find(params[:id])
 
     unless subscription.scheduled_for_cancellation?
