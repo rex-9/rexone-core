@@ -258,7 +258,7 @@ module PaymentService
       user = User.find(user_id)
 
       if session.mode == "subscription"
-        stripe_sub = ::Stripe::Subscription.retrieve(session.subscription)
+        stripe_sub = Stripe::Subscription.retrieve(session.subscription)
 
         # Get payment method ID and details
         payment_info = extract_payment_method_info(stripe_sub.default_payment_method)
@@ -296,7 +296,7 @@ module PaymentService
 
         if session.payment_intent.present?
           begin
-            pi = ::Stripe::PaymentIntent.retrieve(session.payment_intent)
+            pi = Stripe::PaymentIntent.retrieve(session.payment_intent)
             payment_method_id = pi.payment_method
             payment_info = extract_payment_method_info(payment_method_id) if payment_method_id.present?
           rescue => e

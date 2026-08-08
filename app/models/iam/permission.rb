@@ -17,6 +17,7 @@ module Iam
       transactions
       accesses
       assets
+      notifications
       dashboard
       ai
     ].freeze
