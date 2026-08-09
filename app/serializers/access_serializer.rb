@@ -1,8 +1,6 @@
 # app/serializers/access_serializer.rb
 
-class AccessSerializer
-  include JSONAPI::Serializer
-
+class AccessSerializer < ApplicationSerializer
   attributes :id, :status, :granted_at, :expires_at, :created_at, :updated_at
 
   attribute :product_id do |access|

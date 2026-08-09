@@ -1,6 +1,4 @@
-class Payment::TransactionSerializer
-  include JSONAPI::Serializer
-
+class Payment::TransactionSerializer < ApplicationSerializer
   attributes :id, :stripe_payment_intent, :status, :payment_method_id,
              :price_unit_amount, :currency, :paid_at, :refunded_at,
              :created_at, :updated_at, :user_id, :product_id

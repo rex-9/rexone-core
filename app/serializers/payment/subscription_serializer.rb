@@ -1,6 +1,4 @@
-class Payment::SubscriptionSerializer
-  include JSONAPI::Serializer
-
+class Payment::SubscriptionSerializer < ApplicationSerializer
   attributes :id, :stripe_subscription_id, :status, :payment_method_id, :cycle,
              :started_at, :next_billing_at, :ended_at, :canceled_at,
              :created_at, :updated_at, :user_id, :product_id

@@ -1,5 +1,6 @@
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::API
+  include Pagy::Method
   include Authorization
   include ApplicationHelper
 

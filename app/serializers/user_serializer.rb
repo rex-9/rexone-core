@@ -1,8 +1,6 @@
 # app/serializers/user_serializer.rb:
 
-class UserSerializer
-  include JSONAPI::Serializer
-
+class UserSerializer < ApplicationSerializer
   attributes :id, :email, :username, :name, :provider, :created_at, :updated_at
 
   attribute :profile_pic_url do |user|

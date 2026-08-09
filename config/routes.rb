@@ -87,6 +87,7 @@ Rails.application.routes.draw do
   end
 
   # ===== USERS =====
+  get "users/", to: "users/users#index"
   get "users/current", to: "users/users#read_current_user"
   get "users/current/iam", to: "users/users#read_current_iam"
   get "users/peek", to: "users/users#read_peek_user"

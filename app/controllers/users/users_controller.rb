@@ -1,6 +1,21 @@
 class Users::UsersController < ApplicationController
   before_action :authenticate_user!, except: [ :read_peek_user ]  # Skip authentication for this action
 
+  # GET /users?page=2&limit=25
+  def index
+    users = User.order(created_at: :desc)
+    Rails.logger.info "Users query: #{users.to_sql}"  # See the SQL before execution
+
+    pagy, records = pagy(:offset, users, limit: params[:limit])
+
+    render_json_response(
+      status_code: 200,
+      message: "Users retrieved successfully",
+      data: UserSerializer.paginated(records, pagy),
+      pagy: pagy
+    )
+  end
+
   # GET /users/current
   def read_current_user
     if current_user

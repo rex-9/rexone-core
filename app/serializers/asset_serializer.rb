@@ -1,8 +1,6 @@
 # app/serializers/asset_serializer.rb
 
-class AssetSerializer
-  include JSONAPI::Serializer
-
+class AssetSerializer < ApplicationSerializer
   attributes :id, :name, :url, :category, :format, :extension, :size, :source, :created_at, :updated_at
 
   attribute :record_id do |asset|

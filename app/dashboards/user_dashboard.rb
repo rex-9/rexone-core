@@ -59,6 +59,7 @@ class UserDashboard < Administrate::BaseDashboard
     email
     name
     provider
+    roles
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES

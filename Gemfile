@@ -1,5 +1,9 @@
 source "https://rubygems.org"
 
+# ============================================================
+# Rails
+# ============================================================
+
 gem "psych", "~> 5.4.0"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3"
@@ -10,17 +14,22 @@ gem "puma", ">= 8.0"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 # gem "jbuilder"
 
-# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-# gem "bcrypt", "~> 3.1.7"
-
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
+
+# ============================================================
+# Solid Stack
+# ============================================================
 
 # Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
 gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
 gem "async", "~> 2.44"
+
+# ============================================================
+# Performance / Deployment
+# ============================================================
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
@@ -31,15 +40,68 @@ gem "kamal", require: false
 # Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
 gem "thruster", require: false
 
+# ============================================================
+# Assets / Media
+# ============================================================
+
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.0"
+gem "ruby-vips", "~> 2.3"
+
+# ============================================================
+# Admin Dashboards / Monitoring
+# ============================================================
+
+gem "administrate", "~> 1.0"
+gem "sprockets-rails", "~> 3.5"
+gem "sassc-rails", "~> 2.1"
+gem "csv", "~> 3.3"
+
+gem "rails_pulse", "~> 0.3.3"
+gem "solid_web_ui", "~> 0.4.0" # Alternatives: mission_control-jobs, solid_observer, solid_queue_monitor
+
+# ============================================================
+# Authentication / Authorization
+# ============================================================
+
+# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
+gem "bcrypt", "~> 3.1"
+gem "devise", "~> 5.0"
+gem "devise-jwt", "~> 0.13.0"
+gem "jwt", "~> 3.2"
+
+# ============================================================
+# API / Serialization
+# ============================================================
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
-# gem "rack-cors"
+gem "rack-cors", "~> 3.0"
+gem "jsonapi-serializer", "~> 2.2"
+gem "rest-client", "~> 2.1"
+gem "rswag", "~> 2.17"
 
-group :development do
-  gem "solargraph", "~> 0.60.2"
-end
+# ============================================================
+# Security
+# ============================================================
+
+gem "rack-attack", "~> 6.8"
+
+# ============================================================
+# External Services
+# ============================================================
+
+gem "cloudinary", "~> 2.4"
+gem "stripe", "~> 19.4"
+
+# ============================================================
+# Utilities
+# ============================================================
+
+gem "pagy", "~> 43.6"
+
+# ============================================================
+# Development / Test
+# ============================================================
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -71,36 +133,6 @@ group :development, :test do
   gem "guard-rspec", "~> 4.7"
 end
 
-gem "ruby-vips", "~> 2.3"
-
-gem "bcrypt", "~> 3.1"
-
-gem "jwt", "~> 3.2"
-
-gem "rack-cors", "~> 3.0"
-
-gem "rest-client", "~> 2.1"
-
-gem "devise", "~> 5.0"
-
-gem "devise-jwt", "~> 0.13.0"
-
-gem "jsonapi-serializer", "~> 2.2"
-
-gem "rswag", "~> 2.17"
-
-gem "rack-attack", "~> 6.8"
-
-gem "cloudinary", "~> 2.4"
-
-gem "stripe", "~> 19.4"
-
-# === Admin Dashboards ===
-
-gem "administrate", "~> 1.0"
-gem "sprockets-rails", "~> 3.5"
-gem "sassc-rails", "~> 2.1"
-gem "csv", "~> 3.3"
-
-gem "rails_pulse", "~> 0.3.3"
-gem "solid_web_ui", "~> 0.4.0" # Alternatives: mission_control-jobs, solid_observer, solid_queue_monitor
+group :development do
+  gem "solargraph", "~> 0.60.2"
+end

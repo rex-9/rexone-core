@@ -1,6 +1,4 @@
-class Payment::ProductSerializer
-  include JSONAPI::Serializer
-
+class Payment::ProductSerializer < ApplicationSerializer
   attributes :id, :name, :description, :price_unit_amount, :currency, :cycle,
              :stripe_product_id, :stripe_price_id, :active, :created_at, :updated_at
 

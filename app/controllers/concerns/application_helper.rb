@@ -1,7 +1,6 @@
 # app/controllers/concerns/application_helper.rb
-
 module ApplicationHelper
-  def render_json_response(status_code:, message:, error: nil, data: nil)
+  def render_json_response(status_code:, message:, error: nil, data: nil, pagy: nil)
     success = status_code == 200 || status_code == 201
     response = {
       status: {
@@ -10,11 +9,38 @@ module ApplicationHelper
         message: message
       }
     }
+
     response[:status][:error] = error if error
-    response[:data] = data if data
+
+    # Handle paginated data (already formatted by serializer)
+    if pagy && data.is_a?(Hash) && data[:data].present?
+      response[:data] = data[:data]  # The serialized data array
+      response[:meta] = data[:meta]  # The pagination meta
+    else
+      response[:data] = data if data
+    end
 
     render json: response, status: map_status_code(status_code)
   end
+
+  # {
+  #   "status": {
+  #     "code": 200,
+  #     "success": true,
+  #     "message": "Users retrieved successfully"
+  #   },
+  #   "data": [...],
+  #   "meta": {
+  #     "pagination": {
+  #       "current_page": 1,
+  #       "total_pages": 10,
+  #       "total_count": 95,
+  #       "limit": 10,
+  #       "next_page": 2,
+  #       "prev_page": null
+  #     }
+  #   }
+  # }
 
   private
 
