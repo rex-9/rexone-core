@@ -19,10 +19,12 @@ Rails.application.routes.draw do
 
   # ===== PULSE =====
   # Rails Pulse Performance Route
-  mount RailsPulse::Engine => "/pulse"
+  mount RailsPulse::Engine => "/admin/pulse"
 
-  # ===== QUEUE =====
-  # mount SolidQueue::Engine, at: "/queue"
+  # ===== SOLID STACK =====
+  mount SolidWebUi::Queue::Engine => "/admin/queue"
+  mount SolidWebUi::Cache::Engine => "/admin/cache"
+  mount SolidWebUi::Cable::Engine => "/admin/cable"
 
   # ===== ADMINISTRATE =====
   namespace :admin do

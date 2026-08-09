@@ -89,15 +89,18 @@ gem "jsonapi-serializer", "~> 2.2"
 
 gem "rswag", "~> 2.17"
 
-gem "rails_pulse", "~> 0.3.3"
-
 gem "rack-attack", "~> 6.8"
 
 gem "cloudinary", "~> 2.4"
+
+gem "stripe", "~> 19.4"
+
+# === Admin Dashboards ===
 
 gem "administrate", "~> 1.0"
 gem "sprockets-rails", "~> 3.5"
 gem "sassc-rails", "~> 2.1"
 gem "csv", "~> 3.3"
 
-gem "stripe", "~> 19.4"
+gem "rails_pulse", "~> 0.3.3"
+gem "solid_web_ui", "~> 0.4.0" # Alternatives: mission_control-jobs, solid_observer, solid_queue_monitor

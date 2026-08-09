@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Rex9 Admin</title>
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "admin", "data-turbo-track": "reload" %>
+
+    <%= solid_web_ui_head_tags %>
+  </head>
+
+  <body>
+    <aside>
+      <!-- your admin sidebar -->
+    </aside>
+
+    <main>
+      <%= yield %>
+    </main>
+  </body>
+</html>

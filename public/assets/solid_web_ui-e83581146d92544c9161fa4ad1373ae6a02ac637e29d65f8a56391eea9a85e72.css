@@ -1,0 +1,548 @@
+/*! tailwindcss v4.3.0 | MIT License | https://tailwindcss.com */
+@layer properties;
+@layer theme, components, utilities;
+@layer utilities {
+  .visible {
+    visibility: visible;
+  }
+  .static {
+    position: static;
+  }
+  .container {
+    width: 100%;
+    @media (width >= 40rem) {
+      max-width: 40rem;
+    }
+    @media (width >= 48rem) {
+      max-width: 48rem;
+    }
+    @media (width >= 64rem) {
+      max-width: 64rem;
+    }
+    @media (width >= 80rem) {
+      max-width: 80rem;
+    }
+    @media (width >= 96rem) {
+      max-width: 96rem;
+    }
+  }
+  .block {
+    display: block;
+  }
+  .contents {
+    display: contents;
+  }
+  .hidden {
+    display: none;
+  }
+  .table {
+    display: table;
+  }
+  .filter {
+    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+  }
+}
+@layer components {
+  .solid-web-ui {
+    color: var(--swui-color-text);
+    background: var(--swui-color-bg);
+    font-family: var(--swui-font);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .solid-web-ui *, .solid-web-ui *::before, .solid-web-ui *::after {
+    box-sizing: border-box;
+  }
+  .solid-web-ui[data-color-scheme="light"] {
+    color-scheme: light;
+  }
+  .solid-web-ui[data-color-scheme="dark"] {
+    color-scheme: dark;
+  }
+  .solid-web-ui[data-color-scheme="auto"] {
+    color-scheme: light dark;
+  }
+  .solid-web-ui .swui-page {
+    max-width: var(--swui-page-max-width, 72rem);
+    margin-inline: auto;
+    padding: 1.5rem;
+  }
+  .solid-web-ui .swui-page__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--swui-color-border);
+    padding-bottom: 1rem;
+  }
+  .solid-web-ui .swui-page__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  .solid-web-ui .swui-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  .solid-web-ui .swui-refresh-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+  }
+  .solid-web-ui .swui-refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .solid-web-ui .swui-refresh__field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .solid-web-ui .swui-refresh__label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--swui-color-muted);
+  }
+  .solid-web-ui .swui-refresh__select {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+    background: var(--swui-color-surface);
+    color: var(--swui-color-text);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .solid-web-ui .swui-refresh__select:hover {
+    border-color: var(--swui-color-primary);
+  }
+  .solid-web-ui .swui-refresh__status {
+    font-size: 0.8rem;
+    color: var(--swui-color-muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 8.5rem;
+  }
+  .solid-web-ui .swui-refresh__now {
+    line-height: 1;
+    padding: 0.35rem 0.55rem;
+  }
+  .solid-web-ui .swui-nav__link {
+    display: inline-block;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--swui-radius);
+    color: var(--swui-color-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .solid-web-ui .swui-nav__link:hover {
+    background: var(--swui-color-primary);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-primary) 10%, transparent);
+    }
+    color: var(--swui-color-text);
+  }
+  .solid-web-ui .swui-nav__link--active {
+    background: var(--swui-color-primary);
+    color: var(--swui-color-primary-contrast);
+  }
+  .solid-web-ui .swui-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .solid-web-ui .swui-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1rem 1.1rem;
+    background: var(--swui-color-surface);
+    border: 1px solid var(--swui-color-border);
+    border-left: 3px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+    text-decoration: none;
+    color: inherit;
+  }
+  .solid-web-ui a.swui-card:hover {
+    border-color: var(--swui-color-primary);
+  }
+  .solid-web-ui .swui-card__label {
+    font-size: 0.8rem;
+    color: var(--swui-color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .solid-web-ui .swui-card__value {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+  .solid-web-ui .swui-card--primary {
+    border-left-color: var(--swui-color-primary);
+  }
+  .solid-web-ui .swui-card--success {
+    border-left-color: var(--swui-color-success);
+  }
+  .solid-web-ui .swui-card--warning {
+    border-left-color: var(--swui-color-warning);
+  }
+  .solid-web-ui .swui-card--danger {
+    border-left-color: var(--swui-color-danger);
+  }
+  .solid-web-ui .swui-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--swui-color-muted);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-muted) 18%, transparent);
+    }
+    color: var(--swui-color-text);
+  }
+  .solid-web-ui .swui-badge--info {
+    background: var(--swui-color-primary);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-primary) 18%, transparent);
+    }
+  }
+  .solid-web-ui .swui-badge--success {
+    background: var(--swui-color-success);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-success) 22%, transparent);
+    }
+  }
+  .solid-web-ui .swui-badge--warning {
+    background: var(--swui-color-warning);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-warning) 24%, transparent);
+    }
+  }
+  .solid-web-ui .swui-badge--danger {
+    background: var(--swui-color-danger);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-danger) 22%, transparent);
+    }
+  }
+  .solid-web-ui .swui-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--swui-color-surface);
+    border: 1px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+    overflow: hidden;
+    font-size: 0.9rem;
+  }
+  .solid-web-ui .swui-table th, .solid-web-ui .swui-table td {
+    text-align: left;
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--swui-color-border);
+  }
+  .solid-web-ui .swui-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--swui-color-muted);
+    background: var(--swui-color-muted);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-muted) 6%, transparent);
+    }
+  }
+  .solid-web-ui .swui-table tr:last-child td {
+    border-bottom: 0;
+  }
+  .solid-web-ui .swui-table tbody tr[data-swui-row-href] {
+    cursor: pointer;
+  }
+  .solid-web-ui .swui-table tbody tr[data-swui-row-href]:hover {
+    background: var(--swui-color-primary);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-primary) 8%, transparent);
+    }
+  }
+  .solid-web-ui .swui-table__empty td {
+    text-align: center;
+    color: var(--swui-color-muted);
+    padding: 1.5rem;
+  }
+  .solid-web-ui .swui-btn {
+    display: inline-block;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+    background: var(--swui-color-surface);
+    color: var(--swui-color-text);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .solid-web-ui .swui-btn:hover {
+    border-color: var(--swui-color-primary);
+  }
+  .solid-web-ui .swui-btn--danger {
+    color: var(--swui-color-danger);
+    border-color: var(--swui-color-danger);
+  }
+  .solid-web-ui .swui-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 1rem;
+  }
+  .solid-web-ui .swui-pagination__item {
+    display: inline-block;
+    min-width: 2rem;
+    text-align: center;
+    padding: 0.3rem 0.55rem;
+    border: 1px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+    color: var(--swui-color-text);
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+  .solid-web-ui .swui-pagination__item--current {
+    background: var(--swui-color-primary);
+    color: var(--swui-color-primary-contrast);
+    border-color: var(--swui-color-primary);
+  }
+  .solid-web-ui .swui-pagination__item--disabled {
+    color: var(--swui-color-muted);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .solid-web-ui .swui-section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem;
+  }
+  .solid-web-ui .swui-back {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: var(--swui-color-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+  .solid-web-ui .swui-back:hover {
+    color: var(--swui-color-text);
+  }
+  .solid-web-ui .swui-detail {
+    display: grid;
+    grid-template-columns: minmax(8rem, 14rem) 1fr;
+    gap: 0;
+    margin: 0 0 1.5rem;
+    background: var(--swui-color-surface);
+    border: 1px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+    overflow: hidden;
+    font-size: 0.9rem;
+  }
+  .solid-web-ui .swui-detail dt, .solid-web-ui .swui-detail dd {
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--swui-color-border);
+    margin: 0;
+  }
+  .solid-web-ui .swui-detail dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--swui-color-muted);
+    background: var(--swui-color-muted);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-muted) 6%, transparent);
+    }
+  }
+  .solid-web-ui .swui-detail > dt:last-of-type, .solid-web-ui .swui-detail > dd:last-of-type {
+    border-bottom: 0;
+  }
+  .solid-web-ui .swui-detail__hint {
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.8;
+  }
+  .solid-web-ui .swui-flash-region {
+    max-width: var(--swui-page-max-width, 72rem);
+    margin-inline: auto;
+    padding: 1.5rem 1.5rem 0;
+  }
+  .solid-web-ui .swui-flash {
+    padding: 0.6rem 0.85rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+    font-size: 0.9rem;
+  }
+  .solid-web-ui .swui-flash--notice {
+    border-color: var(--swui-color-success);
+    background: var(--swui-color-success);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-success) 14%, transparent);
+    }
+  }
+  .solid-web-ui .swui-flash--alert {
+    border-color: var(--swui-color-danger);
+    background: var(--swui-color-danger);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-danger) 14%, transparent);
+    }
+  }
+  .solid-web-ui .swui-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .solid-web-ui .swui-form {
+    max-width: 48rem;
+    margin-bottom: 1.5rem;
+  }
+  .solid-web-ui .swui-field {
+    margin-bottom: 1rem;
+  }
+  .solid-web-ui .swui-fieldset {
+    margin: 0 0 1rem;
+    padding: 1rem 1.1rem 0.25rem;
+    border: 1px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+  }
+  .solid-web-ui .swui-fieldset legend {
+    padding: 0 0.4rem;
+  }
+  .solid-web-ui .swui-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--swui-color-muted);
+  }
+  .solid-web-ui .swui-input, .solid-web-ui .swui-textarea {
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+    background: var(--swui-color-surface);
+    color: var(--swui-color-text);
+    font: inherit;
+    font-size: 0.9rem;
+  }
+  .solid-web-ui .swui-textarea {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    line-height: 1.45;
+    resize: vertical;
+  }
+  .solid-web-ui .swui-input:focus, .solid-web-ui .swui-textarea:focus {
+    outline: none;
+    border-color: var(--swui-color-primary);
+  }
+  .solid-web-ui .swui-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .solid-web-ui .swui-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    color: var(--swui-color-muted);
+  }
+  .solid-web-ui .swui-form__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+  .solid-web-ui .swui-codeblock {
+    margin: 0;
+    padding: 0.75rem;
+    max-height: 24rem;
+    overflow: auto;
+    background: var(--swui-color-muted);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--swui-color-muted) 8%, transparent);
+    }
+    border: 1px solid var(--swui-color-border);
+    border-radius: var(--swui-radius);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    white-space: pre;
+    color: var(--swui-color-text);
+  }
+}
+@property --tw-blur {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-brightness {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-contrast {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-grayscale {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-hue-rotate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-invert {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-opacity {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-saturate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-sepia {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-drop-shadow-size {
+  syntax: "*";
+  inherits: false;
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop {
+      --tw-blur: initial;
+      --tw-brightness: initial;
+      --tw-contrast: initial;
+      --tw-grayscale: initial;
+      --tw-hue-rotate: initial;
+      --tw-invert: initial;
+      --tw-opacity: initial;
+      --tw-saturate: initial;
+      --tw-sepia: initial;
+      --tw-drop-shadow: initial;
+      --tw-drop-shadow-color: initial;
+      --tw-drop-shadow-alpha: 100%;
+      --tw-drop-shadow-size: initial;
+    }
+  }
+}

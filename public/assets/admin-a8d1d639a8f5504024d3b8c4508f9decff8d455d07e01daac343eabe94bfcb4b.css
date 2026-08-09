@@ -1,0 +1,157 @@
+/* app/assets/stylesheets/admin.css */
+
+html,
+body {
+  background: #0b0f14 !important;
+  color: #e5e7eb;
+}
+
+/* Administrate main layout */
+body {
+  background: #0b0f14 !important;
+}
+
+.app-container {
+  background: #0b0f14 !important;
+}
+
+.main-content {
+  background: #0b0f14 !important;
+}
+
+/* Sidebar */
+.navigation__link,
+.js-table-row {
+  color: #e5e7eb !important;
+  text-decoration: none !important;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.navigation__link:hover,
+.js-table-row:hover {
+  color: #e2e8f0 !important;
+  background: #161d27 !important;
+}
+
+.navigation__link--active {
+  color: #ffffff !important;
+  background: #312e81 !important;
+}
+
+.navigation__link--active:hover {
+  color: #ffffff !important;
+  background: #3730a3 !important;
+}
+
+/* Main content/card areas */
+.main-content__body {
+  background: #11161d !important;
+  color: #e5e7eb !important;
+}
+
+/* Tables */
+.table {
+  background: #11161d !important;
+  color: #e5e7eb !important;
+}
+
+.table tr:hover {
+  background: #555 !important;
+  color: #111 !important;
+}
+
+.table th {
+  background: #171d26 !important;
+  color: #cbd5e1 !important;
+}
+
+.table td {
+  background: #11161d !important;
+  color: #cbd5e1 !important;
+  border-color: #27303b !important;
+}
+
+/* Selectize dark theme */
+
+.selectize-input {
+  background: #111820 !important;
+  border: 1px solid #273241 !important;
+  color: #e5e7eb !important;
+  box-shadow: none !important;
+}
+
+.selectize-input.focus,
+.selectize-input.dropdown-active {
+  background: #111820 !important;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 1px #4f46e5 !important;
+}
+
+.selectize-input input {
+  color: #e5e7eb !important;
+  background: transparent !important;
+}
+
+.selectize-input input::placeholder {
+  color: #64748b !important;
+}
+
+/* Dropdown */
+
+.selectize-dropdown {
+  background: #111820 !important;
+  border: 1px solid #273241 !important;
+  color: #e5e7eb !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+.selectize-dropdown .option {
+  color: #cbd5e1 !important;
+}
+
+.selectize-dropdown .option:hover,
+.selectize-dropdown .option.active {
+  background: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+/* Selected item */
+
+.selectize-input .item {
+  color: #e5e7eb !important;
+  background: transparent !important;
+}
+
+/* Links */
+a {
+  color: #60a5fa;
+}
+
+a:hover {
+  color: #93c5fd;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5 {
+  color: #e5e7eb !important;
+}
+
+/* Forms */
+input,
+textarea,
+select {
+  background: #11161d !important;
+  color: #e5e7eb !important;
+  border-color: #374151 !important;
+}
+
+/* Buttons */
+.button,
+button {
+  border-radius: 6px;
+}
