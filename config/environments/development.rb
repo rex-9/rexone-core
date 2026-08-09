@@ -17,15 +17,14 @@ Rails.application.configure do
 
   # Enable/disable Action Controller caching. By default Action Controller caching is disabled.
   # Run rails dev:cache to toggle Action Controller caching.
-  if Rails.root.join("tmp/caching-dev.txt").exist?
-    # Redis memory cache store
-    config.cache_store = :redis_cache_store, { url: ENV["RAILS_REDIS_URL"] || "redis://redis:6379/0" }
-    config.public_file_server.headers = { "cache-control" => "public, max-age=#{2.days.to_i}" }
-    config.action_controller.perform_caching = true
-  else
-    config.action_controller.perform_caching = false
-    config.cache_store = :null_store
-  end
+  # if Rails.root.join("tmp/caching-dev.txt").exist?
+  config.action_controller.perform_caching = true
+  config.cache_store = :solid_cache_store   # Use Solid Cache
+  config.public_file_server.headers = { "cache-control" => "public, max-age=#{2.days.to_i}" }
+  # else
+  #   config.action_controller.perform_caching = false
+  #   config.cache_store = :null_store
+  # end
 
   # Change to :null_store to avoid any caching.
   # config.cache_store = :memory_store
@@ -65,6 +64,10 @@ Rails.application.configure do
 
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true
+
+  # Use Solid Queue for jobs
+  config.active_job.queue_adapter = :solid_queue
+  config.solid_queue.logger = ActiveSupport::Logger.new(STDOUT)
 
   # Highlight code that triggered redirect in logs.
   config.action_dispatch.verbose_redirect_logs = true

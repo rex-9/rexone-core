@@ -14,8 +14,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
+    # Run server only
+    command: ["./bin/rails", "server", "-b", "0.0.0.0"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: ${RAILS_DOCKERFILE}
+    env_file:
+      - .env
+    volumes:
+      - .:/rails
+    depends_on:
+      db:
         condition: service_healthy
+    command: ["./bin/jobs"]
 
   db:
     image: postgres:18-alpine
@@ -30,16 +43,6 @@ services:
       POSTGRES_PASSWORD: ${PG_PASSWORD}
     ports:
       - ${PG_PORT_MAP}
-
-  redis:
-    image: redis:8.8-alpine
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 2s
-      retries: 10
-    ports:
-      - ${REDIS_PORT_MAP}
 
 volumes:
   postgres:

@@ -20,6 +20,7 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
+gem "async", "~> 2.44"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
@@ -70,10 +71,7 @@ group :development, :test do
   gem "guard-rspec", "~> 4.7"
 end
 
-gem "cgi", "~> 0.5.2"
 gem "ruby-vips", "~> 2.3"
-
-gem "redis", "~> 5.4"
 
 gem "bcrypt", "~> 3.1"
 
@@ -91,7 +89,7 @@ gem "jsonapi-serializer", "~> 2.2"
 
 gem "rswag", "~> 2.17"
 
-gem "rails_performance", "~> 1.6"
+gem "rails_pulse", "~> 0.3.3"
 
 gem "rack-attack", "~> 6.8"
 

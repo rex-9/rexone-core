@@ -9,10 +9,6 @@ module AppConfig
   CLIENT_BASE_URL = ENV.fetch("RAILS_CLIENT_BASE_URL") { "http://localhost:4002" }
   SERVER_BASE_URL = ENV.fetch("RAILS_SERVER_BASE_URL") { "http://localhost:3000" }
 
-  # Performance Dashboard creds
-  RAILS_PERFORMANCE_USERNAME = ENV.fetch("RAILS_PERFORMANCE_USERNAME")
-  RAILS_PERFORMANCE_PASSWORD = ENV.fetch("RAILS_PERFORMANCE_PASSWORD")
-
   # Stripe Keys
   STRIPE_SECRET_KEY = ENV.fetch("STRIPE_SECRET_KEY")
   STRIPE_PUBLISHABLE_KEY = ENV.fetch("STRIPE_PUBLISHABLE_KEY")
@@ -32,18 +28,15 @@ module AppConfig
   DEEPSEEK_MODEL=ENV.fetch("DEEPSEEK_MODEL")
 
   # Session & token timeouts
-  SESSION_TIMEOUT = 1.week
-  JWT_EXPIRATION = 1.week
+  SESSION_TIMEOUT = ENV.fetch("SESSION_TIMEOUT") { 1.week }.to_i # 7-day maximum login, Cache Active Platform Session Lifespan
+  JWT_EXPIRATION = ENV.fetch("JWT_EXPIRATION") { 1.week }.to_i #  7-day inactivity timeout, JWT Token Expiration Lifespan
 
   # Password reset
-  PASSWORD_RESET_WITHIN = 6.hours
-
-  # Confirm code before
-  CONFIRM_CODE_WITHIN = 10.minutes
+  PASSWORD_RESET_WITHIN = ENV.fetch("PASSWORD_RESET_WITHIN") { 1.hour }.to_i
 
   # Unconfirmed access
-  ALLOW_UNCONFIRMED_ACCESS_FOR = 2.days
+  ALLOW_UNCONFIRMED_ACCESS_FOR = ENV.fetch("ALLOW_UNCONFIRMED_ACCESS_FOR") { 1.day }.to_i
 
-  # Rack::Attack
-  RACK_ATTACK_CACHE_EXPIRY = 10.minutes
+  # Confirm code before
+  CONFIRM_CODE_WITHIN = ENV.fetch("CONFIRM_CODE_WITHIN") { 10.minutes }.to_i
 end

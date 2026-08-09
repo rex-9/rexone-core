@@ -23,8 +23,8 @@ module Admin
       end
 
       # http_basic_authenticate_or_request_with(
-      #   name: AppConfig::RAILS_PERFORMANCE_USERNAME,
-      #   password: AppConfig::RAILS_PERFORMANCE_PASSWORD
+      #   name: AppConfig::RAILS_ADMIN_USERNAME,
+      #   password: AppConfig::RAILS_ADMIN_PASSWORD
       # )
     end
 

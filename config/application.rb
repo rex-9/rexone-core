@@ -20,8 +20,10 @@ module MeritboxApi
     #
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
+
+    config.time_zone = "UTC"  # Set a consistent timezone
+    config.active_record.default_timezone = :utc
+
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Only loads a smaller set of middleware suitable for API only apps.
@@ -29,8 +31,7 @@ module MeritboxApi
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
-    # Load the secret key base from the credentials file or fallback to the old
-    Rails.application.config.secret_key_base = Rails.application.credentials.secret_key_base || ENV["RAILS_SECRET_KEY_BASE"]
+    Rails.application.config.secret_key_base = Rails.application.credentials.secret_key_base
 
     # Enable Flash, Cookies, MethodOverride for Administrate Gem
     config.middleware.use ActionDispatch::Flash
@@ -38,5 +39,20 @@ module MeritboxApi
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use ActionDispatch::Session::CookieStore, config.session_options
     config.middleware.use ::Rack::MethodOverride
+
+    # ---- Solid Stack ----
+    # Use Solid Queue as the default Active Job adapter
+    config.active_job.queue_adapter = :solid_queue
+
+    # Use Solid Cache as the default cache store
+    config.cache_store = :solid_cache_store
+
+    # Enable fiber isolation if you plan to use fibers in jobs (recommended)
+    # This allows Active Support to maintain per-fiber state
+    config.active_support.isolation_level = :fiber
+
+    # Optional: If you use multiple databases, you can specify a separate
+    # database for Solid Cache and Solid Queue, but for simplicity we use
+    # the primary one.
   end
 end

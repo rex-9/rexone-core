@@ -9,9 +9,13 @@ fi
 rm -f /rails/tmp/pids/server.pid
 
 # Check if the database exists. If not, create it.
-if [ "$RAILS_ENV" == "development" ]; then
+if [ "$RAILS_ENV" = "development" ] && [ "$1" != "./bin/jobs" ]; then
   echo "Preparing database..."
   bundle exec rake db:prepare
+fi
+
+if [ "$1" = "./bin/jobs" ]; then
+  echo "→ Starting Solid Queue worker..."
 fi
 
 # Continue with the normal command (passed as arguments to the script)

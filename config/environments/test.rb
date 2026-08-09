@@ -20,8 +20,10 @@ Rails.application.configure do
 
   # Show full error reports and disable caching
   config.consider_all_requests_local = true
+
   # config.action_controller.perform_caching = false
-  config.cache_store = :null_store
+  config.cache_store = :null_store   # or :solid_cache_store if you want to test caching
+  config.active_job.queue_adapter = :test   # or :solid_queue if you want to test jobs
 
   # Render exception templates for rescuable exceptions and raise for other exceptions.
   config.action_dispatch.show_exceptions = :rescuable

@@ -36,5 +36,7 @@
 
 # Ignore credential files
 /config/credentials.yml.enc
-/config/database.yml
-/Gemfile.lock
+
+# Ignore key files for decrypting credentials and more.
+/config/*.key
+

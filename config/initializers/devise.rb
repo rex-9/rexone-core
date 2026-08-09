@@ -326,7 +326,7 @@ Devise.setup do |config|
     jwt.revocation_requests = [
       [ "DELETE", %r{^/signout$} ]
     ]
-    jwt.expiration_time = AppConfig::JWT_EXPIRATION.to_i
+    jwt.expiration_time = AppConfig::JWT_EXPIRATION
   end
 
   Warden::JWTAuth.configure do |jwt|

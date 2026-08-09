@@ -1,0 +1,82 @@
+# config/recurring.yml
+
+# examples:
+#   periodic_cleanup:
+#     class: CleanSoftDeletedRecordsJob
+#     queue: background
+#     args: [ 1000, { batch_size: 500 } ]
+#     schedule: every hour
+#   periodic_cleanup_with_command:
+#     command: "SoftDeletedRecord.due.delete_all"
+#     priority: 2
+#     schedule: at 5am every day
+
+production:
+  # CLEAN FINISHED JOBS - Every hour
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every hour at minute 12
+
+  # CLEAN FAILED JOBS - Weekly on Sunday at 3am
+  clear_solid_queue_failed_jobs:
+    command: "SolidQueue::Job.where('finished_at IS NOT NULL AND finished_at < ?', 1.week.ago).delete_all"
+    schedule: at 3am every Sunday
+
+  # ===== RAILS PULSE MAINTENANCE =====
+  # RAILS PULSE SUMMARY - Every hour at minute 5
+  rails_pulse_summary:
+    class: RailsPulse::SummaryJob
+    schedule: every hour at minute 5
+
+  # RAILS PULSE CLEANUP - Daily at 1am
+  rails_pulse_cleanup:
+    class: RailsPulse::CleanupJob
+    schedule: at 1am every day
+
+  # ===== SOLID CACHE MAINTENANCE =====
+  # Optional: Clean up expired cache entries
+  # CLEAN SOLID CACHE - Daily at 2am
+  clear_solid_cache_expired_entries:
+    command: "SolidCache::Entry.where('created_at < ?', 1.day.ago).delete_all"
+    schedule: every day at 2am
+    # Note: Solid Cache automatically handles expiration, this is just a safety net
+
+  # ===== YOUR APP-SPECIFIC RECURRING JOBS =====
+  # Example: Send weekly reports
+  # weekly_report:
+  #   class: WeeklyReportJob
+  #   queue: mailers
+  #   schedule: every Monday at 9am
+
+  # Example: Clean up old sessions
+  # cleanup_expired_sessions:
+  #   command: "CacheService.cleanup_expired_sessions"
+  #   schedule: every hour
+
+  # Example: Update user activity stats
+  # update_activity_stats:
+  #   class: UpdateActivityStatsJob
+  #   schedule: every 30 minutes
+
+# Development - lighter schedule for testing, less frequent, longer periods
+development:
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every hour at minute 12
+    # command: |
+    #   begin
+    #     SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)
+    #   rescue => e
+    #     Rails.logger.error("Failed to clean Solid Queue jobs: #{e.message}")
+    #   end
+
+  rails_pulse_summary:
+    class: RailsPulse::SummaryJob
+    schedule: every hour at minute 5
+
+  rails_pulse_cleanup:
+    class: RailsPulse::CleanupJob
+    schedule: every day at 1am
+
+test:
+  # No recurring jobs in test

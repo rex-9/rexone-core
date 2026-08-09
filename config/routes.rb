@@ -17,11 +17,12 @@ Rails.application.routes.draw do
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
-  # ===== PERFORMANCE =====
-  # Rails Performance Route
-  # authenticate :user, ->(user) { user.admin? } do
-  mount RailsPerformance::Engine, at: "/performance"
-  # end
+  # ===== PULSE =====
+  # Rails Pulse Performance Route
+  mount RailsPulse::Engine => "/pulse"
+
+  # ===== QUEUE =====
+  # mount SolidQueue::Engine, at: "/queue"
 
   # ===== ADMINISTRATE =====
   namespace :admin do

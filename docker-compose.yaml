@@ -8,22 +8,42 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
       RAILS_ENV: ${RAILS_ENV}
-      RAILS_SECRET_KEY_BASE: ${RAILS_SECRET_KEY_BASE}
       RAILS_JWT_SECRET_KEY: ${RAILS_JWT_SECRET_KEY}
       RAILS_DATABASE_URL: ${RAILS_DATABASE_URL}
-      RAILS_REDIS_URL: ${RAILS_REDIS_URL}
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
+      SOLID_QUEUE_WORKERS: ${SOLID_QUEUE_WORKERS:-4}
       RAILS_CLIENT_BASE_URL: ${RAILS_CLIENT_BASE_URL}
       RAILS_SERVER_BASE_URL: ${RAILS_SERVER_BASE_URL}
-      RAILS_PERFORMANCE_USERNAME: ${RAILS_PERFORMANCE_USERNAME}
-      RAILS_PERFORMANCE_PASSWORD: ${RAILS_PERFORMANCE_PASSWORD}
     ports:
       - ${RAILS_PORT_MAP}
     labels:
       - coolify.traefik.middlewares=cors@file
+
+  # Solid Queue Worker
+  worker:
+    container_name: ${RAILS_CONTAINER_NAME}-worker
+    build:
+      context: .
+      dockerfile: ${RAILS_DOCKERFILE}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      RAILS_ENV: ${RAILS_ENV}
+      RAILS_JWT_SECRET_KEY: ${RAILS_JWT_SECRET_KEY}
+      RAILS_DATABASE_URL: ${RAILS_DATABASE_URL}
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
+      SOLID_QUEUE_WORKERS: ${SOLID_QUEUE_WORKERS:-4}
+      RAILS_CLIENT_BASE_URL: ${RAILS_CLIENT_BASE_URL}
+      RAILS_SERVER_BASE_URL: ${RAILS_SERVER_BASE_URL}
+    command: ["./bin/jobs"]
+    labels:
+      - coolify.traefik.enable=false
 
   db:
     container_name: ${DB_CONTAINER_NAME}
@@ -40,25 +60,8 @@ services:
       POSTGRES_DB: ${PG_DATABASE}
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
-      POSTGRES_HOST: ${PG_HOST}
-      POSTGRES_PORT: ${PG_PORT}
     ports:
       - ${PG_PORT_MAP}
 
-  redis:
-    container_name: ${REDIS_CONTAINER_NAME}
-    image: redis:8.8-alpine
-    restart: unless-stopped
-    volumes:
-      - redis:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      retries: 10
-      timeout: 2s
-    ports:
-      - ${REDIS_PORT_MAP}
-
 volumes:
   postgres:
-  redis:

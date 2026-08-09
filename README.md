@@ -38,7 +38,7 @@
       - [Access](#access)
     - [Admin Dashboard](#admin-dashboard)
       - [Authentication \& RBAC](#authentication--rbac)
-      - [Super Admin Setup](#super-admin-setup)
+      - [Super Admin Setup for both Performance and Admin Dashboards](#super-admin-setup-for-both-performance-and-admin-dashboards)
       - [Routes](#routes)
       - [Permissions](#permissions)
     - [Explore More Open Source Projects](#explore-more-open-source-projects)
@@ -146,7 +146,7 @@ The system integrates with multiple third-party services to provide a complete s
   <ul>
     <li><a href="https://rubyonrails.org/">Ruby on Rails</a></li>
     <li><a href="https://rubygems.org/gems/devise/">Devise</a></li>
-    <li><a href="https://redis.io/">Redis</a></li>
+    <li><a href="https://github.com/rails/solid_queue">Solid Trio (Cache, Queue, Cable)</a></li>
     <li><a href="https://www.docker.com/">Docker</a> (for development)</li>
     <li><a href="https://stripe.com/">Stripe</a> (Payment)</li>
     <li><a href="https://onesignal.com/">OneSignal</a> (Notifications)</li>
@@ -221,7 +221,9 @@ Explore them under `/scripts ` folder.
 run the app.
 
 ```sh
-> sh scripts/dev.sh
+shell-1> sh scripts/dev_api.sh
+shell-2> sh scripts/dev_worker.sh
+shell-3> sh scripts/dev_db.sh
 ```
 
 ### Test
@@ -258,20 +260,13 @@ view the API documentation at
 
 ### Performance Dashboard
 
-The application includes a built-in performance monitoring dashboard powered by Rails' built-in instrumentation.
+The application includes a built-in performance monitoring dashboard powered by Rails Pulse.
 
 #### Access
 
 View the performance dashboard at:
 
-`/performance`
-
-with ENV variables credentials
-
-```bash
-RAILS_PERFORMANCE_USERNAME=admin
-RAILS_PERFORMANCE_PASSWORD=password
-```
+`/pulse`
 
 ### Admin Dashboard
 
@@ -279,7 +274,7 @@ RAILS_PERFORMANCE_PASSWORD=password
 
 #### Authentication & RBAC
 
-#### Super Admin Setup
+#### Super Admin Setup for both Performance and Admin Dashboards
 
 The super admin user is automatically created through seeders:
 

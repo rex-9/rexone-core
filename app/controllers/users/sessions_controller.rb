@@ -1,3 +1,4 @@
+# app/controllers/users/sessions_controller.rb
 class Users::SessionsController < Devise::SessionsController
   respond_to :json
 
@@ -17,7 +18,7 @@ class Users::SessionsController < Devise::SessionsController
       return
     end
 
-    limiter = PasswordAttemptService.new(user.id)
+    limiter = PasswordService.new(user.id)
     unless limiter.allowed?
       render_json_response(
         status_code: 429,
@@ -48,9 +49,7 @@ class Users::SessionsController < Devise::SessionsController
           message: Messages::SIGNED_IN_SUCCESSFULLY,
           data: {
             user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-            token: token,
-            remaining_attempts: 3,
-            cooldown_remaining: 0
+            token: token
           }
         )
       else
@@ -220,8 +219,6 @@ class Users::SessionsController < Devise::SessionsController
     )
 
     if user.save
-      # The after_create callback will assign the default role
-
       # Save google profile picture
       asset = Asset.new(
         name: "profile_google_of_user_#{user.id}",
@@ -234,15 +231,7 @@ class Users::SessionsController < Devise::SessionsController
       )
 
       unless asset.save
-      # Log but don't fail the request - user can upload later
-      Rails.logger.warn("Failed to save Google profile picture for user #{user.id}: #{asset.errors.full_messages}")
-
-        # render_json_response(
-        #   status_code: 422,
-        #   message: Messages::FAILED_TO_SAVE_GOOGLE_PHOTO,
-        #   error: asset.errors.full_messages.uniq.to_sentence
-        # )
-        # return
+        Rails.logger.warn("Failed to save Google profile picture for user #{user.id}: #{asset.errors.full_messages}")
       end
 
       clear_google_challenge!(challenge_token)
@@ -299,10 +288,9 @@ class Users::SessionsController < Devise::SessionsController
     super
   end
 
-  # Devise's prepend_before_action for destroy calls this to check if the user
-  # is already signed out. With JWT, warden state is unreliable at this point
-  # (the RevocationManager middleware runs after the response). We skip this
-  # check entirely and let our destroy action handle the response.
+  # Devise normally checks whether the user is already signed out
+  # before destroying the session. For this JWT API, logout is handled
+  # explicitly by destroy/respond_to_on_destroy, so skip that check.
   def verify_signed_out_user(*_args); end
 
   def respond_to_on_destroy(*_args)
@@ -324,6 +312,17 @@ class Users::SessionsController < Devise::SessionsController
 
   private
 
+  # Helper method to sanitize email addresses from Google sign-in
+  def sanitize_email(email)
+    local_part = email.split("@").first.downcase
+    sanitized_username = local_part.gsub(/[^a-z0-9_]/, "_")
+    if User.exists?(username: sanitized_username)
+      "#{sanitized_username}_#{format('%06d', SecureRandom.random_number(10**6))}"
+    else
+      sanitized_username
+    end
+  end
+
   def session_platform
     value = request.headers["X-Platform"].presence || params[:platform].presence || "web"
     %w[web mobile].include?(value) ? value : "web"
@@ -334,22 +333,22 @@ class Users::SessionsController < Devise::SessionsController
   end
 
   def signup_active_session!(user:, token:)
-    PASSWORD_REDIS.set(session_key_for(user.id), token, ex: AppConfig::SESSION_TIMEOUT.to_i)
-  rescue Redis::BaseError => e
+    CacheService.write(session_key_for(user.id), token, expires_in: AppConfig::SESSION_TIMEOUT)
+  rescue => e
     Rails.logger.error("[Auth] Failed to sign up active session: #{e.message}")
   end
 
   def clear_active_session!(user)
     token = request.headers["Authorization"].to_s.split(" ").last
     key = session_key_for(user.id)
-    active_token = PASSWORD_REDIS.get(key)
+    active_token = CacheService.read(key)
 
     return if active_token.blank?
 
     if token.present? && active_token == token
-      PASSWORD_REDIS.del(key)
+      CacheService.delete(key)
     end
-  rescue Redis::BaseError => e
+  rescue => e
     Rails.logger.error("[Auth] Failed to clear active session: #{e.message}")
   end
 
@@ -376,27 +375,24 @@ class Users::SessionsController < Devise::SessionsController
   end
 
   def store_google_challenge!(challenge_token, payload)
-    PASSWORD_REDIS.set(google_challenge_key(challenge_token), payload.to_json, ex: 5.minutes.to_i)
-  rescue Redis::BaseError => e
+    CacheService.write(google_challenge_key(challenge_token), payload.to_json, expires_in: 5.minutes)
+  rescue => e
     Rails.logger.error("[Auth] Failed to store Google challenge: #{e.message}")
   end
 
   def fetch_google_challenge(challenge_token)
-    raw_payload = PASSWORD_REDIS.get(google_challenge_key(challenge_token))
+    raw_payload = CacheService.read(google_challenge_key(challenge_token))
     return nil if raw_payload.blank?
 
     JSON.parse(raw_payload)
-  rescue Redis::BaseError => e
-    Rails.logger.error("[Auth] Failed to fetch Google challenge: #{e.message}")
-    nil
   rescue JSON::ParserError => e
     Rails.logger.error("[Auth] Invalid Google challenge payload: #{e.message}")
     nil
   end
 
   def clear_google_challenge!(challenge_token)
-    PASSWORD_REDIS.del(google_challenge_key(challenge_token))
-  rescue Redis::BaseError => e
+    CacheService.delete(google_challenge_key(challenge_token))
+  rescue => e
     Rails.logger.error("[Auth] Failed to clear Google challenge: #{e.message}")
   end
 
