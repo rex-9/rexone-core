@@ -8,12 +8,6 @@ fi
 # Remove old Puma PID file (if server is already running)
 rm -f /rails/tmp/pids/server.pid
 
-# Check if the database exists. If not, create it.
-if [ "$RAILS_ENV" = "development" ] && [ "$1" != "./bin/jobs" ]; then
-  echo "Preparing database..."
-  bundle exec rake db:prepare
-fi
-
 if [ "$1" = "./bin/jobs" ]; then
   echo "→ Starting Solid Queue waka..."
 fi

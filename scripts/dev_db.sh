@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 # set -e
 
-docker compose -f docker-compose.dev.yaml up db --build
+docker compose -f docker-compose.dev.yaml up db
