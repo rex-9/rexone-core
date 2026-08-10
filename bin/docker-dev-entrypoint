@@ -8,15 +8,17 @@ fi
 # Remove old Puma PID file (if server is already running)
 rm -f /rails/tmp/pids/server.pid
 
-# Check if the database exists. If not, create it.
+# Prepare the development database when starting the Rails API.
+# Solid Queue (Waka) skips this step.
 if [ "$RAILS_ENV" = "development" ] && [ "$1" != "./bin/jobs" ]; then
   echo "Preparing database..."
   bundle exec rake db:prepare
 fi
 
+# Identify Solid Queue Waka startup.
 if [ "$1" = "./bin/jobs" ]; then
   echo "→ Starting Solid Queue waka..."
 fi
 
-# Continue with the normal command (passed as arguments to the script)
-exec "${@}"
+# Continue with the command passed to the container.
+exec "$@"

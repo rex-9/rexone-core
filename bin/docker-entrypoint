@@ -5,9 +5,11 @@ if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*/libjemalloc.so.2 ]; then
   export LD_PRELOAD="$(echo /usr/lib/*/libjemalloc.so.2)"
 fi
 
-# If running the rails server then create or migrate existing database
-if [ "${1}" == "./bin/rails" ] && [ "${2}" == "server" ]; then
-  ./bin/rails db:prepare
+# Prepare the database only when starting the Rails API server.
+if [ "$1" = "./bin/rails" ] && [ "$2" = "server" ]; then
+  echo "Preparing database..."
+  bundle exec rake db:prepare
 fi
 
-exec "${@}"
+# Continue with the command passed to the container.
+exec "$@"
