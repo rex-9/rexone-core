@@ -18,14 +18,14 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     origins "http://localhost:4002", # For dev
-            "https://uat.meritbox.me", # For uat
-            "http://uat.meritbox.me",
-            "https://www.uat.meritbox.me",
-            "http://www.uat.meritbox.me",
-            "https://meritbox.me", # For prod
-            "http://meritbox.me",
-            "https://www.meritbox.me",
-            "http://www.meritbox.me"
+            "https://uat.rexone.me", # For uat
+            "http://uat.rexone.me",
+            "https://www.uat.rexone.me",
+            "http://www.uat.rexone.me",
+            "https://rexone.me", # For prod
+            "http://rexone.me",
+            "https://www.rexone.me",
+            "http://www.rexone.me"
 
     resource "*",
       headers: :any,

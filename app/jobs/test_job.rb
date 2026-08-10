@@ -2,7 +2,7 @@
 class TestJob < ApplicationJob
   queue_as :default
 
-  def perform(message = "Hello from worker!")
+  def perform(message = "Hello from waka")
     Rails.logger.info("🎯 TestJob running: #{message}")
     sleep 1  # Simulate work
     Rails.logger.info("✅ TestJob finished")

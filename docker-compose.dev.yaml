@@ -1,7 +1,6 @@
-name: auth-service-api
-
 services:
   api:
+    container_name: ${RAILS_CONTAINER_NAME}
     build:
       context: .
       dockerfile: ${RAILS_DOCKERFILE}
@@ -17,7 +16,8 @@ services:
     # Run server only
     command: ["./bin/rails", "server", "-b", "0.0.0.0"]
 
-  worker:
+  waka:
+    container_name: ${WAKA_CONTAINER_NAME}
     build:
       context: .
       dockerfile: ${RAILS_DOCKERFILE}
@@ -31,6 +31,7 @@ services:
     command: ["./bin/jobs"]
 
   db:
+    container_name: ${DB_CONTAINER_NAME}
     image: postgres:18-alpine
     volumes:
       - postgres:/var/lib/postgresql
@@ -41,8 +42,8 @@ services:
       retries: 10
     environment:
       POSTGRES_PASSWORD: ${PG_PASSWORD}
-    ports:
-      - ${PG_PORT_MAP}
+    # ports: # enable to access from outside of docker
+    #   - ${PG_PORT_MAP}
 
 volumes:
   postgres:

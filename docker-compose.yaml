@@ -22,8 +22,8 @@ services:
       - coolify.traefik.middlewares=cors@file
 
   # Solid Queue Worker
-  worker:
-    container_name: ${RAILS_CONTAINER_NAME}-worker
+  waka:
+    container_name: ${WAKA_CONTAINER_NAME}
     build:
       context: .
       dockerfile: ${RAILS_DOCKERFILE}
@@ -60,8 +60,8 @@ services:
       POSTGRES_DB: ${PG_DATABASE}
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
-    ports:
-      - ${PG_PORT_MAP}
+    # ports: # enable to access from outside of docker
+    #   - ${PG_PORT_MAP}
 
 volumes:
   postgres:

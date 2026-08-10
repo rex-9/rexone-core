@@ -2,7 +2,7 @@ module AppConfig
   # Keys & Tokens
   SECRET_KEY_BASE = ENV.fetch("RAILS_SECRET_KEY_BASE") { "secret-key-base" }
   MASTER_KEY = ENV.fetch("RAILS_MASTER_KEY") { "master-key" }
-  JWT_SECRET_KEY = ENV.fetch("RAILS_JWT_SECRET_KEY") { "meritbox-me" }
+  JWT_SECRET_KEY = ENV.fetch("RAILS_JWT_SECRET_KEY") { "rexone" }
   JWT_TOKEN = ->(user) { Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first }
 
   # Client & Server urls

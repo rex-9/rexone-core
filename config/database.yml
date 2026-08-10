@@ -24,13 +24,13 @@ default: &default
 development:
   primary:
     <<: *default
-    # database: meritbox_api_development
+    # database: rexone_core_development
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
   # When left blank, PostgreSQL will use the default role. This is
   # the same name as the operating system user running Rails.
-  #username: meritbox_api
+  #username: rexone_core
 
   # The password associated with the PostgreSQL role (username).
   #password:
@@ -59,7 +59,7 @@ development:
 test: # Test doesn't use URL - uses database name directly
   primary:
     <<: *default
-    database: meritbox_api_test
+    database: rexone_core_test
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -85,5 +85,5 @@ test: # Test doesn't use URL - uses database name directly
 production:
   primary:
     <<: *default
-    # database: meritbox_api_production
+    # database: rexone_core_production
     pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 7 }.to_i + ENV.fetch("SOLID_QUEUE_WORKERS", 5).to_i * 10 %>

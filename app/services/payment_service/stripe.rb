@@ -440,7 +440,7 @@ module PaymentService
     # </table>
     # <p>You now have full access. Log in to get started!</p>
     # <p>Thank you for your trust! 🙏</p>
-    # <p><strong>The Meritbox Team</strong></p>
+    # <p><strong>Rex9</strong></p>
 
     # def send_refund_confirmation_email(user, product, transaction)
     #   EmailService::Client.send_template(

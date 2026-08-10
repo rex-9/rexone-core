@@ -15,7 +15,7 @@ if [ "$RAILS_ENV" = "development" ] && [ "$1" != "./bin/jobs" ]; then
 fi
 
 if [ "$1" = "./bin/jobs" ]; then
-  echo "→ Starting Solid Queue worker..."
+  echo "→ Starting Solid Queue waka..."
 fi
 
 # Continue with the normal command (passed as arguments to the script)

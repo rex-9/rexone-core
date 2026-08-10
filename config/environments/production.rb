@@ -69,7 +69,7 @@ Rails.application.configure do
   # config.solid_queue.connects_to = { database: { writing: :queue } } # Separate DB
 
   # Set queue name prefix for production (Optional for single app)
-  config.active_job.queue_name_prefix = "meritbox_api_production"
+  config.active_job.queue_name_prefix = "rexone_core_production"
 
   # Use a custom queue name delimiter
   config.active_job.queue_name_delimiter = "_"
@@ -118,8 +118,8 @@ Rails.application.configure do
   # Enable DNS rebinding protection and other `Host` header attacks.
   config.hosts = [
     /localhost:\d+/,   # Allow requests from localhost with any port
-    "meritbox.me",     # Allow requests from meritbox.me
-    /.+\.meritbox\.me/ # Allow requests from subdomains like `www.meritbox.me`
+    "rexone.me",     # Allow requests from rexone.me
+    /.+\.rexone\.me/ # Allow requests from subdomains like `www.rexone.me`
   ]
 
   # Skip DNS rebinding protection for the default health check endpoint.
