@@ -509,8 +509,6 @@ If you like this project, please consider giving it a star on GitHub and support
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
----
-
 ## 👤 Author
 
 **Rex (Rex9)**
