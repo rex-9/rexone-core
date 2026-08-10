@@ -1,5 +1,3 @@
-# rexone-core
-
 <a name="readme-top"></a>
 
 <div align="center">
@@ -18,7 +16,6 @@
 
 # 📗 Table of Contents
 
-- [rexone-core](#rexone-core)
 - [📗 Table of Contents](#-table-of-contents)
 - [📖 Rexone Core ](#-rexone-core-)
   - [🚀 Featuring!](#-featuring)
@@ -504,11 +501,11 @@ If you like this project, please consider giving it a star on GitHub and support
 
 [![GitHub Stars](https://img.shields.io/github/stars/rex-9/rexone-core.svg?style=social&label=Star)](https://github.com/rex-9/rexone-core)
 
-<div align="center">
+<!-- <div align="center">
   <a href="https://buymeacoffee.com/rex9" target="_blank">
     <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" >
   </a>
-</div>
+</div> -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
