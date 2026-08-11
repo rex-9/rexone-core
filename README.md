@@ -23,6 +23,12 @@
     - [🏗️ Design Patterns \& Architecture](#️-design-patterns--architecture)
     - [🔐 Authentication \& Security](#-authentication--security)
     - [🛡️ IAM \& RBAC](#️-iam--rbac)
+    - [📊 API, Monitoring \& Administration](#-api-monitoring--administration)
+      - [📖 API \& Documentation](#-api--documentation)
+      - [📈 Performance Monitoring](#-performance-monitoring)
+      - [🚨 Error Monitoring \& Alerting](#-error-monitoring--alerting)
+      - [🧰 Administration](#-administration)
+      - [🧱 Solid Stack Dashboards](#-solid-stack-dashboards)
     - [🔌 Integrated Services](#-integrated-services)
       - [📧 Email Service](#-email-service)
       - [🔔 Push Notification Service](#-push-notification-service)
@@ -42,10 +48,13 @@
     - [Test](#test)
     - [Performance Dashboard](#performance-dashboard)
       - [Access](#access)
+    - [Error Dashboard](#error-dashboard)
+      - [Access](#access-1)
     - [Solid Web UI](#solid-web-ui)
-    - [Queue Dashboard](#queue-dashboard)
-    - [Cache Dashboard](#cache-dashboard)
-    - [Cable Dashboard](#cable-dashboard)
+      - [Queue Dashboard](#queue-dashboard)
+      - [Cache Dashboard](#cache-dashboard)
+      - [Cable Dashboard](#cable-dashboard)
+      - [Performance Monitoring vs Error Monitoring](#performance-monitoring-vs-error-monitoring)
     - [Admin Dashboard](#admin-dashboard)
       - [Authentication \& RBAC](#authentication--rbac)
       - [Super Admin Setup](#super-admin-setup)
@@ -67,7 +76,8 @@ The project brings together:
 **Authentication**, **Authorization**, **IAM/RBAC**,
 **API documentation**, **Pagination**, **Payments**,
 **Media Storage**, **AI services**, **Real-time communications**,
-**Background processing**, **Caching**, **Performance Monitoring**, **Administration**, **Testing**, and **Security**
+**Background processing**, **Caching**, **Performance Monitoring**,
+**Error Monitoring & Alerting**, **Administration**, **Testing**, and **Security**
 
 tooling into a single well-rounded backend foundation.
 
@@ -88,10 +98,9 @@ The goal is to provide a clean and scalable foundation so product development ca
 - **Solid Cache**: Database-backed Rails cache storage.
 - **Solid Queue**: Database-backed background job processing.
 - **Solid Cable**: Database-backed Action Cable adapter.
-- **Pagy**: Lightweight and efficient API pagination.
-- **JSON:API Serializer**: Consistent JSON:API resource serialization.
 - **Rswag**: OpenAPI/Swagger API documentation and request specifications.
-- **Rails Pulse**: Application performance monitoring and diagnostics.
+- **Rails Pulse**: Application performance monitoring and runtime diagnostics.
+- **Rails Error Dashboard (RED)**: Application error monitoring, diagnostics, analytics, and alerting.
 - **Administrate**: Administrative dashboard for managing application resources.
 - **Solid Web UI**: Web dashboards for Solid Queue, Solid Cache, and Solid Cable.
 
@@ -133,6 +142,50 @@ The backend includes a dedicated Identity and Access Management system for granu
 - **Resource-based Authorization**: Permissions can be organized around application resources.
 - **Action-based Authorization**: Permissions can define actions such as `create`, `read`, `update`, and `delete`.
 - **Super Admin**: Full administrative access across the system.
+
+### 📊 API, Monitoring & Administration
+
+Rexone Core includes a complete set of developer-facing APIs, operational dashboards, observability tools, and administrative interfaces.
+
+#### 📖 API & Documentation
+
+- **RESTful API**: Production-ready API endpoints for web and mobile clients.
+- **OpenAPI / Swagger**: Interactive API documentation and request specifications through Rswag.
+- **JSON:API**: Consistent resource serialization and API response structure.
+- **Pagy**: Lightweight and efficient API pagination.
+- **Centralized Pagination**: Standardized pagination across API resources.
+
+#### 📈 Performance Monitoring
+
+- **Rails Pulse**: Monitor application performance and runtime activity, including request performance and application-level metrics.
+- **Performance Dashboard**: Dedicated dashboard available at `/admin/pulse`.
+
+#### 🚨 Error Monitoring & Alerting
+
+- **Rails Error Dashboard (RED)**: Centralized application error monitoring and diagnostics.
+- **Automatic Error Capture**: Captures application exceptions through Rails middleware and the Rails error subscriber.
+- **Error Grouping**: Groups recurring failures for easier investigation.
+- **Error Analytics**: Similar error detection, co-occurring errors, error cascades, correlation analysis, platform comparison, and occurrence pattern detection.
+- **Real-Time Updates**: Monitor newly captured errors through the dashboard.
+- **Baseline Anomaly Detection**: Identifies abnormal increases in error activity.
+- **Multi-Channel Alerts**: Supports Slack, Email, Discord, Generic Webhooks, and optional PagerDuty notifications.
+- **Storm Protection**: Reduces monitoring and notification load during high-volume error incidents.
+- **Error Retention**: Maintains error data for 90 days by default.
+- **Error Dashboard**: Dedicated dashboard available at `/admin/red`.
+
+#### 🧰 Administration
+
+- **Administrate**: Full administrative dashboard for managing application resources.
+- **IAM & RBAC Integration**: Administrative access is protected through the application's authentication and authorization system.
+- **Resource Management**: Manage users, assets, IAM configuration, payments, subscriptions, transactions, chat rooms, and chat messages.
+- **Role-Based Access Control**: Administrative capabilities can be restricted through granular permissions.
+
+#### 🧱 Solid Stack Dashboards
+
+- **Solid Queue Dashboard**: Monitor and manage background jobs.
+- **Solid Cache Dashboard**: Inspect and manage application cache.
+- **Solid Cable Dashboard**: Inspect Action Cable messages and retained messages.
+- **Solid Web UI**: Dedicated web interfaces for the Rails Solid Stack.
 
 ### 🔌 Integrated Services
 
@@ -332,7 +385,9 @@ View the API documentation at:
 
 ### Performance Dashboard
 
-The application includes a built-in performance monitoring dashboard powered by Rails Pulse.
+The application includes a built-in performance monitoring dashboard powered by **Rails Pulse**.
+
+Rails Pulse provides visibility into application performance and runtime activity, including request performance and application-level metrics.
 
 #### Access
 
@@ -340,46 +395,59 @@ View the performance dashboard at:
 
 `/admin/pulse`
 
+### Error Dashboard
+
+The application includes a dedicated error monitoring and diagnostics dashboard powered by **Rails Error Dashboard (RED)**.
+
+RED complements Rails Pulse by focusing specifically on application exceptions, error analysis, analytics, diagnostics, and alerting.
+
+#### Access
+
+View the error dashboard at:
+
+`/admin/red`
+
+The RED dashboard is protected by the application's administrative authentication and is intended for authorized administrators only.
+
 ### Solid Web UI
 
 The application includes dedicated dashboards for the Rails Solid Stack.
 
-### Queue Dashboard
+#### Queue Dashboard
 
 Monitor and manage background jobs through Solid Queue:
 
 `/admin/queue`
 
-### Cache Dashboard
+#### Cache Dashboard
 
 Inspect and manage application cache through Solid Cache:
 
 `/admin/cache`
 
-### Cable Dashboard
+#### Cable Dashboard
 
 Inspect Action Cable messages and manage retained messages through Solid Cable:
 
 `/admin/cable`
 
+#### Performance Monitoring vs Error Monitoring
+
+Rexone Core uses both Rails Pulse and RED because they provide different types of observability:
+
+| System          | Purpose                                                            |
+| --------------- | ------------------------------------------------------------------ |
+| **Rails Pulse** | Application performance and runtime monitoring                     |
+| **RED**         | Application error monitoring, diagnostics, analytics, and alerting |
+| **Solid Queue** | Background job monitoring                                          |
+| **Solid Cache** | Cache inspection and management                                    |
+| **Solid Cable** | Action Cable monitoring                                            |
+
+Together, these tools provide visibility into both **application health** and **application failures**.
+
 ### Admin Dashboard
 
 **Administrate** is available at `/admin` for managing application resources with IAM and RBAC authorization.
-
-The current administration area includes:
-
-- Users
-- Assets
-- Accesses
-- IAM Permissions
-- IAM Roles
-- IAM User Roles
-- IAM Role Permissions
-- Payment Products
-- Payment Subscriptions
-- Payment Transactions
-- Chat Rooms
-- Chat Messages
 
 #### Authentication & RBAC
 

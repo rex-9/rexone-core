@@ -23,15 +23,15 @@ production:
     schedule: at 3am every Sunday
 
   # ===== RAILS PULSE MAINTENANCE =====
-  # RAILS PULSE SUMMARY - Every hour at minute 5
-  rails_pulse_summary:
-    class: RailsPulse::SummaryJob
-    schedule: every hour at minute 5
+  # # RAILS PULSE SUMMARY - Every hour at minute 5
+  # rails_pulse_summary:
+  #   class: RailsPulse::SummaryJob
+  #   schedule: every hour at minute 5
 
-  # RAILS PULSE CLEANUP - Daily at 1am
-  rails_pulse_cleanup:
-    class: RailsPulse::CleanupJob
-    schedule: at 1am every day
+  # # RAILS PULSE CLEANUP - Daily at 1am
+  # rails_pulse_cleanup:
+  #   class: RailsPulse::CleanupJob
+  #   schedule: at 1am every day
 
   # ===== SOLID CACHE MAINTENANCE =====
   # Optional: Clean up expired cache entries
@@ -70,13 +70,13 @@ development:
     #     Rails.logger.error("Failed to clean Solid Queue jobs: #{e.message}")
     #   end
 
-  rails_pulse_summary:
-    class: RailsPulse::SummaryJob
-    schedule: every hour at minute 5
+  # rails_pulse_summary:
+  #   class: RailsPulse::SummaryJob
+  #   schedule: every hour at minute 5
 
-  rails_pulse_cleanup:
-    class: RailsPulse::CleanupJob
-    schedule: every day at 1am
+  # rails_pulse_cleanup:
+  #   class: RailsPulse::CleanupJob
+  #   schedule: every day at 1am
 
 test:
   # No recurring jobs in test

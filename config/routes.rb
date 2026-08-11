@@ -17,9 +17,11 @@ Rails.application.routes.draw do
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
-  # ===== PULSE =====
-  # Rails Pulse Performance Route
+  # ===== # RAILS PULSE PERFORMANCE =====
   mount RailsPulse::Engine => "/admin/pulse"
+
+  # ===== RED - RAILS ERROR DASHBOARD =====
+  mount RailsErrorDashboard::Engine => "admin/red" # or /error_dashboard
 
   # ===== SOLID STACK =====
   mount SolidWebUi::Queue::Engine => "/admin/queue"
