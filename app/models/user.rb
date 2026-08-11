@@ -36,7 +36,7 @@ class User < ApplicationRecord
   def confirm_code(code)
     if confirmation_code == code &&
       confirmation_sent_at.present? &&
-      confirmation_sent_at > AppConfig::CONFIRM_CODE_WITHIN.ago
+      confirmation_sent_at > AppConfig::CONFIRM_CODE_WITHIN
       confirm
     else
       errors.add(:confirmation_code, "is invalid or has expired")

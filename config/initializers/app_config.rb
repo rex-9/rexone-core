@@ -28,15 +28,15 @@ module AppConfig
   DEEPSEEK_MODEL=ENV.fetch("DEEPSEEK_MODEL")
 
   # Session & token timeouts
-  SESSION_TIMEOUT = ENV.fetch("SESSION_TIMEOUT") { 1.week }.to_i # 7-day maximum login, Cache Active Platform Session Lifespan
-  JWT_EXPIRATION = ENV.fetch("JWT_EXPIRATION") { 1.week }.to_i #  7-day inactivity timeout, JWT Token Expiration Lifespan
+  SESSION_TIMEOUT = ENV.fetch("SESSION_TIMEOUT") { 1.week }.to_i.seconds # 7-day maximum login, Cache Active Platform Session Lifespan
+  JWT_EXPIRATION = ENV.fetch("JWT_EXPIRATION") { 1.week }.to_i.seconds #  7-day inactivity timeout, JWT Token Expiration Lifespan
 
   # Password reset
-  PASSWORD_RESET_WITHIN = ENV.fetch("PASSWORD_RESET_WITHIN") { 1.hour }.to_i
+  PASSWORD_RESET_WITHIN = ENV.fetch("PASSWORD_RESET_WITHIN") { 1.hour }.to_i.seconds
 
   # Unconfirmed access
-  ALLOW_UNCONFIRMED_ACCESS_FOR = ENV.fetch("ALLOW_UNCONFIRMED_ACCESS_FOR") { 1.day }.to_i
+  ALLOW_UNCONFIRMED_ACCESS_FOR = ENV.fetch("ALLOW_UNCONFIRMED_ACCESS_FOR") { 1.day }.to_i.seconds
 
   # Confirm code before
-  CONFIRM_CODE_WITHIN = ENV.fetch("CONFIRM_CODE_WITHIN") { 10.minutes }.to_i
+  CONFIRM_CODE_WITHIN = ENV.fetch("CONFIRM_CODE_WITHIN") { 10.minutes }.to_i.seconds
 end
