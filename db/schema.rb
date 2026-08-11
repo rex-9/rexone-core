@@ -39,6 +39,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_184950) do
     t.string "extension"
     t.string "format", null: false
     t.string "name", null: false
+    t.string "public_id"
     t.uuid "record_id"
     t.string "record_type"
     t.bigint "size", null: false
@@ -130,20 +131,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_184950) do
   create_table "payment_subscriptions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "canceled_at"
     t.datetime "created_at", null: false
+    t.datetime "current_period_end"
+    t.datetime "current_period_start"
     t.string "cycle", null: false
     t.datetime "ended_at"
-    t.datetime "next_billing_at"
+    t.jsonb "metadata", default: {}
     t.jsonb "payment_method_details", default: {}
     t.string "payment_method_id"
     t.string "payment_method_type"
     t.uuid "product_id", null: false
     t.datetime "started_at"
     t.string "status", default: "incomplete", null: false
+    t.string "stripe_customer_id"
     t.string "stripe_subscription_id", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
-    t.index ["next_billing_at"], name: "index_payment_subscriptions_on_next_billing_at"
-    t.index ["payment_method_type"], name: "index_payment_subscriptions_on_payment_method_type"
+    t.index ["current_period_end"], name: "index_payment_subscriptions_on_current_period_end"
     t.index ["product_id"], name: "index_payment_subscriptions_on_product_id"
     t.index ["status"], name: "index_payment_subscriptions_on_status"
     t.index ["stripe_subscription_id"], name: "index_payment_subscriptions_on_stripe_subscription_id", unique: true
@@ -152,16 +155,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_184950) do
   end
 
   create_table "payment_transactions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.integer "amount_capturable", default: 0
+    t.integer "amount_received", default: 0
+    t.datetime "canceled_at"
+    t.string "client_secret"
     t.datetime "created_at", null: false
     t.string "currency", null: false
+    t.jsonb "metadata", default: {}
     t.datetime "paid_at"
     t.jsonb "payment_method_details", default: {}
     t.string "payment_method_id"
     t.string "payment_method_type"
     t.integer "price_unit_amount", null: false
+    t.datetime "processing_at"
     t.uuid "product_id", null: false
     t.datetime "refunded_at"
-    t.string "status", default: "pending", null: false
+    t.string "status", default: "requires_payment_method", null: false
+    t.string "stripe_charge_id"
+    t.string "stripe_customer_id"
     t.string "stripe_payment_intent_id", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
@@ -169,6 +180,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_184950) do
     t.index ["payment_method_type"], name: "index_payment_transactions_on_payment_method_type"
     t.index ["product_id"], name: "index_payment_transactions_on_product_id"
     t.index ["status"], name: "index_payment_transactions_on_status"
+    t.index ["stripe_charge_id"], name: "index_payment_transactions_on_stripe_charge_id", unique: true
     t.index ["stripe_payment_intent_id"], name: "index_payment_transactions_on_stripe_payment_intent_id", unique: true
     t.index ["user_id", "created_at"], name: "index_payment_transactions_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_payment_transactions_on_user_id"

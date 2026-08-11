@@ -1,7 +1,7 @@
 class CreateAssets < ActiveRecord::Migration[7.2]
   def change
     create_table :assets, id: :uuid do |t|
-      t.string :public_id, null: false                                  # ID for the file storage service
+      t.string :public_id                                               # ID for the file storage service
       t.string :name, null: false                                       # File name (e.g., "google_profile_picture")
       t.string :url, null: false                                        # URL to access the file (Cloudinary or other)
       t.string :category, null: false                                   # Enum: "profile", "banner"

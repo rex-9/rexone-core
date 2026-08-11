@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rm -rf db/schema.rb
+
 # Drop the database
 docker compose -f docker-compose.dev.yaml exec api rails db:drop RAILS_ENV=development
 

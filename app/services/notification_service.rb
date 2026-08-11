@@ -87,8 +87,8 @@ class NotificationService
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
-          start_date: subscription.started_at.strftime("%B %d, %Y"),
-          next_billing: subscription.next_billing_at.strftime("%B %d, %Y"),
+          current_period_start: subscription.current_period_start.strftime("%B %d, %Y"),
+          current_period_end: subscription.current_period_end.strftime("%B %d, %Y"),
           period: product.period_label
         }
       )
@@ -128,7 +128,7 @@ class NotificationService
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
-          next_billing: subscription.next_billing_at.strftime("%B %d, %Y")
+          current_period_end: subscription.current_period_end.strftime("%B %d, %Y")
         }
       )
     end
@@ -147,7 +147,7 @@ class NotificationService
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
-          due_date: subscription.next_billing_at.strftime("%B %d, %Y")
+          due_date: subscription.current_period_end.strftime("%B %d, %Y")
         }
       )
     end

@@ -26,8 +26,6 @@ module StorageService
           Cloudinary.new
         when :local
           Local.new
-        when :s3
-          S3.new
         else
           raise Error, "Unknown storage provider: #{provider_name}"
         end

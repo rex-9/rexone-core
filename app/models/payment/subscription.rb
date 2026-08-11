@@ -1,4 +1,6 @@
 # app/models/payment/subscription.rb
+# Synced with Stripe Subscription Object
+# https://docs.stripe.com/api/subscriptions/object
 class Payment::Subscription < ApplicationRecord
   self.table_name = "payment_subscriptions"
 
@@ -39,48 +41,62 @@ class Payment::Subscription < ApplicationRecord
   scope :active, -> { where(status: "active") }
   scope :canceled, -> { where(status: "canceled") }
   scope :past_due, -> { where(status: "past_due") }
-  scope :expiring_soon, -> { active.where("next_billing_at < ?", 7.days.from_now) }
+  scope :trialing, -> { where(status: "trialing") }
+  scope :paused, -> { where(status: "paused") }
+  scope :expiring_soon, -> { active.where("current_period_end < ?", 7.days.from_now) }
 
   # ===== INSTANCE METHODS =====
+
+  # Status helpers
   def active?
     status == "active"
-  end
-
-  def scheduled_for_cancellation?
-    canceled_at.present? && status == "active"
   end
 
   def canceled?
     status == "canceled"
   end
 
-  def ended?
-    ended_at.present? || status == "canceled"
-  end
-
   def past_due?
     status == "past_due"
+  end
+
+  def trialing?
+    status == "trialing"
+  end
+
+  def paused?
+    status == "paused"
+  end
+
+  def incomplete?
+    status == "incomplete"
+  end
+
+  def ended?
+    ended_at.present? || status == "canceled"
   end
 
   def expired?
     status == "incomplete_expired" || (ended_at.present? && ended_at < Time.current)
   end
 
+  def scheduled_for_cancellation?
+    canceled_at.present? && status == "active"
+  end
+
+  # Cancellation actions
   def cancel!
     return if canceled_at.present?
     update(canceled_at: Time.current)
   end
 
-  def resume_from_cancellation!
-    return unless scheduled_for_cancellation?
-    update(canceled_at: nil)
-  end
-
+  # Billing helpers
   def days_until_renewal
-    return nil unless next_billing_at.present?
-    (next_billing_at - Time.current).to_i / 1.day
+    return nil unless current_period_end.present?
+    (current_period_end - Time.current).to_i / 1.day
   end
 
+  # Payment method display
   def card_last4
     payment_method_details&.dig("last4")
   end

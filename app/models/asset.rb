@@ -4,12 +4,13 @@ class Asset < ApplicationRecord
   belongs_to :record, polymorphic: true, optional: true
   belongs_to :user, optional: true
 
-  validates :name, presence: true, uniqueness: true
+  validates :name, presence: true, uniqueness: { scope: :user_id }  # Allow same name for different users
   validates :url, presence: true, uniqueness: true
   validates :category, inclusion: { in: %w[profile banner] }
   validates :format, inclusion: { in: %w[image video doc unknown] }
   validates :source, inclusion: { in: %w[google upload] }
   validates :size, numericality: { greater_than_or_equal_to: 0 }
+  validates :public_id, presence: true, if: :uploaded?  # Only required for uploaded files
 
   validate :url_must_be_valid
 
@@ -29,6 +30,10 @@ class Asset < ApplicationRecord
       Rails.logger.error("[Asset] Failed to delete from storage: #{e.message}")
       # Don't raise, just log - we still want to delete the database record
     end
+  end
+
+  def uploaded?
+    source == "upload"
   end
 
   def uploaded_file?

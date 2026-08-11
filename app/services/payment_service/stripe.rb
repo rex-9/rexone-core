@@ -96,6 +96,14 @@ module PaymentService
         handle_subscription_paused(event.data.object)
       when "customer.subscription.resumed"
         handle_subscription_resumed(event.data.object)
+      when "payment_intent.succeeded"
+        handle_payment_intent_succeeded(event.data.object)
+      when "payment_intent.processing"
+        handle_payment_intent_processing(event.data.object)
+      when "payment_intent.canceled"
+        handle_payment_intent_canceled(event.data.object)
+      when "payment_intent.payment_failed"
+        handle_payment_intent_payment_failed(event.data.object)
       # when "charge.refunded"
       #   handle_refund(event.data.object)
 
@@ -145,20 +153,6 @@ module PaymentService
         }
       rescue => e
         Rails.logger.warn("[Stripe] Could not retrieve payment method #{payment_method_id}: #{e.message}")
-        { type: "other", details: {} }
-      end
-    end
-
-    def extract_payment_method_from_intent(payment_intent_id)
-      return { type: "other", details: {} } if payment_intent_id.blank?
-
-      begin
-        pi = Stripe::PaymentIntent.retrieve(payment_intent_id)
-        return { type: "other", details: {} } if pi.payment_method.blank?
-
-        extract_payment_method_info(pi.payment_method)
-      rescue => e
-        Rails.logger.warn("[Stripe] Could not retrieve payment intent #{payment_intent_id}: #{e.message}")
         { type: "other", details: {} }
       end
     end
@@ -263,71 +257,84 @@ module PaymentService
         # Get payment method ID and details
         payment_info = extract_payment_method_info(stripe_sub.default_payment_method)
 
-        # Create db subscription
-        subscription = Payment::Subscription.create!(
-          user_id: user_id,
-          product_id: product_id,
-          stripe_subscription_id: session.subscription,
-          status: "active",
-          cycle: product.cycle,
-          started_at: Time.current,
-          next_billing_at: Time.current + product.cycle_in_duration,
-          payment_method_id: stripe_sub.default_payment_method,
-          payment_method_type: payment_info[:type],
-          payment_method_details: payment_info[:details]
+        # Create or update subscription from Stripe Subscription
+        subscription = Payment::Subscription.find_or_initialize_by(
+          stripe_subscription_id: session.subscription
         )
 
-        # Grant access
+        subscription.assign_attributes(
+          user_id: user_id,
+          product_id: product_id,
+          stripe_customer_id: stripe_sub.customer,
+          status: stripe_sub.status,
+          cycle: product.cycle,
+          started_at: Time.current,
+          current_period_start: Time.current,
+          current_period_end: Time.current + product.cycle_in_duration,
+          payment_method_id: stripe_sub.default_payment_method,
+          payment_method_type: payment_info[:type],
+          payment_method_details: payment_info[:details],
+          metadata: stripe_sub.metadata
+        )
+
+        subscription.save!
+
         AccessService.grant(
           user_id: user_id,
           product_id: product_id,
           expires_at: product.cycle_in_duration.from_now
         )
 
-        # Notify for subscription created
         NotificationService.subscription_created(
           user, product, subscription
         )
 
       else
-        # One-time purchase - get payment method from payment intent
-        payment_method_id = nil
-        payment_info = { type: "other", details: {} }
+        # One-time purchase - sync with Payment Intent
+        payment_intent_id = session.payment_intent
 
-        if session.payment_intent.present?
-          begin
-            pi = Stripe::PaymentIntent.retrieve(session.payment_intent)
-            payment_method_id = pi.payment_method
-            payment_info = extract_payment_method_info(payment_method_id) if payment_method_id.present?
-          rescue => e
-            Rails.logger.warn("[Stripe] Could not retrieve payment intent: #{e.message}")
-          end
-        end
+        # Get full payment intent details
+        pi = Stripe::PaymentIntent.retrieve(payment_intent_id)
 
-        transaction = Payment::Transaction.create!(
+        # Get payment method details
+        payment_info = extract_payment_method_info(pi.payment_method)
+
+        # Create or update transaction from Payment Intent
+        transaction = Payment::Transaction.find_or_initialize_by(
+          stripe_payment_intent_id: payment_intent_id
+        )
+
+        transaction.assign_attributes(
           user_id: user_id,
           product_id: product_id,
-          stripe_payment_intent: session.payment_intent,
-          price_unit_amount: product.price_unit_amount,
-          currency: product.currency,
-          status: "paid",
-          paid_at: Time.current,
-          payment_method_id: payment_method_id,
+          price_unit_amount: pi.amount,
+          currency: pi.currency,
+          status: pi.status,
+          stripe_charge_id: pi.latest_charge,
+          stripe_customer_id: pi.customer,
+          client_secret: pi.client_secret,
+          amount_received: pi.amount_received,
+          amount_capturable: pi.amount_capturable,
+          paid_at: pi.amount_received > 0 ? Time.at(pi.created) : nil,
+          payment_method_id: pi.payment_method,
           payment_method_type: payment_info[:type],
-          payment_method_details: payment_info[:details]
+          payment_method_details: payment_info[:details],
+          metadata: pi.metadata
         )
 
-        # Grant lifetime access
-        AccessService.grant(
-          user_id: user_id,
-          product_id: product_id,
-          expires_at: nil
-        )
+        transaction.save!
 
-        # Notify for one time purchase
-        NotificationService.payment_success(
-          user, product, transaction
-        )
+        if transaction.succeeded?
+          AccessService.grant(
+            user_id: user_id,
+            product_id: product_id,
+            expires_at: nil  # Lifetime
+          )
+
+          NotificationService.payment_success(
+            user, product, transaction
+          )
+        end
       end
     end
 
@@ -335,7 +342,6 @@ module PaymentService
       record = Payment::Subscription.find_or_initialize_by(stripe_subscription_id: subscription.id)
       record.update(
         status: subscription.status,
-        next_billing_at: Time.at(subscription.current_period_end),
         started_at: Time.at(subscription.created),
       )
       # No email needed - checkout.completed already sent confirmation
@@ -349,7 +355,6 @@ module PaymentService
 
       record.update(
         status: subscription.status,
-        next_billing_at: Time.at(subscription.current_period_end),
         ended_at: subscription.ended_at ? Time.at(subscription.ended_at) : nil,
         canceled_at: subscription.canceled_at ? Time.at(subscription.canceled_at) : nil,
       )
@@ -396,8 +401,42 @@ module PaymentService
       # return unless record
     end
 
+    # Webhook: payment_intent.succeeded
+    def handle_payment_intent_succeeded(payment_intent)
+      transaction = Payment::Transaction.find_by(stripe_payment_intent_id: payment_intent.id)
+      return unless transaction
+
+      transaction.mark_as_succeeded!
+    end
+
+    # Webhook: payment_intent.processing
+    def handle_payment_intent_processing(payment_intent)
+      transaction = Payment::Transaction.find_by(stripe_payment_intent_id: payment_intent.id)
+      return unless transaction
+
+      transaction.mark_as_processing!
+    end
+
+    # Webhook: payment_intent.canceled
+    def handle_payment_intent_canceled(payment_intent)
+      transaction = Payment::Transaction.find_by(stripe_payment_intent_id: payment_intent.id)
+      return unless transaction
+
+      transaction.mark_as_canceled!
+    end
+
+    # Webhook: payment_intent.payment_failed
+    def handle_payment_intent_payment_failed(payment_intent)
+      transaction = Payment::Transaction.find_by(stripe_payment_intent: payment_intent.id)
+      return unless transaction
+
+      transaction.update(
+        status: "failed"
+      )
+    end
+
     # def handle_refund(charge)
-    #   transaction = Payment::Transaction.find_by(stripe_payment_intent: charge.payment_intent)
+    #   transaction = Payment::Transaction.find_by(stripe_payment_intent_id: charge.payment_intent)
     #   return unless transaction
 
     #   transaction.update(

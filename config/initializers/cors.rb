@@ -17,7 +17,7 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "http://localhost:4002", # For dev
+    origins "http://localhost:4000", # For dev
             "https://uat.rexone.me", # For uat
             "http://uat.rexone.me",
             "https://www.uat.rexone.me",
