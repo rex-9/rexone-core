@@ -1,7 +1,5 @@
-# app/controllers/payment/subscriptions_controller.rb
-class Payment::SubscriptionsController < ApplicationController
-  before_action :authenticate_user!
-
+# app/controllers/v1/payment/subscriptions_controller.rb
+class V1::Payment::SubscriptionsController < V1::ApplicationController
   # GET /payment/subscriptions
   def index
     subscriptions = current_user.subscriptions.includes(:product).order(created_at: :desc)

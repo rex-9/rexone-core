@@ -1,7 +1,5 @@
-# app/controllers/notifications_controller.rb
-class NotificationsController < ApplicationController
-  before_action :authenticate_user!
-
+# app/controllers/v1/notifications_controller.rb
+class V1::NotificationsController < V1::ApplicationController
   # POST /notifications/push
   def create_push
     user = User.find(params[:user_id])

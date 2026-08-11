@@ -1,4 +1,5 @@
-class Users::RegistrationsController < Devise::RegistrationsController
+# app/controllers/auth/registrations_controller.rb
+class Auth::RegistrationsController < Devise::RegistrationsController
   respond_to :json
 
   before_action :check_email_provider, only: [ :create ]

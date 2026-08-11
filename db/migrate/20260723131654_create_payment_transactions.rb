@@ -4,7 +4,7 @@ class CreatePaymentTransactions < ActiveRecord::Migration[8.1]
       t.references :user, null: false, type: :uuid, foreign_key: true
       t.references :product, null: false, type: :uuid, foreign_key: { to_table: :payment_products }
 
-      t.string :stripe_payment_intent, null: false
+      t.string :stripe_payment_intent_id, null: false
       t.string :payment_method_id
       t.string :payment_method_type
       t.jsonb :payment_method_details, default: {}
@@ -19,7 +19,7 @@ class CreatePaymentTransactions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :payment_transactions, :stripe_payment_intent, unique: true
+    add_index :payment_transactions, :stripe_payment_intent_id, unique: true
     add_index :payment_transactions, :status
     add_index :payment_transactions, :created_at
     add_index :payment_transactions, :payment_method_type

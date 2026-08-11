@@ -69,13 +69,15 @@ user_permissions = [
   # Payments - create only
   { resource: "payments", actions: [ "create" ] },
   # Subscriptions - read only
-  { resource: "subscriptions", actions: [ "read" ] },
+  { resource: "subscriptions", actions: [ "read", "create" ] },
   # Transactions - read only
   { resource: "transactions", actions: [ "read" ] },
   # Accesses - read only
   { resource: "accesses", actions: [ "read" ] },
   # Assets - full CRUD
   { resource: "assets", actions: [ "read", "create", "update", "delete" ] },
+  # Users - full CRUD
+  { resource: "users", actions: [ "read", "create", "update", "delete" ] },
   # AI - full CRUD
   { resource: "ai", actions: [ "read", "create", "update", "delete" ] }
   # Notifications - full CRUD

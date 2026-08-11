@@ -18,7 +18,7 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     product: Field::BelongsTo,
     refunded_at: Field::DateTime,
     status: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
-    stripe_payment_intent: Field::String,
+    stripe_payment_intent_id: Field::String,
     user: Field::BelongsTo,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
@@ -50,7 +50,7 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     product
     refunded_at
     status
-    stripe_payment_intent
+    stripe_payment_intent_id
     user
     created_at
     updated_at
@@ -69,7 +69,7 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     product
     refunded_at
     status
-    stripe_payment_intent
+    stripe_payment_intent_id
     user
   ].freeze
 

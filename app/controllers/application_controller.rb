@@ -5,6 +5,7 @@ class ApplicationController < ActionController::API
   include ApplicationHelper
 
   before_action :enforce_active_platform_session!
+  before_action :authenticate_user!
 
   private
 

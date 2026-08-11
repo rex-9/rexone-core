@@ -27,7 +27,7 @@ class Payment::Transaction < ApplicationRecord
   }, prefix: true
 
   # ===== VALIDATIONS =====
-  validates :stripe_payment_intent, presence: true, uniqueness: true
+  validates :stripe_payment_intent_id, presence: true, uniqueness: true
   validates :price_unit_amount, numericality: { greater_than: 0 }
 
   # ===== SCOPES =====

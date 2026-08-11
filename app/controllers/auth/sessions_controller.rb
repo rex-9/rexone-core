@@ -1,9 +1,33 @@
-# app/controllers/users/sessions_controller.rb
-class Users::SessionsController < Devise::SessionsController
+# app/controllers/auth/sessions_controller.rb
+class Auth::SessionsController < Devise::SessionsController
   respond_to :json
 
   skip_before_action :enforce_active_platform_session!, only: [ :create, :token_sign_in, :google_sign_in, :google_sign_in_complete ]
-  skip_before_action :require_no_authentication, only: [ :google_sign_in, :google_sign_in_complete ]
+
+  # GET /peek?email=user@example.com
+  def peek_user
+    email = params[:email].to_s.strip.downcase
+
+    if email.blank?
+      render_json_response(
+        status_code: 400,
+        message: "Email parameter is required.",
+        error: "Missing email address."
+      )
+      return
+    end
+
+    user = User.find_by(email: email)
+
+    render_json_response(
+      status_code: 200,
+      message: "User existence checked successfully.",
+      data: {
+        user_exists: user.present?,
+        confirmed: user&.confirmed? || false
+      }
+    )
+  end
 
   # POST /signin
   def create

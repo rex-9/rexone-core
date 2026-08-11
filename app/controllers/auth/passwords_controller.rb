@@ -1,4 +1,5 @@
-class Users::PasswordsController < Devise::PasswordsController
+# app/controllers/auth/passwords_controller.rb
+class Auth::PasswordsController < Devise::PasswordsController
   respond_to :json
 
   # POST /password/forgot

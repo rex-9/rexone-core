@@ -1,8 +1,5 @@
-# app/controllers/access_controller.rb:
-
-class AccessController < ApplicationController
-  before_action :authenticate_user!
-
+# app/controllers/v1/access_controller.rb:
+class V1::AccessController < V1::ApplicationController
   # GET /access
   def index
     accesses = AccessService.get_user_access(current_user.id)

@@ -1,7 +1,5 @@
-# app/controllers/payment/payments_controller.rb
-class Payment::PaymentsController < ApplicationController
-  before_action :authenticate_user!
-
+# app/controllers/v1/payment/payments_controller.rb
+class V1::Payment::PaymentsController < V1::ApplicationController
   # POST /payment/session
   def create
     product = Payment::Product.find(payment_params[:product_id])

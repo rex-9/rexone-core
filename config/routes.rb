@@ -26,7 +26,11 @@ Rails.application.routes.draw do
   mount SolidWebUi::Cache::Engine => "/admin/cache"
   mount SolidWebUi::Cable::Engine => "/admin/cable"
 
-  # ===== ADMINISTRATE =====
+  # ============================================================
+  # ADMINISTRATE
+  # ============================================================
+  # Separate from the versioned application API.
+  # Administrate is intended for Super Admin access.
   namespace :admin do
     resources :assets, only: %i[index show new create edit update destroy]
     resources :users, only: %i[index show new create edit update destroy]
@@ -53,90 +57,124 @@ Rails.application.routes.draw do
     root to: "users#index"
   end
 
-  # ===== IAM =====
-  namespace :iam do
-    resources :permissions, only: [ :index, :show ]
-    resources :roles, only: [ :index, :show, :create, :update, :destroy ]
-
-    resources :users, only: [] do
-      resources :roles, only: [ :index, :create, :destroy ], controller: "user_roles"
-    end
-  end
-
   # ===== AUTH (Devise) =====
-  devise_for :users, path: "", path_names: {
+  devise_for :users,
+  path: "",
+  path_names: {
     sign_in: "signin",
     sign_out: "signout",
     registration: "signup"
   },
   controllers: {
-    sessions: "users/sessions",
-    registrations: "users/registrations",
-    confirmations: "users/confirmations",
-    passwords: "users/passwords"
+    sessions: "auth/sessions",
+    registrations: "auth/registrations",
+    confirmations: "auth/confirmations",
+    passwords: "auth/passwords"
   }
 
   devise_scope :user do
-    post "signin/google", to: "users/sessions#google_sign_in"
-    post "signin/google/complete", to: "users/sessions#google_sign_in_complete"
-    post "signin/token", to: "users/sessions#token_sign_in"
-    post "confirmation/send_code", to: "users/confirmations#send_code"
-    post "confirmation/confirm_code", to: "users/confirmations#confirm_code"
-    post "password/forgot", to: "users/passwords#create"
-    put "password/reset", to: "users/passwords#update"
+    get "peek", to: "auth/sessions#peek_user"
+
+    post "signin/google", to: "auth/sessions#google_sign_in"
+    post "signin/google/complete", to: "auth/sessions#google_sign_in_complete"
+    post "signin/token", to: "auth/sessions#token_sign_in"
+
+    post "confirmation/send_code", to: "auth/confirmations#send_code"
+    post "confirmation/confirm_code", to: "auth/confirmations#confirm_code"
+
+    post "password/forgot", to: "auth/passwords#create"
+    put "password/reset", to: "auth/passwords#update"
   end
-
-  # ===== USERS =====
-  get "users/", to: "users/users#index"
-  get "users/current", to: "users/users#read_current_user"
-  get "users/current/iam", to: "users/users#read_current_iam"
-  get "users/peek", to: "users/users#read_peek_user"
-
-  # ===== MEDIA =====
-  post "media/upload", to: "assets#create_upload"
-
-  # ===== NOTIFICATIONS =====
-  post "notifications/push", to: "notifications#create_push"
-  post "notifications/email", to: "notifications#create_email"
 
   # ===== WEBHOOKS =====
   post "webhooks/stripe", to: "webhooks/stripe#create"
 
-  # ===== PAYMENTS - Client =====
-  namespace :payment do
-    resources :products, only: [ :index, :show ]
-    resources :subscriptions, only: [ :index, :show, :destroy ] do
-      member do
-        post :create_resume
-        post :create_cancel # Cancel sub at period end
-      end
-    end
-    resources :transactions, only: [ :index, :show ] do
-      collection do
-        get :read_recent
+  # ============================================================
+  # API V1
+  # ============================================================
+  namespace :v1 do
+    # ===== USERS =====
+    get "users/", to: "users#index"
+    get "users/current", to: "users#read_current_user"
+    get "users/current/iam", to: "users#read_current_iam"
+
+    # ===== ADMIN API =====
+    # React Admin Dashboard.
+    # Requires admin role + normal resource permissions.
+    namespace :admin do
+      resources :users, only: [] do
+        collection do
+          get :read_users
+        end
+
+        member do
+          get :read_user
+          put :update_user
+          delete :delete_user
+        end
       end
     end
 
-    # Checkout
-    post "session", to: "payments#create"
-    get "session/:session_id", to: "payments#read_status"
+    # ===== IAM =====
+    namespace :iam do
+      resources :permissions, only: %i[index show]
+
+      resources :roles, only: %i[index show create update destroy]
+
+      resources :users, only: [] do
+        resources :roles,
+          only: %i[index create destroy],
+          controller: "user_roles"
+      end
+    end
+
+    # ===== MEDIA =====
+    post "media/upload", to: "assets#create_upload"
+
+    # ===== NOTIFICATIONS =====
+    post "notifications/push", to: "notifications#create_push"
+    post "notifications/email", to: "notifications#create_email"
+
+    # ===== PAYMENTS - CLIENT =====
+    namespace :payment do
+      resources :products, only: %i[index show]
+
+      resources :subscriptions, only: %i[index show destroy] do
+        member do
+          post :create_cancel, path: "cancel"
+          post :create_resume, path: "resume"
+        end
+      end
+
+      resources :transactions, only: %i[index show] do
+        collection do
+          get :read_recent, path: "recent"
+        end
+      end
+
+      # Checkout
+      post "session", to: "payments#create"
+      get "session/:session_id", to: "payments#read_status"
+    end
+
+    # ===== ACCESS =====
+    get "access", to: "access#index"
+    get "access/active", to: "access#read_active"
+    get "access/check", to: "access#read_check"
+    delete "access/:id", to: "access#destroy"
+
+    # ===== AI =====
+    post "ai/chat", to: "ai#create_chat"
+    get "ai/history", to: "ai#read_history"
+    delete "ai/clear", to: "ai#destroy_clear"
+    put "ai/rename", to: "ai#update_rename"
+
+    get "ai/rooms", to: "ai#read_rooms"
+    post "ai/rooms", to: "ai#create_room"
+    delete "ai/rooms/:id", to: "ai#destroy_room"
+
+    post "ai/summarize", to: "ai#create_summarize"
+    post "ai/translate", to: "ai#create_translate"
+    post "ai/analyze", to: "ai#create_analyze"
   end
-
-  # ===== ACCESS =====
-  get "access", to: "access#index"
-  get "access/active", to: "access#read_active"
-  get "access/check", to: "access#read_check"
-  delete "access/:id", to: "access#destroy"
-
-  # ===== AI =====
-  post "ai/chat", to: "ai#create_chat"
-  get "ai/history", to: "ai#read_history"
-  delete "ai/clear", to: "ai#destroy_clear"
-  put "ai/rename", to: "ai#update_rename"
-  get "ai/rooms", to: "ai#read_rooms"
-  post "ai/rooms", to: "ai#create_room"
-  delete "ai/rooms/:id", to: "ai#destroy_room"
-  post "ai/summarize", to: "ai#create_summarize"
-  post "ai/translate", to: "ai#create_translate"
-  post "ai/analyze", to: "ai#create_analyze"
 end

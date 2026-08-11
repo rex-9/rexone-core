@@ -162,14 +162,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_184950) do
     t.uuid "product_id", null: false
     t.datetime "refunded_at"
     t.string "status", default: "pending", null: false
-    t.string "stripe_payment_intent", null: false
+    t.string "stripe_payment_intent_id", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
     t.index ["created_at"], name: "index_payment_transactions_on_created_at"
     t.index ["payment_method_type"], name: "index_payment_transactions_on_payment_method_type"
     t.index ["product_id"], name: "index_payment_transactions_on_product_id"
     t.index ["status"], name: "index_payment_transactions_on_status"
-    t.index ["stripe_payment_intent"], name: "index_payment_transactions_on_stripe_payment_intent", unique: true
+    t.index ["stripe_payment_intent_id"], name: "index_payment_transactions_on_stripe_payment_intent_id", unique: true
     t.index ["user_id", "created_at"], name: "index_payment_transactions_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_payment_transactions_on_user_id"
   end

@@ -1,7 +1,5 @@
-# app/controllers/iam/roles_controller.rb:
-
-class Iam::RolesController < ApplicationController
-  before_action :authenticate_user!
+# app/controllers/v1/iam/roles_controller.rb:
+class V1::Iam::RolesController < V1::ApplicationController
   before_action :super_admin_required!, except: [ :index ]
 
   # GET /iam/roles/

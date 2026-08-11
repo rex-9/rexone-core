@@ -1,4 +1,5 @@
-class Users::ConfirmationsController < Devise::ConfirmationsController
+# app/controllers/auth/confirmations_controller.rb
+class Auth::ConfirmationsController < Devise::ConfirmationsController
   # GET /confirmation?confirmation_token=abcdef
   def show
     self.resource = resource_class.confirm_by_token(params[:confirmation_token])

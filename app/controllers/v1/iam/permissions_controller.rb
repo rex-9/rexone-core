@@ -1,7 +1,5 @@
-# app/controllers/iam/permissions_controller.rb
-
-class Iam::PermissionsController < ApplicationController
-  before_action :authenticate_user!
+# app/controllers/v1/iam/permissions_controller.rb
+class V1::Iam::PermissionsController < V1::ApplicationController
   before_action :super_admin_required!
 
   # GET /iam/permissions

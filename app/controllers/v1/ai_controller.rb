@@ -1,8 +1,6 @@
-# app/controllers/ai_controller.rb
-
-class AiController < ApplicationController
-  before_action :authenticate_user!
-  before_action :set_room, only: [ :chat, :history, :clear, :rename ]
+# app/controllers/v1/ai_controller.rb
+class V1::AiController < V1::ApplicationController
+  before_action :set_room, only: [ :create_chat, :read_history, :destroy_clear, :update_rename ]
 
   # POST /ai/chat
   def create_chat

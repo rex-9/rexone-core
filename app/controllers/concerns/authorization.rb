@@ -1,67 +1,68 @@
 # app/controllers/concerns/authorization.rb
-
 module Authorization
   extend ActiveSupport::Concern
 
   included do
-    before_action :authorize_action!, if: -> { current_user.present? }
+    before_action :authorize_action!, if: :authorization_required?
+  end
+
+  def authorization_required?
+    current_user.present? &&
+      !controller_path.start_with?("auth/")
+  end
+
+  def admin_api_controller?
+    controller_path.start_with?("v1/admin/")
   end
 
   def authorize_action!
-    # SUPER ADMIN: Skip all permission checks
-    # return if current_user.super_admin?
+    admin_required! if admin_api_controller?
 
-    resource = controller_name.to_sym
-    action = action_name.to_sym
+    return if current_user.can?(permission_action, controller_name)
 
-    # Map action to permission based on prefix
-    permission_action = case action.to_s
-    when /\Acreate_/i, /\Anew\z/i, /\Anew_\z/i
+    render_json_response(
+      status_code: 403,
+      message: "Unauthorized",
+      error: "You don't have permission to #{permission_action} #{controller_name}"
+    )
+  end
+
+  def permission_action
+    action = action_name.to_s
+
+    case action
+    when /\Acreate_/, /\Anew\z/
       :create
-    when /\Aread_/i, /\Aindex\z/i, /\Aindex_\z/i, /\Ashow\z/i, /\Ashow_\z/i, /\Aget/i, /\Aget_/i
+    when /\Aread_/, /\Aindex\z/, /\Ashow\z/
       :read
-    when /\Aupdate_/i, /\Aedit\z/i, /\Aedit_\z/i
+    when /\Aupdate_/, /\Aedit\z/
       :update
-    when /\Adelete_/i, /\Adestroy\z/i, /\Adestroy_\z/i
+    when /\Adelete_/, /\Adestroy\z/
       :delete
+    when "create", "read", "update", "delete"
+      action.to_sym
     else
-      # Fallback: check the actual action name if it matches create/read/update/delete
-      if %w[create read update delete].include?(action.to_s)
-        action.to_sym
-      else
-        :read
-      end
-    end
-
-    # Skip authorization for admin controllers (they use their own)
-    return if controller_path.start_with?("admin/")
-
-    unless current_user.can?(permission_action, resource)
-      render_json_response(
-        status_code: 403,
-        message: "Unauthorized",
-        error: "You don't have permission to #{permission_action} #{resource}"
-      )
+      :read
     end
   end
 
   def admin_required!
-    unless current_user.admin?
-      render_json_response(
-        status_code: 403,
-        message: "Unauthorized",
-        error: "Admin access required"
-      )
-    end
+    return if current_user.admin?
+
+    render_json_response(
+      status_code: 403,
+      message: "Unauthorized",
+      error: "Admin access required"
+    )
   end
 
   def super_admin_required!
-    unless current_user.super_admin?
-      render_json_response(
-        status_code: 403,
-        message: "Unauthorized",
-        error: "Super admin access required"
-      )
-    end
+    return if current_user.super_admin?
+
+    render_json_response(
+      status_code: 403,
+      message: "Unauthorized",
+      error: "Super admin access required"
+    )
   end
 end

@@ -1,4 +1,5 @@
-class Payment::ProductsController < ApplicationController
+# app/controllers/v1/payment/products_controller.rb
+class V1::Payment::ProductsController < V1::ApplicationController
   # GET /payment/products
   def index
     products = Payment::Product.active.order(created_at: :desc)

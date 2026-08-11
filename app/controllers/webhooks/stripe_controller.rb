@@ -1,7 +1,5 @@
 # app/controllers/webhooks/stripe_controller.rb
-class Webhooks::StripeController < ActionController::Base
-  skip_before_action :verify_authenticity_token
-
+class Webhooks::StripeController < ActionController::API
   def create
     payload = request.body.read
     signature = request.headers["HTTP_STRIPE_SIGNATURE"]

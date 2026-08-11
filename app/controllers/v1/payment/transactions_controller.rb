@@ -1,7 +1,5 @@
-# app/controllers/payment/transactions_controller.rb
-class Payment::TransactionsController < ApplicationController
-  before_action :authenticate_user!
-
+# app/controllers/v1/payment/transactions_controller.rb
+class V1::Payment::TransactionsController < V1::ApplicationController
   # GET /payment/transactions
   def index
     transactions = current_user.transactions.includes(:product).order(created_at: :desc)

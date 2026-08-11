@@ -1,7 +1,5 @@
-# app/controllers/iam/user_roles_controller.rb
-
-class Iam::UserRolesController < ApplicationController
-  before_action :authenticate_user!
+# app/controllers/v1/iam/user_roles_controller.rb
+class V1::Iam::UserRolesController < V1::ApplicationController
   before_action :admin_required!
 
   # GET /iam/user_roles?user_id=:user_id

@@ -1,7 +1,6 @@
-# app/controllers/assets_controller.rb
-
-class AssetsController < ApplicationController
-  before_action :authenticate_user!, except: [ :index, :show ]
+# app/controllers/v1/assets_controller.rb
+class V1::AssetsController < V1::ApplicationController
+  skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_asset, only: [ :show, :update, :destroy ]
 
   # GET /assets
