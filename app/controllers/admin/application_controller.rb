@@ -20,6 +20,7 @@ module Admin
         next false unless user.admin?
 
         @current_user = user
+        Current.auditor = user
       end
 
       # http_basic_authenticate_or_request_with(

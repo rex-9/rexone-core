@@ -34,6 +34,27 @@ class CreatePaymentTransactions < ActiveRecord::Migration[8.1]
       t.integer :amount_received, default: 0
       t.integer :amount_capturable, default: 0
 
+      # ===== AUDIT =====
+      t.references :created_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :updated_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :discarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :undiscarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      # ===== SOFT DELETE =====
+      t.datetime :discarded_at
+      t.datetime :undiscarded_at
+
       t.timestamps
     end
 
@@ -43,5 +64,6 @@ class CreatePaymentTransactions < ActiveRecord::Migration[8.1]
     add_index :payment_transactions, :created_at
     add_index :payment_transactions, :payment_method_type
     add_index :payment_transactions, [ :user_id, :created_at ]
+    add_index :payment_transactions, :discarded_at
   end
 end

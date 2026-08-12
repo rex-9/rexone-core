@@ -17,17 +17,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
 
   create_table "accesses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.datetime "expired_at"
     t.datetime "expires_at"
     t.datetime "granted_at", null: false
     t.uuid "product_id", null: false
     t.datetime "revoked_at"
     t.string "status", default: "active", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
     t.uuid "user_id", null: false
+    t.index ["created_by_id"], name: "index_accesses_on_created_by_id"
+    t.index ["discarded_at"], name: "index_accesses_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_accesses_on_discarded_by_id"
     t.index ["expires_at"], name: "index_accesses_on_expires_at"
     t.index ["product_id"], name: "index_accesses_on_product_id"
     t.index ["status"], name: "index_accesses_on_status"
+    t.index ["undiscarded_by_id"], name: "index_accesses_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_accesses_on_updated_by_id"
     t.index ["user_id", "product_id"], name: "index_accesses_on_user_id_and_product_id", unique: true
     t.index ["user_id", "status"], name: "index_accesses_on_user_id_and_status"
     t.index ["user_id"], name: "index_accesses_on_user_id"
@@ -36,6 +47,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
   create_table "assets", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "category", null: false
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.string "extension"
     t.string "format", null: false
     t.string "name", null: false
@@ -44,11 +58,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.string "record_type"
     t.bigint "size", null: false
     t.string "source", default: "upload", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
     t.string "url", null: false
     t.uuid "user_id"
+    t.index ["created_by_id"], name: "index_assets_on_created_by_id"
+    t.index ["discarded_at"], name: "index_assets_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_assets_on_discarded_by_id"
     t.index ["name"], name: "index_assets_on_name", unique: true
     t.index ["record_type", "record_id"], name: "index_assets_on_record"
+    t.index ["undiscarded_by_id"], name: "index_assets_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_assets_on_updated_by_id"
     t.index ["url"], name: "index_assets_on_url", unique: true
     t.index ["user_id"], name: "index_assets_on_user_id"
   end
@@ -56,20 +78,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
   create_table "chat_messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.text "content", null: false
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.jsonb "metadata", default: {}
     t.string "role", null: false
     t.uuid "room_id", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.index ["created_by_id"], name: "index_chat_messages_on_created_by_id"
+    t.index ["discarded_at"], name: "index_chat_messages_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_chat_messages_on_discarded_by_id"
     t.index ["room_id", "created_at"], name: "index_chat_messages_on_room_id_and_created_at"
     t.index ["room_id"], name: "index_chat_messages_on_room_id"
+    t.index ["undiscarded_by_id"], name: "index_chat_messages_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_chat_messages_on_updated_by_id"
   end
 
   create_table "chat_rooms", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.jsonb "metadata", default: {}
     t.string "title", default: "New Conversation"
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
     t.uuid "user_id", null: false
+    t.index ["created_by_id"], name: "index_chat_rooms_on_created_by_id"
+    t.index ["discarded_at"], name: "index_chat_rooms_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_chat_rooms_on_discarded_by_id"
+    t.index ["undiscarded_by_id"], name: "index_chat_rooms_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_chat_rooms_on_updated_by_id"
     t.index ["user_id", "created_at"], name: "index_chat_rooms_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_chat_rooms_on_user_id"
   end
@@ -77,38 +121,82 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
   create_table "iam_permissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "action", null: false
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.string "name", null: false
     t.string "resource", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.index ["created_by_id"], name: "index_iam_permissions_on_created_by_id"
+    t.index ["discarded_at"], name: "index_iam_permissions_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_iam_permissions_on_discarded_by_id"
     t.index ["name"], name: "index_iam_permissions_on_name", unique: true
     t.index ["resource", "action"], name: "index_iam_permissions_on_resource_and_action", unique: true
+    t.index ["undiscarded_by_id"], name: "index_iam_permissions_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_iam_permissions_on_updated_by_id"
   end
 
   create_table "iam_role_permissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.uuid "permission_id", null: false
     t.uuid "role_id", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.index ["created_by_id"], name: "index_iam_role_permissions_on_created_by_id"
+    t.index ["discarded_at"], name: "index_iam_role_permissions_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_iam_role_permissions_on_discarded_by_id"
     t.index ["permission_id"], name: "index_iam_role_permissions_on_permission_id"
     t.index ["role_id", "permission_id"], name: "index_iam_role_permissions_on_role_id_and_permission_id", unique: true
     t.index ["role_id"], name: "index_iam_role_permissions_on_role_id"
+    t.index ["undiscarded_by_id"], name: "index_iam_role_permissions_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_iam_role_permissions_on_updated_by_id"
   end
 
   create_table "iam_roles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
     t.text "description"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.string "name", null: false
     t.boolean "system", default: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.index ["created_by_id"], name: "index_iam_roles_on_created_by_id"
+    t.index ["discarded_at"], name: "index_iam_roles_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_iam_roles_on_discarded_by_id"
     t.index ["name"], name: "index_iam_roles_on_name", unique: true
+    t.index ["undiscarded_by_id"], name: "index_iam_roles_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_iam_roles_on_updated_by_id"
   end
 
   create_table "iam_user_roles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.uuid "role_id", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
     t.uuid "user_id", null: false
+    t.index ["created_by_id"], name: "index_iam_user_roles_on_created_by_id"
+    t.index ["discarded_at"], name: "index_iam_user_roles_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_iam_user_roles_on_discarded_by_id"
     t.index ["role_id"], name: "index_iam_user_roles_on_role_id"
+    t.index ["undiscarded_by_id"], name: "index_iam_user_roles_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_iam_user_roles_on_updated_by_id"
     t.index ["user_id", "role_id"], name: "index_iam_user_roles_on_user_id_and_role_id", unique: true
     t.index ["user_id"], name: "index_iam_user_roles_on_user_id"
   end
@@ -116,24 +204,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
   create_table "payment_products", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
     t.string "currency", null: false
     t.string "cycle"
     t.text "description"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.string "name", null: false
     t.integer "price_unit_amount", null: false
     t.string "stripe_price_id", null: false
     t.string "stripe_product_id", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.index ["created_by_id"], name: "index_payment_products_on_created_by_id"
+    t.index ["discarded_at"], name: "index_payment_products_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_payment_products_on_discarded_by_id"
     t.index ["stripe_price_id"], name: "index_payment_products_on_stripe_price_id", unique: true
     t.index ["stripe_product_id"], name: "index_payment_products_on_stripe_product_id", unique: true
+    t.index ["undiscarded_by_id"], name: "index_payment_products_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_payment_products_on_updated_by_id"
   end
 
   create_table "payment_subscriptions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "canceled_at"
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
     t.datetime "current_period_end"
     t.datetime "current_period_start"
     t.string "cycle", null: false
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.datetime "ended_at"
     t.jsonb "metadata", default: {}
     t.jsonb "payment_method_details", default: {}
@@ -144,12 +246,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.string "status", default: "incomplete", null: false
     t.string "stripe_customer_id"
     t.string "stripe_subscription_id", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
     t.uuid "user_id", null: false
+    t.index ["created_by_id"], name: "index_payment_subscriptions_on_created_by_id"
     t.index ["current_period_end"], name: "index_payment_subscriptions_on_current_period_end"
+    t.index ["discarded_at"], name: "index_payment_subscriptions_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_payment_subscriptions_on_discarded_by_id"
     t.index ["product_id"], name: "index_payment_subscriptions_on_product_id"
     t.index ["status"], name: "index_payment_subscriptions_on_status"
     t.index ["stripe_subscription_id"], name: "index_payment_subscriptions_on_stripe_subscription_id", unique: true
+    t.index ["undiscarded_by_id"], name: "index_payment_subscriptions_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_payment_subscriptions_on_updated_by_id"
     t.index ["user_id", "status"], name: "index_payment_subscriptions_on_user_id_and_status"
     t.index ["user_id"], name: "index_payment_subscriptions_on_user_id"
   end
@@ -160,7 +270,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.datetime "canceled_at"
     t.string "client_secret"
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
     t.string "currency", null: false
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.jsonb "metadata", default: {}
     t.datetime "paid_at"
     t.jsonb "payment_method_details", default: {}
@@ -174,14 +287,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.string "stripe_charge_id"
     t.string "stripe_customer_id"
     t.string "stripe_payment_intent_id", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
     t.uuid "user_id", null: false
     t.index ["created_at"], name: "index_payment_transactions_on_created_at"
+    t.index ["created_by_id"], name: "index_payment_transactions_on_created_by_id"
+    t.index ["discarded_at"], name: "index_payment_transactions_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_payment_transactions_on_discarded_by_id"
     t.index ["payment_method_type"], name: "index_payment_transactions_on_payment_method_type"
     t.index ["product_id"], name: "index_payment_transactions_on_product_id"
     t.index ["status"], name: "index_payment_transactions_on_status"
     t.index ["stripe_charge_id"], name: "index_payment_transactions_on_stripe_charge_id", unique: true
     t.index ["stripe_payment_intent_id"], name: "index_payment_transactions_on_stripe_payment_intent_id", unique: true
+    t.index ["undiscarded_by_id"], name: "index_payment_transactions_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_payment_transactions_on_updated_by_id"
     t.index ["user_id", "created_at"], name: "index_payment_transactions_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_payment_transactions_on_user_id"
   end
@@ -704,8 +825,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.string "confirmation_token"
     t.datetime "confirmed_at"
     t.datetime "created_at", null: false
+    t.uuid "created_by_id"
     t.datetime "current_sign_in_at"
     t.string "current_sign_in_ip"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.integer "failed_attempts", default: 0, null: false
@@ -721,30 +845,82 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.integer "sign_in_count", default: 0, null: false
     t.string "stripe_customer_id"
     t.string "unconfirmed_email"
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
     t.string "unlock_token"
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
     t.string "username", null: false
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
+    t.index ["created_by_id"], name: "index_users_on_created_by_id"
+    t.index ["discarded_at"], name: "index_users_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_users_on_discarded_by_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["jti"], name: "index_users_on_jti", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["undiscarded_by_id"], name: "index_users_on_undiscarded_by_id"
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+    t.index ["updated_by_id"], name: "index_users_on_updated_by_id"
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
   add_foreign_key "accesses", "payment_products", column: "product_id"
   add_foreign_key "accesses", "users"
+  add_foreign_key "accesses", "users", column: "created_by_id"
+  add_foreign_key "accesses", "users", column: "discarded_by_id"
+  add_foreign_key "accesses", "users", column: "undiscarded_by_id"
+  add_foreign_key "accesses", "users", column: "updated_by_id"
   add_foreign_key "assets", "users"
+  add_foreign_key "assets", "users", column: "created_by_id"
+  add_foreign_key "assets", "users", column: "discarded_by_id"
+  add_foreign_key "assets", "users", column: "undiscarded_by_id"
+  add_foreign_key "assets", "users", column: "updated_by_id"
   add_foreign_key "chat_messages", "chat_rooms", column: "room_id"
+  add_foreign_key "chat_messages", "users", column: "created_by_id"
+  add_foreign_key "chat_messages", "users", column: "discarded_by_id"
+  add_foreign_key "chat_messages", "users", column: "undiscarded_by_id"
+  add_foreign_key "chat_messages", "users", column: "updated_by_id"
   add_foreign_key "chat_rooms", "users"
+  add_foreign_key "chat_rooms", "users", column: "created_by_id"
+  add_foreign_key "chat_rooms", "users", column: "discarded_by_id"
+  add_foreign_key "chat_rooms", "users", column: "undiscarded_by_id"
+  add_foreign_key "chat_rooms", "users", column: "updated_by_id"
+  add_foreign_key "iam_permissions", "users", column: "created_by_id"
+  add_foreign_key "iam_permissions", "users", column: "discarded_by_id"
+  add_foreign_key "iam_permissions", "users", column: "undiscarded_by_id"
+  add_foreign_key "iam_permissions", "users", column: "updated_by_id"
   add_foreign_key "iam_role_permissions", "iam_permissions", column: "permission_id"
   add_foreign_key "iam_role_permissions", "iam_roles", column: "role_id"
+  add_foreign_key "iam_role_permissions", "users", column: "created_by_id"
+  add_foreign_key "iam_role_permissions", "users", column: "discarded_by_id"
+  add_foreign_key "iam_role_permissions", "users", column: "undiscarded_by_id"
+  add_foreign_key "iam_role_permissions", "users", column: "updated_by_id"
+  add_foreign_key "iam_roles", "users", column: "created_by_id"
+  add_foreign_key "iam_roles", "users", column: "discarded_by_id"
+  add_foreign_key "iam_roles", "users", column: "undiscarded_by_id"
+  add_foreign_key "iam_roles", "users", column: "updated_by_id"
   add_foreign_key "iam_user_roles", "iam_roles", column: "role_id"
   add_foreign_key "iam_user_roles", "users"
+  add_foreign_key "iam_user_roles", "users", column: "created_by_id"
+  add_foreign_key "iam_user_roles", "users", column: "discarded_by_id"
+  add_foreign_key "iam_user_roles", "users", column: "undiscarded_by_id"
+  add_foreign_key "iam_user_roles", "users", column: "updated_by_id"
+  add_foreign_key "payment_products", "users", column: "created_by_id"
+  add_foreign_key "payment_products", "users", column: "discarded_by_id"
+  add_foreign_key "payment_products", "users", column: "undiscarded_by_id"
+  add_foreign_key "payment_products", "users", column: "updated_by_id"
   add_foreign_key "payment_subscriptions", "payment_products", column: "product_id"
   add_foreign_key "payment_subscriptions", "users"
+  add_foreign_key "payment_subscriptions", "users", column: "created_by_id"
+  add_foreign_key "payment_subscriptions", "users", column: "discarded_by_id"
+  add_foreign_key "payment_subscriptions", "users", column: "undiscarded_by_id"
+  add_foreign_key "payment_subscriptions", "users", column: "updated_by_id"
   add_foreign_key "payment_transactions", "payment_products", column: "product_id"
   add_foreign_key "payment_transactions", "users"
+  add_foreign_key "payment_transactions", "users", column: "created_by_id"
+  add_foreign_key "payment_transactions", "users", column: "discarded_by_id"
+  add_foreign_key "payment_transactions", "users", column: "undiscarded_by_id"
+  add_foreign_key "payment_transactions", "users", column: "updated_by_id"
   add_foreign_key "rails_error_dashboard_cascade_patterns", "rails_error_dashboard_error_logs", column: "child_error_id"
   add_foreign_key "rails_error_dashboard_cascade_patterns", "rails_error_dashboard_error_logs", column: "parent_error_id"
   add_foreign_key "rails_error_dashboard_diagnostic_dumps", "rails_error_dashboard_applications", column: "application_id"
@@ -762,4 +938,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "users", "users", column: "created_by_id"
+  add_foreign_key "users", "users", column: "discarded_by_id"
+  add_foreign_key "users", "users", column: "undiscarded_by_id"
+  add_foreign_key "users", "users", column: "updated_by_id"
 end

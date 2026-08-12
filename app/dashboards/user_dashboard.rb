@@ -14,17 +14,20 @@ class UserDashboard < Administrate::BaseDashboard
   # on pages throughout the dashboard.
   ATTRIBUTE_TYPES = {
     id: Field::String,
-    username: Field::String,
-    email: Field::String,
-    name: Field::String,
     accesses: Field::HasMany,
     assets: Field::HasMany,
     confirmation_code: Field::String,
     confirmation_sent_at: Field::DateTime,
     confirmation_token: Field::String,
     confirmed_at: Field::DateTime,
+    created_by_id: Field::String,
+    creator: Field::BelongsTo,
     current_sign_in_at: Field::DateTime,
     current_sign_in_ip: Field::String,
+    discarded_at: Field::DateTime,
+    discarded_by_id: Field::String,
+    discarder: Field::BelongsTo,
+    email: Field::String,
     encrypted_password: Field::String,
     failed_attempts: Field::Number,
     jti: Field::String,
@@ -32,6 +35,7 @@ class UserDashboard < Administrate::BaseDashboard
     last_sign_in_ip: Field::String,
     locked_at: Field::DateTime,
     messages: Field::HasMany,
+    name: Field::String,
     provider: Field::String,
     remember_created_at: Field::DateTime,
     reset_password_sent_at: Field::DateTime,
@@ -43,8 +47,14 @@ class UserDashboard < Administrate::BaseDashboard
     subscriptions: Field::HasMany,
     transactions: Field::HasMany,
     unconfirmed_email: Field::String,
+    undiscarded_at: Field::DateTime,
+    undiscarded_by_id: Field::String,
+    undiscarder: Field::BelongsTo,
     unlock_token: Field::String,
+    updated_by_id: Field::String,
+    updater: Field::BelongsTo,
     user_roles: Field::HasMany,
+    username: Field::String,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
@@ -72,8 +82,13 @@ class UserDashboard < Administrate::BaseDashboard
     confirmation_sent_at
     confirmation_token
     confirmed_at
+    created_by_id
+    creator
     current_sign_in_at
     current_sign_in_ip
+    discarded_at
+    discarded_by_id
+    discarder
     email
     encrypted_password
     failed_attempts
@@ -94,7 +109,12 @@ class UserDashboard < Administrate::BaseDashboard
     subscriptions
     transactions
     unconfirmed_email
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
     unlock_token
+    updated_by_id
+    updater
     user_roles
     username
     created_at
@@ -111,8 +131,13 @@ class UserDashboard < Administrate::BaseDashboard
     confirmation_sent_at
     confirmation_token
     confirmed_at
+    created_by_id
+    creator
     current_sign_in_at
     current_sign_in_ip
+    discarded_at
+    discarded_by_id
+    discarder
     email
     encrypted_password
     failed_attempts
@@ -133,7 +158,12 @@ class UserDashboard < Administrate::BaseDashboard
     subscriptions
     transactions
     unconfirmed_email
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
     unlock_token
+    updated_by_id
+    updater
     user_roles
     username
   ].freeze

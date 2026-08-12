@@ -15,12 +15,23 @@ class AssetDashboard < Administrate::BaseDashboard
   ATTRIBUTE_TYPES = {
     id: Field::String,
     category: Field::String,
+    created_by_id: Field::String,
+    creator: Field::BelongsTo,
+    discarded_at: Field::DateTime,
+    discarded_by_id: Field::String,
+    discarder: Field::BelongsTo,
     extension: Field::String,
     format: Field::String,
     name: Field::String,
+    public_id: Field::String,
     record: Field::Polymorphic,
     size: Field::Number,
     source: Field::String,
+    undiscarded_at: Field::DateTime,
+    undiscarded_by_id: Field::String,
+    undiscarder: Field::BelongsTo,
+    updated_by_id: Field::String,
+    updater: Field::BelongsTo,
     url: Field::String,
     user: Field::BelongsTo,
     created_at: Field::DateTime,
@@ -44,12 +55,23 @@ class AssetDashboard < Administrate::BaseDashboard
   SHOW_PAGE_ATTRIBUTES = %i[
     id
     category
+    created_by_id
+    creator
+    discarded_at
+    discarded_by_id
+    discarder
     extension
     format
     name
+    public_id
     record
     size
     source
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     url
     user
     created_at
@@ -61,12 +83,23 @@ class AssetDashboard < Administrate::BaseDashboard
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
     category
+    created_by_id
+    creator
+    discarded_at
+    discarded_by_id
+    discarder
     extension
     format
     name
+    public_id
     record
     size
     source
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     url
     user
   ].freeze

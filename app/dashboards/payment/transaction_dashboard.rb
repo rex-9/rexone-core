@@ -13,7 +13,12 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     amount_received: Field::Number,
     canceled_at: Field::DateTime,
     client_secret: Field::String,
+    created_by_id: Field::String,
+    creator: Field::BelongsTo,
     currency: Field::String,
+    discarded_at: Field::DateTime,
+    discarded_by_id: Field::String,
+    discarder: Field::BelongsTo,
     metadata: Field::String.with_options(searchable: false),
     paid_at: Field::DateTime,
     payment_method_details: Field::String.with_options(searchable: false),
@@ -27,6 +32,11 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     stripe_charge_id: Field::String,
     stripe_customer_id: Field::String,
     stripe_payment_intent_id: Field::String,
+    undiscarded_at: Field::DateTime,
+    undiscarded_by_id: Field::String,
+    undiscarder: Field::BelongsTo,
+    updated_by_id: Field::String,
+    updater: Field::BelongsTo,
     user: Field::BelongsTo,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
@@ -55,7 +65,12 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     amount_received
     canceled_at
     client_secret
+    created_by_id
+    creator
     currency
+    discarded_at
+    discarded_by_id
+    discarder
     metadata
     paid_at
     payment_method_details
@@ -69,6 +84,11 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     stripe_charge_id
     stripe_customer_id
     stripe_payment_intent_id
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     user
     created_at
     updated_at
@@ -82,7 +102,12 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     amount_received
     canceled_at
     client_secret
+    created_by_id
+    creator
     currency
+    discarded_at
+    discarded_by_id
+    discarder
     metadata
     paid_at
     payment_method_details
@@ -96,6 +121,11 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
     stripe_charge_id
     stripe_customer_id
     stripe_payment_intent_id
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     user
   ].freeze
 

@@ -16,15 +16,25 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
     id: Field::String,
     accesses: Field::HasMany,
     active: Field::Boolean,
+    created_by_id: Field::String,
+    creator: Field::BelongsTo,
     currency: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     cycle: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     description: Field::Text,
+    discarded_at: Field::DateTime,
+    discarded_by_id: Field::String,
+    discarder: Field::BelongsTo,
     name: Field::String,
     price_unit_amount: Field::Number,
     stripe_price_id: Field::String,
     stripe_product_id: Field::String,
     subscriptions: Field::HasMany,
     transactions: Field::HasMany,
+    undiscarded_at: Field::DateTime,
+    undiscarded_by_id: Field::String,
+    undiscarder: Field::BelongsTo,
+    updated_by_id: Field::String,
+    updater: Field::BelongsTo,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
@@ -48,15 +58,25 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
     id
     accesses
     active
+    created_by_id
+    creator
     currency
     cycle
     description
+    discarded_at
+    discarded_by_id
+    discarder
     name
     price_unit_amount
     stripe_price_id
     stripe_product_id
     subscriptions
     transactions
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     created_at
     updated_at
   ].freeze
@@ -67,15 +87,25 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
   FORM_ATTRIBUTES = %i[
     accesses
     active
+    created_by_id
+    creator
     currency
     cycle
     description
+    discarded_at
+    discarded_by_id
+    discarder
     name
     price_unit_amount
     stripe_price_id
     stripe_product_id
     subscriptions
     transactions
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
   ].freeze
 
   # COLLECTION_FILTERS

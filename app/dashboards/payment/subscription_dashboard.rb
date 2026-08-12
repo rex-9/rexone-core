@@ -10,9 +10,14 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
   ATTRIBUTE_TYPES = {
     id: Field::String,
     canceled_at: Field::DateTime,
+    created_by_id: Field::String,
+    creator: Field::BelongsTo,
     current_period_end: Field::DateTime,
     current_period_start: Field::DateTime,
     cycle: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
+    discarded_at: Field::DateTime,
+    discarded_by_id: Field::String,
+    discarder: Field::BelongsTo,
     ended_at: Field::DateTime,
     metadata: Field::String.with_options(searchable: false),
     payment_method_details: Field::String.with_options(searchable: false),
@@ -23,6 +28,11 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     status: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     stripe_customer_id: Field::String,
     stripe_subscription_id: Field::String,
+    undiscarded_at: Field::DateTime,
+    undiscarded_by_id: Field::String,
+    undiscarder: Field::BelongsTo,
+    updated_by_id: Field::String,
+    updater: Field::BelongsTo,
     user: Field::BelongsTo,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
@@ -47,9 +57,14 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
   SHOW_PAGE_ATTRIBUTES = %i[
     id
     canceled_at
+    created_by_id
+    creator
     current_period_end
     current_period_start
     cycle
+    discarded_at
+    discarded_by_id
+    discarder
     ended_at
     metadata
     payment_method_details
@@ -60,6 +75,11 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     status
     stripe_customer_id
     stripe_subscription_id
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     user
     created_at
     updated_at
@@ -70,9 +90,14 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
     canceled_at
+    created_by_id
+    creator
     current_period_end
     current_period_start
     cycle
+    discarded_at
+    discarded_by_id
+    discarder
     ended_at
     metadata
     payment_method_details
@@ -83,6 +108,11 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     status
     stripe_customer_id
     stripe_subscription_id
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     user
   ].freeze
 

@@ -13,10 +13,32 @@ class CreatePaymentProducts < ActiveRecord::Migration[8.1]
 
       t.boolean :active, default: true, null: false
 
+      # ===== AUDIT =====
+      t.references :created_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :updated_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :discarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :undiscarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      # ===== SOFT DELETE =====
+      t.datetime :discarded_at
+      t.datetime :undiscarded_at
+
       t.timestamps
     end
 
     add_index :payment_products, :stripe_product_id, unique: true
     add_index :payment_products, :stripe_price_id, unique: true
+    add_index :payment_products, :discarded_at
   end
 end

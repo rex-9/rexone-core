@@ -137,3 +137,5 @@ end
 group :development do
   gem "solargraph", "~> 0.60.2"
 end
+
+gem "discard", "~> 2.0"

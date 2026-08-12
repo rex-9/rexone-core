@@ -4,10 +4,14 @@ class ApplicationController < ActionController::API
   include Authorization
   include ApplicationHelper
 
-  before_action :enforce_active_platform_session!
+  before_action :enforce_active_platform_session!, :set_current_auditor
   before_action :authenticate_user!
 
   private
+
+  def set_current_auditor
+    Current.auditor = current_user if current_user
+  end
 
   def enforce_active_platform_session!
     return unless current_user

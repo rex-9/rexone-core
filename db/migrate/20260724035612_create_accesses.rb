@@ -18,6 +18,27 @@ class CreateAccesses < ActiveRecord::Migration[8.1]
       t.datetime :revoked_at
       t.datetime :expired_at
 
+      # ===== AUDIT =====
+      t.references :created_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :updated_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :discarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :undiscarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      # ===== SOFT DELETE =====
+      t.datetime :discarded_at
+      t.datetime :undiscarded_at
+
       t.timestamps
     end
 
@@ -25,5 +46,6 @@ class CreateAccesses < ActiveRecord::Migration[8.1]
     add_index :accesses, :expires_at
     add_index :accesses, [ :user_id, :product_id ], unique: true # TODO: improve
     add_index :accesses, [ :user_id, :status ]
+    add_index :accesses, :discarded_at
   end
 end

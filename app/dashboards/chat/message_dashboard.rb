@@ -10,9 +10,19 @@ class Chat::MessageDashboard < Administrate::BaseDashboard
   ATTRIBUTE_TYPES = {
     id: Field::String,
     content: Field::Text,
+    created_by_id: Field::String,
+    creator: Field::BelongsTo,
+    discarded_at: Field::DateTime,
+    discarded_by_id: Field::String,
+    discarder: Field::BelongsTo,
     metadata: Field::String.with_options(searchable: false),
     role: Field::String,
     room: Field::BelongsTo,
+    undiscarded_at: Field::DateTime,
+    undiscarded_by_id: Field::String,
+    undiscarder: Field::BelongsTo,
+    updated_by_id: Field::String,
+    updater: Field::BelongsTo,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
@@ -34,9 +44,19 @@ class Chat::MessageDashboard < Administrate::BaseDashboard
   SHOW_PAGE_ATTRIBUTES = %i[
     id
     content
+    created_by_id
+    creator
+    discarded_at
+    discarded_by_id
+    discarder
     metadata
     role
     room
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     created_at
     updated_at
   ].freeze
@@ -46,9 +66,19 @@ class Chat::MessageDashboard < Administrate::BaseDashboard
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
     content
+    created_by_id
+    creator
+    discarded_at
+    discarded_by_id
+    discarder
     metadata
     role
     room
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
   ].freeze
 
   # COLLECTION_FILTERS

@@ -25,6 +25,27 @@ class CreatePaymentSubscriptions < ActiveRecord::Migration[8.1]
       t.datetime :ended_at
       t.datetime :canceled_at
 
+      # ===== AUDIT =====
+      t.references :created_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :updated_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :discarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :undiscarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      # ===== SOFT DELETE =====
+      t.datetime :discarded_at
+      t.datetime :undiscarded_at
+
       t.timestamps
     end
 
@@ -32,5 +53,6 @@ class CreatePaymentSubscriptions < ActiveRecord::Migration[8.1]
     add_index :payment_subscriptions, :status
     add_index :payment_subscriptions, :current_period_end
     add_index :payment_subscriptions, [ :user_id, :status ]
+    add_index :payment_subscriptions, :discarded_at
   end
 end

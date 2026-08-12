@@ -1,6 +1,6 @@
 require "administrate/base_dashboard"
 
-class Iam::RoleDashboard < Administrate::BaseDashboard  # Display Resource
+class Iam::RoleDashboard < Administrate::BaseDashboard
   # Display Resource
   def display_resource(role)
     role.name
@@ -14,11 +14,21 @@ class Iam::RoleDashboard < Administrate::BaseDashboard  # Display Resource
   # on pages throughout the dashboard.
   ATTRIBUTE_TYPES = {
     id: Field::String,
+    created_by_id: Field::String,
+    creator: Field::BelongsTo,
     description: Field::Text,
+    discarded_at: Field::DateTime,
+    discarded_by_id: Field::String,
+    discarder: Field::BelongsTo,
     name: Field::String,
     permissions: Field::HasMany,
     role_permissions: Field::HasMany,
     system: Field::Boolean,
+    undiscarded_at: Field::DateTime,
+    undiscarded_by_id: Field::String,
+    undiscarder: Field::BelongsTo,
+    updated_by_id: Field::String,
+    updater: Field::BelongsTo,
     user_roles: Field::HasMany,
     users: Field::HasMany,
     created_at: Field::DateTime,
@@ -41,11 +51,21 @@ class Iam::RoleDashboard < Administrate::BaseDashboard  # Display Resource
   # an array of attributes that will be displayed on the model's show page.
   SHOW_PAGE_ATTRIBUTES = %i[
     id
+    created_by_id
+    creator
     description
+    discarded_at
+    discarded_by_id
+    discarder
     name
     permissions
     role_permissions
     system
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     user_roles
     users
     created_at
@@ -56,11 +76,21 @@ class Iam::RoleDashboard < Administrate::BaseDashboard  # Display Resource
   # an array of attributes that will be displayed
   # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
+    created_by_id
+    creator
     description
+    discarded_at
+    discarded_by_id
+    discarder
     name
     permissions
     role_permissions
     system
+    undiscarded_at
+    undiscarded_by_id
+    undiscarder
+    updated_by_id
+    updater
     user_roles
     users
   ].freeze

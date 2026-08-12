@@ -11,10 +11,33 @@ class CreateAssets < ActiveRecord::Migration[7.2]
       t.string :extension                                               # File extension (e.g., "jpg", "png")
       t.references :record, polymorphic: true, type: :uuid, null: true  # Polymorphic reference (Merit, Wish, Thanks, etc.)
       t.references :user, type: :uuid, foreign_key: true, null: true    # User who uploaded the file
+
+      # ===== AUDIT =====
+      t.references :created_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :updated_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :discarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      t.references :undiscarded_by,
+                   type: :uuid,
+                   foreign_key: { to_table: :users }
+
+      # ===== SOFT DELETE =====
+      t.datetime :discarded_at
+      t.datetime :undiscarded_at
+
       t.timestamps
     end
 
     add_index :assets, :url, unique: true
     add_index :assets, :name, unique: true
+    add_index :assets, :discarded_at
   end
 end
