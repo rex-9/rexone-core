@@ -259,7 +259,6 @@ The system integrates with multiple external and Rails-native services to provid
     <li><a href="https://github.com/cyu/rack-cors">Rack CORS</a></li>
     <li><a href="https://github.com/jnunemaker/httparty">REST Client</a></li>
     <li><a href="https://www.docker.com/">Docker</a></li>
-
   </ul>
 </details>
 
@@ -280,6 +279,7 @@ The system integrates with multiple external and Rails-native services to provid
     <li><a href="https://github.com/thoughtbot/administrate">Administrate</a> (Admin Dashboard)</li>
     <li><a href="https://github.com/doromones/solid-web">Solid Web UI</a> (Queue, Cache, Cable)</li>
     <li><a href="https://railspulse.com/">Rails Pulse</a> (Performance Monitoring)</li>
+    <li><a href="https://anjanj.github.io/rails_error_dashboard/">Rails Error Dashboard</a>(Error Monitoring)</li>
   </ul>
 </details>
 
