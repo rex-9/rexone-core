@@ -45,8 +45,8 @@ class Payment::Product < ApplicationRecord
     return 0.days unless recurring?
 
     case cycle
-    when "month" then 30.days
-    when "year" then 365.days
+    when "monthly" then 30.days
+    when "yearly" then 365.days
     else 0.days
     end
   end

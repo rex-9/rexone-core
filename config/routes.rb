@@ -104,16 +104,20 @@ Rails.application.routes.draw do
     # React Admin Dashboard.
     # Requires admin role + normal resource permissions.
     namespace :admin do
-      resources :users, only: [] do
-        collection do
-          get :read_users
-        end
+      resources :users do
+        # collection do
+        #   get    :read_teaching_users, path: "teachers" # GET /v1/admin/users/teachers # V1::Admin::UsersController#read_teaching_users
+        #   post   :create_users
+        #   put    :update_users
+        #   delete :delete_users
+        # end
 
-        member do
-          get :read_user
-          put :update_user
-          delete :delete_user
-        end
+        # member do
+        #   get :read_user_iam, path: "iam" # GET /v1/admin/users/:id/iam # V1::Admin::UsersController#read_user_iam
+        #   post :create_user
+        #   post :update_user
+        #   post :delete_user
+        # end
       end
     end
 

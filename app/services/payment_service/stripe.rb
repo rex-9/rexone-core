@@ -32,6 +32,23 @@ module PaymentService
             user_id: user.id,
             product_id: product.id
           },
+
+          # For Subscription Object metadata
+          # subscription_data: {
+          #   metadata: {
+          #     user_id: user.id,
+          #     product_id: product.id
+          #   }
+          # },
+
+          # For Payment Intent Object metadata
+          # payment_intent_data: {
+          #   metadata: {
+          #     user_id: user.id,
+          #     product_id: product.id
+          #   }
+          # }
+
           # billing_address_collection: "required", # ask for adress
           # allow_promotion_codes: true, # promo codes
         )
