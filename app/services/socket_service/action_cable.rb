@@ -1,5 +1,4 @@
 # app/services/socket_service/action_cable.rb
-
 module SocketService
   class ActionCable < Base
     ActionCable = ::ActionCable
@@ -17,7 +16,6 @@ module SocketService
     # (via streamed from user_0917b97f-b7cb-4d03-a6fb-f36ba1421731_notifications)
 
     def broadcast(user_id:, message:, data: {})
-      # Broadcast to user's channel without storing
       ActionCable.server.broadcast(
         "user_#{user_id}_notifications",
         {
@@ -27,10 +25,9 @@ module SocketService
           created_at: Time.current.iso8601
         }
       )
-
       true
     rescue => e
-      Rails.logger.error("[Socket] Broadcast error: #{e.message}")
+      Rails.logger.error("[Socket] Broadcast error for user #{user_id}: #{e.message}")
       nil
     end
 
@@ -44,10 +41,8 @@ module SocketService
         }
       )
     rescue => e
-      Rails.logger.error("[Socket] Channel broadcast error: #{e.message}")
+      Rails.logger.error("[Socket] Channel broadcast error to #{channel}: #{e.message}")
       nil
     end
   end
-
-  class Error < StandardError; end
 end
