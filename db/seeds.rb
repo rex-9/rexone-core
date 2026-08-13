@@ -64,6 +64,8 @@ end
 puts "🌱 Assigning permissions to default user role..."
 
 user_permissions = [
+  # Logs - create only
+  { resource: "clients", actions: [ "create" ] },
   # Products - read only
   { resource: "products", actions: [ "read" ] },
   # Payments - create only
