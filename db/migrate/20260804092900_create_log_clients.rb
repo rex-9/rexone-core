@@ -26,8 +26,7 @@ class CreateLogClients < ActiveRecord::Migration[8.1]
       t.string :request_id                                            # Rails request_id for tracing
       t.references :user,
                     type: :uuid,
-                    foreign_key: true,
-                    optional: true  # Authenticated user if available
+                    foreign_key: true                                 # Authenticated user if available
 
       # ===== URL & ROUTE =====
       t.string :url                                                   # Full URL where error occurred
@@ -37,8 +36,7 @@ class CreateLogClients < ActiveRecord::Migration[8.1]
       t.datetime :resolved_at                                         # When the error was resolved
       t.references :resolved_by,
                     type: :uuid,
-                    foreign_key: { to_table: :users },
-                    optional: true                                    # Who resolved it
+                    foreign_key: { to_table: :users }                 # Who resolved it
 
       # ===== OCCURRENCE TRACKING =====
       t.integer :occurrence_count, default: 1                         # How many times this error occurred

@@ -201,6 +201,48 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.index ["user_id"], name: "index_iam_user_roles_on_user_id"
   end
 
+  create_table "log_clients", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "app_version"
+    t.string "browser"
+    t.jsonb "context", default: {}
+    t.jsonb "cookies", default: {}
+    t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.string "environment"
+    t.datetime "last_occurred_at"
+    t.jsonb "local_storage_keys", default: []
+    t.string "message", null: false
+    t.string "method"
+    t.integer "occurrence_count", default: 1
+    t.string "platform"
+    t.string "request_id"
+    t.datetime "resolved_at"
+    t.uuid "resolved_by_id"
+    t.jsonb "session_storage_keys", default: []
+    t.string "severity", default: "error", null: false
+    t.jsonb "stack_trace", default: []
+    t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.string "url"
+    t.string "user_agent"
+    t.uuid "user_id"
+    t.index ["created_at"], name: "index_log_clients_on_created_at"
+    t.index ["created_by_id"], name: "index_log_clients_on_created_by_id"
+    t.index ["discarded_at"], name: "index_log_clients_on_discarded_at"
+    t.index ["environment"], name: "index_log_clients_on_environment"
+    t.index ["local_storage_keys"], name: "index_log_clients_on_local_storage_keys", using: :gin
+    t.index ["platform", "severity"], name: "index_log_clients_on_platform_and_severity"
+    t.index ["platform"], name: "index_log_clients_on_platform"
+    t.index ["resolved_at"], name: "index_log_clients_on_resolved_at"
+    t.index ["resolved_by_id"], name: "index_log_clients_on_resolved_by_id"
+    t.index ["session_storage_keys"], name: "index_log_clients_on_session_storage_keys", using: :gin
+    t.index ["severity"], name: "index_log_clients_on_severity"
+    t.index ["updated_by_id"], name: "index_log_clients_on_updated_by_id"
+    t.index ["user_id", "created_at"], name: "index_log_clients_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_log_clients_on_user_id"
+  end
+
   create_table "payment_products", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -905,6 +947,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
   add_foreign_key "iam_user_roles", "users", column: "discarded_by_id"
   add_foreign_key "iam_user_roles", "users", column: "undiscarded_by_id"
   add_foreign_key "iam_user_roles", "users", column: "updated_by_id"
+  add_foreign_key "log_clients", "users"
+  add_foreign_key "log_clients", "users", column: "created_by_id"
+  add_foreign_key "log_clients", "users", column: "resolved_by_id"
+  add_foreign_key "log_clients", "users", column: "updated_by_id"
   add_foreign_key "payment_products", "users", column: "created_by_id"
   add_foreign_key "payment_products", "users", column: "discarded_by_id"
   add_foreign_key "payment_products", "users", column: "undiscarded_by_id"

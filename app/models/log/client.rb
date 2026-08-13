@@ -16,13 +16,13 @@ class Log::Client < ApplicationRecord
     ios: "ios",
     android: "android",
     unknown: "unknown"
-  }, prefix: true, _default: nil
+  }, prefix: true
 
   enum :environment, {
     development: "development",
     staging: "staging",
     production: "production"
-  }, prefix: true, _default: nil
+  }, prefix: true
 
   # ===== ASSOCIATIONS =====
   belongs_to :user, optional: true
