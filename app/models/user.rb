@@ -22,10 +22,10 @@ class User < ApplicationRecord
 
   self.primary_key = "id"
 
-  validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }, uniqueness: true
+  validates :name, presence: true, length: { maximum: 50 }, format: { without: /[<>:;?]/ }
+  validates :email, uniqueness: true, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, presence: true, confirmation: true, length: { minimum: 6 }, if: -> { new_record? || !password.nil? }
   validates :password_confirmation, presence: true, if: -> { (new_record? || !password.nil?) }
-  validates :name, length: { maximum: 50 }, format: { without: /[<>:;?]/ }, allow_blank: true
   validates :username, presence: true, uniqueness: { case_sensitive: false }, length: { in: 3..30 }, format: { with: /\A[a-z0-9_]+\z/, message: "can only contain lowercase letters, numbers, and underscores" }
 
   def generate_confirmation_code

@@ -105,32 +105,27 @@ gem "pagy", "~> 43.6"
 # ============================================================
 
 group :development, :test do
-  # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
+  # Ruby debugging tool
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
-
-  # Audits gems for known security defects (use config/bundler-audit.yml to ignore issues)
+  # Scan gems for security vulnerabilities
   gem "bundler-audit", require: false
-
-  # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
+  # Static analysis vulnerability scanner
   gem "brakeman", require: false
-
-  # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
+  # Linting and code style compliance
   gem "rubocop-rails-omakase", require: false
-
-  # RSpec is a testing tool for Ruby, created for behavior-driven development (BDD) [https://rspec.info/]
+  # Behavior-driven development testing framework
   gem "rspec-rails", "~> 8.0"
-
-  # FactoryBot is a fixtures replacement with a straightforward definition syntax, support for multiple build strategies (saved instances, unsaved instances, attribute hashes, and stubbed objects), and support for multiple factories for the same class (user, admin_user, and so on), including factory inheritance [
+  # Test fixture replacement for generating test data
   gem "factory_bot_rails", "~> 6.5"
-
-  # RSpec- and Minitest-compatible one-liners to test common Rails functionality [https://github.com/thoughtbot/shoulda-matchers]
+  # One-liner testing helpers for Rails functionality
   gem "shoulda-matchers", "~> 8.0"
-
-  # Library for generating fake data such as names, addresses, and phone numbers. [https://github.com/faker-ruby/faker]
+  # Generate realistic fake data for testing
   gem "faker", "~> 3.8"
-
+  # Ensure a clean database state between tests
   gem "database_cleaner-active_record", "~> 2.2"
+  # Load environment variables from .env files
   gem "dotenv-rails", "~> 3.2"
+  # Automatically run RSpec tests when files change
   gem "guard-rspec", "~> 4.7"
 end
 
