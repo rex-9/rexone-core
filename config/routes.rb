@@ -1,3 +1,4 @@
+# config/routes.rb
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -17,7 +18,7 @@ Rails.application.routes.draw do
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
-  # ===== # RAILS PULSE PERFORMANCE =====
+  # ===== RAILS PULSE PERFORMANCE =====
   mount RailsPulse::Engine => "/admin/pulse"
 
   # ===== RED - RAILS ERROR DASHBOARD =====
@@ -61,18 +62,18 @@ Rails.application.routes.draw do
 
   # ===== AUTH (Devise) =====
   devise_for :users,
-  path: "",
-  path_names: {
-    sign_in: "signin",
-    sign_out: "signout",
-    registration: "signup"
-  },
-  controllers: {
-    sessions: "auth/sessions",
-    registrations: "auth/registrations",
-    confirmations: "auth/confirmations",
-    passwords: "auth/passwords"
-  }
+    path: "",
+    path_names: {
+      sign_in: "signin",
+      sign_out: "signout",
+      registration: "signup"
+    },
+    controllers: {
+      sessions: "auth/sessions",
+      registrations: "auth/registrations",
+      confirmations: "auth/confirmations",
+      passwords: "auth/passwords"
+    }
 
   devise_scope :user do
     get "peek", to: "auth/sessions#peek_user"
@@ -92,9 +93,19 @@ Rails.application.routes.draw do
   post "webhooks/stripe", to: "webhooks/stripe#create"
 
   # ============================================================
-  # API V1
+  # API V1 - All API routes should be API-only (no new/edit)
   # ============================================================
   namespace :v1 do
+    # Client Logging
+    namespace :log do
+      resources :clients, only: [ :create, :index, :show, :destroy ] do
+        member do
+          patch :update_resolve, path: "resolve"
+          patch :update_unresolve, path: "unresolve"
+        end
+      end
+    end
+
     # ===== USERS =====
     get "users/", to: "users#index"
     get "users/current", to: "users#read_current_user"
@@ -104,7 +115,8 @@ Rails.application.routes.draw do
     # React Admin Dashboard.
     # Requires admin role + normal resource permissions.
     namespace :admin do
-      resources :users do
+      # API-only: no new/edit needed
+      resources :users, only: %i[index show create update destroy] do
         # collection do
         #   get    :read_teaching_users, path: "teachers" # GET /v1/admin/users/teachers # V1::Admin::UsersController#read_teaching_users
         #   post   :create_users
@@ -123,7 +135,8 @@ Rails.application.routes.draw do
 
     # ===== IAM =====
     namespace :iam do
-      resources :permissions do
+      # API-only: no new/edit
+      resources :permissions, only: %i[index show create update destroy] do
         collection do
           get :discarded
           get :undiscarded
@@ -168,7 +181,6 @@ Rails.application.routes.draw do
         end
       end
 
-      # Checkout
       post "session", to: "payments#create"
       get "session/:session_id", to: "payments#read_status"
     end

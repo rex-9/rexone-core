@@ -1,5 +1,4 @@
 # app/models/iam/permission.rb
-
 module Iam
   class Permission < ApplicationRecord
     self.table_name = "iam_permissions"
@@ -18,8 +17,8 @@ module Iam
       accesses
       assets
       notifications
-      dashboard
       ai
+      clients
     ].freeze
 
     ACTIONS = %w[read create update delete].freeze
