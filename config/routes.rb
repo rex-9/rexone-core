@@ -124,13 +124,14 @@ Rails.application.routes.draw do
     # ===== IAM =====
     namespace :iam do
       resources :permissions do
+        collection do
+          get :discarded
+          get :undiscarded
+        end
+
         member do
           post :discard
           post :undiscard
-        end
-
-        collection do
-          get :discarded
         end
       end
 

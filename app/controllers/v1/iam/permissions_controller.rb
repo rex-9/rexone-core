@@ -48,6 +48,22 @@ class V1::Iam::PermissionsController < V1::ApplicationController
     )
   end
 
+  # GET /iam/permissions/undiscarded
+  def undiscarded
+    permissions = Iam::Permission.with_discarded
+                                  .where.not(undiscarded_at: nil)
+
+    render_json_response(
+      status_code: 200,
+      message: "Undiscarded permissions fetched",
+      data: {
+        permissions: Iam::PermissionSerializer
+          .new(permissions)
+          .serializable_hash[:data]
+      }
+    )
+  end
+
   # POST /iam/permissions/:id/discard
   def discard
     permission = Iam::Permission.find(params[:id])
