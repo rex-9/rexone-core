@@ -23,6 +23,7 @@
     - [🏗️ Design Patterns \& Architecture](#️-design-patterns--architecture)
     - [🔐 Authentication \& Security](#-authentication--security)
     - [🛡️ IAM \& RBAC](#️-iam--rbac)
+    - [🗃️ Data Lifecycle \& Audit](#️-data-lifecycle--audit)
     - [📊 API, Monitoring \& Administration](#-api-monitoring--administration)
       - [📖 API \& Documentation](#-api--documentation)
       - [📈 Performance Monitoring](#-performance-monitoring)
@@ -142,6 +143,13 @@ The backend includes a dedicated Identity and Access Management system for granu
 - **Resource-based Authorization**: Permissions can be organized around application resources.
 - **Action-based Authorization**: Permissions can define actions such as `create`, `read`, `update`, and `delete`.
 - **Super Admin**: Full administrative access across the system.
+
+### 🗃️ Data Lifecycle & Audit
+
+- **Soft Delete**: Global soft-delete support using Discard with `kept` as the default application scope.
+- **Record Audit**: Tracks record creators, updaters, discarders, and restorers through associated user IDs.
+- **Lifecycle Timestamps**: Records when resources are discarded and restored for traceability.
+- **Recycle Bin Support**: Discarded records can be restored or permanently deleted when authorized.
 
 ### 📊 API, Monitoring & Administration
 
