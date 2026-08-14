@@ -1,32 +1,32 @@
 # app/controllers/v1/log/clients_controller.rb
 class V1::Log::ClientsController < V1::ApplicationController
   skip_before_action :authenticate_user!, only: [ :create ] # Allow public errors
-  before_action :set_client_log, only: [ :show, :resolve, :ignore, :unresolve ]
+  before_action :set_log_client, only: [ :show, :update_resolve, :update_unresolve ]
 
   # POST /log/clients
   def create
-    client_log = Log::Client.new(client_log_params)
+  log_client = Log::Client.new(log_client_params)
 
-    # Attach user if authenticated
-    client_log.user = current_user if current_user.present?
+  # Attach user if authenticated
+  log_client.user = current_user if current_user.present?
 
-    # Set default values
-    client_log.severity ||= "error"
-    client_log.request_id ||= request.request_id
-    client_log.url ||= request.referer || request.url
-    client_log.method ||= request.method
+  # Set default values
+  log_client.severity ||= "error"
+  log_client.request_id ||= request.request_id
+  log_client.url ||= request.referer || request.url
+  log_client.method ||= request.method
 
-    if client_log.save
+    if log_client.save
       render_json_response(
         status_code: 201,
         message: "Client log created successfully",
-        data: { id: client_log.id }
+        data: { id: log_client.id }
       )
     else
       render_json_response(
         status_code: 422,
         message: "Failed to create client log",
-        error: client_log.errors.full_messages.to_sentence
+        error: log_client.errors.full_messages.to_sentence
       )
     end
   end
@@ -62,38 +62,38 @@ class V1::Log::ClientsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: "Client log fetched successfully",
-      data: Log::ClientSerializer.new(@client_log).serializable_hash[:data]
+      data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
     )
   end
 
   # PATCH /log/clients/:id/resolve
   def update_resolve
     authorize! :update, Log::Client
-    @client_log.resolve!(resolved_by: current_user)
+    @log_client.resolve!(resolved_by: current_user)
 
     render_json_response(
       status_code: 200,
       message: "Client log marked as resolved",
-      data: Log::ClientSerializer.new(@client_log).serializable_hash[:data]
+      data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
     )
   end
 
   # PATCH /log/clients/:id/unresolve
   def update_unresolve
     authorize! :update, Log::Client
-    @client_log.unresolve!
+    @log_client.unresolve!
 
     render_json_response(
       status_code: 200,
       message: "Client log marked as unresolved",
-      data: Log::ClientSerializer.new(@client_log).serializable_hash[:data]
+      data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
     )
   end
 
   # DELETE /log/clients/:id (hard delete)
   def destroy
     authorize! :destroy, Log::Client
-    @client_log.destroy!
+    @log_client.destroy!
 
     render_json_response(
       status_code: 200,
@@ -103,14 +103,14 @@ class V1::Log::ClientsController < V1::ApplicationController
 
   private
 
-  def set_client_log
-    @client_log = Log::Client.find(params[:id])
+  def set_log_client
+    @log_client = Log::Client.find(params[:id])
   end
 
-  def client_log_params
+  def log_client_params
     params.require(:log).permit(
       :message, :severity, :platform, :environment,
-      :app_version, :browser, :user_agent,
+      :app_version, :browser, :user_agent, :os, :os_version, :device,
       :url, :method,
       context: {},
       stack_trace: [],
@@ -161,6 +161,9 @@ end
 #     "environment": "production",
 #     "app_version": "2.1.3",
 #     "browser": "Chrome 120.0.6099.109",
+#     "os": "macOS",
+#     "os_version": "10.15.0",
+#     "device": "Mac",
 #     "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36...",
 #     "url": "https://yourapp.com/dashboard",
 #     "method": "GET"

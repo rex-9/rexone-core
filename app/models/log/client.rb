@@ -9,20 +9,19 @@ class Log::Client < ApplicationRecord
     warning: "warning",
     error: "error",
     critical: "critical"
-  }, prefix: true
+  }, prefix: :client_severity
 
   enum :platform, {
     web: "web",
     ios: "ios",
-    android: "android",
-    unknown: "unknown"
-  }, prefix: true
+    android: "android"
+  }, prefix: :client_platform
 
   enum :environment, {
     development: "development",
     staging: "staging",
     production: "production"
-  }, prefix: true
+  }, prefix: :client_environment
 
   # ===== ASSOCIATIONS =====
   belongs_to :user, optional: true
@@ -31,7 +30,6 @@ class Log::Client < ApplicationRecord
   # ===== VALIDATIONS =====
   validates :message, presence: true
   validates :severity, presence: true
-  # platform and environment are optional (null allowed)
 
   # ===== SCOPES =====
   scope :by_severity, ->(severity) { where(severity: severity) }
@@ -39,6 +37,8 @@ class Log::Client < ApplicationRecord
   scope :by_environment, ->(environment) { where(environment: environment) }
   scope :unresolved, -> { where(resolved_at: nil) }
   scope :resolved, -> { where.not(resolved_at: nil) }
+  scope :unauthenticated, -> { where(user_id: nil) }
+  scope :authenticated, -> { where.not(user_id: nil) }
   scope :recent, -> { order(created_at: :desc).limit(100) }
   scope :for_today, -> { where("created_at >= ?", Time.current.beginning_of_day) }
   scope :with_storage_issues, -> { where("local_storage_keys != '[]' OR session_storage_keys != '[]'") }
@@ -46,6 +46,14 @@ class Log::Client < ApplicationRecord
   # ===== INSTANCE METHODS =====
   def resolved?
     resolved_at.present?
+  end
+
+  def unauthenticated
+    user_id.nil?
+  end
+
+  def authenticated?
+    user_id.present?
   end
 
   def mark_as_resolved!(resolved_by: nil)

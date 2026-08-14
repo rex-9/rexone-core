@@ -208,6 +208,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.jsonb "cookies", default: {}
     t.datetime "created_at", null: false
     t.uuid "created_by_id"
+    t.string "device"
     t.datetime "discarded_at"
     t.string "environment"
     t.datetime "last_occurred_at"
@@ -215,6 +216,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.string "message", null: false
     t.string "method"
     t.integer "occurrence_count", default: 1
+    t.string "os"
+    t.string "os_version"
     t.string "platform"
     t.string "request_id"
     t.datetime "resolved_at"

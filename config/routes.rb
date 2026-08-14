@@ -57,6 +57,10 @@ Rails.application.routes.draw do
       resources :messages, only: %i[index show new create edit update destroy]
     end
 
+    namespace :log do
+      resources :clients, only: %i[index show new create edit update destroy]
+    end
+
     root to: "users#index"
   end
 

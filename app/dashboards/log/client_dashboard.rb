@@ -15,6 +15,7 @@ class Log::ClientDashboard < Administrate::BaseDashboard
     cookies: Field::String.with_options(searchable: false),
     created_by_id: Field::String,
     creator: Field::BelongsTo,
+    device: Field::String,
     discarded_at: Field::DateTime,
     discarder: Field::BelongsTo,
     environment: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
@@ -23,6 +24,8 @@ class Log::ClientDashboard < Administrate::BaseDashboard
     message: Field::String,
     method: Field::String,
     occurrence_count: Field::Number,
+    os: Field::String,
+    os_version: Field::String,
     platform: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     request_id: Field::String,
     resolved_at: Field::DateTime,
@@ -64,6 +67,7 @@ class Log::ClientDashboard < Administrate::BaseDashboard
     cookies
     created_by_id
     creator
+    device
     discarded_at
     discarder
     environment
@@ -72,6 +76,8 @@ class Log::ClientDashboard < Administrate::BaseDashboard
     message
     method
     occurrence_count
+    os
+    os_version
     platform
     request_id
     resolved_at
@@ -99,6 +105,7 @@ class Log::ClientDashboard < Administrate::BaseDashboard
     cookies
     created_by_id
     creator
+    device
     discarded_at
     discarder
     environment
@@ -107,6 +114,8 @@ class Log::ClientDashboard < Administrate::BaseDashboard
     message
     method
     occurrence_count
+    os
+    os_version
     platform
     request_id
     resolved_at

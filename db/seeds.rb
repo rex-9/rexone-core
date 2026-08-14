@@ -102,33 +102,39 @@ puts "✅ #{Iam::RolePermission.count} role-permission assignments created"
 # ===== DEFAULT ADMIN USERS =====
 puts "🌱 Creating default admin users..."
 
-User.where(email: [ "super@admin.com", "just@admin.com" ]).destroy_all
-
-super_admin_user = User.create!(
-  email: "super@admin.com",
+super_admin_user = User.find_or_initialize_by(email: "super@admin.com")
+super_admin_user.assign_attributes(
   username: "superadmin",
   name: "Super Admin User",
   password: "111111",
   password_confirmation: "111111",
   confirmed_at: Time.current
 )
+super_admin_user.save!
 
-Iam::UserRole.create!(user: super_admin_user, role: super_admin)
+Iam::UserRole.find_or_create_by!(
+  user: super_admin_user,
+  role: super_admin
+)
 
-puts "✅ Super Admin user created: super@admin.com / 111111"
+puts "✅ Super Admin user ready: super@admin.com / 111111"
 
-admin_user = User.create!(
-  email: "just@admin.com",
+admin_user = User.find_or_initialize_by(email: "just@admin.com")
+admin_user.assign_attributes(
   username: "justadmin",
   name: "Just Admin User",
   password: "123456",
   password_confirmation: "123456",
   confirmed_at: Time.current
 )
+admin_user.save!
 
-Iam::UserRole.create!(user: admin_user, role: admin)
+Iam::UserRole.find_or_create_by!(
+  user: admin_user,
+  role: admin
+)
 
-puts "✅ Admin user created: just@admin.com / 123456"
+puts "✅ Admin user ready: just@admin.com / 123456"
 
 # ===== AUTO-ASSIGN USER ROLE TO ALL EXISTING USERS =====
 puts "🌱 Assigning default user role to all users without roles..."

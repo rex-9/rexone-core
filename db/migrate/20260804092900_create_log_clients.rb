@@ -1,4 +1,4 @@
-# db/migrate/xxxx_create_client_logs.rb
+# db/migrate/xxxx_create_log_clients.rb
 class CreateLogClients < ActiveRecord::Migration[8.1]
   def change
     create_table :log_clients, id: :uuid do |t|
@@ -7,12 +7,12 @@ class CreateLogClients < ActiveRecord::Migration[8.1]
       t.string :severity, null: false, default: "error"               # debug | info | warning | error | critical
 
       # ===== CONTEXT & METADATA =====
-      t.jsonb :context, default: {}                                   # Arbitrary context (user action, component, etc.)
-      t.jsonb :stack_trace, default: []                               # Array of stack trace lines
+      t.jsonb :context, default: {}                                   # Arbitrary context
+      t.jsonb :stack_trace, default: []                               # Stack trace lines
 
       # ===== STORAGE SNAPSHOT =====
-      t.jsonb :local_storage_keys, default: []                        # Keys present in localStorage
-      t.jsonb :session_storage_keys, default: []                      # Keys present in sessionStorage
+      t.jsonb :local_storage_keys, default: []                        # Keys in localStorage
+      t.jsonb :session_storage_keys, default: []                      # Keys in sessionStorage
       t.jsonb :cookies, default: {}                                   # Cookie key-value pairs
 
       # ===== PLATFORM & APP =====
@@ -20,7 +20,10 @@ class CreateLogClients < ActiveRecord::Migration[8.1]
       t.string :environment                                           # development | staging | production
       t.string :app_version                                           # App version + build number
       t.string :browser                                               # Browser name + version
-      t.string :user_agent                                            # Full user-agent string for parsing
+      t.string :os                                                    # OS name
+      t.string :os_version                                            # OS version
+      t.string :device                                                # Device model
+      t.string :user_agent                                            # Full user-agent string
 
       # ===== USER & SESSION =====
       t.string :request_id                                            # Rails request_id for tracing
@@ -42,7 +45,7 @@ class CreateLogClients < ActiveRecord::Migration[8.1]
       t.integer :occurrence_count, default: 1                         # How many times this error occurred
       t.datetime :last_occurred_at                                    # When it last occurred
 
-      # ===== AUDIT (Auditable) =====
+      # ===== AUDIT =====
       t.references :created_by,
                     type: :uuid,
                     foreign_key: { to_table: :users }                 # Who created the log
@@ -50,7 +53,7 @@ class CreateLogClients < ActiveRecord::Migration[8.1]
                     type: :uuid,
                     foreign_key: { to_table: :users }                 # Who last updated the log
 
-      # ===== SOFT DELETE (Discard) =====
+      # ===== SOFT DELETE =====
       t.datetime :discarded_at                                        # Soft delete timestamp
 
       t.timestamps
