@@ -28,6 +28,7 @@
       - [📖 API \& Documentation](#-api--documentation)
       - [📈 Performance Monitoring](#-performance-monitoring)
       - [🚨 Error Monitoring \& Alerting](#-error-monitoring--alerting)
+      - [📱 Client Logging](#-client-logging)
       - [🧰 Administration](#-administration)
       - [🧱 Solid Stack Dashboards](#-solid-stack-dashboards)
     - [🔌 Integrated Services](#-integrated-services)
@@ -51,6 +52,7 @@
       - [Access](#access)
     - [Error Dashboard](#error-dashboard)
       - [Access](#access-1)
+    - [Client Logging](#client-logging)
     - [Solid Web UI](#solid-web-ui)
       - [Queue Dashboard](#queue-dashboard)
       - [Cache Dashboard](#cache-dashboard)
@@ -78,7 +80,7 @@ The project brings together:
 **API documentation**, **Pagination**, **Payments**,
 **Media Storage**, **AI services**, **Real-time communications**,
 **Background processing**, **Caching**, **Performance Monitoring**,
-**Error Monitoring & Alerting**, **Administration**, **Testing**, and **Security**
+**Error Monitoring & Alerting**, **Client Logging**, **Administration**, **Testing**, and **Security**
 
 tooling into a single well-rounded backend foundation.
 
@@ -181,12 +183,27 @@ Rexone Core includes a complete set of developer-facing APIs, operational dashbo
 - **Error Retention**: Maintains error data for 90 days by default.
 - **Error Dashboard**: Dedicated dashboard available at `/admin/red`.
 
+#### 📱 Client Logging
+
+> **No more: "This works on my machine."** — Now you can see exactly what your users are experiencing, complete with their environment, storage state, and error context.
+
+- **Client Error Capture**: Centralized API endpoint for capturing frontend errors from web and mobile clients.
+- **Rich Context**: Captures error messages, stack traces, component context, and storage snapshots (localStorage, sessionStorage, cookies).
+- **Platform Detection**: Automatically detects and logs platform (web, iOS, Android), browser, OS, version, and device model from user agent.
+- **User Association**: Links client errors to authenticated users when available.
+- **Severity Levels**: Supports debug, info, warning, error, and critical severity levels.
+- **Occurrence Tracking**: Tracks how many times an error has occurred and when it last appeared.
+- **Resolution Management**: Mark errors as resolved/unresolved with who resolved them.
+- **Admin Dashboard**: View and manage client errors through the administrative interface.
+- **API Endpoint**: `POST /v1/log/clients` for client-side error submission.
+
 #### 🧰 Administration
 
 - **Administrate**: Full administrative dashboard for managing application resources.
 - **IAM & RBAC Integration**: Administrative access is protected through the application's authentication and authorization system.
 - **Resource Management**: Manage users, assets, IAM configuration, payments, subscriptions, transactions, chat rooms, and chat messages.
 - **Role-Based Access Control**: Administrative capabilities can be restricted through granular permissions.
+- **Client Log Management**: View, filter, resolve, and soft-delete client error logs through the admin interface.
 
 #### 🧱 Solid Stack Dashboards
 
@@ -417,6 +434,16 @@ View the error dashboard at:
 
 The RED dashboard is protected by the application's administrative authentication and is intended for authorized administrators only.
 
+### Client Logging
+
+> **No more: "This works on my machine."** — Now you can see exactly what your users are experiencing, complete with their environment, storage state, and error context.
+
+The application includes a dedicated client-side error logging system for capturing frontend errors from web and mobile applications along with their storage snapshots.
+
+**Endpoint:** `POST /v1/log/clients`
+
+**Admin Access:** View and manage client logs through the administration interface.
+
 ### Solid Web UI
 
 The application includes dedicated dashboards for the Rails Solid Stack.
@@ -447,6 +474,7 @@ Rexone Core uses both Rails Pulse and RED because they provide different types o
 | --------------- | ------------------------------------------------------------------ |
 | **Rails Pulse** | Application performance and runtime monitoring                     |
 | **RED**         | Application error monitoring, diagnostics, analytics, and alerting |
+| **Client Logs** | Frontend error monitoring from web and mobile clients              |
 | **Solid Queue** | Background job monitoring                                          |
 | **Solid Cache** | Cache inspection and management                                    |
 | **Solid Cable** | Action Cable monitoring                                            |
