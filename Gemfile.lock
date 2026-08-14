@@ -607,7 +607,7 @@ GEM
       net-ssh (>= 2.8.0)
       ostruct
     stringio (3.2.0)
-    stripe (19.4.0)
+    stripe (19.5.0)
       bigdecimal
       logger
     thor (1.5.0)
@@ -703,7 +703,7 @@ DEPENDENCIES
   solid_queue
   solid_web_ui (~> 0.4.0)
   sprockets-rails (~> 3.5)
-  stripe (~> 19.4)
+  stripe (~> 19.5)
   thruster
   tzinfo-data
 
@@ -923,7 +923,7 @@ CHECKSUMS
   sprockets-rails (3.5.2) sha256=a9e88e6ce9f8c912d349aa5401509165ec42326baf9e942a85de4b76dbc4119e
   sshkit (1.25.1) sha256=be3f10b9d6eb0b44d5eaba3f7cbe41bc6bb894bce4339688ac20124391455b78
   stringio (3.2.0) sha256=c37cb2e58b4ffbd33fe5cd948c05934af997b36e0b6ca6fdf43afa234cf222e1
-  stripe (19.4.0) sha256=848807275094285e102aa2c9eeff38f4d5a5e2a293027bf5a2fea8cda38f7cc5
+  stripe (19.5.0) sha256=04d7bf83c65e5021cfc94bac92f2dd95d3843dcd70cac1cb8362757398bf5aaf
   thor (1.5.0) sha256=e3a9e55fe857e44859ce104a84675ab6e8cd59c650a49106a05f55f136425e73
   thruster (0.1.25) sha256=d97d704e91fa37d5858bc238dea6186f7310b633abfeea9f2ba814f252203716
   thruster (0.1.25-aarch64-linux) sha256=495265b11fc3c3596ae0d70ed902b60db82dafb2a5b47a2c527d3176ee3cf311
