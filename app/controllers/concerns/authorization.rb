@@ -8,16 +8,16 @@ module Authorization
 
   def authorization_required?
     current_user.present? &&
-      !controller_path.start_with?("auth/")
+      !controller_path.start_with?("auth/") &&
+      !current_user_read_action?
   end
 
-  def admin_api_controller?
-    controller_path.start_with?("v1/admin/")
+  def current_user_read_action?
+    controller_path == "v1/users" &&
+      %w[read_current_user read_current_iam].include?(action_name)
   end
 
   def authorize_action!
-    admin_required! if admin_api_controller?
-
     return if current_user.can?(permission_action, controller_name)
 
     render_json_response(

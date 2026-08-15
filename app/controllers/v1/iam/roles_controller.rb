@@ -56,7 +56,7 @@ class V1::Iam::RolesController < V1::ApplicationController
     role = Iam::Role.find(params[:id])
 
     if role.update(role_params)
-      if params[:permission_ids].present?
+      if params.key?(:permission_ids)
         role.role_permissions.destroy_all
         assign_permissions(role)
       end

@@ -12,6 +12,8 @@ module Iam
       permissions
       products
       payments
+      rooms
+      messages
       subscriptions
       transactions
       accesses

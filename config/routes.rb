@@ -117,23 +117,32 @@ Rails.application.routes.draw do
 
     # ===== ADMIN API =====
     # React Admin Dashboard.
-    # Requires admin role + normal resource permissions.
+    # Requires normal resource permissions.
     namespace :admin do
       # API-only: no new/edit needed
       resources :users, only: %i[index show create update destroy] do
-        # collection do
-        #   get    :read_teaching_users, path: "teachers" # GET /v1/admin/users/teachers # V1::Admin::UsersController#read_teaching_users
-        #   post   :create_users
-        #   put    :update_users
-        #   delete :delete_users
-        # end
+        collection do
+          get :read_roles, path: "roles"
+        end
+      end
 
-        # member do
-        #   get :read_user_iam, path: "iam" # GET /v1/admin/users/:id/iam # V1::Admin::UsersController#read_user_iam
-        #   post :create_user
-        #   post :update_user
-        #   post :delete_user
-        # end
+      namespace :iam do
+        resources :roles, only: %i[index show create update destroy] do
+          collection do
+            get :read_permissions, path: "permissions"
+          end
+        end
+      end
+
+      namespace :chat do
+        resources :rooms, only: %i[index show update destroy]
+        resources :messages, only: %i[index show update destroy]
+      end
+
+      resources :notifications, only: %i[create] do
+        collection do
+          get :read_recipients, path: "recipients"
+        end
       end
     end
 
