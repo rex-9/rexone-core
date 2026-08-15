@@ -25,12 +25,7 @@ production:
 
   workers:
     # Payment operations and ordinary application jobs
-    - queues: default
-      threads: 3
-      polling_interval: 0.2
-
-    # Payment service operations
-    - queues: "payments"
+    - queues: "payments,default"
       threads: 3
       polling_interval: 0.2
 
@@ -43,3 +38,8 @@ production:
     - queues: "storage"
       threads: 2
       polling_interval: 1
+
+    # AI
+    - queues: "ai"
+      threads: 2
+      polling_interval: 0.5

@@ -6,6 +6,7 @@ class Payment::WebhookEvent < ApplicationRecord
   # PROCESSED_RETENTION_PERIOD = 30.seconds
   PROCESSED_RETENTION_PERIOD = 30.days
   CLEANUP_BATCH_SIZE = 1_000
+  FAILED_RETENTION_PERIOD = 180.days
 
   # ===== ENUMS =====
   enum :status, {
@@ -34,6 +35,9 @@ class Payment::WebhookEvent < ApplicationRecord
 
   scope :processed_before, ->(time) {
     where(status: "processed").where("processed_at < ?", time)
+  }
+  scope :failed_before, ->(time) {
+    where(status: "failed").where("updated_at < ?", time)
   }
 
   # ===== INSTANCE METHODS =====
@@ -67,13 +71,20 @@ class Payment::WebhookEvent < ApplicationRecord
         .in_batches(of: CLEANUP_BATCH_SIZE)
         .delete_all
 
+    failed_count =
+      failed_before(FAILED_RETENTION_PERIOD.ago)
+        .in_batches(of: CLEANUP_BATCH_SIZE)
+        .delete_all
+
     Rails.logger.info(
       "[Stripe] Webhook cleanup completed: " \
       "processed_deleted=#{processed_count} " \
+      "failed_deleted=#{failed_count} "
     )
 
     {
-      processed_deleted: processed_count
+      processed_deleted: processed_count,
+      failed_deleted: failed_count
     }
   end
 end

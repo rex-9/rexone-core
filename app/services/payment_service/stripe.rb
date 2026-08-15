@@ -4,6 +4,7 @@ require "stripe"
 module PaymentService
   class Stripe < Base
     Stripe = ::Stripe
+    STRIPE_LOG_PREFIX = "[Stripe]".freeze
 
     def initialize
       Stripe.api_key = AppConfig::STRIPE_SECRET_KEY
@@ -11,7 +12,6 @@ module PaymentService
       Stripe.log_level = "info" if Rails.env.development?
       @webhook_secret = AppConfig::STRIPE_WEBHOOK_SECRET
     end
-
 
     # ===== SESSION =====
     def create_checkout_session(user_id:, product_id:, success_url: nil, cancel_url: nil)
@@ -142,8 +142,6 @@ module PaymentService
       case event.type
       when "checkout.session.completed"
         handle_checkout_completed(event.data.object)
-      when "customer.subscription.created"
-        handle_subscription_created(event.data.object)
       when "customer.subscription.updated"
         handle_subscription_updated(event.data.object)
       when "customer.subscription.deleted"
@@ -152,16 +150,6 @@ module PaymentService
         handle_subscription_updated(event.data.object)
       when "customer.subscription.resumed"
         handle_subscription_updated(event.data.object)
-      when "payment_intent.succeeded"
-        handle_payment_intent_succeeded(event.data.object)
-      when "payment_intent.processing"
-        handle_payment_intent_processing(event.data.object)
-      when "payment_intent.canceled"
-        handle_payment_intent_canceled(event.data.object)
-      when "payment_intent.payment_failed"
-        handle_payment_intent_payment_failed(event.data.object)
-      when "product.created"
-        handle_product_created(event.data.object)
       when "product.updated"
         handle_product_updated(event.data.object)
       when "product.deleted"
@@ -173,7 +161,9 @@ module PaymentService
       when "price.deleted"
         handle_price_deleted(event.data.object)
       else
-        Rails.logger.info("[Stripe] Ignored unsupported webhook event: #{event.type}")
+        Rails.logger.info(
+          "#{STRIPE_LOG_PREFIX} Ignored unsupported webhook event: #{event.type}"
+        )
       end
 
       {
@@ -217,7 +207,7 @@ module PaymentService
           }.compact
         }
       rescue => e
-        Rails.logger.warn("[Stripe] Could not retrieve payment method #{payment_method_id}: #{e.message}")
+        Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not retrieve payment method #{payment_method_id}: #{e.message}")
         { type: "other", details: {} }
       end
     end
@@ -225,7 +215,7 @@ module PaymentService
     def with_stripe_error(action, &block)
       yield
     rescue Stripe::StripeError => e
-      Rails.logger.error("[Stripe] #{action} error: #{e.message}")
+      Rails.logger.error("#{STRIPE_LOG_PREFIX} #{action} error: #{e.message}")
       { error: e.message }
     end
 
@@ -324,19 +314,6 @@ module PaymentService
 
       subscription
     end
-    # === Webhooks ===
-
-    def handle_product_created(product)
-      Rails.logger.info("[Stripe] Product created: #{product.id}")
-      # Product created event doesn't have price details
-      # We'll wait for price.created event to create the full record
-    end
-
-    def handle_product_updated(product)
-      Rails.logger.info("[Stripe] Product updated: #{product.id}")
-      # Update or create the product in our DB
-      sync_product(product)
-    end
 
     def sync_product(product)
       # If we have a default_price from Stripe, try to sync it too
@@ -345,7 +322,7 @@ module PaymentService
           price = Stripe::Price.retrieve(product.default_price)
           sync_price(price)
         rescue => e
-          Rails.logger.warn("[Stripe] Could not sync default price: #{e.message}")
+          Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not sync default price: #{e.message}")
         end
       end
     end
@@ -353,14 +330,14 @@ module PaymentService
     def sync_price(price)
       # Find or initialize by both product_id and price_id
       record = Payment::Product.find_or_initialize_by(
-        stripe_product_id: price.product,
-        stripe_price_id: price.id
+        stripe_product_id: price.product
       )
 
-      # Get product details if not provided
-      stripe_product = Stripe::Product.retrieve(price.product)
+        # Get product details if not provided
+        stripe_product = Stripe::Product.retrieve(price.product)
 
       record.assign_attributes(
+        stripe_price_id: price.id,
         name: stripe_product&.name || "Product #{price.product}",
         description: stripe_product&.description,
         price_unit_amount: price.unit_amount,
@@ -370,19 +347,27 @@ module PaymentService
       )
 
       if record.save
-        Rails.logger.info("[Stripe] Price synced: #{price.id} for product #{price.product}")
+        Rails.logger.info("#{STRIPE_LOG_PREFIX} Price synced: #{price.id} for product #{price.product}")
       else
-        Rails.logger.error("[Stripe] Price sync failed: #{record.errors.full_messages}")
+        Rails.logger.error("#{STRIPE_LOG_PREFIX} Price sync failed: #{record.errors.full_messages}")
       end
     end
 
+    # === Webhooks ===
+
+    def handle_product_updated(product)
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Product updated: #{product.id}")
+      # Update or create the product in our DB
+      sync_product(product)
+    end
+
     def handle_price_created(price)
-      Rails.logger.info("[Stripe] Price created: #{price.id}")
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Price created: #{price.id}")
       sync_price(price)
     end
 
     def handle_price_updated(price)
-      Rails.logger.info("[Stripe] Price updated: #{price.id}")
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Price updated: #{price.id}")
       sync_price(price)
     end
 
@@ -390,19 +375,18 @@ module PaymentService
       record = Payment::Product.find_by(stripe_product_id: product.id)
       return unless record
 
-      record.update(active: false)
-      Rails.logger.info("[Stripe] Product deleted: #{product.id}")
+      record.update!(active: false)
+
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Product deleted: #{product.id}")
     end
 
     def handle_price_deleted(price)
       record = Payment::Product.find_by(stripe_price_id: price.id)
       return unless record
 
-      record.update(
-        stripe_price_id: nil,
-        active: false
-      )
-      Rails.logger.info("[Stripe] Price deleted: #{price.id}")
+      record.update!(active: false)
+
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Price deleted: #{price.id}")
     end
 
     def handle_checkout_completed(session)
@@ -467,6 +451,14 @@ module PaymentService
         end
 
       else
+        # NOTE: For some reason one-time payment not being paid
+        unless session.payment_status == "paid"
+          Rails.logger.warn(
+            "#{STRIPE_LOG_PREFIX} Ignored unpaid completed Checkout Session: #{session.id}"
+          )
+          return
+        end
+
         # One-time purchase - sync with Payment Intent
         payment_intent_id = session.payment_intent
 
@@ -518,10 +510,6 @@ module PaymentService
       end
     end
 
-    def handle_subscription_created(stripe_subscription)
-      sync_subscription(current_subscription(stripe_subscription))
-    end
-
     def handle_subscription_updated(stripe_subscription)
       sync_subscription(current_subscription(stripe_subscription))
     end
@@ -534,40 +522,6 @@ module PaymentService
         canceled_at: subscription.canceled_at || Time.current,
         ended_at: subscription.ended_at || Time.current
       )
-    end
-
-    # Webhook: payment_intent.succeeded
-    def handle_payment_intent_succeeded(payment_intent)
-      transaction = Payment::Transaction.find_by(stripe_payment_intent_id: payment_intent.id)
-      return unless transaction
-
-      transaction.mark_as_succeeded!
-    end
-
-    # Webhook: payment_intent.processing
-    def handle_payment_intent_processing(payment_intent)
-      transaction = Payment::Transaction.find_by(stripe_payment_intent_id: payment_intent.id)
-      return unless transaction
-
-      transaction.mark_as_processing!
-    end
-
-    # Webhook: payment_intent.canceled
-    def handle_payment_intent_canceled(payment_intent)
-      transaction = Payment::Transaction.find_by(stripe_payment_intent_id: payment_intent.id)
-      return unless transaction
-
-      transaction.mark_as_canceled!
-    end
-
-    # Webhook: payment_intent.payment_failed
-    def handle_payment_intent_payment_failed(payment_intent)
-      transaction = Payment::Transaction.find_by(
-        stripe_payment_intent_id: payment_intent.id
-      )
-      return unless transaction
-
-      transaction.sync_with_payment_intent(payment_intent)
     end
 
     # def handle_refund(charge)

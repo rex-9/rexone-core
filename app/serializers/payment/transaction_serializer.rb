@@ -20,10 +20,6 @@ class Payment::TransactionSerializer < ApplicationSerializer
     transaction.paid?
   end
 
-  attribute :refunded do |transaction|
-    transaction.refunded?
-  end
-
   attribute :pending do |transaction|
     transaction.pending?
   end
