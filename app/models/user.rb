@@ -88,7 +88,7 @@ class User < ApplicationRecord
   end
 
   def admin?
-    has_role?("super_admin") || has_role?("admin")
+    roles.where(name: "admin").or(roles.where("name LIKE ?", "%\\_admin")).exists?
   end
 
   def super_admin?
