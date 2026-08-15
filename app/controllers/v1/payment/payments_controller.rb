@@ -2,7 +2,7 @@
 class V1::Payment::PaymentsController < V1::ApplicationController
   # POST /payment/session
   def create
-    product = Payment::Product.find(payment_params[:product_id])
+    product = Payment::Product.active.find(payment_params[:product_id])
 
     # Check if user already has active subscription
     if product.recurring? && current_user.subscriptions.active.exists?(product_id: product.id)

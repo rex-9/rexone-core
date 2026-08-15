@@ -67,7 +67,10 @@ Rails.application.configure do
 
   # Use Solid Queue for jobs
   config.active_job.queue_adapter = :solid_queue
-  config.solid_queue.logger = ActiveSupport::Logger.new(STDOUT)
+
+  # Send Rails application and Solid Queue logs to Docker stdout.
+  config.logger = ActiveSupport::TaggedLogging.logger(STDOUT)
+  config.solid_queue.logger = config.logger
 
   # Highlight code that triggered redirect in logs.
   config.action_dispatch.verbose_redirect_logs = true

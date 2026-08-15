@@ -41,7 +41,11 @@ production:
     schedule: every day at 2am
     # Note: Solid Cache automatically handles expiration, this is just a safety net
 
-  # ===== YOUR APP-SPECIFIC RECURRING JOBS =====
+  # ===== APP-SPECIFIC RECURRING JOBS =====
+  clear_old_payment_webhook_events:
+    command: "Payment::WebhookEvent.cleanup_old!"
+    schedule: at 3:30am every day
+
   # Example: Send weekly reports
   # weekly_report:
   #   class: WeeklyReportJob
@@ -69,6 +73,10 @@ development:
     #   rescue => e
     #     Rails.logger.error("Failed to clean Solid Queue jobs: #{e.message}")
     #   end
+
+  clear_old_payment_webhook_events:
+    command: "Payment::WebhookEvent.cleanup_old!"
+    schedule: at 3:30am every day
 
   # rails_pulse_summary:
   #   class: RailsPulse::SummaryJob

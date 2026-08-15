@@ -1,4 +1,7 @@
 # app/models/payment/product.rb
+# Synced with Stripe Product Object & Price Object
+# https://docs.stripe.com/api/prices/object
+# https://docs.stripe.com/api/products/object
 class Payment::Product < ApplicationRecord
   self.table_name = "payment_products"
 

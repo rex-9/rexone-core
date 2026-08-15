@@ -17,7 +17,7 @@ default: &default
   encoding: unicode
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 7 } %>
+  pool: <%= ENV.fetch("DB_POOL", ENV.fetch("RAILS_MAX_THREADS", 7)).to_i %>
   url: <%= ENV["RAILS_DATABASE_URL"] %>
   # timeout: 5000
 
@@ -86,4 +86,3 @@ production:
   primary:
     <<: *default
     # database: rexone_core_production
-    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 7 }.to_i + ENV.fetch("SOLID_QUEUE_WORKERS", 5).to_i * 10 %>

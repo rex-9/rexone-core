@@ -6,8 +6,8 @@ module PaymentService
                :get_session,
                :cancel_subscription,
                :resume_subscription,
-               #  :refund_payment,
-               :handle_webhook,
+               :verify_webhook,
+               :process_webhook,
                to: :provider
 
       private

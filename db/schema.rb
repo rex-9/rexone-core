@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_15_084100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -273,6 +273,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
   end
 
   create_table "payment_subscriptions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "cancel_at"
+    t.boolean "cancel_at_period_end", default: false, null: false
     t.datetime "canceled_at"
     t.datetime "created_at", null: false
     t.uuid "created_by_id"
@@ -350,6 +352,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
     t.index ["updated_by_id"], name: "index_payment_transactions_on_updated_by_id"
     t.index ["user_id", "created_at"], name: "index_payment_transactions_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_payment_transactions_on_user_id"
+  end
+
+  create_table "payment_webhook_events", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.integer "attempt_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
+    t.string "event_type", null: false
+    t.text "last_error"
+    t.boolean "livemode", default: false, null: false
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "processed_at"
+    t.datetime "processing_started_at"
+    t.datetime "received_at", null: false
+    t.string "status", default: "pending", null: false
+    t.string "stripe_event_id", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
+    t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.index ["created_by_id"], name: "index_payment_webhook_events_on_created_by_id"
+    t.index ["discarded_by_id"], name: "index_payment_webhook_events_on_discarded_by_id"
+    t.index ["event_type"], name: "index_payment_webhook_events_on_event_type"
+    t.index ["received_at"], name: "index_payment_webhook_events_on_received_at"
+    t.index ["status", "received_at"], name: "index_payment_webhook_events_on_status_and_received_at"
+    t.index ["status"], name: "index_payment_webhook_events_on_status"
+    t.index ["stripe_event_id"], name: "index_payment_webhook_events_on_stripe_event_id", unique: true
+    t.index ["undiscarded_by_id"], name: "index_payment_webhook_events_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_payment_webhook_events_on_updated_by_id"
   end
 
   create_table "rails_error_dashboard_applications", force: :cascade do |t|
@@ -970,6 +1002,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_180027) do
   add_foreign_key "payment_transactions", "users", column: "discarded_by_id"
   add_foreign_key "payment_transactions", "users", column: "undiscarded_by_id"
   add_foreign_key "payment_transactions", "users", column: "updated_by_id"
+  add_foreign_key "payment_webhook_events", "users", column: "created_by_id"
+  add_foreign_key "payment_webhook_events", "users", column: "discarded_by_id"
+  add_foreign_key "payment_webhook_events", "users", column: "undiscarded_by_id"
+  add_foreign_key "payment_webhook_events", "users", column: "updated_by_id"
   add_foreign_key "rails_error_dashboard_cascade_patterns", "rails_error_dashboard_error_logs", column: "child_error_id"
   add_foreign_key "rails_error_dashboard_cascade_patterns", "rails_error_dashboard_error_logs", column: "parent_error_id"
   add_foreign_key "rails_error_dashboard_diagnostic_dumps", "rails_error_dashboard_applications", column: "application_id"

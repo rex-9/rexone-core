@@ -39,4 +39,7 @@ module AppConfig
 
   # Confirm code before
   CONFIRM_CODE_WITHIN = ENV.fetch("CONFIRM_CODE_WITHIN") { 10.minutes }.to_i.seconds
+
+  # Confirm code before
+  SOLID_QUEUE_SHUTDOWN_TIMEOUT = ENV.fetch("SOLID_QUEUE_SHUTDOWN_TIMEOUT") { 30.seconds }.to_i.seconds
 end

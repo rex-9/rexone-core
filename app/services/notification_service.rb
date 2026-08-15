@@ -9,46 +9,49 @@ class NotificationService
 
       # 1. Socket (WebSocket)
       if send_socket
-        results[:socket] = SocketService::Client.broadcast(
-          user_id: user_id,
-          message: message || title,
-          data: data
-        )
-      end
-
-      # 2. Push notification
-      if send_push && title.present?
-        results[:push] = PushNotiService::Client.send_to_user(
-          user_id: user_id,
-          title: title,
-          body: message || title,
-          data: data
-        )
-      end
-
-      # 3. Email
-      if send_email
-        user_email ||= User.find(user_id).email
-
-        if email_template.present?
-          results[:email] = EmailService::Client.send_template(
-            to: user_email,
-            template_id: email_template,
-            template_data: email_template_data
-          )
-        else
-          results[:email] = EmailService::Client.send_email(
-            to: user_email,
-            subject: title || "Notification",
-            body: message || "You have a new notification."
+        results[:socket] = deliver(:socket) do
+          SocketService::Client.broadcast(
+            user_id: user_id,
+            message: message || title,
+            data: data
           )
         end
       end
 
+      # 2. Push notification
+      if send_push && title.present?
+        results[:push] = deliver(:push) do
+          PushNotiService::Client.send_to_user(
+            user_id: user_id,
+            title: title,
+            body: message || title,
+            data: data
+          )
+        end
+      end
+
+      # 3. Email
+      if send_email
+        results[:email] = deliver(:email) do
+          user_email ||= User.find(user_id).email
+
+          if email_template.present?
+            EmailService::Client.send_template(
+              to: user_email,
+              template_id: email_template,
+              template_data: email_template_data
+            )
+          else
+            EmailService::Client.send_email(
+              to: user_email,
+              subject: title || "Notification",
+              body: message || "You have a new notification."
+            )
+          end
+        end
+      end
+
       results
-    rescue => e
-      Rails.logger.error("[NotificationService] Error: #{e.message}")
-      { error: e.message }
     end
 
     # ===== PAYMENT NOTIFICATIONS =====
@@ -95,12 +98,21 @@ class NotificationService
     end
 
     def subscription_canceled(user, product, subscription)
+      active_until = subscription.current_period_end
+
       notify_all(
         user_id: user.id,
         user_email: user.email,
         title: Messages::SUBSCRIPTION_CANCELED_TITLE,
-        message: Messages::SUBSCRIPTION_CANCELED_BODY.call(product_name: product.name, active_until: subscription.ended_at&.strftime("%B %d, %Y")),
-        data: { type: "subscription_canceled", product_name: product.name, active_until: subscription.ended_at&.strftime("%B %d, %Y") },
+        message: Messages::SUBSCRIPTION_CANCELED_BODY.call(
+          product_name: product.name,
+          active_until: active_until&.strftime("%B %d, %Y")
+        ),
+        data: {
+          type: "subscription_canceled",
+          product_name: product.name,
+          active_until: active_until&.iso8601
+        },
         send_socket: true,
         send_push: true,
         send_email: true,
@@ -108,8 +120,10 @@ class NotificationService
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
-          canceled_on: subscription.canceled_at&.strftime("%B %d, %Y") || "Today",
-          valid_until: subscription.ended_at&.strftime("%B %d, %Y") || "End of period"
+          canceled_on: subscription.canceled_at&.strftime("%B %d, %Y") ||
+                      "Today",
+          valid_until: active_until&.strftime("%B %d, %Y") ||
+                      "End of period"
         }
       )
     end
@@ -217,6 +231,20 @@ class NotificationService
         email_template: email_template,
         email_template_data: email_template_data
       )
+    end
+
+    private
+
+    def deliver(channel)
+      yield
+    rescue StandardError => error
+      Rails.error.report(error)
+      Rails.logger.error(
+        "[NotificationService] #{channel} delivery failed: " \
+        "#{error.class}: #{error.message}"
+      )
+
+      { error: error.message }
     end
   end
 end

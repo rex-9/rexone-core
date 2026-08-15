@@ -20,11 +20,12 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     )
   end
 
-  # POST /payment/subscriptions/:id/cancel - Cancel at period end
+  # POST /payment/subscriptions/:id/cancel
+  # Schedule cancellation at the end of the current billing period.
   def create_cancel
     subscription = current_user.subscriptions.find(params[:id])
 
-    if subscription.canceled_at.present?
+    if subscription.scheduled_for_cancellation?
       render_json_response(
         status_code: 422,
         message: "Cannot cancel subscription",
@@ -33,16 +34,18 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
       return
     end
 
-    unless subscription.active?
+    unless subscription.cancelable?
       render_json_response(
         status_code: 422,
         message: "Cannot cancel subscription",
-        error: "Subscription is not active"
+        error: "Subscription cannot be canceled in its current state"
       )
       return
     end
 
-    result = PaymentService::Client.cancel_subscription(subscription.stripe_subscription_id)
+    result = PaymentService::Client.cancel_subscription(
+      subscription.stripe_subscription_id
+    )
 
     if result[:error]
       render_json_response(
@@ -53,20 +56,23 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
       return
     end
 
-    subscription.update(canceled_at: Time.current)
+    sync_cancellation_state!(subscription, result)
 
     NotificationService.subscription_canceled(
-      subscription.user, subscription.product, subscription
+      subscription.user,
+      subscription.product,
+      subscription
     )
 
     render_json_response(
       status_code: 200,
-      message: "Subscription will be canceled at the end of billing period",
-      data: Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data][:attributes]
+      message: "Subscription will be canceled at the end of the billing period",
+      data: serialized_subscription(subscription)
     )
   end
 
-  # POST /payment/subscriptions/:id/resume - Resume from cancellation
+  # POST /payment/subscriptions/:id/resume
+  # Stop a pending end-of-period cancellation.
   def create_resume
     subscription = current_user.subscriptions.find(params[:id])
 
@@ -79,7 +85,9 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
       return
     end
 
-    result = PaymentService::Client.resume_subscription(subscription.stripe_subscription_id)
+    result = PaymentService::Client.resume_subscription(
+      subscription.stripe_subscription_id
+    )
 
     if result[:error]
       render_json_response(
@@ -90,23 +98,38 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
       return
     end
 
-    subscription.update(canceled_at: nil)
+    sync_cancellation_state!(subscription, result)
 
     NotificationService.subscription_resumed(
-      subscription.user, subscription.product, subscription
+      subscription.user,
+      subscription.product,
+      subscription
     )
 
     render_json_response(
       status_code: 200,
       message: "Subscription resumed successfully",
-      data: Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data][:attributes]
+      data: serialized_subscription(subscription)
     )
   end
 
-  # DELETE /payment/subscriptions/:id - Fully cancel (already ended)
+  # DELETE /payment/subscriptions/:id
+  # Hide an already-ended subscription from the normal client listing.
   def destroy
     subscription = current_user.subscriptions.find(params[:id])
-    subscription.destroy!
+
+    unless subscription.ended?
+      render_json_response(
+        status_code: 422,
+        message: "Cannot remove subscription",
+        error: "Only an ended subscription can be removed"
+      )
+
+      return
+    end
+
+    subscription.discard!
+
     render_json_response(
       status_code: 200,
       message: "Subscription removed successfully"
@@ -117,5 +140,22 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
 
   def subscription_params
     params.permit(:id)
+  end
+
+  def sync_cancellation_state!(subscription, result)
+    subscription.update!(
+      status: result[:status],
+      cancel_at_period_end: result[:cancel_at_period_end],
+      cancel_at: result[:cancel_at],
+      canceled_at: result[:canceled_at],
+      ended_at: result[:ended_at]
+    )
+  end
+
+  def serialized_subscription(subscription)
+    Payment::SubscriptionSerializer
+      .new(subscription)
+      .serializable_hash
+      .dig(:data, :attributes)
   end
 end

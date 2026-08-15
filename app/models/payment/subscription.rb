@@ -13,7 +13,7 @@ class Payment::Subscription < ApplicationRecord
     incomplete: "incomplete",       # Checkout started but not completed
     active: "active",               # Active and billing
     past_due: "past_due",           # Payment failed, grace period
-    canceled: "canceled",           # User canceled (may still be active until period ends)
+    canceled: "canceled",           # Subscription has actually ended
     incomplete_expired: "incomplete_expired",  # the first invoice is not paid within 23 hours
     unpaid: "unpaid",               # Payment failed and no retry
     trialing: "trialing",           # In a trial period
@@ -73,27 +73,41 @@ class Payment::Subscription < ApplicationRecord
   end
 
   def ended?
-    ended_at.present? || status == "canceled"
+    status == "canceled" || ended_at.present?
   end
 
   def expired?
-    status == "incomplete_expired" || (ended_at.present? && ended_at < Time.current)
+    status == "incomplete_expired" ||
+      status == "canceled" ||
+      (ended_at.present? && ended_at <= Time.current)
   end
 
   def scheduled_for_cancellation?
-    canceled_at.present? && status == "active"
+    cancel_at_period_end? && !ended?
   end
 
-  # Cancellation actions
-  def cancel!
-    return if canceled_at.present?
-    update(canceled_at: Time.current)
+  def renewing?
+    active? && !scheduled_for_cancellation?
+  end
+
+  def cancelable?
+    %w[active trialing].include?(status) &&
+      !scheduled_for_cancellation? &&
+      !ended?
   end
 
   # Billing helpers
-  def days_until_renewal
+  def days_until_period_end
     return nil unless current_period_end.present?
-    (current_period_end - Time.current).to_i / 1.day
+    return 0 if current_period_end <= Time.current
+
+    ((current_period_end - Time.current) / 1.day).ceil
+  end
+
+  def days_until_renewal
+    return nil unless renewing?
+
+    days_until_period_end
   end
 
   # Payment method display

@@ -2,29 +2,51 @@
 class AccessService
   class << self
     def grant(user_id:, product_id:, expires_at: nil)
-      product = Payment::Product.find(product_id) if product_id.present?
+      product = Payment::Product.find(product_id)
 
-      # Deactivate old grants for this product
-      Access.where(user_id: user_id, product_id: product_id).update_all(status: "revoked")
+      resolved_expires_at =
+        expires_at ||
+        (product.recurring? ? product.cycle_in_duration.from_now : nil)
 
-      grant = Access.create!(
+      # create_or_find_by! uses the unique database index to safely handle
+      # two workers attempting to create the same access simultaneously.
+      access = Access.create_or_find_by!(
         user_id: user_id,
-        product_id: product_id,
-        status: "active",
-        granted_at: Time.current,
-        expires_at: expires_at || (product&.recurring? ? product.cycle_in_duration.from_now : nil),
-      )
+        product_id: product_id
+      ) do |record|
+        record.status = "active"
+        record.granted_at = Time.current
+        record.expires_at = resolved_expires_at
+      end
 
-      # Send notification
-      # AccessNotificationService.send_granted(user_id, product_id)
+      access.with_lock do
+        # Preserve the original grant time when processing the same event again.
+        access.granted_at ||= Time.current
 
-      grant
+        access.assign_attributes(
+          status: "active",
+          expires_at: resolved_expires_at,
+          revoked_at: nil,
+          expired_at: nil
+        )
+
+        access.save!
+      end
+
+      access
     end
 
     def revoke(user_id:, product_id:)
-      accesses = Access.where(user_id: user_id, product_id: product_id, status: "active")
-      accesses.each { |a| a.revoke! }
-      accesses.count
+      access = Access.find_by(
+        user_id: user_id,
+        product_id: product_id
+      )
+
+      return unless access
+
+      access.with_lock do
+        access.revoke! if access.active?
+      end
     end
 
     def has_access?(user_id:, product_id:)
