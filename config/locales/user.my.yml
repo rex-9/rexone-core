@@ -1,0 +1,15 @@
+my:
+  user:
+    current_fetched: "လက်ရှိအသုံးပြုသူ အချက်အလက်ကို ရယူပြီးပါပြီ။"
+    not_authenticated: "အသုံးပြုသူကို အတည်ပြုမထားပါ။"
+    current_not_found: "လက်ရှိအသုံးပြုသူကို ရှာမတွေ့ပါ။"
+    iam_fetched: "အသုံးပြုသူ IAM အချက်အလက်ကို ရယူပြီးပါပြီ"
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            username:
+              invalid_format: "အင်္ဂလိပ်စာလုံးအသေး၊ နံပါတ်နှင့် underscore တို့သာ ပါဝင်နိုင်ပါသည်"
+            confirmation_code:
+              invalid_or_expired: "မမှန်ကန်ပါ သို့မဟုတ် သက်တမ်းကုန်သွားပါပြီ"

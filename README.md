@@ -70,6 +70,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | Notifications  | Socket, push, and email coordination through OneSignal and Action Cable         | [Notifications & real time](#notifications--real-time) |
 | Media          | Cloudinary/local providers, uploads, URLs, metadata, queued deletion            | [Storage & assets](#storage--assets)                   |
 | AI             | DeepSeek chat, rooms, history, summarization, translation, analysis             | [AI capabilities](#ai-capabilities)                    |
+| Localization   | Request-scoped English and Myanmar responses with modular domain translations   | [Localization](#localization)                          |
 | Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization  | [Data & API design](#data--api-design)                 |
 | Operations     | Performance, errors, client logs, queues, cache, cable, health checks           | [Observability](#observability)                        |
 | Administration | Administrate plus a growing versioned admin API                                 | [Administration](#administration)                      |
@@ -218,6 +219,19 @@ An Action Cable streaming channel is available as a future direction when the pr
 - Versioned client routes under `/v1` and a separate admin API namespace.
 - Modular I18n-backed client messages, organized by product domain.
 - OpenAPI documentation served through Rswag.
+
+### Localization
+
+Client-facing messages are organized by domain through `MessageService` and Rails I18n instead of being collected in one global constants file. English (`en`) and Myanmar (`my`) are included, with English as the safe fallback.
+
+The API selects a locale for each request in this order:
+
+1. Query parameter: `?locale=my`
+2. Explicit header: `X-Locale: my`
+3. Standard header: `Accept-Language: my-MM`
+4. Default: `en`
+
+Locale switching is request-scoped through `I18n.with_locale`, preventing one request's language from leaking into another under concurrent execution. Adding another language means mirroring the modular files in `config/locales` and registering its locale code.
 
 ### Observability
 

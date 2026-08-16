@@ -1,15 +1,36 @@
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::API
   AUTH_LOG_PREFIX = "[Auth]".freeze
+  SUPPORTED_LOCALES = %w[en my].freeze
 
   include Pagy::Method
   include Authorization
   include ApplicationHelper
 
+  around_action :switch_locale
   before_action :enforce_active_platform_session!, :set_current_auditor
   before_action :authenticate_user!
 
   private
+
+  def switch_locale(&action)
+    I18n.with_locale(requested_locale, &action)
+  end
+
+  def requested_locale
+    candidates = [
+      params[:locale],
+      request.headers["X-Locale"],
+      *request.headers["Accept-Language"].to_s.split(",")
+    ]
+
+    candidates.each do |candidate|
+      locale = candidate.to_s.split(";").first.to_s.strip.downcase.split(/[-_]/).first
+      return locale if SUPPORTED_LOCALES.include?(locale)
+    end
+
+    I18n.default_locale
+  end
 
   def set_current_auditor
     Current.auditor = current_user if current_user

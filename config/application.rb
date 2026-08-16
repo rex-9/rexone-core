@@ -26,6 +26,9 @@ module RexoneCore
 
     # Admin API translations are grouped by resource under locales/admin.
     config.i18n.load_path += Dir[Rails.root.join("config/locales/admin/**/*.{rb,yml}")]
+    config.i18n.available_locales = %i[en my]
+    config.i18n.default_locale = :en
+    config.i18n.fallbacks = [ :en ]
 
     # config.eager_load_paths << Rails.root.join("extras")
 
