@@ -44,10 +44,9 @@ module StorageService
 
       if File.exist?(path)
         FileUtils.rm(path)
-        true
-      else
-        raise NotFoundError, "File not found: #{identifier}"
       end
+
+      true
     rescue => e
       Rails.logger.error("#{LOG_PREFIX} Delete Error: #{e.message}")
       raise DeleteError, e.message
@@ -114,12 +113,20 @@ module StorageService
     private
 
     def get_full_path(identifier, options = {})
-      if identifier.start_with?(@storage_path.to_s)
-        identifier
+      storage_path = File.expand_path(@storage_path)
+      base_path = if options[:folder].present?
+        File.join(storage_path, options[:folder])
       else
-        folder = options[:folder] || "uploads"
-        File.join(@storage_path, folder, identifier)
+        storage_path
       end
+
+      path = File.expand_path(identifier, base_path)
+
+      unless path.start_with?("#{storage_path}#{File::SEPARATOR}")
+        raise Error, "Invalid storage identifier"
+      end
+
+      path
     end
 
     def generate_filename(file)

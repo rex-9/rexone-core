@@ -41,7 +41,7 @@ class V1::AssetsController < V1::ApplicationController
     end
 
     # Generate public_id
-    public_id = "#{params[:category] || 'profile'}/#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}_#{Time.now.to_i}"
+    public_id = "#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}_#{Time.now.to_i}"
 
     # Upload to storage service
     result = StorageService::Client.upload(
@@ -61,7 +61,7 @@ class V1::AssetsController < V1::ApplicationController
       name: result[:public_id],
       url: result[:url],
       category: params[:category] || "profile",
-      format: result[:format] || determine_resource_type(file),
+      format: determine_asset_format(file),
       size: result[:bytes],
       source: "upload",
       user: current_user,
@@ -83,8 +83,10 @@ class V1::AssetsController < V1::ApplicationController
         }
       )
     else
-      # Try to delete from storage if database save fails
-      StorageService::Client.delete(public_id) rescue nil
+      StorageService::Client.delete_later(
+        result[:public_id],
+        resource_type: result[:resource_type]
+      )
 
       render_json_response(
         status_code: 422,
@@ -224,9 +226,22 @@ class V1::AssetsController < V1::ApplicationController
     when "mp4", "mov", "avi", "webm", "mkv"
       "video"
     when "pdf", "doc", "docx", "txt", "rtf"
-      "doc"
+      "raw"
     else
       "auto"
+    end
+  end
+
+  def determine_asset_format(file)
+    resource_type = determine_resource_type(file)
+
+    case resource_type
+    when "image", "video"
+      resource_type
+    when "raw"
+      "doc"
+    else
+      "unknown"
     end
   end
 end
