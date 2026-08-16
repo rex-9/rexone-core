@@ -26,20 +26,23 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
 
         render_json_response(
           status_code: 200,
-          message: Messages::CONFIRMATION_EMAIL_SENT.call(user.email)
+          message: auth_message(
+            MessageService::Auth::CONFIRMATION_EMAIL_SENT,
+            email: user.email
+          )
         )
       else
         render_json_response(
           status_code: 422,
-          message: Messages::EMAIL_ALREADY_CONFIRMED,
-          error: Messages::EMAIL_ALREADY_CONFIRMED,
+          message: auth_message(MessageService::Auth::EMAIL_ALREADY_CONFIRMED),
+          error: auth_message(MessageService::Auth::EMAIL_ALREADY_CONFIRMED),
         )
       end
     else
         render_json_response(
         status_code: 404,
-        message: Messages::USER_NOT_FOUND,
-        error: Messages::USER_NOT_FOUND
+        message: auth_message(MessageService::Auth::USER_NOT_FOUND),
+        error: auth_message(MessageService::Auth::USER_NOT_FOUND)
       )
     end
   end
@@ -56,7 +59,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
         )
         render_json_response(
           status_code: 200,
-          message: Messages::EMAIL_CONFIRMED_SUCCESSFULLY,
+          message: auth_message(MessageService::Auth::EMAIL_CONFIRMED),
           data: {
             user: resource,
             token: AppConfig::JWT_TOKEN.call(resource)
@@ -65,20 +68,24 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
       else
         render_json_response(
           status_code: 422,
-          message: Messages::EMAIL_FAILED_TO_CONFIRM,
+          message: auth_message(MessageService::Auth::EMAIL_CONFIRMATION_FAILED),
           error: resource.errors.full_messages.to_sentence,
         )
       end
     else
       render_json_response(
         status_code: 422,
-        message: Messages::EMAIL_FAILED_TO_CONFIRM,
-        error: Messages::USER_NOT_FOUND,
+        message: auth_message(MessageService::Auth::EMAIL_CONFIRMATION_FAILED),
+        error: auth_message(MessageService::Auth::USER_NOT_FOUND),
       )
     end
   end
 
   protected
+
+  def auth_message(key, **options)
+    MessageService::Auth.t(key, **options)
+  end
 
   def after_confirmation_path_for(resource_name, resource)
     AppConfig::CLIENT_BASE_URL + "?auth_token=#{resource.jti}"

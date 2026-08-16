@@ -1,0 +1,15 @@
+en:
+  user:
+    current_fetched: "Current user fetched successfully."
+    not_authenticated: "User not authenticated."
+    current_not_found: "No current user found."
+    iam_fetched: "User IAM fetched"
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            username:
+              invalid_format: "can only contain lowercase letters, numbers, and underscores"
+            confirmation_code:
+              invalid_or_expired: "is invalid or has expired"

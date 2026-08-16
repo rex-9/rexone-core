@@ -24,6 +24,9 @@ module RexoneCore
     config.time_zone = "UTC"  # Set a consistent timezone
     config.active_record.default_timezone = :utc
 
+    # Admin API translations are grouped by resource under locales/admin.
+    config.i18n.load_path += Dir[Rails.root.join("config/locales/admin/**/*.{rb,yml}")]
+
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Only loads a smaller set of middleware suitable for API only apps.

@@ -8,8 +8,8 @@ class V1::NotificationsController < V1::ApplicationController
     unless PushNotiTemplates::ALL.include?(type)
       render_json_response(
         status_code: 422,
-        message: "Invalid push type.",
-        error: "Supported types: #{PushNotiTemplates::ALL.join(', ')}"
+        message: notification_message(MessageService::Notification::INVALID_PUSH_TYPE),
+        error: supported_types_message(PushNotiTemplates::ALL)
       )
       return
     end
@@ -22,8 +22,8 @@ class V1::NotificationsController < V1::ApplicationController
     else
       NotificationService.custom(
         user_id: user.id,
-        title: params[:title] || "Notification",
-        message: params[:body] || "You have a new notification.",
+        title: params[:title] || notification_message(MessageService::Notification::DEFAULT_TITLE),
+        message: params[:body] || notification_message(MessageService::Notification::DEFAULT_BODY),
         data: params[:data] || {},
         send_push: true,
         send_socket: false,
@@ -33,13 +33,13 @@ class V1::NotificationsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Push notification sent.",
+      message: notification_message(MessageService::Notification::PUSH_SENT),
       data: { delivered: result[:push] != false }
     )
   rescue => e
     render_json_response(
       status_code: 422,
-      message: "Failed to send notification.",
+      message: notification_message(MessageService::Notification::PUSH_FAILED),
       error: e.message
     )
   end
@@ -52,8 +52,8 @@ class V1::NotificationsController < V1::ApplicationController
     unless MailTemplates::ALL.include?(type)
       render_json_response(
         status_code: 422,
-        message: "Invalid email type.",
-        error: "Supported types: #{MailTemplates::ALL.join(', ')}"
+        message: notification_message(MessageService::Notification::INVALID_EMAIL_TYPE),
+        error: supported_types_message(MailTemplates::ALL)
       )
       return
     end
@@ -68,21 +68,34 @@ class V1::NotificationsController < V1::ApplicationController
     else
       EmailService::Client.send_email(
         to: user.email,
-        subject: params[:subject] || "Notification",
-        body: params[:body] || "You have a new notification."
+        subject: params[:subject] || notification_message(MessageService::Notification::DEFAULT_TITLE),
+        body: params[:body] || notification_message(MessageService::Notification::DEFAULT_BODY)
       )
     end
 
     render_json_response(
       status_code: 200,
-      message: "Email sent.",
+      message: notification_message(MessageService::Notification::EMAIL_SENT),
       data: { delivered: result != false }
     )
   rescue => e
     render_json_response(
       status_code: 422,
-      message: "Failed to send email.",
+      message: notification_message(MessageService::Notification::EMAIL_FAILED),
       error: e.message
+    )
+  end
+
+  private
+
+  def notification_message(key, **options)
+    MessageService::Notification.t(key, **options)
+  end
+
+  def supported_types_message(types)
+    notification_message(
+      MessageService::Notification::SUPPORTED_TYPES,
+      types: types.join(", ")
     )
   end
 end

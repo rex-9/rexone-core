@@ -1,0 +1,26 @@
+module MessageService
+  class Iam < Base
+    PERMISSIONS_FETCHED = "iam.permissions.fetched"
+    PERMISSION_FETCHED = "iam.permissions.fetched_one"
+    DISCARDED_PERMISSIONS_FETCHED = "iam.permissions.discarded_fetched"
+    UNDISCARDED_PERMISSIONS_FETCHED = "iam.permissions.undiscarded_fetched"
+    PERMISSION_DISCARDED = "iam.permissions.discarded"
+    PERMISSION_RESTORED = "iam.permissions.restored"
+    PERMISSION_NOT_DISCARDED = "iam.permissions.not_discarded"
+    PERMISSION_DELETED = "iam.permissions.deleted"
+    ROLES_FETCHED = "iam.roles.fetched"
+    ROLE_FETCHED = "iam.roles.fetched_one"
+    ROLE_CREATED = "iam.roles.created"
+    ROLE_CREATE_FAILED = "iam.roles.create_failed"
+    ROLE_UPDATED = "iam.roles.updated"
+    ROLE_UPDATE_FAILED = "iam.roles.update_failed"
+    SYSTEM_ROLE_DELETE_FORBIDDEN = "iam.roles.system_delete_forbidden"
+    SYSTEM_ROLE_DELETE_ERROR = "iam.roles.system_delete_error"
+    ROLE_DELETED = "iam.roles.deleted"
+    USER_ROLES_FETCHED = "iam.user_roles.fetched"
+    ROLE_ASSIGNED = "iam.user_roles.assigned"
+    ROLE_REMOVED = "iam.user_roles.removed"
+    USER_ROLE_NOT_FOUND = "iam.user_roles.not_found"
+    USER_ROLE_MISSING = "iam.user_roles.missing"
+  end
+end

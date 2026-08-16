@@ -50,7 +50,7 @@ Rails.application.routes.draw do
       resources :products, only: %i[index show new create edit update destroy]
       resources :subscriptions, only: %i[index show new create edit update destroy]
       resources :transactions, only: %i[index show new create edit update destroy]
-      resources :webhook_events, only: %i[index show new create edit update destroy]
+      resources :webhook_events, only: %i[index show]
     end
 
     namespace :chat do

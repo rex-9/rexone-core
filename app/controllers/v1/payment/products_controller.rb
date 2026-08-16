@@ -6,7 +6,7 @@ class V1::Payment::ProductsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Products fetched successfully.",
+      message: MessageService::Payment.t(MessageService::Payment::PRODUCTS_FETCHED),
       data: Payment::ProductSerializer.new(products).serializable_hash[:data]
     )
   end
@@ -17,7 +17,7 @@ class V1::Payment::ProductsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Product fetched successfully.",
+      message: MessageService::Payment.t(MessageService::Payment::PRODUCT_FETCHED),
       data: Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
     )
   end

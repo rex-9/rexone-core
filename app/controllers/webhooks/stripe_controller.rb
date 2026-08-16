@@ -1,5 +1,7 @@
 # app/controllers/webhooks/stripe_controller.rb
 class Webhooks::StripeController < ActionController::API
+  STRIPE_LOG_PREFIX = PaymentService::Stripe::STRIPE_LOG_PREFIX
+
   def create
     payload = request.raw_post
     signature = request.headers["Stripe-Signature"]
@@ -8,6 +10,23 @@ class Webhooks::StripeController < ActionController::API
       payload,
       signature
     )
+
+    unless PaymentService::Client.supported_webhook_event?(
+      stripe_event.type
+    )
+      Rails.logger.info(
+        "#{STRIPE_LOG_PREFIX} Ignored unsupported webhook event: " \
+        "#{stripe_event.type}"
+      )
+
+      render json: {
+        received: true,
+        event_id: stripe_event.id,
+        status: "ignored"
+      }, status: :ok
+
+      return
+    end
 
     webhook_event = persist_webhook_event!(
       stripe_event,
@@ -28,7 +47,7 @@ class Webhooks::StripeController < ActionController::API
     )
 
     Rails.logger.info(
-      "[Stripe] Webhook queued: " \
+      "#{STRIPE_LOG_PREFIX} Webhook queued: " \
       "event_id=#{webhook_event.stripe_event_id} " \
       "event_type=#{webhook_event.event_type} " \
       "job_id=#{job.job_id}"
@@ -43,56 +62,60 @@ class Webhooks::StripeController < ActionController::API
 
   rescue Stripe::SignatureVerificationError => error
     Rails.logger.warn(
-      "[Stripe] Invalid webhook signature: #{error.message}"
+      "#{STRIPE_LOG_PREFIX} Invalid webhook signature: #{error.message}"
     )
     render json: {
       received: false,
-      error: "Invalid Stripe signature"
+      error: payment_message(MessageService::Payment::INVALID_STRIPE_SIGNATURE)
     }, status: :bad_request
 
   rescue JSON::ParserError => error
     Rails.logger.warn(
-      "[Stripe] Invalid webhook payload: #{error.message}"
+      "#{STRIPE_LOG_PREFIX} Invalid webhook payload: #{error.message}"
     )
     render json: {
       received: false,
-      error: "Invalid JSON payload"
+      error: payment_message(MessageService::Payment::INVALID_JSON_PAYLOAD)
     }, status: :bad_request
 
   rescue SolidQueue::Job::EnqueueError => error
     Rails.error.report(error)
     Rails.logger.error(
-      "[Stripe] Failed to enqueue webhook: #{error.message}"
+      "#{STRIPE_LOG_PREFIX} Failed to enqueue webhook: #{error.message}"
     )
     # Returning a non-2xx response asks Stripe to retry delivery.
     render json: {
       received: false,
-      error: "Webhook could not be queued"
+      error: payment_message(MessageService::Payment::WEBHOOK_QUEUE_FAILED)
     }, status: :service_unavailable
 
   rescue ActiveRecord::ActiveRecordError => error
     Rails.error.report(error)
     Rails.logger.error(
-      "[Stripe] Failed to persist webhook: #{error.message}"
+      "#{STRIPE_LOG_PREFIX} Failed to persist webhook: #{error.message}"
     )
     render json: {
       received: false,
-      error: "Webhook could not be persisted"
+      error: payment_message(MessageService::Payment::WEBHOOK_PERSIST_FAILED)
     }, status: :internal_server_error
 
   rescue StandardError => error
     Rails.error.report(error)
     Rails.logger.error(
-      "[Stripe] Unexpected webhook error: " \
+      "#{STRIPE_LOG_PREFIX} Unexpected webhook error: " \
       "#{error.class}: #{error.message}"
     )
     render json: {
       received: false,
-      error: "Webhook processing failed"
+      error: payment_message(MessageService::Payment::WEBHOOK_PROCESSING_FAILED)
     }, status: :internal_server_error
   end
 
   private
+
+  def payment_message(key, **options)
+    MessageService::Payment.t(key, **options)
+  end
 
   def persist_webhook_event!(stripe_event, raw_payload)
     Payment::WebhookEvent.create_or_find_by!(

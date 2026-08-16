@@ -22,8 +22,12 @@ module Authorization
 
     render_json_response(
       status_code: 403,
-      message: "Unauthorized",
-      error: "You don't have permission to #{permission_action} #{controller_name}"
+      message: common_message(MessageService::Common::UNAUTHORIZED),
+      error: common_message(
+        MessageService::Common::PERMISSION_DENIED,
+        action: permission_action,
+        resource: controller_name
+      )
     )
   end
 
@@ -51,8 +55,8 @@ module Authorization
 
     render_json_response(
       status_code: 403,
-      message: "Unauthorized",
-      error: "Admin access required"
+      message: common_message(MessageService::Common::UNAUTHORIZED),
+      error: common_message(MessageService::Common::ADMIN_REQUIRED)
     )
   end
 
@@ -61,8 +65,14 @@ module Authorization
 
     render_json_response(
       status_code: 403,
-      message: "Unauthorized",
-      error: "Super admin access required"
+      message: common_message(MessageService::Common::UNAUTHORIZED),
+      error: common_message(MessageService::Common::SUPER_ADMIN_REQUIRED)
     )
+  end
+
+  private
+
+  def common_message(key, **options)
+    MessageService::Common.t(key, **options)
   end
 end

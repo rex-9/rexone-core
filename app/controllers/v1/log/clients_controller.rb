@@ -14,7 +14,7 @@ class V1::Log::ClientsController < V1::ApplicationController
 
       render_json_response(
         status_code: 200,
-        message: "Client log occurrence recorded",
+        message: log_message(MessageService::Log::OCCURRENCE_RECORDED),
         data: { id: log_client.id, occurrence_count: log_client.occurrence_count }
       )
     else
@@ -29,13 +29,13 @@ class V1::Log::ClientsController < V1::ApplicationController
       if log_client.save
         render_json_response(
           status_code: 201,
-          message: "Client log created successfully",
+          message: log_message(MessageService::Log::CREATED),
           data: { id: log_client.id }
         )
       else
         render_json_response(
           status_code: 422,
-          message: "Failed to create client log",
+          message: log_message(MessageService::Log::CREATE_FAILED),
           error: log_client.errors.full_messages.to_sentence
         )
       end
@@ -54,7 +54,7 @@ class V1::Log::ClientsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Client logs fetched successfully",
+      message: log_message(MessageService::Log::FETCHED),
       data: serialized,
       pagy: pagy
     )
@@ -65,7 +65,7 @@ class V1::Log::ClientsController < V1::ApplicationController
     authorize! :read, Log::Client
     render_json_response(
       status_code: 200,
-      message: "Client log fetched successfully",
+      message: log_message(MessageService::Log::FETCHED_ONE),
       data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
     )
   end
@@ -77,7 +77,7 @@ class V1::Log::ClientsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Client log marked as resolved",
+      message: log_message(MessageService::Log::RESOLVED),
       data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
     )
   end
@@ -89,7 +89,7 @@ class V1::Log::ClientsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Client log marked as unresolved",
+      message: log_message(MessageService::Log::UNRESOLVED),
       data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
     )
   end
@@ -101,11 +101,15 @@ class V1::Log::ClientsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Client log deleted permanently"
+      message: log_message(MessageService::Log::DELETED)
     )
   end
 
   private
+
+  def log_message(key, **options)
+    MessageService::Log.t(key, **options)
+  end
 
   def set_log_client
     @log_client = Log::Client.find(params[:id])

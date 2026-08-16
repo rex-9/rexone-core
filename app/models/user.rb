@@ -26,7 +26,14 @@ class User < ApplicationRecord
   validates :email, uniqueness: true, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, presence: true, confirmation: true, length: { minimum: 6 }, if: -> { new_record? || !password.nil? }
   validates :password_confirmation, presence: true, if: -> { (new_record? || !password.nil?) }
-  validates :username, presence: true, uniqueness: { case_sensitive: false }, length: { in: 3..30 }, format: { with: /\A[a-z0-9_]+\z/, message: "can only contain lowercase letters, numbers, and underscores" }
+  validates :username,
+            presence: true,
+            uniqueness: { case_sensitive: false },
+            length: { in: 3..30 },
+            format: {
+              with: /\A[a-z0-9_]+\z/,
+              message: :invalid_format
+            }
 
   def generate_confirmation_code
     self.confirmation_code = SecureRandom.random_number(10**6).to_s.rjust(6, "0")
@@ -39,7 +46,7 @@ class User < ApplicationRecord
       confirmation_sent_at > AppConfig::CONFIRM_CODE_WITHIN
       confirm
     else
-      errors.add(:confirmation_code, "is invalid or has expired")
+      errors.add(:confirmation_code, :invalid_or_expired)
       false
     end
   end
@@ -61,7 +68,10 @@ class User < ApplicationRecord
     update(stripe_customer_id: customer.id)
     customer.id
   rescue Stripe::StripeError => e
-    Rails.logger.error("[Stripe] Failed to create customer: #{e.message}")
+    Rails.logger.error(
+      "#{PaymentService::Stripe::STRIPE_LOG_PREFIX} " \
+      "Failed to create customer: #{e.message}"
+    )
     nil
   end
 

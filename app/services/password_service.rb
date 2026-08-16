@@ -1,5 +1,7 @@
 # app/services/password_service.rb
 class PasswordService
+  LOG_PREFIX = "[PasswordService]".freeze
+
   def initialize(user_id)
     @user_id = user_id
     @attempts_key = "password:attempts:#{user_id}"
@@ -48,6 +50,6 @@ class PasswordService
     CacheService.delete(@attempts_key)
     CacheService.delete(@cooldown_key)
   rescue => e
-    Rails.logger.error("[PasswordService] Failed to record success: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Failed to record success: #{e.message}")
   end
 end

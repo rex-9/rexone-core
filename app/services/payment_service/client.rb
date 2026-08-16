@@ -6,6 +6,7 @@ module PaymentService
                :get_session,
                :cancel_subscription,
                :resume_subscription,
+               :supported_webhook_event?,
                :verify_webhook,
                :process_webhook,
                to: :provider

@@ -1,6 +1,8 @@
 # app/models/payment/webhook_event.rb
 
 class Payment::WebhookEvent < ApplicationRecord
+  STRIPE_LOG_PREFIX = PaymentService::Stripe::STRIPE_LOG_PREFIX
+
   self.table_name = "payment_webhook_events"
 
   # PROCESSED_RETENTION_PERIOD = 30.seconds
@@ -77,7 +79,7 @@ class Payment::WebhookEvent < ApplicationRecord
         .delete_all
 
     Rails.logger.info(
-      "[Stripe] Webhook cleanup completed: " \
+      "#{STRIPE_LOG_PREFIX} Webhook cleanup completed: " \
       "processed_deleted=#{processed_count} " \
       "failed_deleted=#{failed_count} "
     )

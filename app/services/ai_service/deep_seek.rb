@@ -6,6 +6,8 @@ require "uri"
 
 module AiService
   class DeepSeek < Base
+    LOG_PREFIX = "[DeepSeek]".freeze
+
     def initialize
       @api_key = AppConfig::DEEPSEEK_API_KEY
       @base_url = AppConfig::DEEPSEEK_BASE_URL
@@ -38,12 +40,12 @@ module AiService
       if response.code.to_i == 200
         JSON.parse(response.body)
       else
-        Rails.logger.error("[DeepSeek] API Error: #{response.body}")
-        { error: "API error: #{response.code}" }
+        Rails.logger.error("#{LOG_PREFIX} API Error: #{response.body}")
+        { error: provider_error_message }
       end
     rescue => e
-      Rails.logger.error("[DeepSeek] Error: #{e.message}")
-      { error: e.message }
+      Rails.logger.error("#{LOG_PREFIX} Error: #{e.message}")
+      { error: provider_error_message }
     end
 
     def stream_chat(messages:, model: nil, temperature: 0.7, max_tokens: 2000, &block)
@@ -85,8 +87,14 @@ module AiService
         end
       end
     rescue => e
-      Rails.logger.error("[DeepSeek] Stream Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Stream Error: #{e.message}")
       yield nil
+    end
+
+    private
+
+    def provider_error_message
+      MessageService::Ai.t(MessageService::Ai::PROVIDER_ERROR)
     end
   end
 

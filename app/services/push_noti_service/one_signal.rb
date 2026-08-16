@@ -3,13 +3,15 @@ require "rest-client"
 
 module PushNotiService
   class OneSignal < Base
+    LOG_PREFIX = "[OneSignal]".freeze
+
     def initialize
       @app_id = AppConfig::ONE_SIGNAL_APP_ID
       @api_key = AppConfig::ONE_SIGNAL_API_KEY
       @default_sound = AppConfig::ONE_SIGNAL_DEFAULT_SOUND
 
       if @app_id.blank? || @api_key.blank?
-        Rails.logger.info("[OneSignal] not configured - push notifications disabled")
+        Rails.logger.info("#{LOG_PREFIX} not configured - push notifications disabled")
         @disabled = true
       end
     end
@@ -78,7 +80,7 @@ module PushNotiService
     def send_notification(payload)
       return false if @disabled
 
-      Rails.logger.info("[OneSignal] Payload: #{payload.to_json}")
+      Rails.logger.info("#{LOG_PREFIX} Payload: #{payload.to_json}")
 
       response = RestClient.post(
         "https://api.onesignal.com/notifications",
@@ -90,20 +92,20 @@ module PushNotiService
         }
       )
 
-      Rails.logger.info("[OneSignal] Response: #{response.body}")
+      Rails.logger.info("#{LOG_PREFIX} Response: #{response.body}")
 
       JSON.parse(response.body)
     rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.error("[OneSignal] API Error: #{e.response&.body}")
-      raise PushNotiService::Error, "[OneSignal] API error: #{e.message}"
+      Rails.logger.error("#{LOG_PREFIX} API Error: #{e.response&.body}")
+      raise PushNotiService::Error, "#{LOG_PREFIX} API error: #{e.message}"
     rescue => e
-      Rails.logger.error("[OneSignal] Unexpected Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Unexpected Error: #{e.message}")
       raise
     end
 
     def handle_error(error, method, context = {})
-      Rails.logger.error("[OneSignal] #{method} failed: #{error.message}")
-      Rails.logger.error("[OneSignal] Context: #{context.inspect}")
+      Rails.logger.error("#{LOG_PREFIX} #{method} failed: #{error.message}")
+      Rails.logger.error("#{LOG_PREFIX} Context: #{context.inspect}")
       # Don't re-raise - just return false
       false
     end

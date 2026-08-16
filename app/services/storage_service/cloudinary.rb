@@ -6,6 +6,7 @@ require "cloudinary/uploader"
 module StorageService
   class Cloudinary < Base
     Cloudinary = ::Cloudinary
+    LOG_PREFIX = "[Cloudinary]".freeze
 
     def initialize
       Cloudinary.config do |config|
@@ -48,7 +49,7 @@ module StorageService
         resource_type: result["resource_type"]
       }
     rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] Upload Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Upload Error: #{e.message}")
       raise UploadError, e.message
     end
 
@@ -63,7 +64,7 @@ module StorageService
 
       true
     rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] Delete Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Delete Error: #{e.message}")
       raise DeleteError, e.message
     end
 
@@ -106,7 +107,7 @@ module StorageService
         resource_type: result["resource_type"]
       }
     rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] Copy Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Copy Error: #{e.message}")
       raise UploadError, e.message
     end
 
@@ -116,7 +117,7 @@ module StorageService
     rescue Cloudinary::Api::NotFound
       false
     rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] Exists? Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Exists? Error: #{e.message}")
       false
     end
 
@@ -141,7 +142,7 @@ module StorageService
         }
       end
     rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] List Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} List Error: #{e.message}")
       []
     end
 

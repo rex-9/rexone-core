@@ -9,7 +9,7 @@ class V1::AssetsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Assets fetched successfully",
+      message: asset_message(MessageService::Asset::FETCHED),
       data: {
         assets: AssetSerializer.new(assets).serializable_hash[:data]
       }
@@ -20,7 +20,7 @@ class V1::AssetsController < V1::ApplicationController
   def show
     render_json_response(
       status_code: 200,
-      message: "Asset fetched successfully",
+      message: asset_message(MessageService::Asset::FETCHED_ONE),
       data: {
         asset: AssetSerializer.new(@asset).serializable_hash[:data][:attributes]
       }
@@ -34,8 +34,8 @@ class V1::AssetsController < V1::ApplicationController
     if file.blank?
       render_json_response(
         status_code: 422,
-        message: "No file uploaded",
-        error: "File parameter is required"
+        message: asset_message(MessageService::Asset::NO_FILE_UPLOADED),
+        error: asset_message(MessageService::Asset::FILE_REQUIRED)
       )
       return
     end
@@ -72,7 +72,7 @@ class V1::AssetsController < V1::ApplicationController
     if asset.save
       render_json_response(
         status_code: 201,
-        message: "Asset uploaded successfully",
+        message: asset_message(MessageService::Asset::UPLOADED),
         data: {
           asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes],
           storage_details: {
@@ -88,14 +88,14 @@ class V1::AssetsController < V1::ApplicationController
 
       render_json_response(
         status_code: 422,
-        message: "Failed to save asset",
+        message: asset_message(MessageService::Asset::SAVE_FAILED),
         error: asset.errors.full_messages.to_sentence
       )
     end
   rescue StorageService::Error => e
     render_json_response(
       status_code: 500,
-      message: "Storage upload failed",
+      message: asset_message(MessageService::Asset::STORAGE_UPLOAD_FAILED),
       error: e.message
     )
   end
@@ -107,7 +107,7 @@ class V1::AssetsController < V1::ApplicationController
     if asset.save
       render_json_response(
         status_code: 201,
-        message: "Asset created successfully",
+        message: asset_message(MessageService::Asset::CREATED),
         data: {
           asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes]
         }
@@ -115,7 +115,7 @@ class V1::AssetsController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: "Failed to create asset",
+        message: asset_message(MessageService::Asset::CREATE_FAILED),
         error: asset.errors.full_messages.to_sentence
       )
     end
@@ -126,7 +126,7 @@ class V1::AssetsController < V1::ApplicationController
     if @asset.update(asset_params)
       render_json_response(
         status_code: 200,
-        message: "Asset updated successfully",
+        message: asset_message(MessageService::Asset::UPDATED),
         data: {
           asset: AssetSerializer.new(@asset).serializable_hash[:data][:attributes]
         }
@@ -134,7 +134,7 @@ class V1::AssetsController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: "Failed to update asset",
+        message: asset_message(MessageService::Asset::UPDATE_FAILED),
         error: @asset.errors.full_messages.to_sentence
       )
     end
@@ -146,12 +146,12 @@ class V1::AssetsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Asset deleted successfully"
+      message: asset_message(MessageService::Asset::DELETED)
     )
   rescue ActiveRecord::RecordNotDestroyed => e
     render_json_response(
       status_code: 422,
-      message: "Failed to delete asset",
+      message: asset_message(MessageService::Asset::DELETE_FAILED),
       error: e.message
     )
   end
@@ -163,7 +163,7 @@ class V1::AssetsController < V1::ApplicationController
     if @asset.refresh_url
       render_json_response(
         status_code: 200,
-        message: "Asset URL refreshed successfully",
+        message: asset_message(MessageService::Asset::URL_REFRESHED),
         data: {
           asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes]
         }
@@ -171,7 +171,7 @@ class V1::AssetsController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: "Failed to refresh asset URL"
+        message: asset_message(MessageService::Asset::URL_REFRESH_FAILED)
       )
     end
   end
@@ -183,7 +183,7 @@ class V1::AssetsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Storage assets listed successfully",
+      message: asset_message(MessageService::Asset::STORAGE_LISTED),
       data: {
         assets: assets
       }
@@ -191,19 +191,23 @@ class V1::AssetsController < V1::ApplicationController
   rescue StorageService::Error => e
     render_json_response(
       status_code: 500,
-      message: "Failed to list storage assets",
+      message: asset_message(MessageService::Asset::STORAGE_LIST_FAILED),
       error: e.message
     )
   end
 
   private
 
+  def asset_message(key, **options)
+    MessageService::Asset.t(key, **options)
+  end
+
   def set_asset
     @asset = Asset.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_json_response(
       status_code: 404,
-      message: "Asset not found"
+      message: asset_message(MessageService::Asset::NOT_FOUND)
     )
   end
 

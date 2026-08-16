@@ -5,7 +5,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     subscriptions = current_user.subscriptions.includes(:product).order(created_at: :desc)
     render_json_response(
       status_code: 200,
-      message: "Subscriptions fetched successfully.",
+      message: payment_message(MessageService::Payment::SUBSCRIPTIONS_FETCHED),
       data: Payment::SubscriptionSerializer.new(subscriptions).serializable_hash[:data]
     )
   end
@@ -15,7 +15,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     subscription = current_user.subscriptions.find(params[:id])
     render_json_response(
       status_code: 200,
-      message: "Subscription fetched successfully.",
+      message: payment_message(MessageService::Payment::SUBSCRIPTION_FETCHED),
       data: Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data][:attributes]
     )
   end
@@ -28,8 +28,8 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     if subscription.scheduled_for_cancellation?
       render_json_response(
         status_code: 422,
-        message: "Cannot cancel subscription",
-        error: "Subscription is already scheduled for cancellation"
+        message: payment_message(MessageService::Payment::CANNOT_CANCEL),
+        error: payment_message(MessageService::Payment::ALREADY_SCHEDULED_FOR_CANCELLATION)
       )
       return
     end
@@ -37,8 +37,8 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     unless subscription.cancelable?
       render_json_response(
         status_code: 422,
-        message: "Cannot cancel subscription",
-        error: "Subscription cannot be canceled in its current state"
+        message: payment_message(MessageService::Payment::CANNOT_CANCEL),
+        error: payment_message(MessageService::Payment::NOT_CANCELABLE)
       )
       return
     end
@@ -50,7 +50,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     if result[:error]
       render_json_response(
         status_code: 422,
-        message: "Failed to cancel subscription",
+        message: payment_message(MessageService::Payment::CANCEL_FAILED),
         error: result[:error]
       )
       return
@@ -66,7 +66,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Subscription will be canceled at the end of the billing period",
+      message: payment_message(MessageService::Payment::CANCELLATION_SCHEDULED),
       data: serialized_subscription(subscription)
     )
   end
@@ -79,8 +79,8 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     unless subscription.scheduled_for_cancellation?
       render_json_response(
         status_code: 422,
-        message: "Cannot resume subscription",
-        error: "Subscription is not scheduled for cancellation"
+        message: payment_message(MessageService::Payment::CANNOT_RESUME),
+        error: payment_message(MessageService::Payment::NOT_SCHEDULED_FOR_CANCELLATION)
       )
       return
     end
@@ -92,7 +92,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     if result[:error]
       render_json_response(
         status_code: 422,
-        message: "Failed to resume subscription",
+        message: payment_message(MessageService::Payment::RESUME_FAILED),
         error: result[:error]
       )
       return
@@ -108,7 +108,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Subscription resumed successfully",
+      message: payment_message(MessageService::Payment::RESUMED),
       data: serialized_subscription(subscription)
     )
   end
@@ -121,8 +121,8 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     unless subscription.ended?
       render_json_response(
         status_code: 422,
-        message: "Cannot remove subscription",
-        error: "Only an ended subscription can be removed"
+        message: payment_message(MessageService::Payment::CANNOT_REMOVE),
+        error: payment_message(MessageService::Payment::ONLY_ENDED_CAN_BE_REMOVED)
       )
 
       return
@@ -132,11 +132,15 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Subscription removed successfully"
+      message: payment_message(MessageService::Payment::REMOVED)
     )
   end
 
   private
+
+  def payment_message(key, **options)
+    MessageService::Payment.t(key, **options)
+  end
 
   def subscription_params
     params.permit(:id)

@@ -14,13 +14,16 @@ class Auth::PasswordsController < Devise::PasswordsController
 
       render_json_response(
         status_code: 200,
-        message: Messages::PASSWORD_RESET_INSTRUCTIONS_SENT.call(user.email)
+        message: auth_message(
+          MessageService::Auth::PASSWORD_RESET_SENT,
+          email: user.email
+        )
       )
     else
       render_json_response(
         status_code: 404,
-        message: Messages::EMAIL_NOT_FOUND,
-        error: Messages::EMAIL_NOT_FOUND
+        message: auth_message(MessageService::Auth::EMAIL_NOT_FOUND),
+        error: auth_message(MessageService::Auth::EMAIL_NOT_FOUND)
       )
     end
   end
@@ -31,12 +34,12 @@ class Auth::PasswordsController < Devise::PasswordsController
     if user.errors.empty?
       render_json_response(
         status_code: 200,
-        message: Messages::PASSWORD_RESET_SUCCESSFULLY
+        message: auth_message(MessageService::Auth::PASSWORD_RESET)
       )
     else
       render_json_response(
         status_code: 422,
-        message: Messages::FAILED_TO_RESET_PASSWORD,
+        message: auth_message(MessageService::Auth::PASSWORD_RESET_FAILED),
         error: user.errors.full_messages.uniq.to_sentence
       )
     end
@@ -48,6 +51,10 @@ class Auth::PasswordsController < Devise::PasswordsController
   end
 
   private
+
+  def auth_message(key, **options)
+    MessageService::Auth.t(key, **options)
+  end
 
   def reset_password_params
     params.require(:user).permit(:reset_password_token, :password, :password_confirmation)

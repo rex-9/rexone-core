@@ -1,0 +1,11 @@
+en:
+  log:
+    clients:
+      occurrence_recorded: "Client log occurrence recorded"
+      created: "Client log created successfully"
+      create_failed: "Failed to create client log"
+      fetched: "Client logs fetched successfully"
+      fetched_one: "Client log fetched successfully"
+      resolved: "Client log marked as resolved"
+      unresolved: "Client log marked as unresolved"
+      deleted: "Client log deleted permanently"

@@ -51,8 +51,12 @@ class Rack::Attack
           status: {
             code: 429,
             success: false,
-            message: "Too many requests. Please slow down.",
-            error: "Rate limit exceeded"
+            message: MessageService::Common.t(
+              MessageService::Common::TOO_MANY_REQUESTS
+            ),
+            error: MessageService::Common.t(
+              MessageService::Common::RATE_LIMIT_EXCEEDED
+            )
           },
           retry_after: retry_after
         }.to_json
@@ -69,7 +73,9 @@ class Rack::Attack
           status: {
             code: 403,
             success: false,
-            message: "Request blocked."
+            message: MessageService::Common.t(
+              MessageService::Common::REQUEST_BLOCKED
+            )
           }
         }.to_json
       ]

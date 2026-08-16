@@ -1,6 +1,8 @@
 # app/models/asset.rb
 
 class Asset < ApplicationRecord
+  LOG_PREFIX = "[Asset]".freeze
+
   belongs_to :record, polymorphic: true, optional: true
   belongs_to :user, optional: true
 
@@ -25,9 +27,9 @@ class Asset < ApplicationRecord
 
     begin
       StorageService::Client.delete(public_id, resource_type: format)
-      Rails.logger.info("[Asset] Deleted from storage: #{public_id}")
+      Rails.logger.info("#{LOG_PREFIX} Deleted from storage: #{public_id}")
     rescue StorageService::Error => e
-      Rails.logger.error("[Asset] Failed to delete from storage: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Failed to delete from storage: #{e.message}")
       # Don't raise, just log - we still want to delete the database record
     end
   end
@@ -58,7 +60,7 @@ class Asset < ApplicationRecord
     new_url = StorageService::Client.url(public_id)
     update_column(:url, new_url) if new_url.present?
   rescue StorageService::Error => e
-    Rails.logger.error("[Asset] Failed to refresh URL: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Failed to refresh URL: #{e.message}")
     false
   end
 

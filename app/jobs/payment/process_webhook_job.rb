@@ -1,6 +1,8 @@
 # app/jobs/payment/process_webhook_job.rb
 
 class Payment::ProcessWebhookJob < ApplicationJob
+  STRIPE_LOG_PREFIX = PaymentService::Stripe::STRIPE_LOG_PREFIX
+
   queue_as :payments
 
   # Never process the same persisted Stripe event concurrently.
@@ -58,7 +60,7 @@ class Payment::ProcessWebhookJob < ApplicationJob
 
   rescue StandardError => tracking_error
     Rails.logger.error(
-      "[Stripe] Could not mark webhook #{webhook_event.id} as failed: " \
+      "#{STRIPE_LOG_PREFIX} Could not mark webhook #{webhook_event.id} as failed: " \
       "#{tracking_error.class}: #{tracking_error.message}"
     )
   end

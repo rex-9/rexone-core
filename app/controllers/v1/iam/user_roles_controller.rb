@@ -9,7 +9,7 @@ class V1::Iam::UserRolesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "User roles fetched",
+      message: iam_message(MessageService::Iam::USER_ROLES_FETCHED),
       data: {
         user_id: user.id,
         roles: user.roles.map { |r| { id: r.id, name: r.name } }
@@ -27,7 +27,7 @@ class V1::Iam::UserRolesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Role assigned",
+      message: iam_message(MessageService::Iam::ROLE_ASSIGNED),
       data: {
         user_role: Iam::UserRoleSerializer.new(user_role).serializable_hash[:data][:attributes]
       }
@@ -46,14 +46,20 @@ class V1::Iam::UserRolesController < V1::ApplicationController
       user_role.destroy
       render_json_response(
         status_code: 200,
-        message: "Role removed"
+        message: iam_message(MessageService::Iam::ROLE_REMOVED)
       )
     else
       render_json_response(
         status_code: 404,
-        message: "User role not found",
-        error: "User does not have this role"
+        message: iam_message(MessageService::Iam::USER_ROLE_NOT_FOUND),
+        error: iam_message(MessageService::Iam::USER_ROLE_MISSING)
       )
     end
+  end
+
+  private
+
+  def iam_message(key, **options)
+    MessageService::Iam.t(key, **options)
   end
 end

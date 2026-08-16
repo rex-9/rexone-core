@@ -5,6 +5,18 @@ module PaymentService
   class Stripe < Base
     Stripe = ::Stripe
     STRIPE_LOG_PREFIX = "[Stripe]".freeze
+    SUPPORTED_WEBHOOK_EVENT_TYPES = %w[
+      checkout.session.completed
+      customer.subscription.updated
+      customer.subscription.deleted
+      customer.subscription.paused
+      customer.subscription.resumed
+      product.updated
+      product.deleted
+      price.created
+      price.updated
+      price.deleted
+    ].freeze
 
     def initialize
       Stripe.api_key = AppConfig::STRIPE_SECRET_KEY
@@ -117,6 +129,10 @@ module PaymentService
     # end
 
     # ===== WEBHOOK =====
+
+    def supported_webhook_event?(event_type)
+      SUPPORTED_WEBHOOK_EVENT_TYPES.include?(event_type)
+    end
 
     # Verifies that the webhook came from Stripe and returns a Stripe::Event.
     # This must run synchronously while the original signature is available.

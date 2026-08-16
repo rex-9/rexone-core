@@ -17,12 +17,16 @@ class NotificationChannel < ApplicationCable::Channel
     else
       transmit({
         status: "error",
-        error: "Unknown action"
+        error: notification_message(MessageService::Notification::UNKNOWN_ACTION)
       })
     end
   end
 
   private
+
+  def notification_message(key, **options)
+    MessageService::Notification.t(key, **options)
+  end
 
   def mark_notification_read(notification_id)
     notification = current_user.notifications.find_by(id: notification_id)
@@ -30,13 +34,13 @@ class NotificationChannel < ApplicationCable::Channel
       notification.update(read_at: Time.current)
       transmit({
         status: "success",
-        message: "Notification marked as read",
+        message: notification_message(MessageService::Notification::MARKED_AS_READ),
         notification_id: notification_id
       })
     else
       transmit({
         status: "error",
-        error: "Notification not found"
+        error: notification_message(MessageService::Notification::NOT_FOUND)
       })
     end
   end

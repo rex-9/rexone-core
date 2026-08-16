@@ -1,6 +1,8 @@
 # app/services/notification_service.rb
 
 class NotificationService
+  LOG_PREFIX = "[NotificationService]".freeze
+
   class << self
     # ===== UNIFIED METHODS =====
 
@@ -44,8 +46,8 @@ class NotificationService
           else
             EmailService::Client.send_email(
               to: user_email,
-              subject: title || "Notification",
-              body: message || "You have a new notification."
+              subject: title || notification_message(MessageService::Notification::DEFAULT_TITLE),
+              body: message || notification_message(MessageService::Notification::DEFAULT_BODY)
             )
           end
         end
@@ -60,13 +62,17 @@ class NotificationService
       notify_all(
         user_id: user.id,
         user_email: user.email,
-        title: Messages::PAYMENT_SUCCESS_TITLE,
-        message: Messages::PAYMENT_SUCCESS_BODY.call(product_name: product.name, amount: product.display_price),
+        title: payment_message(MessageService::Payment::PAYMENT_SUCCESS_TITLE),
+        message: payment_message(
+          MessageService::Payment::PAYMENT_SUCCESS_BODY,
+          product_name: product.name,
+          amount: product.display_price
+        ),
         data: { type: "payment_success", product_name: product.name, amount: product.display_price },
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: Messages::EMAIL_TEMPLATE_PURCHASE_CONFIRMATION,
+        email_template: MessageService::Payment::PURCHASE_CONFIRMATION_TEMPLATE,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
@@ -80,13 +86,16 @@ class NotificationService
       notify_all(
         user_id: user.id,
         user_email: user.email,
-        title: Messages::SUBSCRIPTION_CREATED_TITLE.call(product_name: product.name),
-        message: Messages::SUBSCRIPTION_CREATED_BODY,
+        title: payment_message(
+          MessageService::Payment::SUBSCRIPTION_CREATED_TITLE,
+          product_name: product.name
+        ),
+        message: payment_message(MessageService::Payment::SUBSCRIPTION_CREATED_BODY),
         data: { type: "subscription_created", product_name: product.name },
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: Messages::EMAIL_TEMPLATE_SUBSCRIPTION_CONFIRMATION,
+        email_template: MessageService::Payment::SUBSCRIPTION_CONFIRMATION_TEMPLATE,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
@@ -103,11 +112,8 @@ class NotificationService
       notify_all(
         user_id: user.id,
         user_email: user.email,
-        title: Messages::SUBSCRIPTION_CANCELED_TITLE,
-        message: Messages::SUBSCRIPTION_CANCELED_BODY.call(
-          product_name: product.name,
-          active_until: active_until&.strftime("%B %d, %Y")
-        ),
+        title: payment_message(MessageService::Payment::SUBSCRIPTION_CANCELED_TITLE),
+        message: subscription_canceled_message(product, active_until),
         data: {
           type: "subscription_canceled",
           product_name: product.name,
@@ -116,14 +122,14 @@ class NotificationService
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: Messages::EMAIL_TEMPLATE_SUBSCRIPTION_CANCELED,
+        email_template: MessageService::Payment::SUBSCRIPTION_CANCELED_TEMPLATE,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
           canceled_on: subscription.canceled_at&.strftime("%B %d, %Y") ||
-                      "Today",
+                      payment_message(MessageService::Payment::TODAY),
           valid_until: active_until&.strftime("%B %d, %Y") ||
-                      "End of period"
+                      payment_message(MessageService::Payment::END_OF_PERIOD)
         }
       )
     end
@@ -132,13 +138,16 @@ class NotificationService
       notify_all(
         user_id: user.id,
         user_email: user.email,
-        title: Messages::SUBSCRIPTION_RESUMED_TITLE,
-        message: Messages::SUBSCRIPTION_RESUMED_BODY.call(product_name: product.name),
+        title: payment_message(MessageService::Payment::SUBSCRIPTION_RESUMED_TITLE),
+        message: payment_message(
+          MessageService::Payment::SUBSCRIPTION_RESUMED_BODY,
+          product_name: product.name
+        ),
         data: { type: "subscription_resumed", product_name: product.name },
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: Messages::EMAIL_TEMPLATE_SUBSCRIPTION_RESUMED,
+        email_template: MessageService::Payment::SUBSCRIPTION_RESUMED_TEMPLATE,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
@@ -151,13 +160,17 @@ class NotificationService
       notify_all(
         user_id: user.id,
         user_email: user.email,
-        title: Messages::PAYMENT_FAILED_TITLE,
-        message: Messages::PAYMENT_FAILED_BODY.call(product_name: product.name, amount: product.display_price),
+        title: payment_message(MessageService::Payment::PAYMENT_FAILED_TITLE),
+        message: payment_message(
+          MessageService::Payment::PAYMENT_FAILED_BODY,
+          product_name: product.name,
+          amount: product.display_price
+        ),
         data: { type: "payment_failed", product_name: product.name, amount: product.display_price },
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: Messages::EMAIL_TEMPLATE_PAYMENT_FAILED,
+        email_template: MessageService::Payment::PAYMENT_FAILED_TEMPLATE,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
@@ -171,8 +184,11 @@ class NotificationService
     def welcome(user_id:, name:)
       notify_all(
         user_id: user_id,
-        title: Messages::PUSH_WELCOME_TITLE,
-        message: Messages::PUSH_WELCOME_BODY.call(name: name),
+        title: notification_message(MessageService::Notification::WELCOME_TITLE),
+        message: notification_message(
+          MessageService::Notification::WELCOME_BODY,
+          name: name
+        ),
         data: { type: "welcome", name: name },
         send_push: true,
         send_socket: false,
@@ -183,8 +199,11 @@ class NotificationService
     def sign_in_alert(user_id:, name:)
       notify_all(
         user_id: user_id,
-        title: Messages::PUSH_SIGN_IN_ALERT_TITLE,
-        message: Messages::PUSH_SIGN_IN_ALERT_BODY.call(name: name),
+        title: notification_message(MessageService::Notification::SIGN_IN_ALERT_TITLE),
+        message: notification_message(
+          MessageService::Notification::SIGN_IN_ALERT_BODY,
+          name: name
+        ),
         data: { type: "sign_in_alert", name: name },
         send_push: true,
         send_socket: false,
@@ -197,7 +216,7 @@ class NotificationService
     def confirmation_email(email:, code:)
       EmailService::Client.send_template(
         to: email,
-        template_id: Messages::EMAIL_TEMPLATE_CONFIRMATION,
+        template_id: MessageService::Auth::CONFIRMATION_EMAIL_TEMPLATE,
         template_data: {
           code: code,
           email: email
@@ -208,7 +227,7 @@ class NotificationService
     def password_reset_email(email:, token:)
       EmailService::Client.send_template(
         to: email,
-        template_id: Messages::EMAIL_TEMPLATE_PASSWORD_RESET,
+        template_id: MessageService::Auth::PASSWORD_RESET_EMAIL_TEMPLATE,
         template_data: {
           token: token,
           email: email,
@@ -235,12 +254,34 @@ class NotificationService
 
     private
 
+    def notification_message(key, **options)
+      MessageService::Notification.t(key, **options)
+    end
+
+    def payment_message(key, **options)
+      MessageService::Payment.t(key, **options)
+    end
+
+    def subscription_canceled_message(product, active_until)
+      key = if active_until.present?
+        MessageService::Payment::SUBSCRIPTION_CANCELED_BODY_WITH_DATE
+      else
+        MessageService::Payment::SUBSCRIPTION_CANCELED_BODY
+      end
+
+      payment_message(
+        key,
+        product_name: product.name,
+        active_until: active_until&.strftime("%B %d, %Y")
+      )
+    end
+
     def deliver(channel)
       yield
     rescue StandardError => error
       Rails.error.report(error)
       Rails.logger.error(
-        "[NotificationService] #{channel} delivery failed: " \
+        "#{LOG_PREFIX} #{channel} delivery failed: " \
         "#{error.class}: #{error.message}"
       )
 

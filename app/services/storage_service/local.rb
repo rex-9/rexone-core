@@ -3,6 +3,8 @@
 
 module StorageService
   class Local < Base
+    LOG_PREFIX = "[LocalStorage]".freeze
+
     def initialize
       @storage_path = ENV.fetch("LOCAL_STORAGE_PATH", Rails.root.join("storage"))
       FileUtils.mkdir_p(@storage_path)
@@ -33,7 +35,7 @@ module StorageService
         resource_type: options[:resource_type] || "auto"
       }
     rescue => e
-      Rails.logger.error("[LocalStorage] Upload Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Upload Error: #{e.message}")
       raise UploadError, e.message
     end
 
@@ -47,7 +49,7 @@ module StorageService
         raise NotFoundError, "File not found: #{identifier}"
       end
     rescue => e
-      Rails.logger.error("[LocalStorage] Delete Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Delete Error: #{e.message}")
       raise DeleteError, e.message
     end
 
@@ -67,7 +69,7 @@ module StorageService
         url: "/storage/#{destination}"
       }
     rescue => e
-      Rails.logger.error("[LocalStorage] Move Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Move Error: #{e.message}")
       raise Error, e.message
     end
 
@@ -83,7 +85,7 @@ module StorageService
         url: "/storage/#{destination}"
       }
     rescue => e
-      Rails.logger.error("[LocalStorage] Copy Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Copy Error: #{e.message}")
       raise Error, e.message
     end
 

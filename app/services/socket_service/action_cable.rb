@@ -2,6 +2,7 @@
 module SocketService
   class ActionCable < Base
     ActionCable = ::ActionCable
+    LOG_PREFIX = "[Socket]".freeze
 
     # NotificationChannel transmitting {
     #   "type" => "notification",
@@ -27,7 +28,9 @@ module SocketService
       )
       true
     rescue => e
-      Rails.logger.error("[Socket] Broadcast error for user #{user_id}: #{e.message}")
+      Rails.logger.error(
+        "#{LOG_PREFIX} Broadcast error for user #{user_id}: #{e.message}"
+      )
       nil
     end
 
@@ -41,7 +44,9 @@ module SocketService
         }
       )
     rescue => e
-      Rails.logger.error("[Socket] Channel broadcast error to #{channel}: #{e.message}")
+      Rails.logger.error(
+        "#{LOG_PREFIX} Channel broadcast error to #{channel}: #{e.message}"
+      )
       nil
     end
   end

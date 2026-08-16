@@ -1,5 +1,7 @@
 # app/controllers/auth/sessions_controller.rb
 class Auth::SessionsController < Devise::SessionsController
+  LOG_PREFIX = "[Auth]".freeze
+
   respond_to :json
 
   skip_before_action :enforce_active_platform_session!, only: [ :create, :token_sign_in, :google_sign_in, :google_sign_in_complete ]
@@ -11,8 +13,8 @@ class Auth::SessionsController < Devise::SessionsController
     if email.blank?
       render_json_response(
         status_code: 400,
-        message: "Email parameter is required.",
-        error: "Missing email address."
+        message: auth_message(MessageService::Auth::EMAIL_REQUIRED),
+        error: auth_message(MessageService::Auth::EMAIL_MISSING)
       )
       return
     end
@@ -21,7 +23,7 @@ class Auth::SessionsController < Devise::SessionsController
 
     render_json_response(
       status_code: 200,
-      message: "User existence checked successfully.",
+      message: auth_message(MessageService::Auth::USER_EXISTENCE_CHECKED),
       data: {
         user_exists: user.present?,
         confirmed: user&.confirmed? || false
@@ -36,8 +38,8 @@ class Auth::SessionsController < Devise::SessionsController
     if user.nil?
       render_json_response(
         status_code: 401,
-        message: Messages::FAILED_TO_SIGN_IN,
-        error: Messages::USER_NOT_FOUND
+        message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
+        error: auth_message(MessageService::Auth::USER_NOT_FOUND)
       )
       return
     end
@@ -46,8 +48,11 @@ class Auth::SessionsController < Devise::SessionsController
     unless limiter.allowed?
       render_json_response(
         status_code: 429,
-        message: Messages::FAILED_TO_SIGN_IN,
-        error: "Too many attempts. Please wait #{limiter.cooldown_remaining} seconds.",
+        message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
+        error: auth_message(
+          MessageService::Auth::TOO_MANY_ATTEMPTS_WITH_WAIT,
+          seconds: limiter.cooldown_remaining
+        ),
         data: {
           remaining_attempts: 0,
           cooldown_remaining: limiter.cooldown_remaining
@@ -70,7 +75,7 @@ class Auth::SessionsController < Devise::SessionsController
 
         render_json_response(
           status_code: 200,
-          message: Messages::SIGNED_IN_SUCCESSFULLY,
+          message: auth_message(MessageService::Auth::SIGNED_IN),
           data: {
             user: UserSerializer.new(user).serializable_hash[:data][:attributes],
             token: token
@@ -87,7 +92,10 @@ class Auth::SessionsController < Devise::SessionsController
 
         render_json_response(
           status_code: 200,
-          message: Messages::CONFIRMATION_EMAIL_SENT.call(user.email),
+          message: auth_message(
+            MessageService::Auth::CONFIRMATION_EMAIL_SENT,
+            email: user.email
+          ),
           data: { otp_sent: true }
         )
       end
@@ -96,8 +104,10 @@ class Auth::SessionsController < Devise::SessionsController
 
       render_json_response(
         status_code: failure_data[:cooldown_active] ? 429 : 401,
-        message: Messages::FAILED_TO_SIGN_IN,
-        error: failure_data[:cooldown_active] ? "Too many attempts" : Messages::INVALID_SIGNIN_CREDENTIALS,
+        message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
+        error: failure_data[:cooldown_active] ?
+          auth_message(MessageService::Auth::TOO_MANY_ATTEMPTS) :
+          auth_message(MessageService::Auth::INVALID_CREDENTIALS),
         data: {
           remaining_attempts: failure_data[:remaining_attempts],
           cooldown_remaining: failure_data[:cooldown_remaining] || 0
@@ -116,7 +126,7 @@ class Auth::SessionsController < Devise::SessionsController
 
       render_json_response(
         status_code: 200,
-        message: Messages::SIGNED_IN_SUCCESSFULLY,
+        message: auth_message(MessageService::Auth::SIGNED_IN),
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes],
           token: token
@@ -125,8 +135,8 @@ class Auth::SessionsController < Devise::SessionsController
     else
       render_json_response(
         status_code: 401,
-        message: Messages::INVALID_AUTHENTICATION_TOKEN,
-        error: Messages::INVALID_AUTHENTICATION_TOKEN
+        message: auth_message(MessageService::Auth::INVALID_TOKEN),
+        error: auth_message(MessageService::Auth::INVALID_TOKEN)
       )
     end
   end
@@ -139,8 +149,8 @@ class Auth::SessionsController < Devise::SessionsController
     if !user_info || user_info["email"].blank?
       render_json_response(
         status_code: 401,
-        message: Messages::GOOGLE_AUTHENTICATION_FAILED,
-        error: Messages::GOOGLE_AUTHENTICATION_FAILED
+        message: auth_message(MessageService::Auth::GOOGLE_AUTH_FAILED),
+        error: auth_message(MessageService::Auth::GOOGLE_AUTH_FAILED)
       )
       return
     end
@@ -158,7 +168,7 @@ class Auth::SessionsController < Devise::SessionsController
       # Existing user - just return user + token
       render_json_response(
         status_code: 200,
-        message: Messages::SIGNED_IN_SUCCESSFULLY,
+        message: auth_message(MessageService::Auth::SIGNED_IN),
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes],
           token: token
@@ -180,7 +190,7 @@ class Auth::SessionsController < Devise::SessionsController
 
     render_json_response(
       status_code: 200,
-      message: "Set a passcode to complete account creation.",
+      message: auth_message(MessageService::Auth::SET_PASSCODE),
       data: {
         password_required: true,
         challenge_token: challenge_token
@@ -196,8 +206,8 @@ class Auth::SessionsController < Devise::SessionsController
     if challenge_token.blank? || password.blank?
       render_json_response(
         status_code: 422,
-        message: Messages::FAILED_TO_SIGN_IN,
-        error: "Challenge token and passcode are required."
+        message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
+        error: auth_message(MessageService::Auth::CHALLENGE_AND_PASSCODE_REQUIRED)
       )
       return
     end
@@ -206,8 +216,8 @@ class Auth::SessionsController < Devise::SessionsController
     if challenge_data.blank?
       render_json_response(
         status_code: 401,
-        message: Messages::INVALID_AUTHENTICATION_TOKEN,
-        error: Messages::INVALID_AUTHENTICATION_TOKEN
+        message: auth_message(MessageService::Auth::INVALID_TOKEN),
+        error: auth_message(MessageService::Auth::INVALID_TOKEN)
       )
       return
     end
@@ -222,7 +232,7 @@ class Auth::SessionsController < Devise::SessionsController
 
       render_json_response(
         status_code: 200,
-        message: Messages::SIGNED_IN_SUCCESSFULLY,
+        message: auth_message(MessageService::Auth::SIGNED_IN),
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes],
           token: token
@@ -255,7 +265,10 @@ class Auth::SessionsController < Devise::SessionsController
       )
 
       unless asset.save
-        Rails.logger.warn("Failed to save Google profile picture for user #{user.id}: #{asset.errors.full_messages}")
+        Rails.logger.warn(
+          "#{LOG_PREFIX} Failed to save Google profile picture " \
+          "for user #{user.id}: #{asset.errors.full_messages}"
+        )
       end
 
       clear_google_challenge!(challenge_token)
@@ -270,7 +283,7 @@ class Auth::SessionsController < Devise::SessionsController
 
       render_json_response(
         status_code: 201,
-        message: Messages::ACCOUNT_CREATED_AND_SIGNED_IN_SUCCESSFULLY,
+        message: auth_message(MessageService::Auth::ACCOUNT_CREATED_AND_SIGNED_IN),
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes],
           token: token
@@ -279,7 +292,7 @@ class Auth::SessionsController < Devise::SessionsController
     else
       render_json_response(
         status_code: 422,
-        message: Messages::GOOGLE_AUTHENTICATION_FAILED,
+        message: auth_message(MessageService::Auth::GOOGLE_AUTH_FAILED),
         error: user.errors.full_messages.uniq.to_sentence
       )
     end
@@ -292,7 +305,7 @@ class Auth::SessionsController < Devise::SessionsController
 
       render_json_response(
         status_code: 200,
-        message: Messages::SIGNED_IN_SUCCESSFULLY,
+        message: auth_message(MessageService::Auth::SIGNED_IN),
         data: {
           user: UserSerializer.new(resource).serializable_hash[:data][:attributes],
           token: token
@@ -301,7 +314,7 @@ class Auth::SessionsController < Devise::SessionsController
     else
       render_json_response(
         status_code: 422,
-        message: Messages::FAILED_TO_SIGN_IN,
+        message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
         error: resource.errors.full_messages.uniq.to_sentence
       )
     end
@@ -323,18 +336,22 @@ class Auth::SessionsController < Devise::SessionsController
 
       render_json_response(
         status_code: 200,
-        message: Messages::SIGNED_OUT_SUCCESSFULLY
+        message: auth_message(MessageService::Auth::SIGNED_OUT)
       )
     else
       render_json_response(
         status_code: 401,
-        message: Messages::FAILED_TO_SIGN_OUT,
-        error: Messages::ACTIVE_SESSION_NOT_FOUND
+        message: auth_message(MessageService::Auth::SIGN_OUT_FAILED),
+        error: auth_message(MessageService::Auth::ACTIVE_SESSION_NOT_FOUND)
       )
     end
   end
 
   private
+
+  def auth_message(key, **options)
+    MessageService::Auth.t(key, **options)
+  end
 
   # Helper method to sanitize email addresses from Google sign-in
   def sanitize_email(email)
@@ -359,7 +376,7 @@ class Auth::SessionsController < Devise::SessionsController
   def signup_active_session!(user:, token:)
     CacheService.write(session_key_for(user.id), token, expires_in: AppConfig::SESSION_TIMEOUT)
   rescue => e
-    Rails.logger.error("[Auth] Failed to sign up active session: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Failed to sign up active session: #{e.message}")
   end
 
   def clear_active_session!(user)
@@ -373,7 +390,7 @@ class Auth::SessionsController < Devise::SessionsController
       CacheService.delete(key)
     end
   rescue => e
-    Rails.logger.error("[Auth] Failed to clear active session: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Failed to clear active session: #{e.message}")
   end
 
   def get_google_user_info(token)
@@ -390,7 +407,10 @@ class Auth::SessionsController < Devise::SessionsController
     response = RestClient.get("https://www.googleapis.com/oauth2/v1/userinfo", { params: { access_token: token, alt: "json" } })
     JSON.parse(response.body)
   rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.error("#{Messages::GOOGLE_AUTHENTICATION_FAILED}: #{e.response&.body || e.response}")
+    Rails.logger.error(
+      "#{LOG_PREFIX} Google authentication failed: " \
+      "#{e.response&.body || e.response}"
+    )
     nil
   end
 
@@ -401,7 +421,7 @@ class Auth::SessionsController < Devise::SessionsController
   def store_google_challenge!(challenge_token, payload)
     CacheService.write(google_challenge_key(challenge_token), payload.to_json, expires_in: 5.minutes)
   rescue => e
-    Rails.logger.error("[Auth] Failed to store Google challenge: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Failed to store Google challenge: #{e.message}")
   end
 
   def fetch_google_challenge(challenge_token)
@@ -410,14 +430,14 @@ class Auth::SessionsController < Devise::SessionsController
 
     JSON.parse(raw_payload)
   rescue JSON::ParserError => e
-    Rails.logger.error("[Auth] Invalid Google challenge payload: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Invalid Google challenge payload: #{e.message}")
     nil
   end
 
   def clear_google_challenge!(challenge_token)
     CacheService.delete(google_challenge_key(challenge_token))
   rescue => e
-    Rails.logger.error("[Auth] Failed to clear Google challenge: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Failed to clear Google challenge: #{e.message}")
   end
 
   # before_action :configure_sign_in_params, only: [:create]
