@@ -11,44 +11,44 @@ class NotificationService
 
       # 1. Socket (WebSocket)
       if send_socket
-        results[:socket] = deliver(:socket) do
-          SocketService::Client.broadcast(
+        results[:socket] = enqueue(:socket) do
+          {
             user_id: user_id,
             message: message || title,
             data: data
-          )
+          }
         end
       end
 
       # 2. Push notification
       if send_push && title.present?
-        results[:push] = deliver(:push) do
-          PushNotiService::Client.send_to_user(
+        results[:push] = enqueue(:push) do
+          {
             user_id: user_id,
             title: title,
             body: message || title,
             data: data
-          )
+          }
         end
       end
 
       # 3. Email
       if send_email
-        results[:email] = deliver(:email) do
+        results[:email] = enqueue(:email) do
           user_email ||= User.find(user_id).email
 
           if email_template.present?
-            EmailService::Client.send_template(
+            {
               to: user_email,
               template_id: email_template,
               template_data: email_template_data
-            )
+            }
           else
-            EmailService::Client.send_email(
+            {
               to: user_email,
               subject: title || notification_message(MessageService::Notification::DEFAULT_TITLE),
               body: message || notification_message(MessageService::Notification::DEFAULT_BODY)
-            )
+            }
           end
         end
       end
@@ -214,26 +214,36 @@ class NotificationService
     # ===== EMAIL ONLY =====
 
     def confirmation_email(email:, code:)
-      EmailService::Client.send_template(
-        to: email,
-        template_id: MessageService::Auth::CONFIRMATION_EMAIL_TEMPLATE,
-        template_data: {
-          code: code,
-          email: email
+      enqueue(:email) do
+        {
+          to: email,
+          template_id: MessageService::Auth::CONFIRMATION_EMAIL_TEMPLATE,
+          template_data: {
+            code: code,
+            email: email
+          }
         }
-      )
+      end
     end
 
     def password_reset_email(email:, token:)
-      EmailService::Client.send_template(
-        to: email,
-        template_id: MessageService::Auth::PASSWORD_RESET_EMAIL_TEMPLATE,
-        template_data: {
-          token: token,
-          email: email,
-          reset_url: "#{AppConfig::CLIENT_BASE_URL}/passcode/reset?reset_password_token=#{token}"
+      enqueue(:email) do
+        {
+          to: email,
+          template_id: MessageService::Auth::PASSWORD_RESET_EMAIL_TEMPLATE,
+          template_data: {
+            token: token,
+            email: email,
+            reset_url: "#{AppConfig::CLIENT_BASE_URL}/passcode/reset?reset_password_token=#{token}"
+          }
         }
-      )
+      end
+    end
+
+    def email(email:, subject:, body:)
+      enqueue(:email) do
+        { to: email, subject: subject, body: body }
+      end
     end
 
     # ===== CUSTOM =====
@@ -276,16 +286,21 @@ class NotificationService
       )
     end
 
-    def deliver(channel)
-      yield
+    def enqueue(channel)
+      Notification::DeliverJob.perform_later(
+        channel: channel,
+        payload: yield
+      )
+
+      true
     rescue StandardError => error
       Rails.error.report(error)
       Rails.logger.error(
-        "#{LOG_PREFIX} #{channel} delivery failed: " \
+        "#{LOG_PREFIX} Could not enqueue #{channel} delivery: " \
         "#{error.class}: #{error.message}"
       )
 
-      { error: error.message }
+      false
     end
   end
 end

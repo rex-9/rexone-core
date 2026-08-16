@@ -6,16 +6,16 @@ class Auth::PasswordsController < Devise::PasswordsController
   def create
     user = User.find_by(email: params[:email])
     if user
-      user.send_reset_password_instructions
+      token = user.send_reset_password_instructions
       NotificationService.password_reset_email(
         email: user.email,
-        token: user.reset_password_token
+        token: token
       )
 
       render_json_response(
         status_code: 200,
         message: auth_message(
-          MessageService::Auth::PASSWORD_RESET_SENT,
+          MessageService::Auth::PASSWORD_RESET_QUEUED,
           email: user.email
         )
       )

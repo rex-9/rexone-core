@@ -93,7 +93,7 @@ class Auth::SessionsController < Devise::SessionsController
         render_json_response(
           status_code: 200,
           message: auth_message(
-            MessageService::Auth::CONFIRMATION_EMAIL_SENT,
+            MessageService::Auth::CONFIRMATION_EMAIL_QUEUED,
             email: user.email
           ),
           data: { otp_sent: true }

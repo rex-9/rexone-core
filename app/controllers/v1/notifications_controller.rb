@@ -33,8 +33,8 @@ class V1::NotificationsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: notification_message(MessageService::Notification::PUSH_SENT),
-      data: { delivered: result[:push] != false }
+      message: notification_message(MessageService::Notification::PUSH_QUEUED),
+      data: { queued: result[:push] != false }
     )
   rescue => e
     render_json_response(
@@ -61,13 +61,13 @@ class V1::NotificationsController < V1::ApplicationController
     result = case type
     when MailTemplates::CONFIRMATION
       code = user.confirmation_code || user.generate_confirmation_code
-      NotificationService.confirmation_email(user_id: user.id, code: code)
+      NotificationService.confirmation_email(email: user.email, code: code)
     when MailTemplates::PASSWORD_RESET
-      user.send_reset_password_instructions
-      NotificationService.password_reset_email(user_id: user.id, token: user.reset_password_token)
+      token = user.send_reset_password_instructions
+      NotificationService.password_reset_email(email: user.email, token: token)
     else
-      EmailService::Client.send_email(
-        to: user.email,
+      NotificationService.email(
+        email: user.email,
         subject: params[:subject] || notification_message(MessageService::Notification::DEFAULT_TITLE),
         body: params[:body] || notification_message(MessageService::Notification::DEFAULT_BODY)
       )
@@ -75,8 +75,8 @@ class V1::NotificationsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: notification_message(MessageService::Notification::EMAIL_SENT),
-      data: { delivered: result != false }
+      message: notification_message(MessageService::Notification::EMAIL_QUEUED),
+      data: { queued: result != false }
     )
   rescue => e
     render_json_response(
