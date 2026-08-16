@@ -1,62 +1,55 @@
-#!/bin/bash
-# scripts/test.sh
+#!/bin/sh
 
-# # Run all tests
+# # Entire suite
 # ./scripts/test.sh
 
-# # Run controller specs
-# ./scripts/test.sh spec/controllers/
+# # Directory
+# ./scripts/test.sh spec/models
 
-# # Run with coverage
-# ./scripts/test.sh -c
+# # Specific file
+# ./scripts/test.sh spec/models/user_spec.rb
 
-# # Run with verbose output
-# ./scripts/test.sh -v
+# # Specific example
+# ./scripts/test.sh spec/models/user_spec.rb:42
 
-# # Run a specific file
-# ./scripts/test.sh spec/controllers/users/sessions_controller_spec.rb
+# # Reproduce a seed
+# ./scripts/test.sh --seed 12345
 
-# # Run with a specific seed
-# ./scripts/test.sh -s 12345
+# # Help
+# ./scripts/test.sh --help
 
-# # Run models with coverage
-# ./scripts/test.sh -c spec/models/
+set -u
 
-# # Run a specific test by line number
-# ./scripts/test.sh spec/controllers/users/sessions_controller_spec.rb:45
+COMPOSE_FILE="docker-compose.dev.yaml"
+SERVICE="api"
 
-# # Show help
-# ./scripts/test.sh -h
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-# Check if Docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo -e "${RED}❌ Docker is not running. Please start Docker first.${NC}"
-    exit 1
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+  printf '%s\n' \
+    "Usage: ./scripts/test.sh [RSpec paths and options]" \
+    "" \
+    "Examples:" \
+    "  ./scripts/test.sh" \
+    "  ./scripts/test.sh spec/models" \
+    "  ./scripts/test.sh spec/models/user_spec.rb:42" \
+    "  ./scripts/test.sh --seed 12345" \
+    "  ./scripts/test.sh --only-failures"
+  exit 0
 fi
 
-# Check if containers are running
-if ! docker-compose -f docker-compose.dev.yaml ps -q api > /dev/null 2>&1; then
-    echo -e "${YELLOW}⚠️  API container is not running. Starting containers...${NC}"
-    docker-compose -f docker-compose.dev.yaml up -d
-    sleep 5
+if ! docker info >/dev/null 2>&1; then
+  printf '%s\n' "Docker is not running. Start Docker and try again." >&2
+  exit 1
 fi
 
-# ✅ Run tests inside the Docker container
-echo -e "${BLUE}🔬 Running tests in Docker...${NC}"
-docker-compose -f docker-compose.dev.yaml exec -e RAILS_ENV=test api bundle exec rspec spec/controllers/
-
-EXIT_CODE=$?
-if [ $EXIT_CODE -eq 0 ]; then
-    echo -e "\n${GREEN}✅ All tests passed!${NC}"
-else
-    echo -e "\n${RED}❌ Some tests failed.${NC}"
+if [ -z "$(docker compose -f "$COMPOSE_FILE" ps --status running -q "$SERVICE")" ]; then
+  printf '%s\n' "Starting the API and its dependencies..."
+  docker compose -f "$COMPOSE_FILE" up -d "$SERVICE" || exit $?
 fi
 
-exit $EXIT_CODE
+if [ "$#" -eq 0 ]; then
+  set -- spec
+fi
+
+printf '%s\n' "Running specs in the API container (RAILS_ENV=test)..."
+docker compose -f "$COMPOSE_FILE" exec -e RAILS_ENV=test "$SERVICE" \
+  bundle exec rspec "$@"

@@ -33,7 +33,9 @@ class Auth::SessionsController < Devise::SessionsController
 
   # POST /signin
   def create
-    user = User.find_by("email = :signin_key OR username = :signin_key", signin_key: params[:user][:signin_key])
+    signin_key = params.dig(:user, :signin_key).to_s.strip
+    password = params.dig(:user, :password)
+    user = User.find_by("email = :signin_key OR username = :signin_key", signin_key: signin_key)
 
     if user.nil?
       render_json_response(
@@ -61,7 +63,7 @@ class Auth::SessionsController < Devise::SessionsController
       return
     end
 
-    if user.valid_password?(params[:user][:password])
+    if user.valid_password?(password)
       limiter.record_success
 
       if user.confirmed?
@@ -201,7 +203,7 @@ class Auth::SessionsController < Devise::SessionsController
   # POST /signin/google/complete
   def google_sign_in_complete
     challenge_token = params[:challenge_token]
-    password = params[:password].presence || params[:password].presence
+    password = params[:password].presence
 
     if challenge_token.blank? || password.blank?
       render_json_response(

@@ -11,7 +11,10 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   end
 
   def check_email_provider
-    user = User.find_by(email: params[:user][:email])
+    email = params.dig(:user, :email).to_s.strip.downcase
+    return if email.blank?
+
+    user = User.find_by(email: email)
     if user && user.provider == "google"
       render_json_response(
         status_code: 422,

@@ -1,7 +1,6 @@
 FactoryBot.define do
-  factory :permission do
-    name { "MyString" }
-    action { "MyString" }
-    resource { "MyString" }
+  factory :permission, class: "Iam::Permission" do
+    action { "read" }
+    resource { "users" }
   end
 end

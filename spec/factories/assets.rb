@@ -2,12 +2,13 @@ require 'faker'
 
 FactoryBot.define do
   factory :asset do
-    name { "profile_photo" }
-    url { "https://example.com/photo.jpg" }
+    sequence(:name) { |n| "profile_photo_#{n}" }
+    sequence(:url) { |n| "https://example.com/photo_#{n}.jpg" }
     category { "profile" }
     format { "image" }
     size { 1024 }
     source { "upload" }
+    sequence(:public_id) { |n| "profile/profile_photo_#{n}" }
     user
   end
   # factory :asset do

@@ -13,7 +13,7 @@ module Chat
     scope :for_user, ->(user) { where(user: user) }
 
     def last_message
-      messages.last
+      messages.order(created_at: :desc).first
     end
 
     def message_count
@@ -22,7 +22,7 @@ module Chat
 
     def update_title_from_first_message!
       return if messages.empty?
-      first_message = messages.first
+      first_message = messages.order(:created_at).first
       return unless first_message.user?
 
       # Truncate first user message as title

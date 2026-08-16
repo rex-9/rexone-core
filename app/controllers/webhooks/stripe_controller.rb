@@ -118,7 +118,7 @@ class Webhooks::StripeController < ActionController::API
   end
 
   def persist_webhook_event!(stripe_event, raw_payload)
-    Payment::WebhookEvent.create_or_find_by!(
+    Payment::WebhookEvent.find_or_create_by!(
       stripe_event_id: stripe_event.id
     ) do |webhook_event|
       webhook_event.event_type = stripe_event.type
@@ -126,5 +126,7 @@ class Webhooks::StripeController < ActionController::API
       webhook_event.payload = JSON.parse(raw_payload)
       webhook_event.received_at = Time.current
     end
+  rescue ActiveRecord::RecordNotUnique
+    Payment::WebhookEvent.find_by!(stripe_event_id: stripe_event.id)
   end
 end

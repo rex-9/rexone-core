@@ -4,7 +4,8 @@ class Auth::PasswordsController < Devise::PasswordsController
 
   # POST /password/forgot
   def create
-    user = User.find_by(email: params[:email])
+    email = params[:email].to_s.strip.downcase
+    user = User.find_by(email: email)
     if user
       token = user.send_reset_password_instructions
       NotificationService.password_reset_email(

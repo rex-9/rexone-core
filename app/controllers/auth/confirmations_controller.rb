@@ -53,6 +53,8 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
     if resource
       if resource.confirm_code(params[:confirmation_code])
         sign_in(resource) # Automatically sign in the resource
+        token = AppConfig::JWT_TOKEN.call(resource)
+        signup_active_session!(user: resource, token: token)
         NotificationService.welcome(
           user_id: resource.id,
           name: resource.name || resource.username
@@ -62,7 +64,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
           message: auth_message(MessageService::Auth::EMAIL_CONFIRMED),
           data: {
             user: resource,
-            token: AppConfig::JWT_TOKEN.call(resource)
+            token: token
           }
         )
       else
@@ -85,6 +87,18 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
 
   def auth_message(key, **options)
     MessageService::Auth.t(key, **options)
+  end
+
+  def session_platform
+    value = request.headers["X-Platform"].presence || params[:platform].presence || "web"
+    %w[web mobile].include?(value) ? value : "web"
+  end
+
+  def signup_active_session!(user:, token:)
+    key = "active_session:user:#{user.id}:#{session_platform}"
+    CacheService.write(key, token, expires_in: AppConfig::SESSION_TIMEOUT)
+  rescue => e
+    Rails.logger.error("#{ApplicationController::AUTH_LOG_PREFIX} Failed to sign up active session: #{e.message}")
   end
 
   def after_confirmation_path_for(resource_name, resource)
