@@ -12,7 +12,11 @@ class Chat::RoomSerializer < ApplicationSerializer
   end
 
   attribute :last_message do |room|
-    room.messages.last&.content
+    room.last_message&.content
+  end
+
+  attribute :processing do |room|
+    room.processing?
   end
 
   belongs_to :user, serializer: UserSerializer

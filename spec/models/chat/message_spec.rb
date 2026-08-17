@@ -22,4 +22,31 @@ RSpec.describe Chat::Message, type: :model do
     earlier = create(:chat_message, room: room, created_at: 1.hour.ago)
     expect(room.messages.chronological).to eq([ earlier, later ])
   end
+
+  it "identifies durable AI processing states" do
+    room = create(:chat_room)
+    queued = create(:chat_message, room: room, metadata: { status: "queued" })
+    completed = create(:chat_message, room: room, metadata: { status: "completed" })
+
+    expect(queued).to be_ai_processing
+    expect(completed).not_to be_ai_processing
+    expect(room.messages.ai_processing).to contain_exactly(queued)
+  end
+
+  it "declares the supported AI metadata fields" do
+    message = build(
+      :chat_message,
+      ai_status: described_class::AI_STATUSES[:queued],
+      ai_notification_locale: "my",
+      ai_temperature: 0.4,
+      ai_max_tokens: 500
+    )
+
+    expect(message).to have_attributes(
+      ai_status: "queued",
+      ai_notification_locale: "my",
+      ai_temperature: 0.4,
+      ai_max_tokens: 500
+    )
+  end
 end

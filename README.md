@@ -69,7 +69,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup | [Background processing](#background-processing)        |
 | Notifications  | Socket, push, and email coordination through OneSignal and Action Cable         | [Notifications & real time](#notifications--real-time) |
 | Media          | Cloudinary/local providers, uploads, URLs, metadata, queued deletion            | [Storage & assets](#storage--assets)                   |
-| AI             | DeepSeek chat, rooms, history, summarization, translation, analysis             | [AI capabilities](#ai-capabilities)                    |
+| AI             | Durable queued chat, persisted history, completion alerts, and language tools    | [AI capabilities](#ai-capabilities)                    |
 | Localization   | Request-scoped English and Myanmar responses with modular domain translations   | [Localization](#localization)                          |
 | Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization  | [Data & API design](#data--api-design)                 |
 | Operations     | Performance, errors, client logs, queues, cache, cable, health checks           | [Observability](#observability)                        |
@@ -198,15 +198,21 @@ The storage abstraction supports Cloudinary and a local provider with a consiste
 
 The DeepSeek-backed AI layer provides:
 
-- Conversational responses with persisted rooms and message history.
+- Durable conversational work through Solid Queue's dedicated `ai` queue.
+- Persisted rooms, user messages, processing state, and assistant responses—the browser never owns the lifetime of the work.
+- Immediate acknowledgement while the AI continues in the background, with one in-flight request allowed per room.
+- Safe retries, per-message concurrency control, idempotent completion, and visible failure state.
+- Real-time completion and failure alerts through the existing notification socket channel.
+- Optional push and email delivery through the same notification path by enabling the existing channel flags.
 - Summarization.
 - Translation.
 - Sentiment, entity, keyword, and general analysis prompts.
 - A provider-neutral client boundary for future AI backends.
 - Safe client errors with detailed provider failures retained in server logs.
 
-The AI layer is deliberately isolated behind its provider boundary so product-specific AI workflows can evolve without coupling the rest of the application to a single model provider.
-An Action Cable streaming channel is available as a future direction when the product needs asynchronous streaming semantics.
+The user can leave the chat, browse elsewhere, close the browser, or shut down the device without interrupting generation. The completed assistant message is committed to conversation history before notification delivery begins, so it is already waiting when the user returns—even if no live socket was present to receive the alert.
+
+The AI layer remains isolated behind its provider boundary so product-specific workflows can evolve without coupling the rest of the application to a single model provider.
 
 ### Data & API design
 

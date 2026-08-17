@@ -3701,7 +3701,7 @@ paths:
     post:
       tags:
       - AI
-      summary: Send a message to an AI room
+      summary: Persist and queue a message for an AI room
       parameters:
       - name: X-Locale
         in: header
