@@ -26,20 +26,23 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
 
         render_json_response(
           status_code: 200,
-          message: Messages::CONFIRMATION_EMAIL_SENT.call(user.email)
+          message: auth_message(
+            MessageService::Auth::CONFIRMATION_EMAIL_QUEUED,
+            email: user.email
+          )
         )
       else
         render_json_response(
           status_code: 422,
-          message: Messages::EMAIL_ALREADY_CONFIRMED,
-          error: Messages::EMAIL_ALREADY_CONFIRMED,
+          message: auth_message(MessageService::Auth::EMAIL_ALREADY_CONFIRMED),
+          error: auth_message(MessageService::Auth::EMAIL_ALREADY_CONFIRMED),
         )
       end
     else
         render_json_response(
         status_code: 404,
-        message: Messages::USER_NOT_FOUND,
-        error: Messages::USER_NOT_FOUND
+        message: auth_message(MessageService::Auth::USER_NOT_FOUND),
+        error: auth_message(MessageService::Auth::USER_NOT_FOUND)
       )
     end
   end
@@ -50,35 +53,53 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
     if resource
       if resource.confirm_code(params[:confirmation_code])
         sign_in(resource) # Automatically sign in the resource
+        token = AppConfig::JWT_TOKEN.call(resource)
+        signup_active_session!(user: resource, token: token)
         NotificationService.welcome(
           user_id: resource.id,
           name: resource.name || resource.username
         )
         render_json_response(
           status_code: 200,
-          message: Messages::EMAIL_CONFIRMED_SUCCESSFULLY,
+          message: auth_message(MessageService::Auth::EMAIL_CONFIRMED),
           data: {
             user: resource,
-            token: AppConfig::JWT_TOKEN.call(resource)
+            token: token
           }
         )
       else
         render_json_response(
           status_code: 422,
-          message: Messages::EMAIL_FAILED_TO_CONFIRM,
+          message: auth_message(MessageService::Auth::EMAIL_CONFIRMATION_FAILED),
           error: resource.errors.full_messages.to_sentence,
         )
       end
     else
       render_json_response(
         status_code: 422,
-        message: Messages::EMAIL_FAILED_TO_CONFIRM,
-        error: Messages::USER_NOT_FOUND,
+        message: auth_message(MessageService::Auth::EMAIL_CONFIRMATION_FAILED),
+        error: auth_message(MessageService::Auth::USER_NOT_FOUND),
       )
     end
   end
 
   protected
+
+  def auth_message(key, **options)
+    MessageService::Auth.t(key, **options)
+  end
+
+  def session_platform
+    value = request.headers["X-Platform"].presence || params[:platform].presence || "web"
+    %w[web mobile].include?(value) ? value : "web"
+  end
+
+  def signup_active_session!(user:, token:)
+    key = "active_session:user:#{user.id}:#{session_platform}"
+    CacheService.write(key, token, expires_in: AppConfig::SESSION_TIMEOUT)
+  rescue => e
+    Rails.logger.error("#{ApplicationController::AUTH_LOG_PREFIX} Failed to sign up active session: #{e.message}")
+  end
 
   def after_confirmation_path_for(resource_name, resource)
     AppConfig::CLIENT_BASE_URL + "?auth_token=#{resource.jti}"

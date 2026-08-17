@@ -1,0 +1,11 @@
+my:
+  log:
+    clients:
+      occurrence_recorded: "Client log ဖြစ်ပွားမှုကို မှတ်တမ်းတင်ပြီးပါပြီ"
+      created: "Client log ဖန်တီးပြီးပါပြီ"
+      create_failed: "Client log ဖန်တီး၍ မရပါ"
+      fetched: "Client log များကို ရယူပြီးပါပြီ"
+      fetched_one: "Client log ကို ရယူပြီးပါပြီ"
+      resolved: "Client log ကို ဖြေရှင်းပြီးအဖြစ် သတ်မှတ်ပြီးပါပြီ"
+      unresolved: "Client log ကို မဖြေရှင်းရသေးအဖြစ် သတ်မှတ်ပြီးပါပြီ"
+      deleted: "Client log ကို အပြီးဖျက်ပြီးပါပြီ"

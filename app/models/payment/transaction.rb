@@ -49,10 +49,6 @@ class Payment::Transaction < ApplicationRecord
     succeeded?
   end
 
-  def refunded?
-    status == "refunded"
-  end
-
   def pending?
     %w[processing requires_action requires_confirmation requires_payment_method].include?(status)
   end
@@ -81,7 +77,7 @@ class Payment::Transaction < ApplicationRecord
 
   # Mark as paid (webhook: payment_intent.succeeded)
   def mark_as_succeeded!
-    update(
+    update!(
       status: "succeeded",
       paid_at: Time.current
     )
@@ -89,7 +85,7 @@ class Payment::Transaction < ApplicationRecord
 
   # Mark as processing (webhook: payment_intent.processing)
   def mark_as_processing!
-    update(
+    update!(
       status: "processing",
       processing_at: Time.current
     )
@@ -97,7 +93,7 @@ class Payment::Transaction < ApplicationRecord
 
   # Mark as canceled (webhook: payment_intent.canceled)
   def mark_as_canceled!
-    update(
+    update!(
       status: "canceled",
       canceled_at: Time.current
     )

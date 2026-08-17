@@ -2,14 +2,14 @@
 class V1::Payment::PaymentsController < V1::ApplicationController
   # POST /payment/session
   def create
-    product = Payment::Product.find(payment_params[:product_id])
+    product = Payment::Product.active.find(payment_params[:product_id])
 
     # Check if user already has active subscription
     if product.recurring? && current_user.subscriptions.active.exists?(product_id: product.id)
       render_json_response(
         status_code: 422,
-        message: "Already subscribed",
-        error: "You already have an active subscription to this product. You can cancel it first."
+        message: payment_message(MessageService::Payment::ALREADY_SUBSCRIBED),
+        error: payment_message(MessageService::Payment::ACTIVE_SUBSCRIPTION_EXISTS)
       )
       return
     end
@@ -24,13 +24,13 @@ class V1::Payment::PaymentsController < V1::ApplicationController
     if result[:error]
       render_json_response(
         status_code: 422,
-        message: "Failed to create checkout session",
+        message: payment_message(MessageService::Payment::CHECKOUT_CREATE_FAILED),
         error: result[:error]
       )
     else
       render_json_response(
         status_code: 200,
-        message: "Checkout Session created",
+        message: payment_message(MessageService::Payment::CHECKOUT_CREATED),
         data: {
           checkout_url: result[:checkout_url],
           session_id: result[:session_id]
@@ -46,19 +46,23 @@ class V1::Payment::PaymentsController < V1::ApplicationController
     if result[:error]
       render_json_response(
         status_code: 404,
-        message: "Session not found",
+        message: payment_message(MessageService::Payment::SESSION_NOT_FOUND),
         error: result[:error]
       )
     else
       render_json_response(
         status_code: 200,
-        message: "Session status",
+        message: payment_message(MessageService::Payment::SESSION_STATUS),
         data: result
       )
     end
   end
 
   private
+
+  def payment_message(key, **options)
+    MessageService::Payment.t(key, **options)
+  end
 
   def payment_params
     params.permit(:product_id, :success_url, :cancel_url)

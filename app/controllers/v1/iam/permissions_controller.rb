@@ -9,7 +9,7 @@ class V1::Iam::PermissionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Permissions fetched",
+      message: iam_message(MessageService::Iam::PERMISSIONS_FETCHED),
       data: {
         permissions: Iam::PermissionSerializer
           .new(permissions)
@@ -24,7 +24,7 @@ class V1::Iam::PermissionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Permission fetched",
+      message: iam_message(MessageService::Iam::PERMISSION_FETCHED),
       data: {
         permission: Iam::PermissionSerializer
           .new(permission)
@@ -39,7 +39,7 @@ class V1::Iam::PermissionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Discarded permissions fetched",
+      message: iam_message(MessageService::Iam::DISCARDED_PERMISSIONS_FETCHED),
       data: {
         permissions: Iam::PermissionSerializer
           .new(permissions)
@@ -55,7 +55,7 @@ class V1::Iam::PermissionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Undiscarded permissions fetched",
+      message: iam_message(MessageService::Iam::UNDISCARDED_PERMISSIONS_FETCHED),
       data: {
         permissions: Iam::PermissionSerializer
           .new(permissions)
@@ -71,7 +71,7 @@ class V1::Iam::PermissionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Permission moved to recycle bin",
+      message: iam_message(MessageService::Iam::PERMISSION_DISCARDED),
       data: {
         permission: Iam::PermissionSerializer
           .new(permission)
@@ -87,7 +87,7 @@ class V1::Iam::PermissionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Permission restored",
+      message: iam_message(MessageService::Iam::PERMISSION_RESTORED),
       data: {
         permission: Iam::PermissionSerializer
           .new(permission)
@@ -105,7 +105,7 @@ class V1::Iam::PermissionsController < V1::ApplicationController
     unless permission.discarded?
       return render_json_response(
         status_code: 422,
-        message: "Permission must be in the recycle bin before permanent deletion"
+        message: iam_message(MessageService::Iam::PERMISSION_NOT_DISCARDED)
       )
     end
 
@@ -113,7 +113,13 @@ class V1::Iam::PermissionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Permission permanently deleted"
+      message: iam_message(MessageService::Iam::PERMISSION_DELETED)
     )
+  end
+
+  private
+
+  def iam_message(key, **options)
+    MessageService::Iam.t(key, **options)
   end
 end

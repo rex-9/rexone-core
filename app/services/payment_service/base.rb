@@ -17,8 +17,16 @@ module PaymentService
       raise NotImplementedError, "#{self.class} must implement #resume_subscription"
     end
 
-    def handle_webhook(payload, signature)
-      raise NotImplementedError, "#{self.class} must implement #handle_webhook"
+    def supported_webhook_event?(event_type)
+      raise NotImplementedError, "#{self.class} must implement #supported_webhook_event?"
+    end
+
+    def verify_webhook(payload, signature)
+      raise NotImplementedError, "#{self.class} must implement #verify_webhook"
+    end
+
+    def process_webhook(event)
+      raise NotImplementedError, "#{self.class} must implement #process_webhook"
     end
   end
 end

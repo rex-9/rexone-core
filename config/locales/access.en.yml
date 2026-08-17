@@ -1,0 +1,8 @@
+en:
+  access:
+    fetched: "Access retrieved"
+    active_fetched: "Active access retrieved"
+    check_completed: "Access check completed"
+    unauthorized: "Unauthorized"
+    not_owned: "You do not own this access"
+    revoked: "Access revoked"

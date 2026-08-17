@@ -3,6 +3,8 @@
 
 module StorageService
   class Local < Base
+    LOG_PREFIX = "[LocalStorage]".freeze
+
     def initialize
       @storage_path = ENV.fetch("LOCAL_STORAGE_PATH", Rails.root.join("storage"))
       FileUtils.mkdir_p(@storage_path)
@@ -33,7 +35,7 @@ module StorageService
         resource_type: options[:resource_type] || "auto"
       }
     rescue => e
-      Rails.logger.error("[LocalStorage] Upload Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Upload Error: #{e.message}")
       raise UploadError, e.message
     end
 
@@ -42,12 +44,11 @@ module StorageService
 
       if File.exist?(path)
         FileUtils.rm(path)
-        true
-      else
-        raise NotFoundError, "File not found: #{identifier}"
       end
+
+      true
     rescue => e
-      Rails.logger.error("[LocalStorage] Delete Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Delete Error: #{e.message}")
       raise DeleteError, e.message
     end
 
@@ -67,7 +68,7 @@ module StorageService
         url: "/storage/#{destination}"
       }
     rescue => e
-      Rails.logger.error("[LocalStorage] Move Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Move Error: #{e.message}")
       raise Error, e.message
     end
 
@@ -83,7 +84,7 @@ module StorageService
         url: "/storage/#{destination}"
       }
     rescue => e
-      Rails.logger.error("[LocalStorage] Copy Error: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Copy Error: #{e.message}")
       raise Error, e.message
     end
 
@@ -112,12 +113,20 @@ module StorageService
     private
 
     def get_full_path(identifier, options = {})
-      if identifier.start_with?(@storage_path.to_s)
-        identifier
+      storage_path = File.expand_path(@storage_path)
+      base_path = if options[:folder].present?
+        File.join(storage_path, options[:folder])
       else
-        folder = options[:folder] || "uploads"
-        File.join(@storage_path, folder, identifier)
+        storage_path
       end
+
+      path = File.expand_path(identifier, base_path)
+
+      unless path.start_with?("#{storage_path}#{File::SEPARATOR}")
+        raise Error, "Invalid storage identifier"
+      end
+
+      path
     end
 
     def generate_filename(file)

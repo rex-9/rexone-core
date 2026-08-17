@@ -1,10 +1,13 @@
 # app/controllers/v1/admin/users_controller.rb
 class V1::Admin::UsersController < V1::ApplicationController
+  LOG_PREFIX = "[Admin::Users]".freeze
+
   before_action :set_user, only: %i[show update destroy]
 
   # GET /users?page=2&limit=25
   def index
     users = User.includes(:roles).order(created_at: :desc)
+    Rails.logger.info("#{LOG_PREFIX} Query: #{users.to_sql}")
 
     pagy, records = pagy(:offset, users, limit: params[:limit])
 

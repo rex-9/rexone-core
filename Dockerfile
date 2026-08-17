@@ -6,8 +6,10 @@
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=4.0.4
-
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+
+ARG BUNDLER_VERSION=4.0.16
+RUN gem install bundler -v "$BUNDLER_VERSION"
 
 # Rails app lives here
 WORKDIR /rails
@@ -45,7 +47,7 @@ RUN apt-get update -qq && \
 # Install application gems
 COPY Gemfile Gemfile.lock ./
 
-RUN bundle install && \
+RUN bundle _${BUNDLER_VERSION}_ install && \
     rm -rf ~/.bundle/ \
       "${BUNDLE_PATH}"/ruby/*/cache \
       "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \

@@ -6,7 +6,7 @@ class V1::AccessController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Access retrieved",
+      message: access_message(MessageService::Access::FETCHED),
       data: {
         accesses: AccessSerializer.new(accesses).serializable_hash[:data]
       }
@@ -19,7 +19,7 @@ class V1::AccessController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Active access retrieved",
+      message: access_message(MessageService::Access::ACTIVE_FETCHED),
       data: {
         accesses: AccessSerializer.new(accesses).serializable_hash[:data]
       }
@@ -36,7 +36,7 @@ class V1::AccessController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Access check completed",
+      message: access_message(MessageService::Access::CHECK_COMPLETED),
       data: {
         has_access: has_access,
         product_id: product_id
@@ -51,8 +51,8 @@ class V1::AccessController < V1::ApplicationController
     unless access.user_id == current_user.id
       render_json_response(
         status_code: 403,
-        message: "Unauthorized",
-        error: "You do not own this access"
+        message: access_message(MessageService::Access::UNAUTHORIZED),
+        error: access_message(MessageService::Access::NOT_OWNED)
       )
       return
     end
@@ -61,7 +61,13 @@ class V1::AccessController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Access revoked"
+      message: access_message(MessageService::Access::REVOKED)
     )
+  end
+
+  private
+
+  def access_message(key, **options)
+    MessageService::Access.t(key, **options)
   end
 end

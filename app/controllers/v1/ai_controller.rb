@@ -9,8 +9,8 @@ class V1::AiController < V1::ApplicationController
     if message.blank?
       render_json_response(
         status_code: 422,
-        message: "Message is required",
-        error: "Missing message parameter"
+        message: ai_message(MessageService::Ai::MESSAGE_REQUIRED),
+        error: ai_message(MessageService::Ai::MESSAGE_PARAMETER_MISSING)
       )
       return
     end
@@ -33,11 +33,12 @@ class V1::AiController < V1::ApplicationController
     if result[:error]
       render_json_response(
         status_code: 500,
-        message: "AI service error",
+        message: ai_message(MessageService::Ai::SERVICE_ERROR),
         error: result[:error]
       )
     else
-      response_text = result.dig("choices", 0, "message", "content") || "No response"
+      response_text = result.dig("choices", 0, "message", "content") ||
+                      ai_message(MessageService::Ai::NO_RESPONSE)
 
       # Save assistant response
       @room.messages.create!(
@@ -50,11 +51,11 @@ class V1::AiController < V1::ApplicationController
       )
 
       # Update room title from first message if default
-      @room.update_title_from_first_message! if @room.title == "New Conversation"
+      @room.update_title_from_first_message! if default_room_title?(@room)
 
       render_json_response(
         status_code: 200,
-        message: "AI response generated",
+        message: ai_message(MessageService::Ai::RESPONSE_GENERATED),
         data: {
           response: response_text,
           room_id: @room.id,
@@ -70,7 +71,7 @@ class V1::AiController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Conversation history",
+      message: ai_message(MessageService::Ai::CONVERSATION_HISTORY),
       data: {
         messages: Chat::MessageSerializer.new(messages).serializable_hash[:data],
         room_id: @room.id,
@@ -85,7 +86,7 @@ class V1::AiController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Conversation cleared"
+      message: ai_message(MessageService::Ai::CONVERSATION_CLEARED)
     )
   end
 
@@ -96,8 +97,8 @@ class V1::AiController < V1::ApplicationController
     if title.blank?
       render_json_response(
         status_code: 422,
-        message: "Title is required",
-        error: "Missing title parameter"
+        message: ai_message(MessageService::Ai::TITLE_REQUIRED),
+        error: ai_message(MessageService::Ai::TITLE_PARAMETER_MISSING)
       )
       return
     end
@@ -106,7 +107,7 @@ class V1::AiController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Room renamed",
+      message: ai_message(MessageService::Ai::ROOM_RENAMED),
       data: {
         room: Chat::RoomSerializer.new(@room).serializable_hash[:data][:attributes]
       }
@@ -119,7 +120,7 @@ class V1::AiController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Chat rooms",
+      message: ai_message(MessageService::Ai::ROOMS_FETCHED),
       data: {
         rooms: Chat::RoomSerializer.new(rooms).serializable_hash[:data]
       }
@@ -129,12 +130,12 @@ class V1::AiController < V1::ApplicationController
   # POST /ai/rooms
   def create_room
     room = current_user.rooms.create!(
-      title: params[:title] || "New Conversation"
+      title: params[:title] || ai_message(MessageService::Ai::DEFAULT_ROOM_TITLE)
     )
 
     render_json_response(
       status_code: 201,
-      message: "Room created",
+      message: ai_message(MessageService::Ai::ROOM_CREATED),
       data: {
         room: Chat::RoomSerializer.new(room).serializable_hash[:data][:attributes]
       }
@@ -148,7 +149,7 @@ class V1::AiController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Room deleted"
+      message: ai_message(MessageService::Ai::ROOM_DELETED)
     )
   end
 
@@ -159,8 +160,8 @@ class V1::AiController < V1::ApplicationController
     if text.blank?
       render_json_response(
         status_code: 422,
-        message: "Text is required",
-        error: "Missing text parameter"
+        message: ai_message(MessageService::Ai::TEXT_REQUIRED),
+        error: ai_message(MessageService::Ai::TEXT_PARAMETER_MISSING)
       )
       return
     end
@@ -179,15 +180,16 @@ class V1::AiController < V1::ApplicationController
     if result[:error]
       render_json_response(
         status_code: 500,
-        message: "AI service error",
+        message: ai_message(MessageService::Ai::SERVICE_ERROR),
         error: result[:error]
       )
     else
-      response_text = result.dig("choices", 0, "message", "content") || "No response"
+      response_text = result.dig("choices", 0, "message", "content") ||
+                      ai_message(MessageService::Ai::NO_RESPONSE)
 
       render_json_response(
         status_code: 200,
-        message: "Summary generated",
+        message: ai_message(MessageService::Ai::SUMMARY_GENERATED),
         data: { summary: response_text }
       )
     end
@@ -201,8 +203,8 @@ class V1::AiController < V1::ApplicationController
     if text.blank?
       render_json_response(
         status_code: 422,
-        message: "Text is required",
-        error: "Missing text parameter"
+        message: ai_message(MessageService::Ai::TEXT_REQUIRED),
+        error: ai_message(MessageService::Ai::TEXT_PARAMETER_MISSING)
       )
       return
     end
@@ -221,15 +223,16 @@ class V1::AiController < V1::ApplicationController
     if result[:error]
       render_json_response(
         status_code: 500,
-        message: "AI service error",
+        message: ai_message(MessageService::Ai::SERVICE_ERROR),
         error: result[:error]
       )
     else
-      response_text = result.dig("choices", 0, "message", "content") || "No response"
+      response_text = result.dig("choices", 0, "message", "content") ||
+                      ai_message(MessageService::Ai::NO_RESPONSE)
 
       render_json_response(
         status_code: 200,
-        message: "Translation generated",
+        message: ai_message(MessageService::Ai::TRANSLATION_GENERATED),
         data: { translation: response_text }
       )
     end
@@ -243,8 +246,8 @@ class V1::AiController < V1::ApplicationController
     if text.blank?
       render_json_response(
         status_code: 422,
-        message: "Text is required",
-        error: "Missing text parameter"
+        message: ai_message(MessageService::Ai::TEXT_REQUIRED),
+        error: ai_message(MessageService::Ai::TEXT_PARAMETER_MISSING)
       )
       return
     end
@@ -274,21 +277,30 @@ class V1::AiController < V1::ApplicationController
     if result[:error]
       render_json_response(
         status_code: 500,
-        message: "AI service error",
+        message: ai_message(MessageService::Ai::SERVICE_ERROR),
         error: result[:error]
       )
     else
-      response_text = result.dig("choices", 0, "message", "content") || "No response"
+      response_text = result.dig("choices", 0, "message", "content") ||
+                      ai_message(MessageService::Ai::NO_RESPONSE)
 
       render_json_response(
         status_code: 200,
-        message: "Analysis generated",
+        message: ai_message(MessageService::Ai::ANALYSIS_GENERATED),
         data: { analysis: response_text }
       )
     end
   end
 
   private
+
+  def ai_message(key, **options)
+    MessageService::Ai.t(key, **options)
+  end
+
+  def default_room_title?(room)
+    room.title == ai_message(MessageService::Ai::DEFAULT_ROOM_TITLE)
+  end
 
   def set_room
     room_id = params[:room_id]
@@ -297,7 +309,7 @@ class V1::AiController < V1::ApplicationController
       @room = current_user.rooms.find(room_id)
     else
       @room = current_user.rooms.first_or_create(
-        title: "New Conversation"
+        title: ai_message(MessageService::Ai::DEFAULT_ROOM_TITLE)
       )
     end
   end

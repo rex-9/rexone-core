@@ -2,11 +2,13 @@
 # Not Used Yet, useful in the future for AI streaming responses via WebSocket
 
 class AiChannel < ApplicationCable::Channel
+  LOG_PREFIX = "[AI Channel]".freeze
+
   def subscribed
     stream_from "user_#{current_user.id}_ai"
     transmit({
       type: "connected",
-      message: "AI channel connected"
+      message: ai_message(MessageService::Ai::CHANNEL_CONNECTED)
     })
   end
 
@@ -18,7 +20,7 @@ class AiChannel < ApplicationCable::Channel
     if message.blank?
       transmit({
         type: "error",
-        error: "Message is required"
+        error: ai_message(MessageService::Ai::MESSAGE_REQUIRED)
       })
       return
     end
@@ -38,12 +40,16 @@ class AiChannel < ApplicationCable::Channel
 
   private
 
+  def ai_message(key, **options)
+    MessageService::Ai.t(key, **options)
+  end
+
   def get_or_create_room(room_id)
     if room_id.present?
       current_user.rooms.find(room_id)
     else
       current_user.rooms.first_or_create(
-        title: "New Conversation"
+        title: ai_message(MessageService::Ai::DEFAULT_ROOM_TITLE)
       )
     end
   end
@@ -69,7 +75,7 @@ class AiChannel < ApplicationCable::Channel
           )
 
           # Update room title from first message if default
-          room.update_title_from_first_message! if room.title == "New Conversation"
+          room.update_title_from_first_message! if default_room_title?(room)
         end
 
         transmit({ type: "typing", status: "ended" })
@@ -84,11 +90,15 @@ class AiChannel < ApplicationCable::Channel
       end
     end
   rescue => e
-    Rails.logger.error("[AI Channel] Error: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Error: #{e.message}")
     transmit({
       type: "error",
       error: e.message
     })
+  end
+
+  def default_room_title?(room)
+    room.title == ai_message(MessageService::Ai::DEFAULT_ROOM_TITLE)
   end
 
   def build_messages(room, history, message)

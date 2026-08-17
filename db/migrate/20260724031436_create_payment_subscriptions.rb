@@ -24,6 +24,8 @@ class CreatePaymentSubscriptions < ActiveRecord::Migration[8.1]
       t.datetime :started_at
       t.datetime :ended_at
       t.datetime :canceled_at
+      t.datetime :cancel_at
+      t.boolean :cancel_at_period_end, null: false, default: false
 
       # ===== AUDIT =====
       t.references :created_by,

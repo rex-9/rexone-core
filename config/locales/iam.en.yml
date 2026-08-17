@@ -1,0 +1,27 @@
+en:
+  iam:
+    permissions:
+      fetched: "Permissions fetched"
+      fetched_one: "Permission fetched"
+      discarded_fetched: "Discarded permissions fetched"
+      undiscarded_fetched: "Undiscarded permissions fetched"
+      discarded: "Permission moved to recycle bin"
+      restored: "Permission restored"
+      not_discarded: "Permission must be in the recycle bin before permanent deletion"
+      deleted: "Permission permanently deleted"
+    roles:
+      fetched: "Roles fetched"
+      fetched_one: "Role fetched"
+      created: "Role created"
+      create_failed: "Failed to create role"
+      updated: "Role updated"
+      update_failed: "Failed to update role"
+      system_delete_forbidden: "Cannot delete system role"
+      system_delete_error: "System roles cannot be deleted"
+      deleted: "Role deleted"
+    user_roles:
+      fetched: "User roles fetched"
+      assigned: "Role assigned"
+      removed: "Role removed"
+      not_found: "User role not found"
+      missing: "User does not have this role"

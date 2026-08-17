@@ -4,23 +4,27 @@ class Auth::PasswordsController < Devise::PasswordsController
 
   # POST /password/forgot
   def create
-    user = User.find_by(email: params[:email])
+    email = params[:email].to_s.strip.downcase
+    user = User.find_by(email: email)
     if user
-      user.send_reset_password_instructions
+      token = user.send_reset_password_instructions
       NotificationService.password_reset_email(
         email: user.email,
-        token: user.reset_password_token
+        token: token
       )
 
       render_json_response(
         status_code: 200,
-        message: Messages::PASSWORD_RESET_INSTRUCTIONS_SENT.call(user.email)
+        message: auth_message(
+          MessageService::Auth::PASSWORD_RESET_QUEUED,
+          email: user.email
+        )
       )
     else
       render_json_response(
         status_code: 404,
-        message: Messages::EMAIL_NOT_FOUND,
-        error: Messages::EMAIL_NOT_FOUND
+        message: auth_message(MessageService::Auth::EMAIL_NOT_FOUND),
+        error: auth_message(MessageService::Auth::EMAIL_NOT_FOUND)
       )
     end
   end
@@ -31,12 +35,12 @@ class Auth::PasswordsController < Devise::PasswordsController
     if user.errors.empty?
       render_json_response(
         status_code: 200,
-        message: Messages::PASSWORD_RESET_SUCCESSFULLY
+        message: auth_message(MessageService::Auth::PASSWORD_RESET)
       )
     else
       render_json_response(
         status_code: 422,
-        message: Messages::FAILED_TO_RESET_PASSWORD,
+        message: auth_message(MessageService::Auth::PASSWORD_RESET_FAILED),
         error: user.errors.full_messages.uniq.to_sentence
       )
     end
@@ -48,6 +52,10 @@ class Auth::PasswordsController < Devise::PasswordsController
   end
 
   private
+
+  def auth_message(key, **options)
+    MessageService::Auth.t(key, **options)
+  end
 
   def reset_password_params
     params.require(:user).permit(:reset_password_token, :password, :password_confirmation)

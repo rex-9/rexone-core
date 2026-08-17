@@ -1,5 +1,5 @@
 FactoryBot.define do
-  factory :role do
+  factory :role, class: "Iam::Role" do
     name { "MyString" }
     description { "MyText" }
   end

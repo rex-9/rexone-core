@@ -2,6 +2,7 @@
 class CacheService
   # Base key for all cache entries
   PREFIX = "app".freeze
+  LOG_PREFIX = "[Cache]".freeze
 
   class << self
     # Write to cache with expiration
@@ -13,7 +14,7 @@ class CacheService
         Rails.cache.write(full_key, value)
       end
     rescue => e
-      Rails.logger.error("[Cache] Write failed for #{full_key}: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Write failed for #{full_key}: #{e.message}")
       nil
     end
 
@@ -22,7 +23,7 @@ class CacheService
       full_key = full_key(key)
       Rails.cache.read(full_key)
     rescue => e
-      Rails.logger.error("[Cache] Read failed for #{full_key}: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Read failed for #{full_key}: #{e.message}")
       nil
     end
 
@@ -31,7 +32,7 @@ class CacheService
       full_key = full_key(key)
       Rails.cache.delete(full_key)
     rescue => e
-      Rails.logger.error("[Cache] Delete failed for #{full_key}: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Delete failed for #{full_key}: #{e.message}")
       nil
     end
 
@@ -44,7 +45,7 @@ class CacheService
         Rails.cache.increment(full_key, amount)
       end
     rescue => e
-      Rails.logger.error("[Cache] Increment failed for #{full_key}: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Increment failed for #{full_key}: #{e.message}")
       nil
     end
 
@@ -53,7 +54,7 @@ class CacheService
       full_key = full_key(key)
       Rails.cache.decrement(full_key, amount)
     rescue => e
-      Rails.logger.error("[Cache] Decrement failed for #{full_key}: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Decrement failed for #{full_key}: #{e.message}")
       nil
     end
 
@@ -62,7 +63,7 @@ class CacheService
       full_key = full_key(key)
       Rails.cache.fetch(full_key, expires_in: expires_in, &block)
     rescue => e
-      Rails.logger.error("[Cache] Fetch failed for #{full_key}: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Fetch failed for #{full_key}: #{e.message}")
       yield if block_given?
     end
 
@@ -71,7 +72,7 @@ class CacheService
       full_key = full_key(key)
       Rails.cache.exist?(full_key)
     rescue => e
-      Rails.logger.error("[Cache] Exist check failed for #{full_key}: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Exist check failed for #{full_key}: #{e.message}")
       false
     end
 
@@ -82,11 +83,13 @@ class CacheService
       if Rails.cache.respond_to?(:keys)
         Rails.cache.keys(full_key(pattern))
       else
-        Rails.logger.warn("[Cache] Keys pattern matching not supported by current cache store")
+        Rails.logger.warn(
+          "#{LOG_PREFIX} Keys pattern matching not supported by current cache store"
+        )
         []
       end
     rescue => e
-      Rails.logger.error("[Cache] Keys pattern failed: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Keys pattern failed: #{e.message}")
       []
     end
 

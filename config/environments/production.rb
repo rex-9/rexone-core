@@ -42,7 +42,7 @@ Rails.application.configure do
   # config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true # TONOTE: this has been commented as default
+  config.force_ssl = true # NOTE: this has been commented as default
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
@@ -50,6 +50,7 @@ Rails.application.configure do
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
   config.logger   = ActiveSupport::TaggedLogging.logger(STDOUT)
+  config.solid_queue.logger = config.logger
 
   # Change to "debug" to log everything (including potentially personally-identifiable information!).
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
@@ -68,11 +69,14 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   # config.solid_queue.connects_to = { database: { writing: :queue } } # Separate DB
 
-  # Set queue name prefix for production (Optional for single app)
-  config.active_job.queue_name_prefix = "rexone_core_production"
+  # Allow in-progress jobs time to finish during deployment/restart.
+  config.solid_queue.shutdown_timeout = AppConfig::SOLID_QUEUE_SHUTDOWN_TIMEOUT
 
-  # Use a custom queue name delimiter
-  config.active_job.queue_name_delimiter = "_"
+  # Set queue name prefix for production (Optional for single app)
+  # config.active_job.queue_name_prefix = "rexone_core_production"
+
+  # Use a custom queue name delimiter (Optional for single app)
+  # config.active_job.queue_name_delimiter = "_"
 
   # Disable caching for Action Mailer templates even if Action Controller caching is enabled.
   # config.action_mailer.perform_caching = false

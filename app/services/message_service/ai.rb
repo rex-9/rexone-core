@@ -1,0 +1,25 @@
+module MessageService
+  class Ai < Base
+    MESSAGE_REQUIRED = "ai.message_required"
+    MESSAGE_PARAMETER_MISSING = "ai.message_parameter_missing"
+    TEXT_REQUIRED = "ai.text_required"
+    TEXT_PARAMETER_MISSING = "ai.text_parameter_missing"
+    TITLE_REQUIRED = "ai.title_required"
+    TITLE_PARAMETER_MISSING = "ai.title_parameter_missing"
+    SERVICE_ERROR = "ai.service_error"
+    PROVIDER_ERROR = "ai.provider_error"
+    RESPONSE_GENERATED = "ai.response_generated"
+    NO_RESPONSE = "ai.no_response"
+    CONVERSATION_HISTORY = "ai.conversation_history"
+    CONVERSATION_CLEARED = "ai.conversation_cleared"
+    DEFAULT_ROOM_TITLE = "ai.default_room_title"
+    ROOM_RENAMED = "ai.room_renamed"
+    ROOMS_FETCHED = "ai.rooms_fetched"
+    ROOM_CREATED = "ai.room_created"
+    ROOM_DELETED = "ai.room_deleted"
+    SUMMARY_GENERATED = "ai.summary_generated"
+    TRANSLATION_GENERATED = "ai.translation_generated"
+    ANALYSIS_GENERATED = "ai.analysis_generated"
+    CHANNEL_CONNECTED = "ai.channel_connected"
+  end
+end

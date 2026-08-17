@@ -8,7 +8,7 @@ class V1::Iam::RolesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Roles fetched",
+      message: iam_message(MessageService::Iam::ROLES_FETCHED),
       data: {
         roles: Iam::RoleSerializer.new(roles).serializable_hash[:data]
       }
@@ -21,7 +21,7 @@ class V1::Iam::RolesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Role fetched",
+      message: iam_message(MessageService::Iam::ROLE_FETCHED),
       data: {
         role: Iam::RoleSerializer.new(role).serializable_hash[:data][:attributes]
       }
@@ -37,7 +37,7 @@ class V1::Iam::RolesController < V1::ApplicationController
 
       render_json_response(
         status_code: 201,
-        message: "Role created",
+        message: iam_message(MessageService::Iam::ROLE_CREATED),
         data: {
           role: Iam::RoleSerializer.new(role).serializable_hash[:data][:attributes]
         }
@@ -45,7 +45,7 @@ class V1::Iam::RolesController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: "Failed to create role",
+        message: iam_message(MessageService::Iam::ROLE_CREATE_FAILED),
         error: role.errors.full_messages.to_sentence
       )
     end
@@ -63,7 +63,7 @@ class V1::Iam::RolesController < V1::ApplicationController
 
       render_json_response(
         status_code: 200,
-        message: "Role updated",
+        message: iam_message(MessageService::Iam::ROLE_UPDATED),
         data: {
           role: Iam::RoleSerializer.new(role).serializable_hash[:data][:attributes]
         }
@@ -71,7 +71,7 @@ class V1::Iam::RolesController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: "Failed to update role",
+        message: iam_message(MessageService::Iam::ROLE_UPDATE_FAILED),
         error: role.errors.full_messages.to_sentence
       )
     end
@@ -84,8 +84,8 @@ class V1::Iam::RolesController < V1::ApplicationController
     if role.system?
       render_json_response(
         status_code: 422,
-        message: "Cannot delete system role",
-        error: "System roles cannot be deleted"
+        message: iam_message(MessageService::Iam::SYSTEM_ROLE_DELETE_FORBIDDEN),
+        error: iam_message(MessageService::Iam::SYSTEM_ROLE_DELETE_ERROR)
       )
       return
     end
@@ -94,11 +94,15 @@ class V1::Iam::RolesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Role deleted"
+      message: iam_message(MessageService::Iam::ROLE_DELETED)
     )
   end
 
   private
+
+  def iam_message(key, **options)
+    MessageService::Iam.t(key, **options)
+  end
 
   def role_params
     params.permit(:name, :description)

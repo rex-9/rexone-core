@@ -12,6 +12,13 @@ module StorageService
                :list,
                to: :provider
 
+      def delete_later(identifier, options = {})
+        StorageService::DeleteJob.perform_later(
+          identifier: identifier,
+          options: options
+        )
+      end
+
       private
 
       def provider

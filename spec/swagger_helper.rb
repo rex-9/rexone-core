@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require_relative 'openapi/v1'
 
 RSpec.configure do |config|
   # Specify a root folder where Swagger JSON files are generated
@@ -18,43 +19,34 @@ RSpec.configure do |config|
     'v1/swagger.yaml' => {
       openapi: '3.0.1',
       info: {
-        title: 'API V1',
-        version: 'v1'
+        title: 'Rexone Core API',
+        version: 'v1',
+        description: <<~DESCRIPTION
+          Production API foundation for authentication, IAM, payments, access,
+          media, notifications, client observability, and AI conversations.
+
+          Authenticated endpoints use a bearer JWT. Send `X-Platform` as `web`
+          or `mobile` to select the active session, and `X-Locale` as `en` or
+          `my` to select translated response messages.
+        DESCRIPTION
       },
+      tags: [
+        { name: 'Authentication' },
+        { name: 'Users' },
+        { name: 'Admin Users' },
+        { name: 'IAM Permissions' },
+        { name: 'IAM Roles' },
+        { name: 'IAM User Roles' },
+        { name: 'Payments' },
+        { name: 'Access' },
+        { name: 'Media' },
+        { name: 'Notifications' },
+        { name: 'AI' },
+        { name: 'Client Logs' },
+        { name: 'Webhooks' }
+      ],
       components: {
-        schemas: {
-          user: {
-            type: :object,
-            properties: {
-              id: { type: :string, format: :uuid },
-              email: { type: :string },
-              name: { type: :string, nullable: true },
-              provider: { type: :string },
-              created_at: { type: :string, format: 'date-time' },
-              updated_at: { type: :string, format: 'date-time' }
-            },
-            required: [ 'id', 'username', 'email', 'provider', 'created_at', 'updated_at' ]
-          },
-          success_status: {
-            type: :object,
-            properties: {
-              code: { type: :integer, example: 200 },
-              success: { type: :boolean },
-              message: { type: :string }
-            },
-            required: [ 'code', 'success', 'message' ]
-          },
-          error_status: {
-            type: :object,
-            properties: {
-              code: { type: :integer },
-              success: { type: :boolean, example: false },
-              message: { type: :string },
-              error: { type: :string }
-            },
-            required: [ 'code', 'success', 'message', 'error' ]
-          }
-        },
+        schemas: Openapi::V1::SCHEMAS,
         securitySchemes: {
           bearerAuth: {
             type: :http,
@@ -63,15 +55,11 @@ RSpec.configure do |config|
           }
         }
       },
-      paths: {},
+      paths: Openapi::V1::PATHS,
       servers: [
         {
-          url: 'https://{defaultHost}', # TODO: Update the host accordingly
-          variables: {
-            defaultHost: {
-              default: 'www.example.com' # TODO: Update the domain accordingly
-            }
-          }
+          url: '/',
+          description: 'Current API server'
         }
       ]
     }

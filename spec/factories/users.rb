@@ -7,9 +7,14 @@ FactoryBot.define do
     password { "password123" }
     password_confirmation { "password123" }
     confirmed_at { Time.current }
+    provider { "email" }
 
     trait :unconfirmed do
       confirmed_at { nil }
+    end
+
+    trait :google_provider do
+      provider { "google" }
     end
 
     trait :super_admin do

@@ -1,0 +1,56 @@
+en:
+  payment:
+    products:
+      fetched: "Products fetched successfully."
+      fetched_one: "Product fetched successfully."
+    transactions:
+      fetched: "Transactions fetched successfully."
+      fetched_one: "Transaction fetched successfully."
+      recent_fetched: "Recent transactions fetched successfully."
+    checkout:
+      already_subscribed: "Already subscribed"
+      active_subscription_exists: "You already have an active subscription to this product. You can cancel it first."
+      create_failed: "Failed to create checkout session"
+      created: "Checkout Session created"
+      session_not_found: "Session not found"
+      session_status: "Session status"
+    subscriptions:
+      fetched: "Subscriptions fetched successfully."
+      fetched_one: "Subscription fetched successfully."
+      cannot_cancel: "Cannot cancel subscription"
+      already_scheduled_for_cancellation: "Subscription is already scheduled for cancellation"
+      not_cancelable: "Subscription cannot be canceled in its current state"
+      cancel_failed: "Failed to cancel subscription"
+      cancellation_scheduled: "Subscription will be canceled at the end of the billing period"
+      cannot_resume: "Cannot resume subscription"
+      not_scheduled_for_cancellation: "Subscription is not scheduled for cancellation"
+      resume_failed: "Failed to resume subscription"
+      resumed: "Subscription resumed successfully"
+      cannot_remove: "Cannot remove subscription"
+      only_ended_can_be_removed: "Only an ended subscription can be removed"
+      removed: "Subscription removed successfully"
+    webhooks:
+      invalid_stripe_signature: "Invalid Stripe signature"
+      invalid_json_payload: "Invalid JSON payload"
+      queue_failed: "Webhook could not be queued"
+      persist_failed: "Webhook could not be persisted"
+      processing_failed: "Webhook processing failed"
+    notifications:
+      payment_success:
+        title: "Payment Successful! 🎉"
+        body: "Your payment of %{amount} for %{product_name} was successful."
+      subscription_created:
+        title: "Welcome to %{product_name} 🎉"
+        body: "Your subscription has been activated. You now have full access."
+      subscription_canceled:
+        title: "Subscription Canceled"
+        body: "Your subscription to %{product_name} has been canceled."
+        body_with_date: "Your subscription to %{product_name} has been canceled. You have access until %{active_until}."
+      subscription_resumed:
+        title: "Subscription Resumed ✅"
+        body: "Your subscription to %{product_name} has been resumed."
+      payment_failed:
+        title: "Payment Failed ⚠️"
+        body: "We couldn't process your payment of %{amount} for %{product_name}."
+      today: "Today"
+      end_of_period: "End of period"

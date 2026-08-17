@@ -1,6 +1,6 @@
 FactoryBot.define do
-  factory :role_permission do
-    role { nil }
-    permission { nil }
+  factory :role_permission, class: "Iam::RolePermission" do
+    role
+    permission
   end
 end

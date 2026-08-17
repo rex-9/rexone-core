@@ -1,0 +1,11 @@
+en:
+  common:
+    authorization:
+      unauthorized: "Unauthorized"
+      permission_denied: "You don't have permission to %{action} %{resource}"
+      admin_required: "Admin access required"
+      super_admin_required: "Super admin access required"
+    rate_limit:
+      too_many_requests: "Too many requests. Please slow down."
+      exceeded: "Rate limit exceeded"
+      request_blocked: "Request blocked."

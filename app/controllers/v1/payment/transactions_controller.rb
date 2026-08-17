@@ -6,7 +6,7 @@ class V1::Payment::TransactionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Transactions fetched successfully.",
+      message: payment_message(MessageService::Payment::TRANSACTIONS_FETCHED),
       data: Payment::TransactionSerializer.new(transactions).serializable_hash[:data]
     )
   end
@@ -17,7 +17,7 @@ class V1::Payment::TransactionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Transaction fetched successfully.",
+      message: payment_message(MessageService::Payment::TRANSACTION_FETCHED),
       data: Payment::TransactionSerializer.new(transaction).serializable_hash[:data][:attributes]
     )
   end
@@ -28,12 +28,16 @@ class V1::Payment::TransactionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Recent transactions fetched successfully.",
+      message: payment_message(MessageService::Payment::RECENT_TRANSACTIONS_FETCHED),
       data: Payment::TransactionSerializer.new(transactions).serializable_hash[:data]
     )
   end
 
   private
+
+  def payment_message(key, **options)
+    MessageService::Payment.t(key, **options)
+  end
 
   def transaction_params
     params.permit(:id)

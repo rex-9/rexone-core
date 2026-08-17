@@ -1,0 +1,56 @@
+my:
+  payment:
+    products:
+      fetched: "ထုတ်ကုန်များကို ရယူပြီးပါပြီ။"
+      fetched_one: "ထုတ်ကုန်ကို ရယူပြီးပါပြီ။"
+    transactions:
+      fetched: "ငွေပေးချေမှုမှတ်တမ်းများကို ရယူပြီးပါပြီ။"
+      fetched_one: "ငွေပေးချေမှုမှတ်တမ်းကို ရယူပြီးပါပြီ။"
+      recent_fetched: "လတ်တလော ငွေပေးချေမှုမှတ်တမ်းများကို ရယူပြီးပါပြီ။"
+    checkout:
+      already_subscribed: "စာရင်းသွင်းထားပြီးဖြစ်ပါသည်"
+      active_subscription_exists: "ဤထုတ်ကုန်အတွက် လက်ရှိစာရင်းသွင်းမှု ရှိပြီးဖြစ်ပါသည်။ ဦးစွာ ပယ်ဖျက်နိုင်ပါသည်။"
+      create_failed: "Checkout session ဖန်တီး၍ မရပါ"
+      created: "Checkout session ဖန်တီးပြီးပါပြီ"
+      session_not_found: "Session ကို ရှာမတွေ့ပါ"
+      session_status: "Session အခြေအနေ"
+    subscriptions:
+      fetched: "စာရင်းသွင်းမှုများကို ရယူပြီးပါပြီ။"
+      fetched_one: "စာရင်းသွင်းမှုကို ရယူပြီးပါပြီ။"
+      cannot_cancel: "စာရင်းသွင်းမှုကို ပယ်ဖျက်၍ မရပါ"
+      already_scheduled_for_cancellation: "စာရင်းသွင်းမှုကို ပယ်ဖျက်ရန် စီစဉ်ထားပြီးဖြစ်ပါသည်"
+      not_cancelable: "လက်ရှိအခြေအနေတွင် စာရင်းသွင်းမှုကို ပယ်ဖျက်၍ မရပါ"
+      cancel_failed: "စာရင်းသွင်းမှုကို ပယ်ဖျက်၍ မရပါ"
+      cancellation_scheduled: "ငွေကောက်ခံကာလအဆုံးတွင် စာရင်းသွင်းမှုကို ပယ်ဖျက်ပါမည်"
+      cannot_resume: "စာရင်းသွင်းမှုကို ပြန်လည်စတင်၍ မရပါ"
+      not_scheduled_for_cancellation: "စာရင်းသွင်းမှုကို ပယ်ဖျက်ရန် စီစဉ်ထားခြင်း မရှိပါ"
+      resume_failed: "စာရင်းသွင်းမှုကို ပြန်လည်စတင်၍ မရပါ"
+      resumed: "စာရင်းသွင်းမှုကို ပြန်လည်စတင်ပြီးပါပြီ"
+      cannot_remove: "စာရင်းသွင်းမှုကို ဖယ်ရှား၍ မရပါ"
+      only_ended_can_be_removed: "ပြီးဆုံးထားသော စာရင်းသွင်းမှုကိုသာ ဖယ်ရှားနိုင်ပါသည်"
+      removed: "စာရင်းသွင်းမှုကို ဖယ်ရှားပြီးပါပြီ"
+    webhooks:
+      invalid_stripe_signature: "Stripe လက်မှတ် မမှန်ကန်ပါ"
+      invalid_json_payload: "JSON အချက်အလက် မမှန်ကန်ပါ"
+      queue_failed: "Webhook ကို queue ထဲသို့ ထည့်၍ မရပါ"
+      persist_failed: "Webhook ကို သိမ်းဆည်း၍ မရပါ"
+      processing_failed: "Webhook ကို လုပ်ဆောင်၍ မရပါ"
+    notifications:
+      payment_success:
+        title: "ငွေပေးချေမှု အောင်မြင်ပါသည်! 🎉"
+        body: "%{product_name} အတွက် %{amount} ပေးချေမှု အောင်မြင်ပါသည်။"
+      subscription_created:
+        title: "%{product_name} မှ ကြိုဆိုပါတယ် 🎉"
+        body: "သင့်စာရင်းသွင်းမှု အသက်ဝင်ပါပြီ။ ယခု အပြည့်အဝ အသုံးပြုနိုင်ပါသည်။"
+      subscription_canceled:
+        title: "စာရင်းသွင်းမှု ပယ်ဖျက်ပြီးပါပြီ"
+        body: "%{product_name} စာရင်းသွင်းမှုကို ပယ်ဖျက်ပြီးပါပြီ။"
+        body_with_date: "%{product_name} စာရင်းသွင်းမှုကို ပယ်ဖျက်ပြီးပါပြီ။ %{active_until} အထိ အသုံးပြုနိုင်ပါသည်။"
+      subscription_resumed:
+        title: "စာရင်းသွင်းမှု ပြန်လည်စတင်ပါပြီ ✅"
+        body: "%{product_name} စာရင်းသွင်းမှုကို ပြန်လည်စတင်ပြီးပါပြီ။"
+      payment_failed:
+        title: "ငွေပေးချေမှု မအောင်မြင်ပါ ⚠️"
+        body: "%{product_name} အတွက် %{amount} ပေးချေမှုကို မလုပ်ဆောင်နိုင်ပါ။"
+      today: "ယနေ့"
+      end_of_period: "ကာလအဆုံး"

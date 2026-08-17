@@ -4,6 +4,19 @@ require "stripe"
 module PaymentService
   class Stripe < Base
     Stripe = ::Stripe
+    STRIPE_LOG_PREFIX = "[Stripe]".freeze
+    SUPPORTED_WEBHOOK_EVENT_TYPES = %w[
+      checkout.session.completed
+      customer.subscription.updated
+      customer.subscription.deleted
+      customer.subscription.paused
+      customer.subscription.resumed
+      product.updated
+      product.deleted
+      price.created
+      price.updated
+      price.deleted
+    ].freeze
 
     def initialize
       Stripe.api_key = AppConfig::STRIPE_SECRET_KEY
@@ -12,14 +25,13 @@ module PaymentService
       @webhook_secret = AppConfig::STRIPE_WEBHOOK_SECRET
     end
 
-
     # ===== SESSION =====
     def create_checkout_session(user_id:, product_id:, success_url: nil, cancel_url: nil)
       with_stripe_error("Create Checkout Session") do
         user = User.find(user_id)
         product = Payment::Product.find(product_id)
 
-        session = Stripe::Checkout::Session.create(
+        checkout_params = {
           customer: user.stripe_customer,
           line_items: [ {
             price: product.stripe_price_id,
@@ -31,7 +43,7 @@ module PaymentService
           metadata: {
             user_id: user.id,
             product_id: product.id
-          },
+          }
 
           # For Subscription Object metadata
           # subscription_data: {
@@ -51,7 +63,25 @@ module PaymentService
 
           # billing_address_collection: "required", # ask for adress
           # allow_promotion_codes: true, # promo codes
-        )
+        }
+
+        if product.recurring?
+          checkout_params[:subscription_data] = {
+            metadata: {
+              user_id: user.id,
+              product_id: product.id
+            }
+          }
+        else
+          checkout_params[:payment_intent_data] = {
+            metadata: {
+              user_id: user.id,
+              product_id: product.id
+            }
+          }
+        end
+
+        session = Stripe::Checkout::Session.create(checkout_params)
 
         { checkout_url: session.url, session_id: session.id }
       end
@@ -71,7 +101,8 @@ module PaymentService
           subscription_id,
           cancel_at_period_end: true
         )
-        { subscription_id: subscription.id, status: subscription.status }
+
+        subscription_cancellation_state(subscription)
       end
     end
 
@@ -79,9 +110,10 @@ module PaymentService
       with_stripe_error("Resume Subscription") do
         subscription = Stripe::Subscription.update(
           subscription_id,
-          pause_collection: nil
+          cancel_at_period_end: false
         )
-        { subscription_id: subscription.id, status: subscription.status }
+
+        subscription_cancellation_state(subscription)
       end
     end
 
@@ -97,36 +129,43 @@ module PaymentService
     # end
 
     # ===== WEBHOOK =====
-    def handle_webhook(payload, signature)
-      event = Stripe::Webhook.construct_event(payload, signature, @webhook_secret)
+
+    def supported_webhook_event?(event_type)
+      SUPPORTED_WEBHOOK_EVENT_TYPES.include?(event_type)
+    end
+
+    # Verifies that the webhook came from Stripe and returns a Stripe::Event.
+    # This must run synchronously while the original signature is available.
+    def verify_webhook(payload, signature)
+      Stripe::Webhook.construct_event(
+        payload,
+        signature,
+        @webhook_secret
+      )
+    end
+
+    # Processes an event that has already passed signature verification.
+    #
+    # It accepts either:
+    # - a Stripe::Event from the webhook controller; or
+    # - a Hash loaded from Payment::WebhookEvent#payload by a background job.
+    #
+    # Do not rescue processing errors here. Solid Queue needs raised exceptions
+    # so it can retry failed jobs.
+    def process_webhook(event)
+      event = normalize_webhook_event(event)
 
       case event.type
       when "checkout.session.completed"
         handle_checkout_completed(event.data.object)
-      when "customer.subscription.created"
-        handle_subscription_created(event.data.object)
       when "customer.subscription.updated"
         handle_subscription_updated(event.data.object)
       when "customer.subscription.deleted"
         handle_subscription_deleted(event.data.object)
       when "customer.subscription.paused"
-        handle_subscription_paused(event.data.object)
+        handle_subscription_updated(event.data.object)
       when "customer.subscription.resumed"
-        handle_subscription_resumed(event.data.object)
-      when "payment_intent.succeeded"
-        handle_payment_intent_succeeded(event.data.object)
-      when "payment_intent.processing"
-        handle_payment_intent_processing(event.data.object)
-      when "payment_intent.canceled"
-        handle_payment_intent_canceled(event.data.object)
-      when "payment_intent.payment_failed"
-        handle_payment_intent_payment_failed(event.data.object)
-      # when "charge.refunded"
-      #   handle_refund(event.data.object)
-
-      # ===== PRODUCT EVENTS =====
-      when "product.created"
-        handle_product_created(event.data.object)
+        handle_subscription_updated(event.data.object)
       when "product.updated"
         handle_product_updated(event.data.object)
       when "product.deleted"
@@ -137,20 +176,35 @@ module PaymentService
         handle_price_updated(event.data.object)
       when "price.deleted"
         handle_price_deleted(event.data.object)
+      else
+        Rails.logger.info(
+          "#{STRIPE_LOG_PREFIX} Ignored unsupported webhook event: #{event.type}"
+        )
       end
 
-      { status: 200, event: event.type }
-    rescue Stripe::SignatureVerificationError => e
-      Rails.logger.error("[Stripe] Webhook signature error: #{e.message}")
-      { status: 400, error: "Invalid signature" }
-    rescue => e
-      Rails.logger.error("[Stripe] Webhook error: #{e.message}")
-      { status: 500, error: e.message }
+      {
+        status: 200,
+        event_id: event.id,
+        event_type: event.type
+      }
     end
 
     private
 
     # === Helpers ===
+
+    def normalize_webhook_event(event)
+      return event if event.is_a?(Stripe::Event)
+
+      unless event.is_a?(Hash)
+        raise PaymentService::Error,
+              "Webhook event must be a Stripe::Event or Hash"
+      end
+
+      Stripe::Webhook.construct_event_without_verification(
+        JSON.generate(event)
+      )
+    end
 
     def extract_payment_method_info(payment_method_id)
       return { type: "other", details: {} } if payment_method_id.blank?
@@ -169,7 +223,7 @@ module PaymentService
           }.compact
         }
       rescue => e
-        Rails.logger.warn("[Stripe] Could not retrieve payment method #{payment_method_id}: #{e.message}")
+        Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not retrieve payment method #{payment_method_id}: #{e.message}")
         { type: "other", details: {} }
       end
     end
@@ -177,22 +231,104 @@ module PaymentService
     def with_stripe_error(action, &block)
       yield
     rescue Stripe::StripeError => e
-      Rails.logger.error("[Stripe] #{action} error: #{e.message}")
+      Rails.logger.error("#{STRIPE_LOG_PREFIX} #{action} error: #{e.message}")
       { error: e.message }
     end
 
-    # === Webhooks ===
+    def stripe_time(timestamp)
+      return nil if timestamp.blank?
 
-    def handle_product_created(product)
-      Rails.logger.info("[Stripe] Product created: #{product.id}")
-      # Product created event doesn't have price details
-      # We'll wait for price.created event to create the full record
+      Time.at(timestamp).utc
     end
 
-    def handle_product_updated(product)
-      Rails.logger.info("[Stripe] Product updated: #{product.id}")
-      # Update or create the product in our DB
-      sync_product(product)
+    def subscription_period(subscription)
+      subscription_item = subscription.items&.data&.first
+
+      period_start_timestamp =
+        subscription[:current_period_start] ||
+        subscription_item&.current_period_start
+
+      period_end_timestamp =
+        subscription[:current_period_end] ||
+        subscription_item&.current_period_end
+
+      if period_start_timestamp.blank? || period_end_timestamp.blank?
+        raise PaymentService::Error,
+              "Stripe subscription #{subscription.id} has no billing period"
+      end
+
+      {
+        starts_at: stripe_time(period_start_timestamp),
+        ends_at: stripe_time(period_end_timestamp)
+      }
+    end
+
+    def subscription_started_at(subscription)
+      stripe_time(
+        subscription[:start_date] ||
+        subscription[:created]
+      )
+    end
+
+    def subscription_cancellation_state(subscription)
+      {
+        subscription_id: subscription.id,
+        status: subscription.status,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        cancel_at: stripe_time(subscription.cancel_at),
+        canceled_at: stripe_time(subscription.canceled_at),
+        ended_at: stripe_time(subscription.ended_at)
+      }
+    end
+
+    def current_subscription(stripe_subscription)
+      Stripe::Subscription.retrieve(stripe_subscription.id)
+    end
+
+    def sync_subscription(stripe_subscription)
+      subscription = Payment::Subscription.find_or_initialize_by(
+        stripe_subscription_id: stripe_subscription.id
+      )
+      previous_status = subscription.status
+      period = subscription_period(stripe_subscription)
+
+      subscription.update!(
+        stripe_customer_id: stripe_subscription.customer,
+        status: stripe_subscription.status,
+        started_at: subscription_started_at(stripe_subscription),
+        current_period_start: period[:starts_at],
+        current_period_end: period[:ends_at],
+        cancel_at_period_end: stripe_subscription.cancel_at_period_end,
+        cancel_at: stripe_time(stripe_subscription.cancel_at),
+        ended_at: stripe_time(stripe_subscription.ended_at),
+        canceled_at: stripe_time(stripe_subscription.canceled_at),
+        metadata: stripe_subscription.metadata&.to_h || {}
+      )
+
+      if %w[active trialing].include?(subscription.status)
+        AccessService.grant(
+          user_id: subscription.user_id,
+          product_id: subscription.product_id,
+          expires_at: period[:ends_at]
+        )
+      elsif subscription.canceled? || subscription.unpaid? || subscription.paused?
+        AccessService.revoke(
+          user_id: subscription.user_id,
+          product_id: subscription.product_id
+        )
+      end
+
+      if previous_status.present? &&
+          previous_status != "past_due" &&
+          subscription.past_due?
+        NotificationService.payment_failed(
+          subscription.user,
+          subscription.product,
+          subscription
+        )
+      end
+
+      subscription
     end
 
     def sync_product(product)
@@ -202,7 +338,7 @@ module PaymentService
           price = Stripe::Price.retrieve(product.default_price)
           sync_price(price)
         rescue => e
-          Rails.logger.warn("[Stripe] Could not sync default price: #{e.message}")
+          Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not sync default price: #{e.message}")
         end
       end
     end
@@ -210,36 +346,44 @@ module PaymentService
     def sync_price(price)
       # Find or initialize by both product_id and price_id
       record = Payment::Product.find_or_initialize_by(
-        stripe_product_id: price.product,
-        stripe_price_id: price.id
+        stripe_product_id: price.product
       )
 
-      # Get product details if not provided
-      stripe_product = Stripe::Product.retrieve(price.product)
+        # Get product details if not provided
+        stripe_product = Stripe::Product.retrieve(price.product)
 
       record.assign_attributes(
+        stripe_price_id: price.id,
         name: stripe_product&.name || "Product #{price.product}",
         description: stripe_product&.description,
         price_unit_amount: price.unit_amount,
         currency: price.currency,
         cycle: price.recurring&.interval,
-        active: stripe_product&.active
+        active: stripe_product&.active && price.active
       )
 
       if record.save
-        Rails.logger.info("[Stripe] Price synced: #{price.id} for product #{price.product}")
+        Rails.logger.info("#{STRIPE_LOG_PREFIX} Price synced: #{price.id} for product #{price.product}")
       else
-        Rails.logger.error("[Stripe] Price sync failed: #{record.errors.full_messages}")
+        Rails.logger.error("#{STRIPE_LOG_PREFIX} Price sync failed: #{record.errors.full_messages}")
       end
     end
 
+    # === Webhooks ===
+
+    def handle_product_updated(product)
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Product updated: #{product.id}")
+      # Update or create the product in our DB
+      sync_product(product)
+    end
+
     def handle_price_created(price)
-      Rails.logger.info("[Stripe] Price created: #{price.id}")
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Price created: #{price.id}")
       sync_price(price)
     end
 
     def handle_price_updated(price)
-      Rails.logger.info("[Stripe] Price updated: #{price.id}")
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Price updated: #{price.id}")
       sync_price(price)
     end
 
@@ -247,19 +391,18 @@ module PaymentService
       record = Payment::Product.find_by(stripe_product_id: product.id)
       return unless record
 
-      record.update(active: false)
-      Rails.logger.info("[Stripe] Product deleted: #{product.id}")
+      record.update!(active: false)
+
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Product deleted: #{product.id}")
     end
 
     def handle_price_deleted(price)
       record = Payment::Product.find_by(stripe_price_id: price.id)
       return unless record
 
-      record.update(
-        stripe_price_id: nil,
-        active: false
-      )
-      Rails.logger.info("[Stripe] Price deleted: #{price.id}")
+      record.update!(active: false)
+
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Price deleted: #{price.id}")
     end
 
     def handle_checkout_completed(session)
@@ -269,15 +412,24 @@ module PaymentService
       user = User.find(user_id)
 
       if session.mode == "subscription"
-        stripe_sub = Stripe::Subscription.retrieve(session.subscription)
-
-        # Get payment method ID and details
-        payment_info = extract_payment_method_info(stripe_sub.default_payment_method)
-
-        # Create or update subscription from Stripe Subscription
-        subscription = Payment::Subscription.find_or_initialize_by(
-          stripe_subscription_id: session.subscription
+        stripe_sub = Stripe::Subscription.retrieve(
+          session.subscription
         )
+
+        period = subscription_period(stripe_sub)
+
+        payment_method_id = stripe_sub.default_payment_method
+
+        # An expanded Stripe payment method is an object; otherwise it is an ID.
+        payment_method_id =
+          payment_method_id.id if payment_method_id.respond_to?(:id)
+
+        payment_info = extract_payment_method_info(payment_method_id)
+
+        subscription = Payment::Subscription.find_or_initialize_by(
+          stripe_subscription_id: stripe_sub.id
+        )
+        new_subscription = subscription.new_record?
 
         subscription.assign_attributes(
           user_id: user_id,
@@ -285,13 +437,17 @@ module PaymentService
           stripe_customer_id: stripe_sub.customer,
           status: stripe_sub.status,
           cycle: product.cycle,
-          started_at: Time.current,
-          current_period_start: Time.current,
-          current_period_end: Time.current + product.cycle_in_duration,
-          payment_method_id: stripe_sub.default_payment_method,
+          started_at: subscription_started_at(stripe_sub),
+          current_period_start: period[:starts_at],
+          current_period_end: period[:ends_at],
+          cancel_at_period_end: stripe_sub.cancel_at_period_end,
+          cancel_at: stripe_time(stripe_sub.cancel_at),
+          ended_at: stripe_time(stripe_sub.ended_at),
+          canceled_at: stripe_time(stripe_sub.canceled_at),
+          payment_method_id: payment_method_id,
           payment_method_type: payment_info[:type],
           payment_method_details: payment_info[:details],
-          metadata: stripe_sub.metadata
+          metadata: stripe_sub.metadata&.to_h || {}
         )
 
         subscription.save!
@@ -299,14 +455,26 @@ module PaymentService
         AccessService.grant(
           user_id: user_id,
           product_id: product_id,
-          expires_at: product.cycle_in_duration.from_now
+          expires_at: period[:ends_at]
         )
 
-        NotificationService.subscription_created(
-          user, product, subscription
-        )
+        if new_subscription
+          NotificationService.subscription_created(
+            user,
+            product,
+            subscription
+          )
+        end
 
       else
+        # NOTE: For some reason one-time payment not being paid
+        unless session.payment_status == "paid"
+          Rails.logger.warn(
+            "#{STRIPE_LOG_PREFIX} Ignored unpaid completed Checkout Session: #{session.id}"
+          )
+          return
+        end
+
         # One-time purchase - sync with Payment Intent
         payment_intent_id = session.payment_intent
 
@@ -320,6 +488,7 @@ module PaymentService
         transaction = Payment::Transaction.find_or_initialize_by(
           stripe_payment_intent_id: payment_intent_id
         )
+        new_transaction = transaction.new_record?
 
         transaction.assign_attributes(
           user_id: user_id,
@@ -348,107 +517,26 @@ module PaymentService
             expires_at: nil  # Lifetime
           )
 
-          NotificationService.payment_success(
-            user, product, transaction
-          )
+          if new_transaction
+            NotificationService.payment_success(
+              user, product, transaction
+            )
+          end
         end
       end
     end
 
-    def handle_subscription_created(subscription)
-      record = Payment::Subscription.find_or_initialize_by(stripe_subscription_id: subscription.id)
-      record.update(
-        status: subscription.status,
-        started_at: Time.at(subscription.created),
-      )
-      # No email needed - checkout.completed already sent confirmation
+    def handle_subscription_updated(stripe_subscription)
+      sync_subscription(current_subscription(stripe_subscription))
     end
 
-    def handle_subscription_updated(subscription)
-      record = Payment::Subscription.find_by(stripe_subscription_id: subscription.id)
-      return unless record
+    def handle_subscription_deleted(stripe_subscription)
+      subscription = sync_subscription(stripe_subscription)
 
-      old_status = record.status
-
-      record.update(
-        status: subscription.status,
-        ended_at: subscription.ended_at ? Time.at(subscription.ended_at) : nil,
-        canceled_at: subscription.canceled_at ? Time.at(subscription.canceled_at) : nil,
-      )
-
-      # Send email on status changes
-      if old_status != subscription.status
-        case subscription.status
-        when "past_due"
-          # Notify for payment failure
-          NotificationService.payment_failed(
-            record.user, record.product, record
-          )
-        end
-      end
-    end
-
-    def handle_subscription_deleted(subscription)
-      record = Payment::Subscription.find_by(stripe_subscription_id: subscription.id)
-      return unless record
-
-      record.update(
+      subscription.update!(
         status: "canceled",
-        canceled_at: subscription.canceled_at ? Time.at(subscription.canceled_at) : Time.current,
-        ended_at: subscription.ended_at ? Time.at(subscription.ended_at) : Time.current
-      )
-
-      if subscription.canceled_at.present? || subscription.canceled?
-        AccessService.revoke(
-          user_id: record.user_id,
-          product_id: record.product_id
-        )
-      end
-    end
-
-    def handle_subscription_paused(subscription)
-      # When the free trial ends...
-      # record = Payment::Subscription.find_by(stripe_subscription_id: subscription.id)
-      # return unless record
-    end
-
-    def handle_subscription_resumed(subscription)
-      # Not sure... Lol...
-      # record = Payment::Subscription.find_by(stripe_subscription_id: subscription.id)
-      # return unless record
-    end
-
-    # Webhook: payment_intent.succeeded
-    def handle_payment_intent_succeeded(payment_intent)
-      transaction = Payment::Transaction.find_by(stripe_payment_intent_id: payment_intent.id)
-      return unless transaction
-
-      transaction.mark_as_succeeded!
-    end
-
-    # Webhook: payment_intent.processing
-    def handle_payment_intent_processing(payment_intent)
-      transaction = Payment::Transaction.find_by(stripe_payment_intent_id: payment_intent.id)
-      return unless transaction
-
-      transaction.mark_as_processing!
-    end
-
-    # Webhook: payment_intent.canceled
-    def handle_payment_intent_canceled(payment_intent)
-      transaction = Payment::Transaction.find_by(stripe_payment_intent_id: payment_intent.id)
-      return unless transaction
-
-      transaction.mark_as_canceled!
-    end
-
-    # Webhook: payment_intent.payment_failed
-    def handle_payment_intent_payment_failed(payment_intent)
-      transaction = Payment::Transaction.find_by(stripe_payment_intent: payment_intent.id)
-      return unless transaction
-
-      transaction.update(
-        status: "failed"
+        canceled_at: subscription.canceled_at || Time.current,
+        ended_at: subscription.ended_at || Time.current
       )
     end
 

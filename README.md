@@ -1,596 +1,436 @@
-<a name="readme-top"></a>
+<a id="readme-top"></a>
 
 <div align="center">
-  <h3><b>Rexone CORE</b></h3>
 
-  <p>
-    A production-ready Ruby on Rails Core foundation for building modern applications.
-  </p>
+# Rexone Core
 
-  <p>
-    Authentication · Authorization · Payments · Media · AI · Real-time · Background Jobs · Admin · Monitoring
-  </p>
+### A battle-hardened Rails foundation, forged so the product can wage the interesting war.
+
+A production-minded API core for web and mobile products. Authentication, IAM, payments, access control, media, notifications, AI, real-time delivery, background work, administration, and observability stand ready—not as scattered trophies, but as one disciplined system.
+
+Built under a simple creed: **clear in thought, exact in structure, simple in use, and strong enough to endure what comes after launch.**
+
+[![Ruby](https://img.shields.io/badge/Ruby-4.0.4-CC342D?logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
+[![Rails](https://img.shields.io/badge/Rails-8.1-CC0000?logo=rubyonrails&logoColor=white)](https://rubyonrails.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+
+**API-first · Modular · Observable · Queue-aware · Built to grow**
+
+[Explore the foundation](#feature-map) · [Run it locally](#getting-started) · [Open the dashboards](#operations-center) · [Meet the architecture](#architecture)
+
 </div>
 
-<!-- TABLE OF CONTENTS -->
+---
 
-# 📗 Table of Contents
+## Why Rexone Core?
 
-- [📗 Table of Contents](#-table-of-contents)
-- [📖 Rexone Core ](#-rexone-core-)
-  - [🚀 Featuring!](#-featuring)
-    - [🌟 Modern Tech Stack](#-modern-tech-stack)
-    - [🏗️ Design Patterns \& Architecture](#️-design-patterns--architecture)
-    - [🔐 Authentication \& Security](#-authentication--security)
-    - [🛡️ IAM \& RBAC](#️-iam--rbac)
-    - [🗃️ Data Lifecycle \& Audit](#️-data-lifecycle--audit)
-    - [📊 API, Monitoring \& Administration](#-api-monitoring--administration)
-      - [📖 API \& Documentation](#-api--documentation)
-      - [📈 Performance Monitoring](#-performance-monitoring)
-      - [🚨 Error Monitoring \& Alerting](#-error-monitoring--alerting)
-      - [🧰 Administration](#-administration)
-      - [🧱 Solid Stack Dashboards](#-solid-stack-dashboards)
-    - [🔌 Integrated Services](#-integrated-services)
-      - [📧 Email Service](#-email-service)
-      - [🔔 Push Notification Service](#-push-notification-service)
-      - [📁 Storage Service](#-storage-service)
-      - [💳 Payment Service](#-payment-service)
-      - [🤖 AI Service](#-ai-service)
-      - [🔌 Socket Service](#-socket-service)
-    - [🗃️ Testing \& Quality Assurance](#️-testing--quality-assurance)
-  - [🛠 Built With ](#-built-with-)
-    - [Tech Stack ](#tech-stack-)
-  - [💻 Getting Started ](#-getting-started-)
-    - [Prerequisites](#prerequisites)
-    - [Setup](#setup)
-    - [Run](#run)
-    - [Scripts](#scripts)
-    - [Doc](#doc)
-    - [Test](#test)
-    - [Performance Dashboard](#performance-dashboard)
-      - [Access](#access)
-    - [Error Dashboard](#error-dashboard)
-      - [Access](#access-1)
-    - [Solid Web UI](#solid-web-ui)
-      - [Queue Dashboard](#queue-dashboard)
-      - [Cache Dashboard](#cache-dashboard)
-      - [Cable Dashboard](#cable-dashboard)
-      - [Performance Monitoring vs Error Monitoring](#performance-monitoring-vs-error-monitoring)
-    - [Admin Dashboard](#admin-dashboard)
-      - [Authentication \& RBAC](#authentication--rbac)
-      - [Super Admin Setup](#super-admin-setup)
-      - [Routes](#routes)
-      - [Permissions](#permissions)
-    - [Pagination](#pagination)
-    - [Explore More Open Source Projects](#explore-more-open-source-projects)
-- [☕ Support ](#-support-)
-  - [👤 Author](#-author)
+Every product eventually meets the same old enemies: accounts, permissions, billing, uploads, jobs, notifications, dashboards, audit trails, failures, and the darkness between _“it works”_ and _“we know why it works.”_. Especially, the real challenge is _“it works on my machine.”_
 
-<!-- PROJECT DESCRIPTION -->
+Rexone Core exists because this ground should not have to be conquered again for every product.
 
-# 📖 Rexone Core <a name="about-project"></a>
+This is not a chest of disconnected examples wearing the armor of an architecture. It is a cohesive foundation whose parts answer to one another. Stripe payments grant access. Webhooks are durably recorded before background processing begins. Notifications divide into isolated delivery jobs. Asset cleanup retries without making the client wait. Administrators can inspect the realm, while performance, backend errors, frontend failures, queues, cache, and sockets each leave a trail.
 
-**Rexone Core** is a production-ready Ruby on Rails API foundation designed to provide a complete backend starting point for modern authenticated applications.
+The foundation is designed to **bend around the product**, never to make the product kneel before the framework.
 
-The project brings together:
+Its boundaries are deliberate and provider-aware. Capabilities can be extended, replaced, or reforged as the product evolves without scattering vendor logic across the codebase.
 
-**Authentication**, **Authorization**, **IAM/RBAC**,
-**API documentation**, **Pagination**, **Payments**,
-**Media Storage**, **AI services**, **Real-time communications**,
-**Background processing**, **Caching**, **Performance Monitoring**,
-**Error Monitoring & Alerting**, **Administration**, **Testing**, and **Security**
+And no—this was not vibe-coded into existence.
 
-tooling into a single well-rounded backend foundation.
+The boundaries were reasoned about. Failure paths were traced. Immediate work was separated from deferred work. Retries, idempotency, observability, security, and data lifecycle were treated as engineering concerns, not decorations added after the demo survived.
 
-The goal is to provide a clean and scalable foundation so product development can focus on business logic instead of repeatedly rebuilding the same backend infrastructure.
+Rexone Core brings startup speed with battle-tested discipline—and fewer final-hour whispers of _“we should probably build that before launch.”_
 
-**Related Repositories:**
+## The philosophy
 
-- **Web Frontend**: [Rexone Web](https://github.com/rex-9/rexone-web)
-- **Mobile App**: [Rexone Mobile](https://github.com/rex-9/rexone_mobile)
+Rexone Core follows a simple doctrine:
 
-## 🚀 Featuring!
+> **Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle.**
 
-### 🌟 Modern Tech Stack
+Years of building software teach the same lesson as any long campaign: the first victory is easy to celebrate; surviving everything that follows is the true test.
 
-- **Ruby on Rails 8.1**: API-only backend framework built for modern server-side applications.
-- **PostgreSQL**: Robust relational database for application data.
-- **Puma**: Production-ready Ruby application server.
-- **Solid Cache**: Database-backed Rails cache storage.
-- **Solid Queue**: Database-backed background job processing.
-- **Solid Cable**: Database-backed Action Cable adapter.
-- **Rswag**: OpenAPI/Swagger API documentation and request specifications.
-- **Rails Pulse**: Application performance monitoring and runtime diagnostics.
-- **Rails Error Dashboard (RED)**: Application error monitoring, diagnostics, analytics, and alerting.
-- **Administrate**: Administrative dashboard for managing application resources.
-- **Solid Web UI**: Web dashboards for Solid Queue, Solid Cache, and Solid Cable.
+The difficult part is rarely another controller or CRUD endpoint. It is preserving a system that remains understandable when the product grows, integrations multiply, failures arrive from unfamiliar directions, and the original developer is no longer the only one carrying the blade.
 
-### 🏗️ Design Patterns & Architecture
+So the ambition was never to build the largest foundation possible.
 
-- **MVC Architecture**: Clear separation between models, controllers, and application logic.
-- **API-Only Rails**: Lightweight backend optimized for web and mobile clients.
-- **Service-Oriented Architecture**: Business operations can be isolated into dedicated services.
-- **Concerns**: Shared controller and application behavior is organized into reusable concerns.
-- **Serializer Layer**: API responses are consistently transformed through dedicated serializers.
-- **Centralized API Response Format**: Successful and failed API responses follow a consistent envelope.
-- **Centralized Pagination**: Pagination is handled through a shared Pagy-based backend implementation.
-- **Dockerized Development**: Application services can be developed and run through Docker.
-- **Modular Integrations**: External services are isolated behind application-level service abstractions.
+It was to build a **clear one**—strong enough to carry ambitious products, flexible enough to surrender its shape to them, and disciplined enough that the next developer can enter the codebase without a map drawn in blood.
 
-### 🔐 Authentication & Security
+No prophecy. No magic. No shortcuts disguised as momentum.
 
-- **Devise**: Secure authentication and account management.
-- **Devise JWT**: Token-based authentication for API clients.
-- **Email-Password Authentication**: Standard secure account authentication.
-- **Google Authentication**: Google sign-in integration.
-- **Forgot Password & Reset Password**: Account recovery workflows.
-- **Email Confirmation**: Email verification for user accounts.
-- **JWT Authentication**: Stateless API authentication using JSON Web Tokens.
-- **Session Management**: Platform-aware authentication and session handling.
-- **Rack Attack**: Request throttling and protection against abusive traffic.
-- **Rack CORS**: Cross-Origin Resource Sharing support.
-- **CSP & Rails Security**: Rails security mechanisms and browser security policies.
+Just deliberate engineering, tested boundaries, and a foundation built to remain standing.
 
-### 🛡️ IAM & RBAC
+## Feature map
 
-The backend includes a dedicated Identity and Access Management system for granular authorization.
+| Foundation     | What is ready                                                                   | Details                                                |
+| -------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions          | [Authentication & security](#authentication--security) |
+| Authorization  | Roles, permissions, user-role and role-permission assignments                   | [IAM & access control](#iam--access-control)           |
+| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants           | [Payments & entitlements](#payments--entitlements)     |
+| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup | [Background processing](#background-processing)        |
+| Notifications  | Socket, push, and email coordination through OneSignal and Action Cable         | [Notifications & real time](#notifications--real-time) |
+| Media          | Cloudinary/local providers, uploads, URLs, metadata, queued deletion            | [Storage & assets](#storage--assets)                   |
+| AI             | DeepSeek chat, rooms, history, summarization, translation, analysis             | [AI capabilities](#ai-capabilities)                    |
+| Localization   | Request-scoped English and Myanmar responses with modular domain translations   | [Localization](#localization)                          |
+| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization  | [Data & API design](#data--api-design)                 |
+| Operations     | Performance, errors, client logs, queues, cache, cable, health checks           | [Observability](#observability)                        |
+| Administration | Administrate plus a growing versioned admin API                                 | [Administration](#administration)                      |
+| Delivery       | Docker images, separate API/worker processes, health checks, graceful shutdown  | [Deployment](#deployment)                              |
+| Quality        | RSpec, factories, security scanning, dependency auditing, linting               | [Quality toolchain](#quality-toolchain)                |
 
-- **Users**: Application user accounts.
-- **Roles**: Groups of permissions assigned to users.
-- **Permissions**: Resource/action-based authorization rules.
-- **User Roles**: User-to-role assignments.
-- **Role Permissions**: Role-to-permission assignments.
-- **Resource-based Authorization**: Permissions can be organized around application resources.
-- **Action-based Authorization**: Permissions can define actions such as `create`, `read`, `update`, and `delete`.
-- **Super Admin**: Full administrative access across the system.
+## Architecture
 
-### 🗃️ Data Lifecycle & Audit
+Rexone Core keeps framework concerns conventional and integrations replaceable.
 
-- **Soft Delete**: Global soft-delete support using Discard with `kept` as the default application scope.
-- **Record Audit**: Tracks record creators, updaters, discarders, and restorers through associated user IDs.
-- **Lifecycle Timestamps**: Records when resources are discarded and restored for traceability.
-- **Recycle Bin Support**: Discarded records can be restored or permanently deleted when authorized.
+Controllers own HTTP contracts, models own data rules, services own business and provider boundaries, jobs own deferred work, and serializers own response representation.
 
-### 📊 API, Monitoring & Administration
+```mermaid
+flowchart LR
+    Clients[Web & mobile clients] --> API[Rails API]
+    Clients <-->|Action Cable| Realtime[Solid Cable]
 
-Rexone Core includes a complete set of developer-facing APIs, operational dashboards, observability tools, and administrative interfaces.
+    API --> Auth[Authentication & IAM]
+    API --> Domain[Product domain]
+    API --> Services[Service interfaces]
+    API --> Jobs[Solid Queue]
 
-#### 📖 API & Documentation
+    Domain --> PostgreSQL[(PostgreSQL)]
+    Auth --> PostgreSQL
+    Jobs --> PostgreSQL
 
-- **RESTful API**: Production-ready API endpoints for web and mobile clients.
-- **OpenAPI / Swagger**: Interactive API documentation and request specifications through Rswag.
-- **JSON:API**: Consistent resource serialization and API response structure.
-- **Pagy**: Lightweight and efficient API pagination.
-- **Centralized Pagination**: Standardized pagination across API resources.
+    Services --> Stripe[Stripe]
+    Services --> OneSignal[OneSignal]
+    Services --> Cloudinary[Cloudinary]
+    Services --> DeepSeek[DeepSeek]
 
-#### 📈 Performance Monitoring
+    Jobs --> Services
+    API --> Observability[Pulse · RED · client logs]
+```
 
-- **Rails Pulse**: Monitor application performance and runtime activity, including request performance and application-level metrics.
-- **Performance Dashboard**: Dedicated dashboard available at `/admin/pulse`.
+Provider-facing code lives behind focused clients such as `PaymentService::Client`, `StorageService::Client`, `AiService::Client`, and the notification delivery services.
 
-#### 🚨 Error Monitoring & Alerting
+Swapping or extending a provider does not require spreading vendor logic across controllers.
 
-- **Rails Error Dashboard (RED)**: Centralized application error monitoring and diagnostics.
-- **Automatic Error Capture**: Captures application exceptions through Rails middleware and the Rails error subscriber.
-- **Error Grouping**: Groups recurring failures for easier investigation.
-- **Error Analytics**: Similar error detection, co-occurring errors, error cascades, correlation analysis, platform comparison, and occurrence pattern detection.
-- **Real-Time Updates**: Monitor newly captured errors through the dashboard.
-- **Baseline Anomaly Detection**: Identifies abnormal increases in error activity.
-- **Multi-Channel Alerts**: Supports Slack, Email, Discord, Generic Webhooks, and optional PagerDuty notifications.
-- **Storm Protection**: Reduces monitoring and notification load during high-volume error incidents.
-- **Error Retention**: Maintains error data for 90 days by default.
-- **Error Dashboard**: Dedicated dashboard available at `/admin/red`.
+The same principle applies to product-specific functionality: the foundation provides the structure, while the product remains free to define its own domain, workflows, and experience.
 
-#### 🧰 Administration
+### Background processing
 
-- **Administrate**: Full administrative dashboard for managing application resources.
-- **IAM & RBAC Integration**: Administrative access is protected through the application's authentication and authorization system.
-- **Resource Management**: Manage users, assets, IAM configuration, payments, subscriptions, transactions, chat rooms, and chat messages.
-- **Role-Based Access Control**: Administrative capabilities can be restricted through granular permissions.
+Solid Queue is part of the application architecture, not an afterthought.
 
-#### 🧱 Solid Stack Dashboards
+The foundation currently queues work where it benefits from durability, isolation, retries, or provider independence:
 
-- **Solid Queue Dashboard**: Monitor and manage background jobs.
-- **Solid Cache Dashboard**: Inspect and manage application cache.
-- **Solid Cable Dashboard**: Inspect Action Cable messages and retained messages.
-- **Solid Web UI**: Dedicated web interfaces for the Rails Solid Stack.
+| Work                             | Queue           | Why                                                             |
+| -------------------------------- | --------------- | --------------------------------------------------------------- |
+| Stripe webhook processing        | `payments`      | Durable ingestion, idempotency, retries, and concurrency safety |
+| Socket, push, and email delivery | `notifications` | Provider latency must not delay the originating request         |
+| Physical asset deletion          | `storage`       | Database operations can complete before remote cleanup          |
 
-### 🔌 Integrated Services
+Production workers are separated by workload in [`config/queue.yml`](config/queue.yml), and recurring maintenance lives in [`config/recurring.yml`](config/recurring.yml).
 
-The system integrates with multiple external and Rails-native services to provide a complete backend foundation.
+The queue architecture is intentionally extensible. As a product grows, new workloads can be introduced as dedicated queues with their own concurrency, retry, and execution policies rather than turning the background layer into one undifferentiated worker.
 
-#### 📧 Email Service
+The exact queue structure can also be customized around the requirements of the product being built.
 
-- **Function**: Transactional and account-related email workflows.
-- **Implementation**: Application-level service abstraction for email operations.
+The API and worker run as separate services in Docker, keeping request handling and background execution independently scalable.
 
-#### 🔔 Push Notification Service
+## The foundation in detail
 
-- **Function**: Push notification delivery for supported clients.
-- **Implementation**: Application-level notification service abstraction.
+### Authentication & security
 
-#### 📁 Storage Service
+- Devise authentication with JWT issuance and revocation.
+- Email/password registration, confirmation codes, password recovery, locking, tracking, and timeout support.
+- Google sign-in with a challenge flow for completing account creation.
+- Platform-aware active sessions backed by the application cache.
+- Rack Attack throttling for abusive or excessive requests.
+- Configurable CORS and Rails security defaults.
+- Consistent authentication failures and localized client-facing messages.
 
-- **Providers**: Cloudinary and local Active Storage processing.
-- **Function**: File uploads, image processing, and media management.
-- **Implementation**: Active Storage with image processing support.
+Authentication is ready for multiple clients without forcing browser-session assumptions onto an API product.
 
-#### 💳 Payment Service
+### IAM & access control
 
-- **Provider**: Stripe
-- **Function**: Payment processing, products, subscriptions, and transactions.
-- **Implementation**: Dedicated payment service and API endpoints.
+Authorization is modeled explicitly instead of being buried in controller conditionals:
 
-#### 🤖 AI Service
+- Users receive roles through `Iam::UserRole`.
+- Roles receive resource/action permissions through `Iam::RolePermission`.
+- Permissions cover operations such as `create`, `read`, `update`, and `delete`.
+- `admin` and `super_admin` roles support privileged product and operational workflows.
+- New users receive the default user role automatically.
 
-- **Function**: AI-powered application features including chat, history, rooms, summarization, translation, and analysis.
-- **Implementation**: Dedicated AI service layer with API endpoints for client applications.
+This gives small products a sensible starting policy and growing products a clean path to granular authorization.
 
-#### 🔌 Socket Service
+### Payments & entitlements
 
-- **Provider**: Action Cable
-- **Function**: Real-time WebSocket communication and live application updates.
-- **Implementation**: Rails Action Cable backed by Solid Cable.
+Stripe integration covers the full commercial loop:
 
-### 🗃️ Testing & Quality Assurance
+- Product and price synchronization.
+- Checkout Sessions for one-time purchases and subscriptions.
+- Customer creation and reuse.
+- Transactions, payment-method metadata, and subscription lifecycle state.
+- Cancellation-at-period-end and subscription resumption.
+- Access grants and revocation driven by payment state.
+- Persisted webhook events with duplicate protection, processing state, attempts, errors, retention, and admin visibility.
+- Background webhook processing with targeted retries and per-event concurrency control.
 
-- **RSpec Rails**: Comprehensive automated testing framework.
-- **FactoryBot Rails**: Test data generation and factory management.
-- **Shoulda Matchers**: Concise testing matchers for Rails models and controllers.
-- **Faker**: Realistic test data generation.
-- **Database Cleaner**: Reliable database isolation between tests.
-- **Brakeman**: Static security analysis for Rails applications.
-- **Bundler Audit**: Dependency vulnerability auditing.
-- **RuboCop Rails Omakase**: Ruby and Rails code style enforcement.
-- **Guard RSpec**: Automated test execution during development.
+The important distinction is deliberate: customer-facing payment flows remain responsive, while webhook fulfillment is durable and asynchronous for the business.
 
-## 🛠 Built With <a name="built-with"></a>
+### Notifications & real time
 
-### Tech Stack <a name="tech-stack"></a>
+`NotificationService` coordinates three independent delivery paths:
 
-<details>
-  <summary>Server</summary>
-  <ul>
-    <li><a href="https://rubyonrails.org/">Ruby on Rails 8.1</a></li>
-    <li><a href="https://www.ruby-lang.org/">Ruby</a></li>
-    <li><a href="https://puma.io/">Puma</a></li>
-    <li><a href="https://github.com/rails/solid_cache">Solid Cache</a></li>
-    <li><a href="https://github.com/rails/solid_queue">Solid Queue</a></li>
-    <li><a href="https://github.com/rails/solid_cable">Solid Cable</a></li>
-    <li><a href="https://github.com/heartcombo/devise">Devise</a></li>
-    <li><a href="https://github.com/waiting-for-dev/devise-jwt">Devise JWT</a></li>
-    <li><a href="https://github.com/jnunemaker/httparty">REST Client</a></li>
-    <li><a href="https://stripe.com/">Stripe</a> (Payments)</li>
-    <li><a href="https://cloudinary.com/">Cloudinary</a> (Media)</li>
-    <li><a href="https://github.com/rack/rack-attack">Rack Attack</a> (Security)</li>
-    <li><a href="https://deepseek.com/">DeepSeek</a> (AI Services)</li>
-    <li><a href="https://github.com/cyu/rack-cors">Rack CORS</a></li>
-    <li><a href="https://github.com/jnunemaker/httparty">REST Client</a></li>
-    <li><a href="https://www.docker.com/">Docker</a></li>
-  </ul>
-</details>
+- Action Cable broadcasts for live in-product updates.
+- OneSignal push notifications.
+- OneSignal email and template delivery.
 
-<details>
-  <summary>API & Serialization</summary>
-  <ul>
-    <li><a href="https://github.com/jsonapi-serializer/jsonapi-serializer">JSON:API Serializer</a></li>
-    <li><a href="https://github.com/paper-trail-gem/paper_trail">Pagy</a> (Pagination)</li>
-    <li><a href="https://github.com/rswag/rswag">Rswag</a></li>
-    <li><a href="https://www.openapis.org/">OpenAPI</a></li>
-    <li><a href="https://github.com/rswag/rswag-ui">Swagger UI</a></li>
-  </ul>
-</details>
+Each enabled channel receives its own Solid Queue job. A failed email therefore does not repeat a successful push, and a notification provider outage does not roll back a completed payment or authentication action.
 
-<details>
-  <summary>Administration & Monitoring</summary>
-  <ul>
-    <li><a href="https://github.com/thoughtbot/administrate">Administrate</a> (Admin Dashboard)</li>
-    <li><a href="https://github.com/doromones/solid-web">Solid Web UI</a> (Queue, Cache, Cable)</li>
-    <li><a href="https://railspulse.com/">Rails Pulse</a> (Performance Monitoring)</li>
-    <li><a href="https://anjanj.github.io/rails_error_dashboard/">Rails Error Dashboard</a>(Error Monitoring)</li>
-  </ul>
-</details>
+### Storage & assets
 
-<details>
-  <summary>Testing & Development</summary>
-  <ul>
-    <li><a href="https://rspec.info/">RSpec</a></li>
-    <li><a href="https://github.com/thoughtbot/factory_bot_rails">FactoryBot Rails</a></li>
-    <li><a href="https://github.com/thoughtbot/shoulda-matchers">Shoulda Matchers</a></li>
-    <li><a href="https://github.com/faker-ruby/faker">Faker</a></li>
-    <li><a href="https://github.com/DatabaseCleaner/database_cleaner">Database Cleaner</a></li>
-    <li><a href="https://github.com/guard/guard-rspec">Guard RSpec</a></li>
-    <li><a href="https://brakemanscanner.org/">Brakeman</a></li>
-    <li><a href="https://github.com/rubysec/bundler-audit">Bundler Audit</a></li>
-    <li><a href="https://github.com/rails/rubocop-rails-omakase">RuboCop Rails Omakase</a></li>
-    <li><a href="https://solargraph.org/">Solargraph</a></li>
-  </ul>
-</details>
+The storage abstraction supports Cloudinary and a local provider with a consistent interface for upload, deletion, URL generation, move, copy, existence checks, and listing.
 
-<details>
-  <summary>Database</summary>
-  <ul>
-    <li><a href="https://www.postgresql.org/">PostgreSQL</a></li>
-  </ul>
-</details>
+- Uploads return the URL and metadata the client needs immediately.
+- Assets retain provider identifiers, category, media type, extension, size, source, and ownership.
+- Remote deletion happens after the database transaction commits.
+- Failed deletion is retried and "already absent" is treated idempotently.
+- Local paths are constrained to the configured storage root.
+- Cloudinary image, video, and raw document resource types are handled separately.
 
-<!-- GETTING STARTED -->
+### AI capabilities
 
-## 💻 Getting Started <a name="getting-started"></a>
+The DeepSeek-backed AI layer provides:
 
-To get a local copy up and running, follow these steps.
+- Conversational responses with persisted rooms and message history.
+- Summarization.
+- Translation.
+- Sentiment, entity, keyword, and general analysis prompts.
+- A provider-neutral client boundary for future AI backends.
+- Safe client errors with detailed provider failures retained in server logs.
+
+The AI layer is deliberately isolated behind its provider boundary so product-specific AI workflows can evolve without coupling the rest of the application to a single model provider.
+An Action Cable streaming channel is available as a future direction when the product needs asynchronous streaming semantics.
+
+### Data & API design
+
+- PostgreSQL with UUID primary keys for application records.
+- Global soft deletion through Discard, with kept records as the default scope.
+- Actor-aware creation, update, discard, and restore auditing through `Current.auditor`.
+- JSON:API serializers for stable resource representation.
+- A consistent response envelope for status, errors, data, and pagination metadata.
+- Pagy-backed offset pagination for efficient collection endpoints.
+- Versioned client routes under `/v1` and a separate admin API namespace.
+- Modular I18n-backed client messages, organized by product domain.
+- OpenAPI documentation served through Rswag.
+
+### Localization
+
+Client-facing messages are organized by domain through `MessageService` and Rails I18n instead of being collected in one global constants file. English (`en`) and Myanmar (`my`) are included, with English as the safe fallback.
+
+The API selects a locale for each request in this order:
+
+1. Query parameter: `?locale=my`
+2. Explicit header: `X-Locale: my`
+3. Standard header: `Accept-Language: my-MM`
+4. Default: `en`
+
+Locale switching is request-scoped through `I18n.with_locale`, preventing one request's language from leaking into another under concurrent execution. Adding another language means mirroring the modular files in `config/locales` and registering its locale code.
+
+### Observability
+
+Backend, frontend, synchronous, and asynchronous failures leave different clues. Rexone Core gives each one a proper home.
+
+- **Rails Pulse** tracks request, query, and background-job performance with configurable thresholds.
+- **Rails Error Dashboard** captures, groups, analyzes, and retains backend exceptions. Optional Slack, email, Discord, PagerDuty, and webhook alerts are supported but disabled by default.
+- **Client Logs** accept structured errors from web and mobile clients, including stack traces, platform/device context, severity, occurrences, and resolution state.
+- **Solid Web UI** exposes queue, cache, and cable operations.
+- **Health checks** are available at `/up` for containers and load balancers.
+
+That is full-stack visibility without requiring an external observability platform on day one.
+
+### Administration
+
+The server-rendered Administrate workspace manages users, assets, access grants, IAM, payments, webhook events, chat data, and client logs.
+
+Admin authentication uses application users over HTTP Basic and requires an `admin` or `super_admin` role.
+
+A separate `/v1/admin` namespace supports the web admin client and can grow independently from the server-rendered dashboard.
+
+### Quality toolchain
+
+- RSpec, FactoryBot, Shoulda Matchers, Faker, and Database Cleaner.
+- RuboCop Rails Omakase for consistent Ruby and Rails style.
+- Brakeman for Rails security analysis.
+- Bundler Audit for dependency vulnerability checks.
+- Guard RSpec for rapid local feedback.
+- Rswag request specifications for OpenAPI generation.
+
+## Operations center
+
+Operational dashboards are mounted in the application and protected by admin authentication. API documentation and the health endpoint are listed alongside them for convenience.
+
+| Path           | Purpose                             |
+| -------------- | ----------------------------------- |
+| `/admin`       | Administrate resource management    |
+| `/admin/pulse` | Request, query, and job performance |
+| `/admin/red`   | Backend errors and diagnostics      |
+| `/admin/queue` | Solid Queue inspection and control  |
+| `/admin/cache` | Solid Cache inspection              |
+| `/admin/cable` | Solid Cable inspection              |
+| `/api-docs`    | Swagger/OpenAPI documentation       |
+| `/up`          | Application health check            |
+
+Client-side errors are accepted at `POST /v1/log/clients` and managed from the admin area.
+
+## Getting started
+
+Docker is the quickest and most reproducible path.
 
 ### Prerequisites
 
-In order to run this project you need <a href="https://www.ruby-lang.org/en/downloads/">Ruby</a> and <a href="https://www.postgresql.org/">PostgreSQL</a> set up on your computer, or you can use <a href="https://www.docker.com/">Docker</a>.
+- Docker with Docker Compose
+- Git
 
-Check your Ruby and PostgreSQL installations if you are not using Docker.
+For a native installation, use Ruby `4.0.4`, PostgreSQL, libvips, and Bundler `4.0.16`.
 
-```sh
-  ruby --version && postgres --version
+### 1. Clone and configure
+
+```bash
+git clone https://github.com/rex-9/rexone-core.git
+cd rexone-core
+cp .env.example .env
 ```
 
-### Setup
+Fill in the required database, JWT, Stripe, OneSignal, DeepSeek, and Cloudinary values in `.env`.
 
-Clone this repository or download it as a zip file to your desired folder:
+Development placeholders are fine for providers you are not exercising, but never ship placeholder secrets.
 
-```sh
-  cd my-folder
-  git clone https://github.com/rex-9/rexone-core.git
+### 2. Start the stack
+
+```bash
+docker compose -f docker-compose.dev.yaml up --build
 ```
 
-Enter the root level of the project:
+This starts:
 
-```sh
-  cd rexone-core
+- `api` — Rails on [http://localhost:3000](http://localhost:3000)
+- `waka` — the dedicated Solid Queue worker
+- `db` — PostgreSQL
+
+The development entrypoint runs `db:prepare` when the API starts.
+
+If you prefer separate terminals, the repository includes:
+
+```bash
+./scripts/dev_db.sh
+./scripts/dev_api.sh
+./scripts/dev_waka.sh
 ```
 
-### Run
+### 3. Seed IAM and admin users
 
-Run the application.
-
-```sh
-  shell-1> sh scripts/dev_api.sh
-  shell-2> sh scripts/dev_waka.sh
-  shell-3> sh scripts/dev_db.sh
+```bash
+docker compose -f docker-compose.dev.yaml exec api bin/rails db:seed
 ```
 
-### Scripts
+The seed file creates the default roles, permissions, assignments, and development admin accounts.
 
-Explore them under the `/scripts` folder.
+Review and replace seeded credentials before using them outside local development.
 
-### Doc
+### Useful commands
 
-Generate Swagger/OpenAPI documentation:
+```bash
+# Rails console
+./scripts/console.sh
 
-```sh
-> sh scripts/rswag.sh
+# Generate OpenAPI output
+./scripts/rswag.sh
+
+# Run the repository test script
+./scripts/test.sh
+
+# Watch specs
+./scripts/test_watch.sh
+
+# Run Rails security analysis
+bin/brakeman
+
+# Run linting
+bin/rubocop
 ```
 
-### Test
+## Configuration
 
-Set up RSpec once:
+The checked-in [`.env.example`](.env.example) documents the available settings.
 
-```sh
-> rails generate rspec:install
-```
+The important groups are:
 
-Execute tests:
+- Rails environment, URLs, logging, threads, and secrets.
+- PostgreSQL connection and Docker service names.
+- JWT/session, confirmation, and password-reset lifetimes.
+- Stripe credentials, webhook secret, and redirect URLs.
+- OneSignal application, API key, sender, and sound configuration.
+- DeepSeek API URL, key, and model.
+- Cloudinary credentials or local storage path.
+- Solid Queue process and shutdown settings.
 
-```sh
-> sh scripts/test.sh
-```
+Keep real credentials in your deployment platform or encrypted secret store—not in Git.
 
-Watch tests:
+## API surface
 
-```sh
-> sh scripts/test_watch.sh
-```
+The API is broader than a starter CRUD demo. Its main route families are:
 
-View the API documentation at:
+| Area             | Representative routes                                                    |
+| ---------------- | ------------------------------------------------------------------------ |
+| Authentication   | `/signup`, `/signin`, `/signin/google`, `/confirmation/*`, `/password/*` |
+| Users            | `/v1/users/*`                                                            |
+| IAM              | `/v1/iam/*`                                                              |
+| Admin API        | `/v1/admin/*`                                                            |
+| Payments         | `/v1/payment/*`, `/webhooks/stripe`                                      |
+| Entitlements     | `/v1/access/*`                                                           |
+| Media            | `/v1/media/upload`                                                       |
+| Notifications    | `/v1/notifications/*`                                                    |
+| AI               | `/v1/ai/*`                                                               |
+| Client telemetry | `/v1/log/clients`                                                        |
 
-`/api-docs/`
+Use `/api-docs` for the interactive OpenAPI view and [`config/routes.rb`](config/routes.rb) for the authoritative route map.
 
-### Performance Dashboard
+## Deployment
 
-The application includes a built-in performance monitoring dashboard powered by **Rails Pulse**.
+The production image is multi-stage, runs as a non-root user, precompiles Bootsnap, includes health-check dependencies, and prepares the database when the API container starts.
 
-Rails Pulse provides visibility into application performance and runtime activity, including request performance and application-level metrics.
+[`docker-compose.yaml`](docker-compose.yaml) separates the API, Solid Queue worker, and PostgreSQL services with health checks and restart policies.
 
-#### Access
+The same image can also be deployed through Kamal or another container platform.
 
-View the performance dashboard at:
+Before production:
 
-`/admin/pulse`
+1. Supply real secrets through the deployment environment.
+2. Use strong, unique admin credentials and remove development seed accounts.
+3. Configure Stripe webhook signing and provider callback URLs.
+4. Run the API and `bin/jobs` worker as separate processes.
+5. Confirm database pool sizing against API threads and queue concurrency.
+6. Put TLS and a trusted reverse proxy in front of the application.
+7. Review retention, throttling, alerting, and backup policies for your product.
 
-### Error Dashboard
+## Related clients
 
-The application includes a dedicated error monitoring and diagnostics dashboard powered by **Rails Error Dashboard (RED)**.
+- [Rexone Web](https://github.com/rex-9/rexone-web) — web client
+- [Rexone Mobile](https://github.com/rex-9/rexone_mobile) — mobile client
 
-RED complements Rails Pulse by focusing specifically on application exceptions, error analysis, analytics, diagnostics, and alerting.
+## Support the project
 
-#### Access
-
-View the error dashboard at:
-
-`/admin/red`
-
-The RED dashboard is protected by the application's administrative authentication and is intended for authorized administrators only.
-
-### Solid Web UI
-
-The application includes dedicated dashboards for the Rails Solid Stack.
-
-#### Queue Dashboard
-
-Monitor and manage background jobs through Solid Queue:
-
-`/admin/queue`
-
-#### Cache Dashboard
-
-Inspect and manage application cache through Solid Cache:
-
-`/admin/cache`
-
-#### Cable Dashboard
-
-Inspect Action Cable messages and manage retained messages through Solid Cable:
-
-`/admin/cable`
-
-#### Performance Monitoring vs Error Monitoring
-
-Rexone Core uses both Rails Pulse and RED because they provide different types of observability:
-
-| System          | Purpose                                                            |
-| --------------- | ------------------------------------------------------------------ |
-| **Rails Pulse** | Application performance and runtime monitoring                     |
-| **RED**         | Application error monitoring, diagnostics, analytics, and alerting |
-| **Solid Queue** | Background job monitoring                                          |
-| **Solid Cache** | Cache inspection and management                                    |
-| **Solid Cable** | Action Cable monitoring                                            |
-
-Together, these tools provide visibility into both **application health** and **application failures**.
-
-### Admin Dashboard
-
-**Administrate** is available at `/admin` for managing application resources with IAM and RBAC authorization.
-
-#### Authentication & RBAC
-
-Administrative resources are protected through the application's authentication and authorization system.
-
-Access is controlled through IAM roles and permissions rather than relying solely on the existence of an admin route.
-
-Typical roles include:
-
-- `admin`
-- `super_admin`
-
-The `super_admin` role is intended for unrestricted administrative access.
-
-#### Super Admin Setup
-
-The super admin account is created through the application's seed process.
-
-Run:
-
-**```sh**
-
-> rails db:seed
-> **```**
-
-For production environments, use secure credentials and never commit passwords or secrets to the repository.
-
-#### Routes
-
-| Path                           | Description                 |
-| ------------------------------ | --------------------------- |
-| `/admin`                       | Administrate dashboard      |
-| `/admin/users`                 | User management             |
-| `/admin/assets`                | Asset management            |
-| `/admin/accesses`              | Access management           |
-| `/admin/iam/permissions`       | IAM permission management   |
-| `/admin/iam/roles`             | IAM role management         |
-| `/admin/iam/user_roles`        | User-role assignments       |
-| `/admin/iam/role_permissions`  | Role-permission assignments |
-| `/admin/payment/products`      | Payment product management  |
-| `/admin/payment/subscriptions` | Subscription management     |
-| `/admin/payment/transactions`  | Transaction management      |
-| `/admin/chat/rooms`            | Chat room management        |
-| `/admin/chat/messages`         | Chat message management     |
-
-#### Permissions
-
-The IAM system supports granular resource/action authorization.
-
-| Resource         | Actions                      | Description                 |
-| ---------------- | ---------------------------- | --------------------------- |
-| Users            | create, read, update, delete | Manage user accounts        |
-| Assets           | create, read, update, delete | Manage uploaded assets      |
-| Roles            | create, read, update, delete | Manage application roles    |
-| Permissions      | create, read, update, delete | Manage IAM permissions      |
-| User Roles       | create, read, delete         | Assign roles to users       |
-| Role Permissions | create, read, delete         | Assign permissions to roles |
-| Payment Products | create, read, update, delete | Manage payment products     |
-| Subscriptions    | create, read, update, delete | Manage subscriptions        |
-| Transactions     | create, read                 | Manage payment transactions |
-| Chat Rooms       | create, read, update, delete | Manage chat rooms           |
-| Chat Messages    | create, read, update, delete | Manage chat messages        |
-
-### Pagination
-
-The API uses **Pagy** for centralized pagination.
-
-Pagination parameters are provided through the API request:
-
-**```http
-GET /users?page=1&limit=20
-**```\*\*
-
-Paginated responses follow a consistent structure:
-
-**```json
-{
-"status": {
-"code": 200,
-"success": true,
-"message": "Users retrieved successfully"
-},
-"data": [
-{
-"id": "uuid-1",
-"type": "user",
-"attributes": {
-"email": "user@example.com",
-"username": "testuser",
-"name": "Test User",
-"created_at": "2026-08-09T12:00:00.000Z"
-}
-}
-],
-"meta": {
-"pagination": {
-"current_page": 1,
-"total_pages": 10,
-"total_count": 95,
-"per_page": 20,
-"next_page": 2,
-"prev_page": null
-}
-}
-}
-**```\*\*
-
-Pagination is centralized in the backend so API clients can consume the same response structure across paginated resources.
-
-### Explore More Open Source Projects
-
-If you are interested in exploring more open source projects, check out Instacart's GitHub page:
-
-[Instacart Open Source Projects](https://github.com/instacart)
-
-# ☕ Support <a name="support"></a>
-
-If you like this project, please consider giving it a star on GitHub and supporting its development: 🌟
+If Rexone Core saves you a few weeks—or saves you from one memorable production incident—consider giving it a star. 🌟
 
 [![GitHub Stars](https://img.shields.io/github/stars/rex-9/rexone-core.svg?style=social&label=Star)](https://github.com/rex-9/rexone-core)
 
-<!-- <div align="center">
-  <a href="https://buymeacoffee.com/rex9" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" >
-  </a>
-</div> -->
+## Author
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+Built with clarity, curiosity, and a healthy suspicion of unexamined complexity by **Rex (Rex9)**.
 
-## 👤 Author
+A software engineer, full-stack architect, and long-time practitioner of meditation.
 
-**Rex (Rex9)**
+I build systems the same way I approach the path itself: **with a clear mind, deliberate steps, and no unnecessary weight.**
 
 - GitHub: [@rex-9](https://github.com/rex-9)
 - Portfolio: [rex9.vercel.app](https://rex9.vercel.app)
-- Linkedin: [rex9](https://www.linkedin.com/in/rex9/)
+- LinkedIn: [rex9](https://www.linkedin.com/in/rex9/)
 
-_Built with ❤️ by Rex9_
+<p align="right"><a href="#readme-top">Back to top ↑</a></p>

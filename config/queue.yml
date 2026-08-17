@@ -1,49 +1,45 @@
 # config/queue.yml
 # TODO: need to test with dev
-default: &default # How often to poll for new jobs (in seconds)
-  dispatchers:
-    - polling_interval: 0.1
-      shutdown_timeout: 30 # Graceful shutdown timeout
-      # batch_size: 500
+default: &default
+  dispatchers: # move scheduled queue to ready queue when time's up [not immediate jobs]
+    - polling_interval: 1 # check scheduled queue every 1s & move to ready when scheduled time's up
+      batch_size: 500 # 2000 notis => 4 x 500 notis move to ready queue
+      concurrency_maintenance_interval: 60 # check blocked jobs every min. not affect normal ready-job polling. default is 600s.
 
 development:
   <<: *default
-  workers:
+  workers: # idle worker checks ready queue & execute
     - queues: "*"
-      threads: 5 # Use threads in dev for simplicity
-      polling_interval: 0.5
+      threads: 3
+      polling_interval: 0.5 # 2 checks per second
 
 test:
   <<: *default
   workers:
     - queues: "*"
-      threads: 1 # Single thread to keep tests fast
+      threads: 1
+      polling_interval: 0.5
 
 production:
   <<: *default
-  # Total: 34 concurrent jobs - 5 workers
+
   workers:
-    # Worker 1: General jobs — start with threads
-    - queues: "default"
-      threads: 5
-      polling_interval: 0.05
-
-    # Worker 2: Mailers — I/O heavy, use fibers
-    - queues: "mailers"
-      fibers: 20
-      polling_interval: 0.05
-
-    # Worker 3: Image processing — CPU heavy, use threads
-    - queues: "image_processing"
+    # Payment operations and ordinary application jobs
+    - queues: "payments,default"
       threads: 3
-      polling_interval: 0.05
+      polling_interval: 0.2
 
-    # Worker 4: Active Storage — mix of I/O and CPU
-    - queues: "active_storage_analysis,active_storage_purge"
+    # Everything coordinated by NotificationService
+    - queues: "notifications"
       threads: 3
-      polling_interval: 0.05
+      polling_interval: 0.5
 
-    # Worker 5: Catch-all for anything else — conservative
-    - queues: "*"
-      threads: 3
-      polling_interval: 0.05
+    # Storage uploads, deletion and media processing
+    - queues: "storage"
+      threads: 2
+      polling_interval: 1
+
+    # AI
+    - queues: "ai"
+      threads: 2
+      polling_interval: 0.5

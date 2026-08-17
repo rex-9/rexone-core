@@ -1,0 +1,18 @@
+my:
+  notification:
+    invalid_push_type: "Push notification အမျိုးအစား မမှန်ကန်ပါ။"
+    invalid_email_type: "အီးမေးလ်အမျိုးအစား မမှန်ကန်ပါ။"
+    supported_types: "အသုံးပြုနိုင်သော အမျိုးအစားများ: %{types}"
+    push_queued: "Push notification ပို့ရန် စီစဉ်ပြီးပါပြီ။"
+    push_failed: "Notification ပို့၍ မရပါ။"
+    email_queued: "အီးမေးလ်ပို့ရန် စီစဉ်ပြီးပါပြီ။"
+    email_failed: "အီးမေးလ်ပို့၍ မရပါ။"
+    default_title: "အသိပေးချက်"
+    default_body: "သင့်အတွက် အသိပေးချက်အသစ်တစ်ခု ရှိပါသည်။"
+    template_not_found: "Template ကို ရှာမတွေ့ပါ"
+    welcome:
+      title: "ကြိုဆိုပါတယ်! 🎉"
+      body: "မင်္ဂလာပါ %{name}၊ ကျွန်ုပ်တို့နှင့် ပူးပေါင်းသည့်အတွက် ကျေးဇူးတင်ပါသည်။"
+    sign_in_alert:
+      title: "အကောင့်ဝင်ရောက်မှုအသစ်"
+      body: "မင်္ဂလာပါ %{name}၊ သင့်အကောင့်သို့ ဝင်ရောက်မှုအသစ်တစ်ခု တွေ့ရှိထားပါသည်။"

@@ -1,6 +1,8 @@
 # app/models/asset.rb
 
 class Asset < ApplicationRecord
+  LOG_PREFIX = "[Asset]".freeze
+
   belongs_to :record, polymorphic: true, optional: true
   belongs_to :user, optional: true
 
@@ -15,21 +17,22 @@ class Asset < ApplicationRecord
   validate :url_must_be_valid
 
   before_validation :set_extension_and_format
-  before_destroy :delete_from_storage, if: :uploaded_file?
+  after_destroy_commit :delete_from_storage_later, if: :uploaded_file?
 
   scope :uploaded, -> { where(source: "upload") }
   scope :google, -> { where(source: "google") }
 
-  def delete_from_storage
+  def delete_from_storage_later
     return unless public_id.present?
 
-    begin
-      StorageService::Client.delete(public_id, resource_type: format)
-      Rails.logger.info("[Asset] Deleted from storage: #{public_id}")
-    rescue StorageService::Error => e
-      Rails.logger.error("[Asset] Failed to delete from storage: #{e.message}")
-      # Don't raise, just log - we still want to delete the database record
-    end
+    StorageService::Client.delete_later(
+      public_id,
+      resource_type: storage_resource_type
+    )
+    Rails.logger.info("#{LOG_PREFIX} Queued storage deletion: #{public_id}")
+  rescue StandardError => e
+    Rails.error.report(e)
+    Rails.logger.error("#{LOG_PREFIX} Failed to queue storage deletion: #{e.message}")
   end
 
   def uploaded?
@@ -58,11 +61,22 @@ class Asset < ApplicationRecord
     new_url = StorageService::Client.url(public_id)
     update_column(:url, new_url) if new_url.present?
   rescue StorageService::Error => e
-    Rails.logger.error("[Asset] Failed to refresh URL: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Failed to refresh URL: #{e.message}")
     false
   end
 
   private
+
+  def storage_resource_type
+    case format
+    when "video"
+      "video"
+    when "doc"
+      "raw"
+    else
+      "image"
+    end
+  end
 
   def url_must_be_valid
     return if url.blank?

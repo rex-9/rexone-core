@@ -1,33 +1,44 @@
 # app/controllers/v1/log/clients_controller.rb
 class V1::Log::ClientsController < V1::ApplicationController
-  skip_before_action :authenticate_user!, only: [ :create ] # Allow public errors
+  skip_before_action :authenticate_user!, only: [ :create ]
   before_action :set_log_client, only: [ :show, :update_resolve, :update_unresolve ]
 
   # POST /log/clients
   def create
-  log_client = Log::Client.new(log_client_params)
+    log_client = find_or_initialize_log
 
-  # Attach user if authenticated
-  log_client.user = current_user if current_user.present?
+    if log_client.persisted?
+      # Increment occurrence count and update timestamp
+      log_client.increment!(:occurrence_count)
+      log_client.touch(:last_occurred_at)
 
-  # Set default values
-  log_client.severity ||= "error"
-  log_client.request_id ||= request.request_id
-  log_client.url ||= request.referer || request.url
-  log_client.method ||= request.method
-
-    if log_client.save
       render_json_response(
-        status_code: 201,
-        message: "Client log created successfully",
-        data: { id: log_client.id }
+        status_code: 200,
+        message: log_message(MessageService::Log::OCCURRENCE_RECORDED),
+        data: { id: log_client.id, occurrence_count: log_client.occurrence_count }
       )
     else
-      render_json_response(
-        status_code: 422,
-        message: "Failed to create client log",
-        error: log_client.errors.full_messages.to_sentence
-      )
+      # New log - assign attributes and save
+      log_client.assign_attributes(log_client_params)
+      log_client.user = current_user if current_user.present?
+      log_client.severity ||= "error"
+      log_client.request_id ||= request.request_id
+      log_client.url ||= request.referer || request.url
+      log_client.method ||= request.method
+
+      if log_client.save
+        render_json_response(
+          status_code: 201,
+          message: log_message(MessageService::Log::CREATED),
+          data: { id: log_client.id }
+        )
+      else
+        render_json_response(
+          status_code: 422,
+          message: log_message(MessageService::Log::CREATE_FAILED),
+          error: log_client.errors.full_messages.to_sentence
+        )
+      end
     end
   end
 
@@ -36,21 +47,14 @@ class V1::Log::ClientsController < V1::ApplicationController
     authorize! :read, Log::Client
 
     logs = Log::Client.all.order(created_at: :desc)
-
-    # Apply filters
-    logs = logs.by_severity(params[:severity]) if params[:severity].present?
-    logs = logs.by_platform(params[:platform]) if params[:platform].present?
-    logs = logs.by_environment(params[:environment]) if params[:environment].present?
-    logs = logs.unresolved if params[:unresolved] == "true"
-    logs = logs.resolved if params[:resolved] == "true"
-    logs = logs.with_storage_issues if params[:storage_issues] == "true"
+    logs = apply_filters(logs)
 
     pagy, records = pagy(:offset, logs, limit: params[:limit])
     serialized = Log::ClientSerializer.paginated(records, pagy)
 
     render_json_response(
       status_code: 200,
-      message: "Client logs fetched successfully",
+      message: log_message(MessageService::Log::FETCHED),
       data: serialized,
       pagy: pagy
     )
@@ -61,7 +65,7 @@ class V1::Log::ClientsController < V1::ApplicationController
     authorize! :read, Log::Client
     render_json_response(
       status_code: 200,
-      message: "Client log fetched successfully",
+      message: log_message(MessageService::Log::FETCHED_ONE),
       data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
     )
   end
@@ -73,7 +77,7 @@ class V1::Log::ClientsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Client log marked as resolved",
+      message: log_message(MessageService::Log::RESOLVED),
       data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
     )
   end
@@ -85,23 +89,27 @@ class V1::Log::ClientsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: "Client log marked as unresolved",
+      message: log_message(MessageService::Log::UNRESOLVED),
       data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
     )
   end
 
-  # DELETE /log/clients/:id (hard delete)
+  # DELETE /log/clients/:id
   def destroy
     authorize! :destroy, Log::Client
     @log_client.destroy!
 
     render_json_response(
       status_code: 200,
-      message: "Client log deleted permanently"
+      message: log_message(MessageService::Log::DELETED)
     )
   end
 
   private
+
+  def log_message(key, **options)
+    MessageService::Log.t(key, **options)
+  end
 
   def set_log_client
     @log_client = Log::Client.find(params[:id])
@@ -120,16 +128,30 @@ class V1::Log::ClientsController < V1::ApplicationController
     )
   end
 
-  def detect_platform
-    user_agent = request.user_agent.to_s.downcase
+  def find_or_initialize_log
+    conditions = {
+      message: params[:log][:message],
+      severity: params[:log][:severity] || "error",
+      platform: params[:log][:platform],
+      environment: params[:log][:environment],
+      os: params[:log][:os],
+      os_version: params[:log][:os_version],
+      browser: params[:log][:browser],
+      url: params[:log][:url],
+      method: params[:log][:method]
+    }.compact
 
-    return "ios" if user_agent.include?("ios") || user_agent.include?("iphone") || user_agent.include?("ipad")
-    return "android" if user_agent.include?("android")
-    "web"
+    Log::Client.find_or_initialize_by(conditions)
   end
 
-  def detect_environment
-    params[:environment].presence || Rails.env
+  def apply_filters(logs)
+    logs = logs.by_severity(params[:severity]) if params[:severity].present?
+    logs = logs.by_platform(params[:platform]) if params[:platform].present?
+    logs = logs.by_environment(params[:environment]) if params[:environment].present?
+    logs = logs.unresolved if params[:unresolved] == "true"
+    logs = logs.resolved if params[:resolved] == "true"
+    logs = logs.with_storage_issues if params[:storage_issues] == "true"
+    logs
   end
 end
 

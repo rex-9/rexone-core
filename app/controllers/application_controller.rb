@@ -1,13 +1,36 @@
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::API
+  AUTH_LOG_PREFIX = "[Auth]".freeze
+  SUPPORTED_LOCALES = %w[en my].freeze
+
   include Pagy::Method
   include Authorization
   include ApplicationHelper
 
+  around_action :switch_locale
   before_action :enforce_active_platform_session!, :set_current_auditor
   before_action :authenticate_user!
 
   private
+
+  def switch_locale(&action)
+    I18n.with_locale(requested_locale, &action)
+  end
+
+  def requested_locale
+    candidates = [
+      params[:locale],
+      request.headers["X-Locale"],
+      *request.headers["Accept-Language"].to_s.split(",")
+    ]
+
+    candidates.each do |candidate|
+      locale = candidate.to_s.split(";").first.to_s.strip.downcase.split(/[-_]/).first
+      return locale if SUPPORTED_LOCALES.include?(locale)
+    end
+
+    I18n.default_locale
+  end
 
   def set_current_auditor
     Current.auditor = current_user if current_user
@@ -25,8 +48,8 @@ class ApplicationController < ActionController::API
     if active_token.blank? || active_token != bearer_token
       render_json_response(
         status_code: 401,
-        message: Messages::FAILED_TO_SIGN_IN,
-        error: Messages::ACTIVE_SESSION_NOT_FOUND
+        message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
+        error: auth_message(MessageService::Auth::ACTIVE_SESSION_NOT_FOUND)
       )
       return
     end
@@ -34,12 +57,18 @@ class ApplicationController < ActionController::API
     # Refresh the session TTL on each request
     CacheService.write(key, bearer_token, expires_in: AppConfig::SESSION_TIMEOUT)
   rescue => e
-    Rails.logger.error("[Auth] Active session verification failed: #{e.message}")
+    Rails.logger.error(
+      "#{AUTH_LOG_PREFIX} Active session verification failed: #{e.message}"
+    )
   end
 
   def session_platform
     value = request.headers["X-Platform"].presence || params[:platform].presence || "web"
     %w[web mobile].include?(value) ? value : "web"
+  end
+
+  def auth_message(key, **options)
+    MessageService::Auth.t(key, **options)
   end
 
   def session_key(user_id)

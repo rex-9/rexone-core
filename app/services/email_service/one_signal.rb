@@ -3,6 +3,8 @@ require "rest-client"
 
 module EmailService
   class OneSignal < Base
+    LOG_PREFIX = "[OneSignal]".freeze
+
     def initialize
       @app_id = AppConfig::ONE_SIGNAL_APP_ID
       @api_key = AppConfig::ONE_SIGNAL_API_KEY
@@ -28,7 +30,7 @@ module EmailService
       )
       JSON.parse(response.body)
     rescue RestClient::Exception => e
-      Rails.logger.error("[OneSignal] Email failed: #{e.response&.body}")
+      Rails.logger.error("#{LOG_PREFIX} Email failed: #{e.response&.body}")
       raise EmailService::Error, "Failed to send email: #{e.message}"
     end
 
@@ -39,7 +41,9 @@ module EmailService
 
       # Replace template variables with data
       body = render_template(template, template_data)
-      subject = template_data[:subject] || template["subject"] || "Notification"
+      subject = template_data[:subject] ||
+                template["subject"] ||
+                MessageService::Notification.t(MessageService::Notification::DEFAULT_TITLE)
 
       send_email(
         to: to,
@@ -48,7 +52,7 @@ module EmailService
         from: from
       )
     rescue => e
-      Rails.logger.error("[OneSignal] Template email failed: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Template email failed: #{e.message}")
       false
     end
 
@@ -65,12 +69,16 @@ module EmailService
       )
       @templates[template_id] = JSON.parse(response.body)
     rescue RestClient::Exception => e
-      Rails.logger.error("[OneSignal] Failed to fetch template: #{e.message}")
+      Rails.logger.error("#{LOG_PREFIX} Failed to fetch template: #{e.message}")
       nil
     end
 
     def render_template(template, data)
-      return "Template not found" if template.nil?
+      if template.nil?
+        return MessageService::Notification.t(
+          MessageService::Notification::TEMPLATE_NOT_FOUND
+        )
+      end
 
       html = template["html"] || template["body"]
 

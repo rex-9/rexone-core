@@ -6,6 +6,7 @@ require "cloudinary/uploader"
 module StorageService
   class Cloudinary < Base
     Cloudinary = ::Cloudinary
+    LOG_PREFIX = "[Cloudinary]".freeze
 
     def initialize
       Cloudinary.config do |config|
@@ -47,8 +48,8 @@ module StorageService
         original_filename: result["original_filename"],
         resource_type: result["resource_type"]
       }
-    rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] Upload Error: #{e.message}")
+    rescue ::CloudinaryException => e
+      Rails.logger.error("#{LOG_PREFIX} Upload Error: #{e.message}")
       raise UploadError, e.message
     end
 
@@ -56,14 +57,14 @@ module StorageService
       resource_type = options[:resource_type] || "image"
       result = Cloudinary::Uploader.destroy(identifier, resource_type: resource_type)
 
-      unless result["result"] == "ok"
+      unless %w[ok not\ found].include?(result["result"])
         raise DeleteError, result["error"]["message"] if result["error"]
         raise DeleteError, "Failed to delete asset"
       end
 
       true
-    rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] Delete Error: #{e.message}")
+    rescue ::CloudinaryException => e
+      Rails.logger.error("#{LOG_PREFIX} Delete Error: #{e.message}")
       raise DeleteError, e.message
     end
 
@@ -105,8 +106,8 @@ module StorageService
         format: result["format"],
         resource_type: result["resource_type"]
       }
-    rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] Copy Error: #{e.message}")
+    rescue ::CloudinaryException => e
+      Rails.logger.error("#{LOG_PREFIX} Copy Error: #{e.message}")
       raise UploadError, e.message
     end
 
@@ -115,8 +116,8 @@ module StorageService
       true
     rescue Cloudinary::Api::NotFound
       false
-    rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] Exists? Error: #{e.message}")
+    rescue ::CloudinaryException => e
+      Rails.logger.error("#{LOG_PREFIX} Exists? Error: #{e.message}")
       false
     end
 
@@ -140,8 +141,8 @@ module StorageService
           resource_type: resource["resource_type"]
         }
       end
-    rescue Cloudinary::Error => e
-      Rails.logger.error("[Cloudinary] List Error: #{e.message}")
+    rescue ::CloudinaryException => e
+      Rails.logger.error("#{LOG_PREFIX} List Error: #{e.message}")
       []
     end
 

@@ -1,0 +1,18 @@
+en:
+  notification:
+    invalid_push_type: "Invalid push type."
+    invalid_email_type: "Invalid email type."
+    supported_types: "Supported types: %{types}"
+    push_queued: "Push notification queued."
+    push_failed: "Failed to send notification."
+    email_queued: "Email queued."
+    email_failed: "Failed to send email."
+    default_title: "Notification"
+    default_body: "You have a new notification."
+    template_not_found: "Template not found"
+    welcome:
+      title: "Welcome aboard! 🎉"
+      body: "Hey %{name}, thanks for joining! We're excited to have you."
+    sign_in_alert:
+      title: "New Sign In"
+      body: "Hi %{name}, we noticed a new sign-in to your account."
