@@ -31,19 +31,25 @@ RSpec.configure do |config|
         DESCRIPTION
       },
       tags: [
-        { name: 'Authentication' },
-        { name: 'Users' },
-        { name: 'Admin Users' },
-        { name: 'IAM Permissions' },
-        { name: 'IAM Roles' },
-        { name: 'IAM User Roles' },
-        { name: 'Payments' },
-        { name: 'Access' },
-        { name: 'Media' },
-        { name: 'Notifications' },
-        { name: 'AI' },
-        { name: 'Client Logs' },
-        { name: 'Webhooks' }
+        { name: 'Authentication', description: 'Account registration, confirmation, sessions, and password recovery.' },
+        { name: 'Users', description: 'Authenticated user profile and effective IAM information.' },
+        {
+          name: 'Admin / Users',
+          description: 'Admin dashboard user operations. Requires the admin role and the matching user permission.'
+        },
+        {
+          name: 'Admin / Notifications',
+          description: 'Admin notification dispatch. Requires the admin role and create_notifications permission.'
+        },
+        { name: 'IAM Permissions', description: 'Super-admin permission management.' },
+        { name: 'IAM Roles', description: 'Role definitions and their permission assignments.' },
+        { name: 'IAM User Roles', description: 'Admin-managed role assignments for users.' },
+        { name: 'Payments', description: 'Products, checkout sessions, subscriptions, and transactions.' },
+        { name: 'Access', description: 'Product-access inspection and revocation.' },
+        { name: 'Media', description: 'Synchronous multipart asset upload.' },
+        { name: 'AI', description: 'Durable queued chat plus synchronous text utilities.' },
+        { name: 'Client Logs', description: 'Client error ingestion and authorized operational review.' },
+        { name: 'Webhooks', description: 'Provider-signed inbound webhooks.' }
       ],
       components: {
         schemas: Openapi::V1::SCHEMAS,

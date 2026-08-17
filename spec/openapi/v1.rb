@@ -8,6 +8,11 @@ module Openapi
     UUID = { type: :string, format: :uuid }.freeze
     DATE_TIME = { type: :string, format: "date-time", nullable: true }.freeze
     SECURITY = [ { bearerAuth: [] } ].freeze
+    AI_STATUSES = Chat::Message::AI_STATUSES.values.freeze
+    AI_ROLES = %w[user assistant].freeze
+    LOG_SEVERITIES = Log::Client.severities.keys.freeze
+    LOG_PLATFORMS = Log::Client.platforms.keys.freeze
+    LOG_ENVIRONMENTS = Log::Client.environments.keys.freeze
 
     def ref(name)
       { "$ref": "#/components/schemas/#{name}" }
@@ -28,7 +33,7 @@ module Openapi
       }
     end
 
-    def operation(tags:, summary:, success: 200, body: nil, parameters: [],
+    def operation(tags:, summary:, description: nil, success: 200, body: nil, parameters: [],
                   security: SECURITY, errors: [ 401, 422 ])
       operation = {
         tags: Array(tags),
@@ -38,6 +43,7 @@ module Openapi
           success.to_s => response(success == 201 ? "Created" : "Successful response")
         }
       }
+      operation[:description] = description if description
       operation[:security] = security unless security.nil?
       operation[:requestBody] = request(body) if body
       errors.each do |status|
@@ -111,6 +117,208 @@ module Openapi
     end
 
     SCHEMAS = {
+      signup_request: object(
+        required: [ :user ],
+        user: object(
+          required: %i[username name email password password_confirmation],
+          username: { type: :string, pattern: "^[a-z0-9_]+$", example: "elden_lord" },
+          name: { type: :string, maxLength: 50, example: "Elden Lord" },
+          email: { type: :string, format: :email, example: "lord@example.com" },
+          password: { type: :string, format: :password, minLength: 6, writeOnly: true },
+          password_confirmation: { type: :string, format: :password, minLength: 6, writeOnly: true }
+        )
+      ),
+      signin_request: object(
+        required: [ :user ],
+        user: object(
+          required: %i[signin_key password],
+          signin_key: { type: :string, description: "Email address or username", example: "elden_lord" },
+          password: { type: :string, format: :password, writeOnly: true }
+        )
+      ),
+      token_signin_request: object(
+        required: [ :token ],
+        token: { type: :string, writeOnly: true, description: "One-time account sign-in token." }
+      ),
+      google_signin_request: object(
+        required: [ :token ],
+        token: { type: :string, writeOnly: true, description: "Google identity token." }
+      ),
+      google_registration_request: object(
+        required: %i[challenge_token password],
+        challenge_token: { type: :string, writeOnly: true },
+        password: { type: :string, format: :password, minLength: 6, writeOnly: true }
+      ),
+      confirmation_code_request: object(
+        required: [ :signin_key ],
+        signin_key: { type: :string, description: "Email address or username." }
+      ),
+      confirmation_verify_request: object(
+        required: %i[signin_key confirmation_code],
+        signin_key: { type: :string, description: "Email address or username." },
+        confirmation_code: { type: :string, pattern: "^[0-9]{6}$", example: "123456" }
+      ),
+      forgot_password_request: object(
+        required: [ :email ],
+        email: { type: :string, format: :email }
+      ),
+      reset_password_request: object(
+        required: [ :user ],
+        user: object(
+          required: %i[reset_password_token password password_confirmation],
+          reset_password_token: { type: :string, writeOnly: true },
+          password: { type: :string, format: :password, minLength: 6, writeOnly: true },
+          password_confirmation: { type: :string, format: :password, minLength: 6, writeOnly: true }
+        )
+      ),
+      role_request: object(
+        required: [ :name ],
+        name: { type: :string, example: "teacher" },
+        description: { type: :string, nullable: true },
+        permission_ids: {
+          type: :array,
+          uniqueItems: true,
+          items: UUID,
+          description: "Permission UUIDs assigned to the role."
+        }
+      ),
+      user_role_request: object(
+        required: [ :role_id ],
+        role_id: UUID.merge(description: "Role UUID to assign to the path user.")
+      ),
+      client_log_context: {
+        type: :object,
+        description: "Free-form, JSON-safe diagnostic context supplied by the client. Do not include secrets or tokens.",
+        additionalProperties: true,
+        example: { component: "CheckoutPage", action: "loadSession", attempt: 2 }
+      },
+      client_log_request: object(
+        required: [ :log ],
+        log: object(
+          required: [ :message ],
+          message: { type: :string, example: "Checkout request failed" },
+          severity: { type: :string, enum: LOG_SEVERITIES, default: "error" },
+          platform: { type: :string, enum: LOG_PLATFORMS, nullable: true },
+          environment: { type: :string, enum: LOG_ENVIRONMENTS, nullable: true },
+          app_version: { type: :string, nullable: true },
+          browser: { type: :string, nullable: true },
+          user_agent: { type: :string, nullable: true },
+          os: { type: :string, nullable: true },
+          os_version: { type: :string, nullable: true },
+          device: { type: :string, nullable: true },
+          url: { type: :string, format: :uri, nullable: true },
+          method: { type: :string, example: "POST", nullable: true },
+          context: ref(:client_log_context),
+          stack_trace: { type: :array, items: { type: :string } },
+          local_storage_keys: { type: :array, items: { type: :string } },
+          session_storage_keys: { type: :array, items: { type: :string } },
+          cookies: {
+            type: :object,
+            description: "Cookie names and diagnostic values. Do not submit authentication cookies or secrets.",
+            additionalProperties: { type: :string }
+          }
+        )
+      ),
+      notification_data: {
+        type: :object,
+        description: <<~DESCRIPTION.squish,
+          Optional JSON object delivered unchanged to socket and push clients. There are no reserved or required keys for
+          admin-created notifications. Clients should agree on their own stable keys; a conventional `type` string may be
+          used as an event discriminator. Values must be JSON-safe.
+        DESCRIPTION
+        additionalProperties: true,
+        example: { type: "campaign_announcement", campaign_id: "summer-2026", path: "/offers" }
+      },
+      notification_request: object(
+        required: %i[audience channels title message],
+        audience: {
+          description: "Use exactly one audience shape. Role matches use OR semantics and each user is notified once.",
+          oneOf: [
+            object(
+              required: %i[type role_ids],
+              type: { type: :string, enum: [ "roles" ] },
+              role_ids: { type: :array, minItems: 1, uniqueItems: true, items: UUID }
+            ),
+            object(required: [ :type ], type: { type: :string, enum: [ "all" ] })
+          ]
+        },
+        channels: {
+          type: :array,
+          minItems: 1,
+          uniqueItems: true,
+          items: { type: :string, enum: NotificationService::CHANNELS },
+          description: "One or more delivery channels: socket, push, or email."
+        },
+        title: { type: :string, minLength: 1, example: "A new chapter awaits" },
+        message: { type: :string, minLength: 1, example: "Return to the app to see what is new." },
+        data: ref(:notification_data)
+      ),
+      asset_upload_request: object(
+        required: [ :file ],
+        file: { type: :string, format: :binary },
+        category: {
+          type: :string,
+          default: "profile",
+          description: "Storage folder and persisted asset category. Free-form string; defaults to profile."
+        }
+      ),
+      checkout_session_request: object(
+        required: %i[product_id success_url cancel_url],
+        product_id: UUID,
+        success_url: { type: :string, format: :uri, description: "Client URL used by Stripe after success." },
+        cancel_url: { type: :string, format: :uri, description: "Client URL used by Stripe after cancellation." }
+      ),
+      ai_chat_request: object(
+        required: [ :message ],
+        message: { type: :string, minLength: 1 },
+        room_id: UUID.merge(description: "Existing owned room UUID. Omit to use or create the current room."),
+        system_prompt: { type: :string, nullable: true, description: "Optional instruction prepended to this request." },
+        temperature: { type: :number, format: :float, default: 0.7, minimum: 0 },
+        max_tokens: { type: :integer, default: 2000, minimum: 1 }
+      ),
+      ai_rename_request: object(
+        required: [ :title ],
+        title: { type: :string, minLength: 1 },
+        room_id: UUID.merge(description: "Owned room UUID. Omit to use the current room.")
+      ),
+      ai_room_request: object(
+        title: { type: :string, minLength: 1, description: "Omit to use the translated default room title." }
+      ),
+      ai_text_request: object(
+        required: [ :text ],
+        text: { type: :string, minLength: 1 }
+      ),
+      ai_translate_request: object(
+        required: %i[text target_language],
+        text: { type: :string, minLength: 1 },
+        target_language: {
+          type: :string,
+          minLength: 1,
+          description: "Natural-language target such as English, Myanmar, Japanese, or Spanish; not a fixed enum."
+        }
+      ),
+      ai_analyze_request: object(
+        required: [ :text ],
+        text: { type: :string, minLength: 1 },
+        type: { type: :string, enum: %w[sentiment entities keywords], default: "sentiment" }
+      ),
+      ai_message_metadata: object(
+        status: { type: :string, enum: AI_STATUSES, description: "Processing state; set on queued user messages." },
+        notification_locale: { type: :string, enum: %w[en my], description: "Locale captured for completion notifications." },
+        system_prompt: { type: :string, nullable: true },
+        temperature: { type: :number, format: :float, nullable: true },
+        max_tokens: { type: :integer, nullable: true },
+        assistant_message_id: UUID.merge(nullable: true),
+        error: { type: :string, nullable: true },
+        usage: {
+          type: :object,
+          nullable: true,
+          description: "Provider token-usage object returned for an assistant response.",
+          additionalProperties: true,
+          example: { prompt_tokens: 42, completion_tokens: 18, total_tokens: 60 }
+        },
+        model: { type: :string, nullable: true, description: "Provider model identifier used for the response." }
+      ),
       response: object(
         required: [ :status ],
         status: object(
@@ -155,25 +363,6 @@ module Openapi
         created_at: DATE_TIME,
         updated_at: DATE_TIME
       ),
-      signup: object(
-        required: [ :user ],
-        user: object(
-          required: %i[username name email password password_confirmation],
-          username: { type: :string, pattern: "^[a-z0-9_]+$" },
-          name: { type: :string, maxLength: 50 },
-          email: { type: :string, format: :email },
-          password: { type: :string, format: :password, minLength: 6 },
-          password_confirmation: { type: :string, format: :password }
-        )
-      ),
-      signin: object(
-        required: [ :user ],
-        user: object(
-          required: %i[signin_key password],
-          signin_key: { type: :string, description: "Email address or username" },
-          password: { type: :string, format: :password }
-        )
-      ),
       role: object(
         id: UUID,
         name: { type: :string },
@@ -185,12 +374,6 @@ module Openapi
         created_at: DATE_TIME,
         updated_at: DATE_TIME
       ),
-      role_input: object(
-        required: [ :name ],
-        name: { type: :string },
-        description: { type: :string, nullable: true },
-        permission_ids: { type: :array, items: UUID }
-      ),
       permission: object(
         id: UUID,
         name: { type: :string },
@@ -198,14 +381,6 @@ module Openapi
         resource: { type: :string },
         created_at: DATE_TIME,
         updated_at: DATE_TIME
-      ),
-      permission_input: object(
-        required: [ :permission ],
-        permission: object(
-          required: %i[action resource],
-          action: { type: :string },
-          resource: { type: :string }
-        )
       ),
       product: object(
         id: UUID,
@@ -280,7 +455,11 @@ module Openapi
         id: UUID,
         user_id: UUID,
         title: { type: :string },
-        metadata: { type: :object },
+        metadata: {
+          type: :object,
+          description: "Server-owned room metadata. No public request currently accepts room metadata.",
+          additionalProperties: true
+        },
         message_count: { type: :integer },
         last_message: { type: :string, nullable: true },
         created_at: DATE_TIME,
@@ -289,32 +468,11 @@ module Openapi
       message: object(
         id: UUID,
         room_id: UUID,
-        role: { type: :string, enum: %w[user assistant system] },
+        role: { type: :string, enum: AI_ROLES },
         content: { type: :string },
-        metadata: { type: :object },
+        metadata: ref(:ai_message_metadata),
         created_at: DATE_TIME,
         updated_at: DATE_TIME
-      ),
-      log_input: object(
-        required: [ :log ],
-        log: object(
-          required: [ :message ],
-          message: { type: :string },
-          severity: { type: :string, default: "error" },
-          platform: { type: :string },
-          environment: { type: :string },
-          context: { type: :object },
-          stack_trace: { type: :array, items: { type: :string } },
-          url: { type: :string },
-          method: { type: :string }
-        )
-      ),
-      notification: object(
-        required: %i[user_id message],
-        user_id: UUID,
-        message: { type: :string },
-        title: { type: :string },
-        data: { type: :object }
       )
     }.freeze
 
@@ -342,29 +500,28 @@ module Openapi
         },
         "/signup" => {
           post: operation(tags: "Authentication", summary: "Create an email account", success: 201,
-                          security: nil, body: ref(:signup), errors: [ 400, 422 ]),
+                          security: nil, body: ref(:signup_request), errors: [ 400, 422 ]),
           delete: operation(tags: "Authentication", summary: "Delete the current account", errors: [ 401 ])
         },
         "/signin" => {
           post: operation(tags: "Authentication", summary: "Sign in with email or username",
-                          security: nil, body: ref(:signin), errors: [ 401, 429 ])
+                          security: nil, body: ref(:signin_request), errors: [ 401, 429 ])
         },
         "/signout" => {
           delete: operation(tags: "Authentication", summary: "Sign out the active platform session", errors: [ 401 ])
         },
         "/signin/token" => {
           post: operation(tags: "Authentication", summary: "Exchange a one-time account token for a JWT",
-                          security: nil, body: object(required: [ :token ], token: { type: :string }), errors: [ 401 ])
+                          security: nil, body: ref(:token_signin_request), errors: [ 401 ])
         },
         "/signin/google" => {
           post: operation(tags: "Authentication", summary: "Start Google sign-in",
-                          security: nil, body: object(required: [ :token ], token: { type: :string }), errors: [ 401 ])
+                          security: nil, body: ref(:google_signin_request), errors: [ 401 ])
         },
         "/signin/google/complete" => {
           post: operation(
             tags: "Authentication", summary: "Complete Google registration with a passcode", security: nil,
-            body: object(required: %i[challenge_token password], challenge_token: { type: :string },
-                         password: { type: :string, format: :password, minLength: 6 }),
+            body: ref(:google_registration_request),
             errors: [ 401, 422 ]
           )
         },
@@ -376,28 +533,22 @@ module Openapi
         },
         "/confirmation/send_code" => {
           post: operation(tags: "Authentication", summary: "Send a new email confirmation code", security: nil,
-                          body: object(required: [ :signin_key ], signin_key: { type: :string }), errors: [ 404, 422 ])
+                          body: ref(:confirmation_code_request), errors: [ 404, 422 ])
         },
         "/confirmation/confirm_code" => {
           post: operation(
             tags: "Authentication", summary: "Confirm an account using its email code", security: nil,
-            body: object(required: %i[signin_key confirmation_code], signin_key: { type: :string },
-                         confirmation_code: { type: :string, example: "123456" }), errors: [ 422 ]
+            body: ref(:confirmation_verify_request), errors: [ 422 ]
           )
         },
         "/password/forgot" => {
           post: operation(tags: "Authentication", summary: "Request a password reset email", security: nil,
-                          body: object(required: [ :email ], email: { type: :string, format: :email }), errors: [ 404 ])
+                          body: ref(:forgot_password_request), errors: [ 404 ])
         },
         "/password/reset" => {
           put: operation(
             tags: "Authentication", summary: "Reset a password using a reset token", security: nil,
-            body: object(
-              required: [ :user ],
-              user: object(required: %i[reset_password_token password password_confirmation],
-                           reset_password_token: { type: :string }, password: { type: :string, format: :password },
-                           password_confirmation: { type: :string, format: :password })
-            ), errors: [ 422 ]
+            body: ref(:reset_password_request), errors: [ 422 ]
           )
         },
         "/webhooks/stripe" => {
@@ -417,7 +568,7 @@ module Openapi
       }
 
       paths["/v1/admin/users"] = {
-        get: operation(tags: "Admin Users", summary: "List users for the admin client",
+        get: operation(tags: "Admin / Users", summary: "List users for the admin client",
                        parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
       }
       paths["/v1/iam/permissions"] = {
@@ -429,7 +580,7 @@ module Openapi
         delete: operation(tags: "IAM Permissions", summary: "Permanently delete a discarded permission",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
-      paths.merge!(standard_crud(path: "/v1/iam/roles", tag: "IAM Roles", schema: :role, writable: :role_input))
+      paths.merge!(standard_crud(path: "/v1/iam/roles", tag: "IAM Roles", schema: :role, writable: :role_request))
 
       paths["/v1/iam/permissions/discarded"] = {
         get: operation(tags: "IAM Permissions", summary: "List discarded permissions", errors: [ 401, 403 ])
@@ -450,7 +601,7 @@ module Openapi
         post: operation(
           tags: "IAM User Roles", summary: "Assign a role to a user",
           parameters: [ path_parameter(:user_id) ],
-          body: object(required: [ :role_id ], role_id: UUID), errors: [ 401, 403, 404, 422 ]
+          body: ref(:user_role_request), errors: [ 401, 403, 404, 422 ]
         )
       }
       paths["/v1/iam/users/{user_id}/roles/{id}"] = {
@@ -467,7 +618,7 @@ module Openapi
                        parameters: log_filters + [ query_parameter(:limit, type: :integer, minimum: 1) ],
                        errors: [ 401, 403 ]),
         post: operation(tags: "Client Logs", summary: "Report or increment a client error", success: 201,
-                        security: nil, body: ref(:log_input), errors: [ 422 ])
+                        security: nil, body: ref(:client_log_request), errors: [ 422 ])
       }
       paths["/v1/log/clients/{id}"] = {
         get: operation(tags: "Client Logs", summary: "Get a client error report",
@@ -484,30 +635,29 @@ module Openapi
 
       paths["/v1/media/upload"] = {
         post: operation(tags: "Media", summary: "Upload and persist an asset", success: 201,
-                        body: object(required: [ :file ], file: { type: :string, format: :binary },
-                                     category: { type: :string }), errors: [ 401, 422, 500 ])
+                        body: ref(:asset_upload_request), errors: [ 401, 422, 500 ])
       }
       paths["/v1/media/upload"][:post][:requestBody] = {
         required: true,
         content: {
           "multipart/form-data" => {
-            schema: object(required: [ :file ], file: { type: :string, format: :binary },
-                           category: { type: :string })
+            schema: ref(:asset_upload_request)
           }
         }
       }
-      paths["/v1/notifications/push"] = {
-        post: operation(tags: "Notifications", summary: "Queue a push notification",
-                        body: object(required: [ :user_id ], user_id: UUID,
-                                     type: { type: :string }, title: { type: :string },
-                                     body: { type: :string }, data: { type: :object }),
-                        errors: [ 401, 403, 422 ])
-      }
-      paths["/v1/notifications/email"] = {
-        post: operation(tags: "Notifications", summary: "Queue an email notification",
-                        body: object(required: [ :user_id ], user_id: UUID, type: { type: :string },
-                                     subject: { type: :string }, body: { type: :string }),
-                        errors: [ 401, 403, 422 ])
+      paths["/v1/admin/notifications"] = {
+        post: operation(
+          tags: "Admin / Notifications",
+          summary: "Queue an admin notification for selected roles or all users",
+          description: <<~DESCRIPTION.squish,
+            Requires an authenticated user with the admin role and create_notifications permission. Only confirmed,
+            active users are eligible. A roles audience matches users holding any supplied role and de-duplicates users
+            who hold multiple matching roles. The request queues fan-out and returns before channel delivery completes.
+          DESCRIPTION
+          success: 202,
+          body: ref(:notification_request),
+          errors: [ 401, 403, 422, 503 ]
+        )
       }
 
       paths["/v1/payment/products"] = {
@@ -545,8 +695,7 @@ module Openapi
       paths["/v1/payment/session"] = {
         post: operation(
           tags: "Payments", summary: "Create a Stripe Checkout session",
-          body: object(required: %i[product_id success_url cancel_url], product_id: UUID,
-                       success_url: { type: :string, format: :uri }, cancel_url: { type: :string, format: :uri }),
+          body: ref(:checkout_session_request),
           errors: [ 401, 404, 422 ]
         )
       }
@@ -576,9 +725,7 @@ module Openapi
                                        description: "Uses or creates the current room when omitted")
       paths["/v1/ai/chat"] = {
         post: operation(tags: "AI", summary: "Persist and queue a message for an AI room",
-                        body: object(required: [ :message ], message: { type: :string }, room_id: UUID,
-                                     temperature: { type: :number, format: :float, default: 0.7 },
-                                     max_tokens: { type: :integer, default: 2000 }), errors: [ 401, 422, 500 ])
+                        body: ref(:ai_chat_request), errors: [ 401, 422, 500, 503 ])
       }
       paths["/v1/ai/history"] = {
         get: operation(tags: "AI", summary: "Get room message history", parameters: [ room_parameter ], errors: [ 401, 404 ])
@@ -588,24 +735,22 @@ module Openapi
       }
       paths["/v1/ai/rename"] = {
         put: operation(tags: "AI", summary: "Rename a room",
-                       body: object(required: [ :title ], title: { type: :string }, room_id: UUID),
+                       body: ref(:ai_rename_request),
                        errors: [ 401, 404, 422 ])
       }
       paths["/v1/ai/rooms"] = {
         get: operation(tags: "AI", summary: "List AI rooms", errors: [ 401 ]),
         post: operation(tags: "AI", summary: "Create an AI room", success: 201,
-                        body: object(title: { type: :string }), errors: [ 401, 422 ])
+                        body: ref(:ai_room_request), errors: [ 401, 422 ])
       }
       paths["/v1/ai/rooms/{id}"] = {
         delete: operation(tags: "AI", summary: "Delete an AI room",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 404 ])
       }
       {
-        summarize: object(required: [ :text ], text: { type: :string }),
-        translate: object(required: %i[text target_language], text: { type: :string },
-                          target_language: { type: :string }),
-        analyze: object(required: [ :text ], text: { type: :string },
-                        type: { type: :string, enum: %w[sentiment entities keywords] })
+        summarize: ref(:ai_text_request),
+        translate: ref(:ai_translate_request),
+        analyze: ref(:ai_analyze_request)
       }.each do |action, body|
         paths["/v1/ai/#{action}"] = {
           post: operation(tags: "AI", summary: "#{action.to_s.capitalize} text", body: body,

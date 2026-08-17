@@ -8,7 +8,7 @@ RSpec.describe "OpenAPI V1 document" do
   it "documents every intentional public API operation" do
     operation_count = document[:paths].sum { |_path, methods| methods.size }
 
-    expect(operation_count).to eq(67)
+    expect(operation_count).to eq(66)
     expect(document[:paths]).to include(
       "/signup",
       "/v1/payment/session",
@@ -44,5 +44,51 @@ RSpec.describe "OpenAPI V1 document" do
           "#{controller}##{route.fetch(:action)}"
       end
     end
+  end
+
+  it "groups versioned admin operations under admin tags" do
+    admin_paths = document[:paths].select { |path, _methods| path.start_with?("/v1/admin/") }
+
+    admin_paths.each_value do |methods|
+      methods.each_value do |operation|
+        expect(operation.fetch(:tags)).to all(start_with("Admin /"))
+      end
+    end
+  end
+
+  it "uses named schemas for every client-authored request object" do
+    document[:paths].each do |path, methods|
+      methods.each do |method, operation|
+        operation.fetch(:requestBody, {}).fetch(:content, {}).each do |content_type, media_type|
+          next if path == "/webhooks/stripe"
+
+          expect(media_type.fetch(:schema)).to include(:"$ref"),
+            "#{method.to_s.upcase} #{path} (#{content_type}) must reference a named request schema"
+        end
+      end
+    end
+  end
+
+  it "documents conditional notification audiences and AI metadata keys" do
+    notification = document.dig(:components, :schemas, :notification_request, :properties)
+    audience_variants = notification.dig(:audience, :oneOf)
+
+    expect(audience_variants.map { |variant| variant.dig(:properties, :type, :enum) })
+      .to contain_exactly([ "roles" ], [ "all" ])
+    expect(notification.dig(:channels, :items, :enum)).to eq(NotificationService::CHANNELS)
+
+    metadata = document.dig(:components, :schemas, :ai_message_metadata, :properties)
+    expect(metadata.keys).to contain_exactly(
+      :status,
+      :notification_locale,
+      :system_prompt,
+      :temperature,
+      :max_tokens,
+      :assistant_message_id,
+      :error,
+      :usage,
+      :model
+    )
+    expect(metadata.dig(:status, :enum)).to eq(Chat::Message::AI_STATUSES.values)
   end
 end

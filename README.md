@@ -69,7 +69,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup | [Background processing](#background-processing)        |
 | Notifications  | Socket, push, and email coordination through OneSignal and Action Cable         | [Notifications & real time](#notifications--real-time) |
 | Media          | Cloudinary/local providers, uploads, URLs, metadata, queued deletion            | [Storage & assets](#storage--assets)                   |
-| AI             | Durable queued chat, persisted history, completion alerts, and language tools    | [AI capabilities](#ai-capabilities)                    |
+| AI             | Durable queued chat, persisted history, completion alerts, and language tools   | [AI capabilities](#ai-capabilities)                    |
 | Localization   | Request-scoped English and Myanmar responses with modular domain translations   | [Localization](#localization)                          |
 | Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization  | [Data & API design](#data--api-design)                 |
 | Operations     | Performance, errors, client logs, queues, cache, cable, health checks           | [Observability](#observability)                        |
@@ -182,6 +182,8 @@ The important distinction is deliberate: customer-facing payment flows remain re
 - OneSignal email and template delivery.
 
 Each enabled channel receives its own Solid Queue job. A failed email therefore does not repeat a successful push, and a notification provider outage does not roll back a completed payment or authentication action.
+
+The admin- and permission-protected `POST /v1/admin/notifications` contract is ready for the dashboard to send custom content to confirmed users holding selected roles—or to the full confirmed audience—through any combination of socket, push, and email. Users with several selected roles are included only once. Audience fanout runs in the `notifications` queue, while each resulting channel delivery keeps its own retry boundary. Transactional OneSignal email template identifiers live beside the email provider instead of in application initializers, and sensitive confirmation or password-reset workflows are never exposed as admin-selectable presets.
 
 ### Storage & assets
 
@@ -392,7 +394,7 @@ The API is broader than a starter CRUD demo. Its main route families are:
 | Payments         | `/v1/payment/*`, `/webhooks/stripe`                                      |
 | Entitlements     | `/v1/access/*`                                                           |
 | Media            | `/v1/media/upload`                                                       |
-| Notifications    | `/v1/notifications/*`                                                    |
+| Notifications    | `/v1/admin/notifications`                                                |
 | AI               | `/v1/ai/*`                                                               |
 | Client telemetry | `/v1/log/clients`                                                        |
 

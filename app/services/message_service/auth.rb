@@ -29,8 +29,5 @@ module MessageService
     TOO_MANY_ATTEMPTS_WITH_WAIT = "auth.too_many_attempts_with_wait"
     SET_PASSCODE = "auth.set_passcode"
     CHALLENGE_AND_PASSCODE_REQUIRED = "auth.challenge_and_passcode_required"
-
-    CONFIRMATION_EMAIL_TEMPLATE = "email_confirmation"
-    PASSWORD_RESET_EMAIL_TEMPLATE = "password_reset"
   end
 end
