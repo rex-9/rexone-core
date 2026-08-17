@@ -6,7 +6,7 @@ class NotificationService
   class << self
     # ===== UNIFIED METHODS =====
 
-    def notify_all(user_id:, user_email: nil, title: nil, message: nil, data: {}, send_socket: false, send_push: false, send_email: false, email_template: nil, email_template_data: {})
+    def notify(user_id:, user_email: nil, title: nil, message: nil, data: {}, send_socket: false, send_push: false, send_email: false, email_template: nil, email_template_data: {})
       results = {}
 
       # 1. Socket (WebSocket)
@@ -59,7 +59,7 @@ class NotificationService
     # ===== PAYMENT NOTIFICATIONS =====
 
     def payment_success(user, product, transaction)
-      notify_all(
+      notify(
         user_id: user.id,
         user_email: user.email,
         title: payment_message(MessageService::Payment::PAYMENT_SUCCESS_TITLE),
@@ -83,7 +83,7 @@ class NotificationService
     end
 
     def subscription_created(user, product, subscription)
-      notify_all(
+      notify(
         user_id: user.id,
         user_email: user.email,
         title: payment_message(
@@ -109,7 +109,7 @@ class NotificationService
     def subscription_canceled(user, product, subscription)
       active_until = subscription.current_period_end
 
-      notify_all(
+      notify(
         user_id: user.id,
         user_email: user.email,
         title: payment_message(MessageService::Payment::SUBSCRIPTION_CANCELED_TITLE),
@@ -135,7 +135,7 @@ class NotificationService
     end
 
     def subscription_resumed(user, product, subscription)
-      notify_all(
+      notify(
         user_id: user.id,
         user_email: user.email,
         title: payment_message(MessageService::Payment::SUBSCRIPTION_RESUMED_TITLE),
@@ -157,7 +157,7 @@ class NotificationService
     end
 
     def payment_failed(user, product, subscription)
-      notify_all(
+      notify(
         user_id: user.id,
         user_email: user.email,
         title: payment_message(MessageService::Payment::PAYMENT_FAILED_TITLE),
@@ -182,7 +182,7 @@ class NotificationService
     # ===== AUTH NOTIFICATIONS =====
 
     def welcome(user_id:, name:)
-      notify_all(
+      notify(
         user_id: user_id,
         title: notification_message(MessageService::Notification::WELCOME_TITLE),
         message: notification_message(
@@ -197,7 +197,7 @@ class NotificationService
     end
 
     def sign_in_alert(user_id:, name:)
-      notify_all(
+      notify(
         user_id: user_id,
         title: notification_message(MessageService::Notification::SIGN_IN_ALERT_TITLE),
         message: notification_message(
@@ -244,22 +244,6 @@ class NotificationService
       enqueue(:email) do
         { to: email, subject: subject, body: body }
       end
-    end
-
-    # ===== CUSTOM =====
-
-    def custom(user_id:, title:, message:, data: {}, send_push: true, send_socket: false, send_email: false, email_template: nil, email_template_data: {})
-      notify_all(
-        user_id: user_id,
-        title: title,
-        message: message,
-        data: data,
-        send_push: send_push,
-        send_socket: send_socket,
-        send_email: send_email,
-        email_template: email_template,
-        email_template_data: email_template_data
-      )
     end
 
     private

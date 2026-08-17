@@ -20,6 +20,10 @@ module Chat
       messages.count
     end
 
+    def processing?
+      messages.ai_processing.exists?
+    end
+
     def update_title_from_first_message!
       return if messages.empty?
       first_message = messages.order(:created_at).first

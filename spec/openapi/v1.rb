@@ -575,7 +575,7 @@ module Openapi
       room_parameter = query_parameter(:room_id, required: false, format: :uuid,
                                        description: "Uses or creates the current room when omitted")
       paths["/v1/ai/chat"] = {
-        post: operation(tags: "AI", summary: "Send a message to an AI room",
+        post: operation(tags: "AI", summary: "Persist and queue a message for an AI room",
                         body: object(required: [ :message ], message: { type: :string }, room_id: UUID,
                                      temperature: { type: :number, format: :float, default: 0.7 },
                                      max_tokens: { type: :integer, default: 2000 }), errors: [ 401, 422, 500 ])

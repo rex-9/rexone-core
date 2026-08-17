@@ -21,5 +21,11 @@ module MessageService
     TRANSLATION_GENERATED = "ai.translation_generated"
     ANALYSIS_GENERATED = "ai.analysis_generated"
     CHANNEL_CONNECTED = "ai.channel_connected"
+    RESPONSE_QUEUED = "ai.response_queued"
+    ALREADY_PROCESSING = "ai.already_processing"
+    RESPONSE_READY = "ai.response_ready"
+    RESPONSE_FAILED = "ai.response_failed"
+    ROOM_BUSY = "ai.room_busy"
+    QUEUE_FAILED = "ai.queue_failed"
   end
 end

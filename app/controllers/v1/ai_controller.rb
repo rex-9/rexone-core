@@ -15,54 +15,51 @@ class V1::AiController < V1::ApplicationController
       return
     end
 
-    # Save user message
-    @room.messages.create!(
-      role: "user",
-      content: message
-    )
+    user_message = nil
+    job = nil
 
-    # Build messages with history
-    messages = build_messages
+    @room.with_lock do
+      if @room.processing?
+        render_json_response(
+          status_code: 422,
+          message: ai_message(MessageService::Ai::ALREADY_PROCESSING),
+          error: ai_message(MessageService::Ai::ALREADY_PROCESSING),
+          data: { processing: true, room_id: @room.id }
+        )
+        return
+      end
 
-    result = AiService::Client.chat(
-      messages: messages,
-      temperature: params[:temperature]&.to_f || 0.7,
-      max_tokens: params[:max_tokens]&.to_i || 2000
-    )
-
-    if result[:error]
-      render_json_response(
-        status_code: 500,
-        message: ai_message(MessageService::Ai::SERVICE_ERROR),
-        error: result[:error]
-      )
-    else
-      response_text = result.dig("choices", 0, "message", "content") ||
-                      ai_message(MessageService::Ai::NO_RESPONSE)
-
-      # Save assistant response
-      @room.messages.create!(
-        role: "assistant",
-        content: response_text,
-        metadata: {
-          usage: result["usage"],
-          model: result["model"]
-        }
+      user_message = @room.messages.create!(
+        role: "user",
+        content: message,
+        ai_status: Chat::Message::AI_STATUSES[:queued],
+        ai_notification_locale: I18n.locale.to_s,
+        ai_system_prompt: params[:system_prompt].presence,
+        ai_temperature: params[:temperature]&.to_f || 0.7,
+        ai_max_tokens: params[:max_tokens]&.to_i || 2000
       )
 
-      # Update room title from first message if default
-      @room.update_title_from_first_message! if default_room_title?(@room)
-
-      render_json_response(
-        status_code: 200,
-        message: ai_message(MessageService::Ai::RESPONSE_GENERATED),
-        data: {
-          response: response_text,
-          room_id: @room.id,
-          usage: result["usage"]
-        }
-      )
+      job = Ai::ProcessChatJob.perform_later(user_message.id)
     end
+
+    render_json_response(
+      status_code: 200,
+      message: ai_message(MessageService::Ai::RESPONSE_QUEUED),
+      data: {
+        message: Chat::MessageSerializer.new(user_message).serializable_hash[:data][:attributes],
+        room_id: @room.id,
+        status: "queued",
+        job_id: job.job_id
+      }
+    )
+
+  rescue SolidQueue::Job::EnqueueError, ActiveJob::EnqueueError => error
+    Rails.error.report(error)
+    render_json_response(
+      status_code: 503,
+      message: ai_message(MessageService::Ai::QUEUE_FAILED),
+      error: ai_message(MessageService::Ai::QUEUE_FAILED)
+    )
   end
 
   # GET /ai/history
@@ -75,13 +72,16 @@ class V1::AiController < V1::ApplicationController
       data: {
         messages: Chat::MessageSerializer.new(messages).serializable_hash[:data],
         room_id: @room.id,
-        room_title: @room.title
+        room_title: @room.title,
+        processing: @room.processing?
       }
     )
   end
 
   # DELETE /ai/clear
   def destroy_clear
+    return render_room_busy if @room.processing?
+
     @room.messages.destroy_all
 
     render_json_response(
@@ -145,6 +145,8 @@ class V1::AiController < V1::ApplicationController
   # DELETE /ai/rooms/:id
   def destroy_room
     room = current_user.rooms.find(params[:id])
+    return render_room_busy if room.processing?
+
     room.destroy
 
     render_json_response(
@@ -298,10 +300,6 @@ class V1::AiController < V1::ApplicationController
     MessageService::Ai.t(key, **options)
   end
 
-  def default_room_title?(room)
-    room.title == ai_message(MessageService::Ai::DEFAULT_ROOM_TITLE)
-  end
-
   def set_room
     room_id = params[:room_id]
 
@@ -314,21 +312,11 @@ class V1::AiController < V1::ApplicationController
     end
   end
 
-  def build_messages
-    messages = []
-
-    # System prompt (optional)
-    if params[:system_prompt].present?
-      messages << { role: "system", content: params[:system_prompt] }
-    end
-
-    # Get last 20 messages from room
-    history = @room.messages.chronological.limit(20)
-
-    history.each do |msg|
-      messages << { role: msg.role, content: msg.content }
-    end
-
-    messages
+  def render_room_busy
+    render_json_response(
+      status_code: 422,
+      message: ai_message(MessageService::Ai::ROOM_BUSY),
+      error: ai_message(MessageService::Ai::ROOM_BUSY)
+    )
   end
 end

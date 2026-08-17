@@ -4,7 +4,7 @@ RSpec.describe NotificationService do
   before { ActiveJob::Base.queue_adapter.enqueued_jobs.clear }
 
   it "enqueues only explicitly requested channels" do
-    result = described_class.notify_all(
+    result = described_class.notify(
       user_id: "user-id", title: "Title", message: "Message",
       data: { type: "custom" }, send_socket: true, send_push: false, send_email: false
     )
@@ -18,13 +18,13 @@ RSpec.describe NotificationService do
 
   it "does not enqueue push without a title" do
     expect do
-      described_class.notify_all(user_id: "user-id", message: "Body", send_push: true)
+      described_class.notify(user_id: "user-id", message: "Body", send_push: true)
     end.not_to have_enqueued_job(Notification::DeliverJob)
   end
 
   it "resolves an email address lazily and applies plain defaults" do
     user = create(:user)
-    described_class.notify_all(user_id: user.id, send_email: true)
+    described_class.notify(user_id: user.id, send_email: true)
     expect(Notification::DeliverJob).to have_been_enqueued.with(
       channel: :email,
       payload: hash_including(to: user.email, subject: be_present, body: be_present)
@@ -32,7 +32,7 @@ RSpec.describe NotificationService do
   end
 
   it "builds template email payloads" do
-    described_class.notify_all(
+    described_class.notify(
       user_id: "user-id", user_email: "user@example.com", send_email: true,
       email_template: "template", email_template_data: { code: "123456" }
     )

@@ -20,7 +20,7 @@ class V1::NotificationsController < V1::ApplicationController
     when PushNotiTemplates::SIGN_IN_ALERT
       NotificationService.sign_in_alert(user_id: user.id, name: user.name || user.username)
     else
-      NotificationService.custom(
+      NotificationService.notify(
         user_id: user.id,
         title: params[:title] || notification_message(MessageService::Notification::DEFAULT_TITLE),
         message: params[:body] || notification_message(MessageService::Notification::DEFAULT_BODY),
