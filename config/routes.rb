@@ -136,6 +136,8 @@ Rails.application.routes.draw do
         #   post :delete_user
         # end
       end
+
+      resources :notifications, only: :create
     end
 
     # ===== IAM =====
@@ -164,10 +166,6 @@ Rails.application.routes.draw do
 
     # ===== MEDIA =====
     post "media/upload", to: "assets#create_upload"
-
-    # ===== NOTIFICATIONS =====
-    post "notifications/push", to: "notifications#create_push"
-    post "notifications/email", to: "notifications#create_email"
 
     # ===== PAYMENTS - CLIENT =====
     namespace :payment do

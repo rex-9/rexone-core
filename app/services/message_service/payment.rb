@@ -51,12 +51,5 @@ module MessageService
     PAYMENT_FAILED_BODY = "payment.notifications.payment_failed.body"
     TODAY = "payment.notifications.today"
     END_OF_PERIOD = "payment.notifications.end_of_period"
-
-    # OneSignal template identifiers
-    PURCHASE_CONFIRMATION_TEMPLATE = "payment_purchase_confirmation"
-    SUBSCRIPTION_CONFIRMATION_TEMPLATE = "payment_subscription_confirmation"
-    SUBSCRIPTION_CANCELED_TEMPLATE = "payment_subscription_canceled"
-    SUBSCRIPTION_RESUMED_TEMPLATE = "payment_subscription_resumed"
-    PAYMENT_FAILED_TEMPLATE = "payment_failed"
   end
 end

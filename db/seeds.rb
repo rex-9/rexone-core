@@ -82,8 +82,6 @@ user_permissions = [
   { resource: "users", actions: [ "read", "create", "update", "delete" ] },
   # AI - full CRUD
   { resource: "ai", actions: [ "read", "create", "update", "delete" ] }
-  # Notifications - full CRUD
-  # { resource: "notifications", actions: [ "read", "create", "update", "delete" ] }
 ]
 
 user_permissions.each do |entry|

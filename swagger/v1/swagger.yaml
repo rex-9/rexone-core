@@ -12,20 +12,525 @@ info:
     `my` to select translated response messages.
 tags:
 - name: Authentication
+  description: Account registration, confirmation, sessions, and password recovery.
 - name: Users
-- name: Admin Users
+  description: Authenticated user profile and effective IAM information.
+- name: Admin / Users
+  description: Admin dashboard user operations. Requires the admin role and the matching
+    user permission.
+- name: Admin / Notifications
+  description: Admin notification dispatch. Requires the admin role and create_notifications
+    permission.
 - name: IAM Permissions
+  description: Super-admin permission management.
 - name: IAM Roles
+  description: Role definitions and their permission assignments.
 - name: IAM User Roles
+  description: Admin-managed role assignments for users.
 - name: Payments
+  description: Products, checkout sessions, subscriptions, and transactions.
 - name: Access
+  description: Product-access inspection and revocation.
 - name: Media
-- name: Notifications
+  description: Synchronous multipart asset upload.
 - name: AI
+  description: Durable queued chat plus synchronous text utilities.
 - name: Client Logs
+  description: Client error ingestion and authorized operational review.
 - name: Webhooks
+  description: Provider-signed inbound webhooks.
 components:
   schemas:
+    signup_request:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            username:
+              type: string
+              pattern: "^[a-z0-9_]+$"
+              example: elden_lord
+            name:
+              type: string
+              maxLength: 50
+              example: Elden Lord
+            email:
+              type: string
+              format: email
+              example: lord@example.com
+            password:
+              type: string
+              format: password
+              minLength: 6
+              writeOnly: true
+            password_confirmation:
+              type: string
+              format: password
+              minLength: 6
+              writeOnly: true
+          required:
+          - username
+          - name
+          - email
+          - password
+          - password_confirmation
+      required:
+      - user
+    signin_request:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            signin_key:
+              type: string
+              description: Email address or username
+              example: elden_lord
+            password:
+              type: string
+              format: password
+              writeOnly: true
+          required:
+          - signin_key
+          - password
+      required:
+      - user
+    token_signin_request:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          description: One-time account sign-in token.
+      required:
+      - token
+    google_signin_request:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          description: Google identity token.
+      required:
+      - token
+    google_registration_request:
+      type: object
+      properties:
+        challenge_token:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          format: password
+          minLength: 6
+          writeOnly: true
+      required:
+      - challenge_token
+      - password
+    confirmation_code_request:
+      type: object
+      properties:
+        signin_key:
+          type: string
+          description: Email address or username.
+      required:
+      - signin_key
+    confirmation_verify_request:
+      type: object
+      properties:
+        signin_key:
+          type: string
+          description: Email address or username.
+        confirmation_code:
+          type: string
+          pattern: "^[0-9]{6}$"
+          example: '123456'
+      required:
+      - signin_key
+      - confirmation_code
+    forgot_password_request:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    reset_password_request:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            reset_password_token:
+              type: string
+              writeOnly: true
+            password:
+              type: string
+              format: password
+              minLength: 6
+              writeOnly: true
+            password_confirmation:
+              type: string
+              format: password
+              minLength: 6
+              writeOnly: true
+          required:
+          - reset_password_token
+          - password
+          - password_confirmation
+      required:
+      - user
+    role_request:
+      type: object
+      properties:
+        name:
+          type: string
+          example: teacher
+        description:
+          type: string
+          nullable: true
+        permission_ids:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+          description: Permission UUIDs assigned to the role.
+      required:
+      - name
+    user_role_request:
+      type: object
+      properties:
+        role_id:
+          type: string
+          format: uuid
+          description: Role UUID to assign to the path user.
+      required:
+      - role_id
+    client_log_context:
+      type: object
+      description: Free-form, JSON-safe diagnostic context supplied by the client.
+        Do not include secrets or tokens.
+      additionalProperties: true
+      example:
+        component: CheckoutPage
+        action: loadSession
+        attempt: 2
+    client_log_request:
+      type: object
+      properties:
+        log:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Checkout request failed
+            severity:
+              type: string
+              enum:
+              - debug
+              - info
+              - warning
+              - error
+              - critical
+              default: error
+            platform:
+              type: string
+              enum:
+              - web
+              - ios
+              - android
+              nullable: true
+            environment:
+              type: string
+              enum:
+              - development
+              - staging
+              - production
+              nullable: true
+            app_version:
+              type: string
+              nullable: true
+            browser:
+              type: string
+              nullable: true
+            user_agent:
+              type: string
+              nullable: true
+            os:
+              type: string
+              nullable: true
+            os_version:
+              type: string
+              nullable: true
+            device:
+              type: string
+              nullable: true
+            url:
+              type: string
+              format: uri
+              nullable: true
+            method:
+              type: string
+              example: POST
+              nullable: true
+            context:
+              "$ref": "#/components/schemas/client_log_context"
+            stack_trace:
+              type: array
+              items:
+                type: string
+            local_storage_keys:
+              type: array
+              items:
+                type: string
+            session_storage_keys:
+              type: array
+              items:
+                type: string
+            cookies:
+              type: object
+              description: Cookie names and diagnostic values. Do not submit authentication
+                cookies or secrets.
+              additionalProperties:
+                type: string
+          required:
+          - message
+      required:
+      - log
+    notification_data:
+      type: object
+      description: Optional JSON object delivered unchanged to socket and push clients.
+        There are no reserved or required keys for admin-created notifications. Clients
+        should agree on their own stable keys; a conventional `type` string may be
+        used as an event discriminator. Values must be JSON-safe.
+      additionalProperties: true
+      example:
+        type: campaign_announcement
+        campaign_id: summer-2026
+        path: "/offers"
+    notification_request:
+      type: object
+      properties:
+        audience:
+          description: Use exactly one audience shape. Role matches use OR semantics
+            and each user is notified once.
+          oneOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - roles
+              role_ids:
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  type: string
+                  format: uuid
+            required:
+            - type
+            - role_ids
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - all
+            required:
+            - type
+        channels:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+            - socket
+            - push
+            - email
+          description: 'One or more delivery channels: socket, push, or email.'
+        title:
+          type: string
+          minLength: 1
+          example: A new chapter awaits
+        message:
+          type: string
+          minLength: 1
+          example: Return to the app to see what is new.
+        data:
+          "$ref": "#/components/schemas/notification_data"
+      required:
+      - audience
+      - channels
+      - title
+      - message
+    asset_upload_request:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+        category:
+          type: string
+          default: profile
+          description: Storage folder and persisted asset category. Free-form string;
+            defaults to profile.
+      required:
+      - file
+    checkout_session_request:
+      type: object
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        success_url:
+          type: string
+          format: uri
+          description: Client URL used by Stripe after success.
+        cancel_url:
+          type: string
+          format: uri
+          description: Client URL used by Stripe after cancellation.
+      required:
+      - product_id
+      - success_url
+      - cancel_url
+    ai_chat_request:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+        room_id:
+          type: string
+          format: uuid
+          description: Existing owned room UUID. Omit to use or create the current
+            room.
+        system_prompt:
+          type: string
+          nullable: true
+          description: Optional instruction prepended to this request.
+        temperature:
+          type: number
+          format: float
+          default: 0.7
+          minimum: 0
+        max_tokens:
+          type: integer
+          default: 2000
+          minimum: 1
+      required:
+      - message
+    ai_rename_request:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        room_id:
+          type: string
+          format: uuid
+          description: Owned room UUID. Omit to use the current room.
+      required:
+      - title
+    ai_room_request:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Omit to use the translated default room title.
+      required: []
+    ai_text_request:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+      required:
+      - text
+    ai_translate_request:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+        target_language:
+          type: string
+          minLength: 1
+          description: Natural-language target such as English, Myanmar, Japanese,
+            or Spanish; not a fixed enum.
+      required:
+      - text
+      - target_language
+    ai_analyze_request:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum:
+          - sentiment
+          - entities
+          - keywords
+          default: sentiment
+      required:
+      - text
+    ai_message_metadata:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - queued
+          - processing
+          - retrying
+          - completed
+          - failed
+          description: Processing state; set on queued user messages.
+        notification_locale:
+          type: string
+          enum:
+          - en
+          - my
+          description: Locale captured for completion notifications.
+        system_prompt:
+          type: string
+          nullable: true
+        temperature:
+          type: number
+          format: float
+          nullable: true
+        max_tokens:
+          type: integer
+          nullable: true
+        assistant_message_id:
+          type: string
+          format: uuid
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        usage:
+          type: object
+          nullable: true
+          description: Provider token-usage object returned for an assistant response.
+          additionalProperties: true
+          example:
+            prompt_tokens: 42
+            completion_tokens: 18
+            total_tokens: 60
+        model:
+          type: string
+          nullable: true
+          description: Provider model identifier used for the response.
+      required: []
     response:
       type: object
       properties:
@@ -149,53 +654,6 @@ components:
       - provider
       - created_at
       - updated_at
-    signup:
-      type: object
-      properties:
-        user:
-          type: object
-          properties:
-            username:
-              type: string
-              pattern: "^[a-z0-9_]+$"
-            name:
-              type: string
-              maxLength: 50
-            email:
-              type: string
-              format: email
-            password:
-              type: string
-              format: password
-              minLength: 6
-            password_confirmation:
-              type: string
-              format: password
-          required:
-          - username
-          - name
-          - email
-          - password
-          - password_confirmation
-      required:
-      - user
-    signin:
-      type: object
-      properties:
-        user:
-          type: object
-          properties:
-            signin_key:
-              type: string
-              description: Email address or username
-            password:
-              type: string
-              format: password
-          required:
-          - signin_key
-          - password
-      required:
-      - user
     role:
       type: object
       properties:
@@ -231,21 +689,6 @@ components:
           format: date-time
           nullable: true
       required: []
-    role_input:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-          nullable: true
-        permission_ids:
-          type: array
-          items:
-            type: string
-            format: uuid
-      required:
-      - name
     permission:
       type: object
       properties:
@@ -267,21 +710,6 @@ components:
           format: date-time
           nullable: true
       required: []
-    permission_input:
-      type: object
-      properties:
-        permission:
-          type: object
-          properties:
-            action:
-              type: string
-            resource:
-              type: string
-          required:
-          - action
-          - resource
-      required:
-      - permission
     product:
       type: object
       properties:
@@ -483,6 +911,9 @@ components:
           type: string
         metadata:
           type: object
+          description: Server-owned room metadata. No public request currently accepts
+            room metadata.
+          additionalProperties: true
         message_count:
           type: integer
         last_message:
@@ -511,11 +942,10 @@ components:
           enum:
           - user
           - assistant
-          - system
         content:
           type: string
         metadata:
-          type: object
+          "$ref": "#/components/schemas/ai_message_metadata"
         created_at:
           type: string
           format: date-time
@@ -525,50 +955,6 @@ components:
           format: date-time
           nullable: true
       required: []
-    log_input:
-      type: object
-      properties:
-        log:
-          type: object
-          properties:
-            message:
-              type: string
-            severity:
-              type: string
-              default: error
-            platform:
-              type: string
-            environment:
-              type: string
-            context:
-              type: object
-            stack_trace:
-              type: array
-              items:
-                type: string
-            url:
-              type: string
-            method:
-              type: string
-          required:
-          - message
-      required:
-      - log
-    notification:
-      type: object
-      properties:
-        user_id:
-          type: string
-          format: uuid
-        message:
-          type: string
-        title:
-          type: string
-        data:
-          type: object
-      required:
-      - user_id
-      - message
   securitySchemes:
     bearerAuth:
       type: http
@@ -670,7 +1056,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/signup"
+              "$ref": "#/components/schemas/signup_request"
     delete:
       tags:
       - Authentication
@@ -761,7 +1147,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/signin"
+              "$ref": "#/components/schemas/signin_request"
   "/signout":
     delete:
       tags:
@@ -847,12 +1233,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                token:
-                  type: string
-              required:
-              - token
+              "$ref": "#/components/schemas/token_signin_request"
   "/signin/google":
     post:
       tags:
@@ -897,12 +1278,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                token:
-                  type: string
-              required:
-              - token
+              "$ref": "#/components/schemas/google_signin_request"
   "/signin/google/complete":
     post:
       tags:
@@ -953,17 +1329,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                challenge_token:
-                  type: string
-                password:
-                  type: string
-                  format: password
-                  minLength: 6
-              required:
-              - challenge_token
-              - password
+              "$ref": "#/components/schemas/google_registration_request"
   "/confirmation":
     get:
       tags:
@@ -1052,12 +1418,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                signin_key:
-                  type: string
-              required:
-              - signin_key
+              "$ref": "#/components/schemas/confirmation_code_request"
   "/confirmation/confirm_code":
     post:
       tags:
@@ -1102,16 +1463,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                signin_key:
-                  type: string
-                confirmation_code:
-                  type: string
-                  example: '123456'
-              required:
-              - signin_key
-              - confirmation_code
+              "$ref": "#/components/schemas/confirmation_verify_request"
   "/password/forgot":
     post:
       tags:
@@ -1156,13 +1508,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-              required:
-              - email
+              "$ref": "#/components/schemas/forgot_password_request"
   "/password/reset":
     put:
       tags:
@@ -1207,25 +1553,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                user:
-                  type: object
-                  properties:
-                    reset_password_token:
-                      type: string
-                    password:
-                      type: string
-                      format: password
-                    password_confirmation:
-                      type: string
-                      format: password
-                  required:
-                  - reset_password_token
-                  - password
-                  - password_confirmation
-              required:
-              - user
+              "$ref": "#/components/schemas/reset_password_request"
   "/webhooks/stripe":
     post:
       tags:
@@ -1374,7 +1702,7 @@ paths:
   "/v1/admin/users":
     get:
       tags:
-      - Admin Users
+      - Admin / Users
       summary: List users for the admin client
       parameters:
       - name: X-Locale
@@ -1698,7 +2026,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/role_input"
+              "$ref": "#/components/schemas/role_request"
   "/v1/iam/roles/{id}":
     get:
       tags:
@@ -1827,7 +2155,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/role_input"
+              "$ref": "#/components/schemas/role_request"
     delete:
       tags:
       - IAM Roles
@@ -2238,13 +2566,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                role_id:
-                  type: string
-                  format: uuid
-              required:
-              - role_id
+              "$ref": "#/components/schemas/user_role_request"
   "/v1/iam/users/{user_id}/roles/{id}":
     delete:
       tags:
@@ -2437,7 +2759,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/log_input"
+              "$ref": "#/components/schemas/client_log_request"
   "/v1/log/clients/{id}":
     get:
       tags:
@@ -2731,20 +3053,12 @@ paths:
         content:
           multipart/form-data:
             schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                category:
-                  type: string
-              required:
-              - file
-  "/v1/notifications/push":
+              "$ref": "#/components/schemas/asset_upload_request"
+  "/v1/admin/notifications":
     post:
       tags:
-      - Notifications
-      summary: Queue a push notification
+      - Admin / Notifications
+      summary: Queue an admin notification for selected roles or all users
       parameters:
       - name: X-Locale
         in: header
@@ -2767,7 +3081,7 @@ paths:
           - mobile
           default: web
       responses:
-        '200':
+        '202':
           description: Successful response
           content:
             application/json:
@@ -2791,6 +3105,17 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      description: Requires an authenticated user with the admin role and create_notifications
+        permission. Only confirmed, active users are eligible. A roles audience matches
+        users holding any supplied role and de-duplicates users who hold multiple
+        matching roles. The request queues fan-out and returns before channel delivery
+        completes.
       security:
       - bearerAuth: []
       requestBody:
@@ -2798,92 +3123,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                user_id:
-                  type: string
-                  format: uuid
-                type:
-                  type: string
-                title:
-                  type: string
-                body:
-                  type: string
-                data:
-                  type: object
-              required:
-              - user_id
-  "/v1/notifications/email":
-    post:
-      tags:
-      - Notifications
-      summary: Queue an email notification
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '422':
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user_id:
-                  type: string
-                  format: uuid
-                type:
-                  type: string
-                subject:
-                  type: string
-                body:
-                  type: string
-              required:
-              - user_id
+              "$ref": "#/components/schemas/notification_request"
   "/v1/payment/products":
     get:
       tags:
@@ -3441,21 +3681,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                product_id:
-                  type: string
-                  format: uuid
-                success_url:
-                  type: string
-                  format: uri
-                cancel_url:
-                  type: string
-                  format: uri
-              required:
-              - product_id
-              - success_url
-              - cancel_url
+              "$ref": "#/components/schemas/checkout_session_request"
   "/v1/payment/session/{session_id}":
     get:
       tags:
@@ -3748,6 +3974,12 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
       security:
       - bearerAuth: []
       requestBody:
@@ -3755,22 +3987,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                message:
-                  type: string
-                room_id:
-                  type: string
-                  format: uuid
-                temperature:
-                  type: number
-                  format: float
-                  default: 0.7
-                max_tokens:
-                  type: integer
-                  default: 2000
-              required:
-              - message
+              "$ref": "#/components/schemas/ai_chat_request"
   "/v1/ai/history":
     get:
       tags:
@@ -3937,15 +4154,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                room_id:
-                  type: string
-                  format: uuid
-              required:
-              - title
+              "$ref": "#/components/schemas/ai_rename_request"
   "/v1/ai/rooms":
     get:
       tags:
@@ -4038,11 +4247,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-              required: []
+              "$ref": "#/components/schemas/ai_room_request"
   "/v1/ai/rooms/{id}":
     delete:
       tags:
@@ -4154,12 +4359,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                text:
-                  type: string
-              required:
-              - text
+              "$ref": "#/components/schemas/ai_text_request"
   "/v1/ai/translate":
     post:
       tags:
@@ -4218,15 +4418,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                text:
-                  type: string
-                target_language:
-                  type: string
-              required:
-              - text
-              - target_language
+              "$ref": "#/components/schemas/ai_translate_request"
   "/v1/ai/analyze":
     post:
       tags:
@@ -4285,18 +4477,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                text:
-                  type: string
-                type:
-                  type: string
-                  enum:
-                  - sentiment
-                  - entities
-                  - keywords
-              required:
-              - text
+              "$ref": "#/components/schemas/ai_analyze_request"
 servers:
 - url: "/"
   description: Current API server

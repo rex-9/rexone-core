@@ -2,6 +2,8 @@
 
 class NotificationService
   LOG_PREFIX = "[NotificationService]".freeze
+  CHANNELS = %w[socket push email].freeze
+  AUDIENCES = %w[roles all].freeze
 
   class << self
     # ===== UNIFIED METHODS =====
@@ -72,7 +74,7 @@ class NotificationService
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: MessageService::Payment::PURCHASE_CONFIRMATION_TEMPLATE,
+        email_template: EmailService::Templates::PURCHASE_CONFIRMATION,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
@@ -95,7 +97,7 @@ class NotificationService
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: MessageService::Payment::SUBSCRIPTION_CONFIRMATION_TEMPLATE,
+        email_template: EmailService::Templates::SUBSCRIPTION_CONFIRMATION,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
@@ -122,7 +124,7 @@ class NotificationService
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: MessageService::Payment::SUBSCRIPTION_CANCELED_TEMPLATE,
+        email_template: EmailService::Templates::SUBSCRIPTION_CANCELED,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
@@ -147,7 +149,7 @@ class NotificationService
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: MessageService::Payment::SUBSCRIPTION_RESUMED_TEMPLATE,
+        email_template: EmailService::Templates::SUBSCRIPTION_RESUMED,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
@@ -170,7 +172,7 @@ class NotificationService
         send_socket: true,
         send_push: true,
         send_email: true,
-        email_template: MessageService::Payment::PAYMENT_FAILED_TEMPLATE,
+        email_template: EmailService::Templates::PAYMENT_FAILED,
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
@@ -217,7 +219,7 @@ class NotificationService
       enqueue(:email) do
         {
           to: email,
-          template_id: MessageService::Auth::CONFIRMATION_EMAIL_TEMPLATE,
+          template_id: EmailService::Templates::CONFIRMATION,
           template_data: {
             code: code,
             email: email
@@ -230,7 +232,7 @@ class NotificationService
       enqueue(:email) do
         {
           to: email,
-          template_id: MessageService::Auth::PASSWORD_RESET_EMAIL_TEMPLATE,
+          template_id: EmailService::Templates::PASSWORD_RESET,
           template_data: {
             token: token,
             email: email,
