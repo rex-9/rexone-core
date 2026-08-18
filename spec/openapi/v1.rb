@@ -304,7 +304,6 @@ module Openapi
       ),
       ai_message_metadata: object(
         status: { type: :string, enum: AI_STATUSES, description: "Processing state; set on queued user messages." },
-        notification_locale: { type: :string, enum: %w[en my], description: "Locale captured for completion notifications." },
         system_prompt: { type: :string, nullable: true },
         temperature: { type: :number, format: :float, nullable: true },
         max_tokens: { type: :integer, nullable: true },

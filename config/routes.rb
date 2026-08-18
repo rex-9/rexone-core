@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   # Default Action Cable mounts the WebSocket server at /cable
-  # mount ActionCable.server => '/cable'
+  mount ActionCable.server => "/cable"
 
   # ===== HEALTH CHECK =====
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

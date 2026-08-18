@@ -14,7 +14,6 @@ module Chat
 
     store_accessor :metadata,
                    :status,
-                   :notification_locale,
                    :system_prompt,
                    :temperature,
                    :max_tokens,

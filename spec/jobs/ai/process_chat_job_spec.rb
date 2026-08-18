@@ -7,7 +7,7 @@ RSpec.describe Ai::ProcessChatJob, type: :job do
       :chat_message,
       room: room,
       content: "How are you?",
-      metadata: { status: "queued", notification_locale: "en", temperature: 0.4, max_tokens: 500 }
+      metadata: { status: "queued", temperature: 0.4, max_tokens: 500 }
     )
   end
   let(:result) do

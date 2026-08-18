@@ -11,34 +11,36 @@ info:
     or `mobile` to select the active session, and `X-Locale` as `en` or
     `my` to select translated response messages.
 tags:
-- name: Authentication
-  description: Account registration, confirmation, sessions, and password recovery.
-- name: Users
-  description: Authenticated user profile and effective IAM information.
-- name: Admin / Users
-  description: Admin dashboard user operations. Requires the admin role and the matching
-    user permission.
-- name: Admin / Notifications
-  description: Admin notification dispatch. Requires the admin role and create_notifications
-    permission.
-- name: IAM Permissions
-  description: Super-admin permission management.
-- name: IAM Roles
-  description: Role definitions and their permission assignments.
-- name: IAM User Roles
-  description: Admin-managed role assignments for users.
-- name: Payments
-  description: Products, checkout sessions, subscriptions, and transactions.
-- name: Access
-  description: Product-access inspection and revocation.
-- name: Media
-  description: Synchronous multipart asset upload.
-- name: AI
-  description: Durable queued chat plus synchronous text utilities.
-- name: Client Logs
-  description: Client error ingestion and authorized operational review.
-- name: Webhooks
-  description: Provider-signed inbound webhooks.
+  - name: Authentication
+    description: Account registration, confirmation, sessions, and password recovery.
+  - name: Users
+    description: Authenticated user profile and effective IAM information.
+  - name: Admin / Users
+    description:
+      Admin dashboard user operations. Requires the admin role and the matching
+      user permission.
+  - name: Admin / Notifications
+    description:
+      Admin notification dispatch. Requires the admin role and create_notifications
+      permission.
+  - name: IAM Permissions
+    description: Super-admin permission management.
+  - name: IAM Roles
+    description: Role definitions and their permission assignments.
+  - name: IAM User Roles
+    description: Admin-managed role assignments for users.
+  - name: Payments
+    description: Products, checkout sessions, subscriptions, and transactions.
+  - name: Access
+    description: Product-access inspection and revocation.
+  - name: Media
+    description: Synchronous multipart asset upload.
+  - name: AI
+    description: Durable queued chat plus synchronous text utilities.
+  - name: Client Logs
+    description: Client error ingestion and authorized operational review.
+  - name: Webhooks
+    description: Provider-signed inbound webhooks.
 components:
   schemas:
     signup_request:
@@ -70,13 +72,13 @@ components:
               minLength: 6
               writeOnly: true
           required:
-          - username
-          - name
-          - email
-          - password
-          - password_confirmation
+            - username
+            - name
+            - email
+            - password
+            - password_confirmation
       required:
-      - user
+        - user
     signin_request:
       type: object
       properties:
@@ -92,10 +94,10 @@ components:
               format: password
               writeOnly: true
           required:
-          - signin_key
-          - password
+            - signin_key
+            - password
       required:
-      - user
+        - user
     token_signin_request:
       type: object
       properties:
@@ -104,7 +106,7 @@ components:
           writeOnly: true
           description: One-time account sign-in token.
       required:
-      - token
+        - token
     google_signin_request:
       type: object
       properties:
@@ -113,7 +115,7 @@ components:
           writeOnly: true
           description: Google identity token.
       required:
-      - token
+        - token
     google_registration_request:
       type: object
       properties:
@@ -126,8 +128,8 @@ components:
           minLength: 6
           writeOnly: true
       required:
-      - challenge_token
-      - password
+        - challenge_token
+        - password
     confirmation_code_request:
       type: object
       properties:
@@ -135,7 +137,7 @@ components:
           type: string
           description: Email address or username.
       required:
-      - signin_key
+        - signin_key
     confirmation_verify_request:
       type: object
       properties:
@@ -145,10 +147,10 @@ components:
         confirmation_code:
           type: string
           pattern: "^[0-9]{6}$"
-          example: '123456'
+          example: "123456"
       required:
-      - signin_key
-      - confirmation_code
+        - signin_key
+        - confirmation_code
     forgot_password_request:
       type: object
       properties:
@@ -156,7 +158,7 @@ components:
           type: string
           format: email
       required:
-      - email
+        - email
     reset_password_request:
       type: object
       properties:
@@ -177,11 +179,11 @@ components:
               minLength: 6
               writeOnly: true
           required:
-          - reset_password_token
-          - password
-          - password_confirmation
+            - reset_password_token
+            - password
+            - password_confirmation
       required:
-      - user
+        - user
     role_request:
       type: object
       properties:
@@ -199,7 +201,7 @@ components:
             format: uuid
           description: Permission UUIDs assigned to the role.
       required:
-      - name
+        - name
     user_role_request:
       type: object
       properties:
@@ -208,10 +210,11 @@ components:
           format: uuid
           description: Role UUID to assign to the path user.
       required:
-      - role_id
+        - role_id
     client_log_context:
       type: object
-      description: Free-form, JSON-safe diagnostic context supplied by the client.
+      description:
+        Free-form, JSON-safe diagnostic context supplied by the client.
         Do not include secrets or tokens.
       additionalProperties: true
       example:
@@ -230,25 +233,25 @@ components:
             severity:
               type: string
               enum:
-              - debug
-              - info
-              - warning
-              - error
-              - critical
+                - debug
+                - info
+                - warning
+                - error
+                - critical
               default: error
             platform:
               type: string
               enum:
-              - web
-              - ios
-              - android
+                - web
+                - ios
+                - android
               nullable: true
             environment:
               type: string
               enum:
-              - development
-              - staging
-              - production
+                - development
+                - staging
+                - production
               nullable: true
             app_version:
               type: string
@@ -292,17 +295,19 @@ components:
                 type: string
             cookies:
               type: object
-              description: Cookie names and diagnostic values. Do not submit authentication
+              description:
+                Cookie names and diagnostic values. Do not submit authentication
                 cookies or secrets.
               additionalProperties:
                 type: string
           required:
-          - message
+            - message
       required:
-      - log
+        - log
     notification_data:
       type: object
-      description: Optional JSON object delivered unchanged to socket and push clients.
+      description:
+        Optional JSON object delivered unchanged to socket and push clients.
         There are no reserved or required keys for admin-created notifications. Clients
         should agree on their own stable keys; a conventional `type` string may be
         used as an event discriminator. Values must be JSON-safe.
@@ -315,33 +320,34 @@ components:
       type: object
       properties:
         audience:
-          description: Use exactly one audience shape. Role matches use OR semantics
+          description:
+            Use exactly one audience shape. Role matches use OR semantics
             and each user is notified once.
           oneOf:
-          - type: object
-            properties:
-              type:
-                type: string
-                enum:
-                - roles
-              role_ids:
-                type: array
-                minItems: 1
-                uniqueItems: true
-                items:
+            - type: object
+              properties:
+                type:
                   type: string
-                  format: uuid
-            required:
-            - type
-            - role_ids
-          - type: object
-            properties:
-              type:
-                type: string
-                enum:
-                - all
-            required:
-            - type
+                  enum:
+                    - roles
+                role_ids:
+                  type: array
+                  minItems: 1
+                  uniqueItems: true
+                  items:
+                    type: string
+                    format: uuid
+              required:
+                - type
+                - role_ids
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - all
+              required:
+                - type
         channels:
           type: array
           minItems: 1
@@ -349,10 +355,10 @@ components:
           items:
             type: string
             enum:
-            - socket
-            - push
-            - email
-          description: 'One or more delivery channels: socket, push, or email.'
+              - socket
+              - push
+              - email
+          description: "One or more delivery channels: socket, push, or email."
         title:
           type: string
           minLength: 1
@@ -364,10 +370,10 @@ components:
         data:
           "$ref": "#/components/schemas/notification_data"
       required:
-      - audience
-      - channels
-      - title
-      - message
+        - audience
+        - channels
+        - title
+        - message
     asset_upload_request:
       type: object
       properties:
@@ -377,10 +383,11 @@ components:
         category:
           type: string
           default: profile
-          description: Storage folder and persisted asset category. Free-form string;
+          description:
+            Storage folder and persisted asset category. Free-form string;
             defaults to profile.
       required:
-      - file
+        - file
     checkout_session_request:
       type: object
       properties:
@@ -396,9 +403,9 @@ components:
           format: uri
           description: Client URL used by Stripe after cancellation.
       required:
-      - product_id
-      - success_url
-      - cancel_url
+        - product_id
+        - success_url
+        - cancel_url
     ai_chat_request:
       type: object
       properties:
@@ -408,7 +415,8 @@ components:
         room_id:
           type: string
           format: uuid
-          description: Existing owned room UUID. Omit to use or create the current
+          description:
+            Existing owned room UUID. Omit to use or create the current
             room.
         system_prompt:
           type: string
@@ -424,7 +432,7 @@ components:
           default: 2000
           minimum: 1
       required:
-      - message
+        - message
     ai_rename_request:
       type: object
       properties:
@@ -436,7 +444,7 @@ components:
           format: uuid
           description: Owned room UUID. Omit to use the current room.
       required:
-      - title
+        - title
     ai_room_request:
       type: object
       properties:
@@ -452,7 +460,7 @@ components:
           type: string
           minLength: 1
       required:
-      - text
+        - text
     ai_translate_request:
       type: object
       properties:
@@ -462,11 +470,12 @@ components:
         target_language:
           type: string
           minLength: 1
-          description: Natural-language target such as English, Myanmar, Japanese,
+          description:
+            Natural-language target such as English, Myanmar, Japanese,
             or Spanish; not a fixed enum.
       required:
-      - text
-      - target_language
+        - text
+        - target_language
     ai_analyze_request:
       type: object
       properties:
@@ -476,30 +485,24 @@ components:
         type:
           type: string
           enum:
-          - sentiment
-          - entities
-          - keywords
+            - sentiment
+            - entities
+            - keywords
           default: sentiment
       required:
-      - text
+        - text
     ai_message_metadata:
       type: object
       properties:
         status:
           type: string
           enum:
-          - queued
-          - processing
-          - retrying
-          - completed
-          - failed
+            - queued
+            - processing
+            - retrying
+            - completed
+            - failed
           description: Processing state; set on queued user messages.
-        notification_locale:
-          type: string
-          enum:
-          - en
-          - my
-          description: Locale captured for completion notifications.
         system_prompt:
           type: string
           nullable: true
@@ -546,9 +549,9 @@ components:
             message:
               type: string
           required:
-          - code
-          - success
-          - message
+            - code
+            - success
+            - message
         data:
           nullable: true
         meta:
@@ -558,7 +561,7 @@ components:
               "$ref": "#/components/schemas/pagination"
           required: []
       required:
-      - status
+        - status
     error_response:
       type: object
       properties:
@@ -576,13 +579,13 @@ components:
             error:
               type: string
           required:
-          - code
-          - success
-          - message
+            - code
+            - success
+            - message
         data:
           nullable: true
       required:
-      - status
+        - status
     pagination:
       type: object
       properties:
@@ -618,8 +621,8 @@ components:
         provider:
           type: string
           enum:
-          - email
-          - google
+            - email
+            - google
         profile_pic_url:
           type: string
           format: uri
@@ -648,12 +651,12 @@ components:
           format: date-time
           nullable: true
       required:
-      - id
-      - email
-      - username
-      - provider
-      - created_at
-      - updated_at
+        - id
+        - email
+        - username
+        - provider
+        - created_at
+        - updated_at
     role:
       type: object
       properties:
@@ -911,7 +914,8 @@ components:
           type: string
         metadata:
           type: object
-          description: Server-owned room metadata. No public request currently accepts
+          description:
+            Server-owned room metadata. No public request currently accepts
             room metadata.
           additionalProperties: true
         message_count:
@@ -940,8 +944,8 @@ components:
         role:
           type: string
           enum:
-          - user
-          - assistant
+            - user
+            - assistant
         content:
           type: string
         metadata:
@@ -964,43 +968,44 @@ paths:
   "/peek":
     get:
       tags:
-      - Authentication
+        - Authentication
       summary: Check whether an email account exists
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: email
-        in: query
-        required: true
-        schema:
-          type: string
-          format: email
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+            format: email
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -1009,43 +1014,44 @@ paths:
   "/signup":
     post:
       tags:
-      - Authentication
+        - Authentication
       summary: Create an email account
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
@@ -1059,84 +1065,86 @@ paths:
               "$ref": "#/components/schemas/signup_request"
     delete:
       tags:
-      - Authentication
+        - Authentication
       summary: Delete the current account
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/signin":
     post:
       tags:
-      - Authentication
+        - Authentication
       summary: Sign in with email or username
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '429':
+        "429":
           description: Too Many Requests
           content:
             application/json:
@@ -1151,78 +1159,80 @@ paths:
   "/signout":
     delete:
       tags:
-      - Authentication
+        - Authentication
       summary: Sign out the active platform session
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/signin/token":
     post:
       tags:
-      - Authentication
+        - Authentication
       summary: Exchange a one-time account token for a JWT
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
@@ -1237,37 +1247,38 @@ paths:
   "/signin/google":
     post:
       tags:
-      - Authentication
+        - Authentication
       summary: Start Google sign-in
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
@@ -1282,43 +1293,44 @@ paths:
   "/signin/google/complete":
     post:
       tags:
-      - Authentication
+        - Authentication
       summary: Complete Google registration with a passcode
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
@@ -1333,36 +1345,37 @@ paths:
   "/confirmation":
     get:
       tags:
-      - Authentication
+        - Authentication
       summary: Confirm an email link and redirect to the web client
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: confirmation_token
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: confirmation_token
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
-        '302':
+        "302":
           description: Successful response
           content:
             application/json:
@@ -1371,43 +1384,44 @@ paths:
   "/confirmation/send_code":
     post:
       tags:
-      - Authentication
+        - Authentication
       summary: Send a new email confirmation code
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
@@ -1422,37 +1436,38 @@ paths:
   "/confirmation/confirm_code":
     post:
       tags:
-      - Authentication
+        - Authentication
       summary: Confirm an account using its email code
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
@@ -1467,37 +1482,38 @@ paths:
   "/password/forgot":
     post:
       tags:
-      - Authentication
+        - Authentication
       summary: Request a password reset email
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
@@ -1512,37 +1528,38 @@ paths:
   "/password/reset":
     put:
       tags:
-      - Authentication
+        - Authentication
       summary: Reset a password using a reset token
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
@@ -1557,54 +1574,55 @@ paths:
   "/webhooks/stripe":
     post:
       tags:
-      - Webhooks
+        - Webhooks
       summary: Receive, persist, and queue a Stripe webhook
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: Stripe-Signature
-        in: header
-        required: true
-        schema:
-          type: string
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: Stripe-Signature
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '503':
+        "503":
           description: Service Unavailable
           content:
             application/json:
@@ -1620,407 +1638,415 @@ paths:
   "/v1/users/current":
     get:
       tags:
-      - Users
+        - Users
       summary: Get the current user
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/users/current/iam":
     get:
       tags:
-      - Users
+        - Users
       summary: Get the current user's roles and permissions
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/admin/users":
     get:
       tags:
-      - Admin / Users
+        - Admin / Users
       summary: List users for the admin client
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 1
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/iam/permissions":
     get:
       tags:
-      - IAM Permissions
+        - IAM Permissions
       summary: List permissions
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/iam/permissions/{id}":
     get:
       tags:
-      - IAM Permissions
+        - IAM Permissions
       summary: Get a permission
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
     delete:
       tags:
-      - IAM Permissions
+        - IAM Permissions
       summary: Permanently delete a discarded permission
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/iam/roles":
     get:
       tags:
-      - IAM Roles
+        - IAM Roles
       summary: List iam roles
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
     post:
       tags:
-      - IAM Roles
+        - IAM Roles
       summary: Create iam role
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -2030,126 +2056,128 @@ paths:
   "/v1/iam/roles/{id}":
     get:
       tags:
-      - IAM Roles
+        - IAM Roles
       summary: Get iam role
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
     patch:
       tags:
-      - IAM Roles
+        - IAM Roles
       summary: Update iam role
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -2158,409 +2186,416 @@ paths:
               "$ref": "#/components/schemas/role_request"
     delete:
       tags:
-      - IAM Roles
+        - IAM Roles
       summary: Delete iam role
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/iam/permissions/discarded":
     get:
       tags:
-      - IAM Permissions
+        - IAM Permissions
       summary: List discarded permissions
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/iam/permissions/undiscarded":
     get:
       tags:
-      - IAM Permissions
+        - IAM Permissions
       summary: List active permissions
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/iam/permissions/{id}/discard":
     post:
       tags:
-      - IAM Permissions
+        - IAM Permissions
       summary: Discard a permission
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/iam/permissions/{id}/undiscard":
     post:
       tags:
-      - IAM Permissions
+        - IAM Permissions
       summary: Undiscard a permission
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/iam/users/{user_id}/roles":
     get:
       tags:
-      - IAM User Roles
+        - IAM User Roles
       summary: List a user's roles
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: user_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
     post:
       tags:
-      - IAM User Roles
+        - IAM User Roles
       summary: Assign a role to a user
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: user_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -2570,185 +2605,188 @@ paths:
   "/v1/iam/users/{user_id}/roles/{id}":
     delete:
       tags:
-      - IAM User Roles
+        - IAM User Roles
       summary: Remove a role from a user
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: user_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: id
-        in: path
-        required: true
-        description: Role ID
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          required: true
+          description: Role ID
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/log/clients":
     get:
       tags:
-      - Client Logs
+        - Client Logs
       summary: List and filter client error reports
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: severity
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: platform
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: environment
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: unresolved
-        in: query
-        required: false
-        schema:
-          type: boolean
-      - name: resolved
-        in: query
-        required: false
-        schema:
-          type: boolean
-      - name: storage_issues
-        in: query
-        required: false
-        schema:
-          type: boolean
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 1
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: severity
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: platform
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: environment
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: unresolved
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: resolved
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: storage_issues
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
     post:
       tags:
-      - Client Logs
+        - Client Logs
       summary: Report or increment a client error
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
@@ -2763,291 +2801,296 @@ paths:
   "/v1/log/clients/{id}":
     get:
       tags:
-      - Client Logs
+        - Client Logs
       summary: Get a client error report
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
     delete:
       tags:
-      - Client Logs
+        - Client Logs
       summary: Delete a client error report
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/log/clients/{id}/resolve":
     patch:
       tags:
-      - Client Logs
+        - Client Logs
       summary: Mark a client error as resolved
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/log/clients/{id}/unresolve":
     patch:
       tags:
-      - Client Logs
+        - Client Logs
       summary: Mark a client error as unresolved
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/media/upload":
     post:
       tags:
-      - Media
+        - Media
       summary: Upload and persist an asset
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -3057,67 +3100,69 @@ paths:
   "/v1/admin/notifications":
     post:
       tags:
-      - Admin / Notifications
+        - Admin / Notifications
       summary: Queue an admin notification for selected roles or all users
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '202':
+        "202":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '503':
+        "503":
           description: Service Unavailable
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-      description: Requires an authenticated user with the admin role and create_notifications
+      description:
+        Requires an authenticated user with the admin role and create_notifications
         permission. Only confirmed, active users are eligible. A roles audience matches
         users holding any supplied role and de-duplicates users who hold multiple
         matching roles. The request queues fan-out and returns before channel delivery
         completes.
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -3127,555 +3172,566 @@ paths:
   "/v1/payment/products":
     get:
       tags:
-      - Payments
+        - Payments
       summary: List active payment products
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/payment/products/{id}":
     get:
       tags:
-      - Payments
+        - Payments
       summary: Get a payment product
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/payment/subscriptions":
     get:
       tags:
-      - Payments
+        - Payments
       summary: List the current user's subscriptions
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/payment/subscriptions/{id}":
     get:
       tags:
-      - Payments
+        - Payments
       summary: Get a subscription
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
     delete:
       tags:
-      - Payments
+        - Payments
       summary: Hide an ended subscription
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/payment/subscriptions/{id}/cancel":
     post:
       tags:
-      - Payments
+        - Payments
       summary: Cancel a subscription
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/payment/subscriptions/{id}/resume":
     post:
       tags:
-      - Payments
+        - Payments
       summary: Resume a subscription
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/payment/transactions":
     get:
       tags:
-      - Payments
+        - Payments
       summary: List the current user's transactions
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/payment/transactions/recent":
     get:
       tags:
-      - Payments
+        - Payments
       summary: List recent successful transactions
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/payment/transactions/{id}":
     get:
       tags:
-      - Payments
+        - Payments
       summary: Get a transaction
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/payment/session":
     post:
       tags:
-      - Payments
+        - Payments
       summary: Create a Stripe Checkout session
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -3685,303 +3741,309 @@ paths:
   "/v1/payment/session/{session_id}":
     get:
       tags:
-      - Payments
+        - Payments
       summary: Get a Checkout session status
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: session_id
-        in: path
-        required: true
-        schema:
-          type: string
-          example: cs_test_123
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: cs_test_123
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/access":
     get:
       tags:
-      - Access
+        - Access
       summary: List the current user's product access
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/access/active":
     get:
       tags:
-      - Access
+        - Access
       summary: List active product access
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/access/check":
     get:
       tags:
-      - Access
+        - Access
       summary: Check access to a product
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: product_id
-        in: query
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: product_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/access/{id}":
     delete:
       tags:
-      - Access
+        - Access
       summary: Revoke owned product access
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '403':
+        "403":
           description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/ai/chat":
     post:
       tags:
-      - AI
+        - AI
       summary: Persist and queue a message for an AI room
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '503':
+        "503":
           description: Service Unavailable
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -3991,164 +4053,167 @@ paths:
   "/v1/ai/history":
     get:
       tags:
-      - AI
+        - AI
       summary: Get room message history
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: room_id
-        in: query
-        required: false
-        description: Uses or creates the current room when omitted
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: room_id
+          in: query
+          required: false
+          description: Uses or creates the current room when omitted
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/ai/clear":
     delete:
       tags:
-      - AI
+        - AI
       summary: Clear a room's messages
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: room_id
-        in: query
-        required: false
-        description: Uses or creates the current room when omitted
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: room_id
+          in: query
+          required: false
+          description: Uses or creates the current room when omitted
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/ai/rename":
     put:
       tags:
-      - AI
+        - AI
       summary: Rename a room
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -4158,90 +4223,92 @@ paths:
   "/v1/ai/rooms":
     get:
       tags:
-      - AI
+        - AI
       summary: List AI rooms
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
     post:
       tags:
-      - AI
+        - AI
       summary: Create an AI room
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -4251,109 +4318,111 @@ paths:
   "/v1/ai/rooms/{id}":
     delete:
       tags:
-      - AI
+        - AI
       summary: Delete an AI room
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
   "/v1/ai/summarize":
     post:
       tags:
-      - AI
+        - AI
       summary: Summarize text
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -4363,56 +4432,57 @@ paths:
   "/v1/ai/translate":
     post:
       tags:
-      - AI
+        - AI
       summary: Translate text
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -4422,56 +4492,57 @@ paths:
   "/v1/ai/analyze":
     post:
       tags:
-      - AI
+        - AI
       summary: Analyze text
       parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/response"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '422':
+        "422":
           description: Unprocessable Content
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
       security:
-      - bearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -4479,5 +4550,5 @@ paths:
             schema:
               "$ref": "#/components/schemas/ai_analyze_request"
 servers:
-- url: "/"
-  description: Current API server
+  - url: "/"
+    description: Current API server

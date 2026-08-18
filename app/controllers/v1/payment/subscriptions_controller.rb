@@ -64,9 +64,18 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
       subscription
     )
 
+    active_until = subscription.current_period_end
+    msg_key = active_until.present? ?
+      MessageService::Payment::SUBSCRIPTION_CANCELED_BODY_WITH_DATE :
+      MessageService::Payment::SUBSCRIPTION_CANCELED_BODY
+
     render_json_response(
       status_code: 200,
-      message: payment_message(MessageService::Payment::CANCELLATION_SCHEDULED),
+      message: payment_message(
+        msg_key,
+        product_name: subscription.product.name,
+        active_until: active_until&.strftime("%B %d, %Y")
+      ),
       data: serialized_subscription(subscription)
     )
   end
@@ -108,7 +117,10 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: payment_message(MessageService::Payment::RESUMED),
+      message: payment_message(
+        MessageService::Payment::SUBSCRIPTION_RESUMED_BODY,
+        product_name: subscription.product.name
+      ),
       data: serialized_subscription(subscription)
     )
   end

@@ -26,7 +26,6 @@ RSpec.describe "Queued AI chat", type: :request do
     expect(message).to have_attributes(role: "user", content: "Hello")
     expect(message.metadata).to include(
       "status" => "queued",
-      "notification_locale" => "my",
       "temperature" => 0.3,
       "max_tokens" => 250
     )

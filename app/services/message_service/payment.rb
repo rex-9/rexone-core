@@ -19,12 +19,10 @@ module MessageService
       "payment.subscriptions.already_scheduled_for_cancellation"
     NOT_CANCELABLE = "payment.subscriptions.not_cancelable"
     CANCEL_FAILED = "payment.subscriptions.cancel_failed"
-    CANCELLATION_SCHEDULED = "payment.subscriptions.cancellation_scheduled"
     CANNOT_RESUME = "payment.subscriptions.cannot_resume"
     NOT_SCHEDULED_FOR_CANCELLATION =
       "payment.subscriptions.not_scheduled_for_cancellation"
     RESUME_FAILED = "payment.subscriptions.resume_failed"
-    RESUMED = "payment.subscriptions.resumed"
     CANNOT_REMOVE = "payment.subscriptions.cannot_remove"
     ONLY_ENDED_CAN_BE_REMOVED = "payment.subscriptions.only_ended_can_be_removed"
     REMOVED = "payment.subscriptions.removed"

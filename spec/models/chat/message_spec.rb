@@ -37,14 +37,12 @@ RSpec.describe Chat::Message, type: :model do
     message = build(
       :chat_message,
       ai_status: described_class::AI_STATUSES[:queued],
-      ai_notification_locale: "my",
       ai_temperature: 0.4,
       ai_max_tokens: 500
     )
 
     expect(message).to have_attributes(
       ai_status: "queued",
-      ai_notification_locale: "my",
       ai_temperature: 0.4,
       ai_max_tokens: 500
     )
