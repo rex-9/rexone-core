@@ -14,11 +14,11 @@ module SocketService
     #   },
     #   "created_at" => "2026-08-01T02:15:17Z"
     # }
-    # (via streamed from user_0917b97f-b7cb-4d03-a6fb-f36ba1421731_notifications)
+    # (via streamed from notification_user_0917b97f-b7cb-4d03-a6fb-f36ba1421731)
 
     def broadcast(user_id:, message:, data: {})
       ActionCable.server.broadcast(
-        "user_#{user_id}_notifications",
+        "notification_user_#{user_id}",
         {
           type: "notification",
           message: message,
