@@ -3,7 +3,7 @@
 class NotificationService
   LOG_PREFIX = "[NotificationService]".freeze
   CHANNELS = %w[socket push email].freeze
-  AUDIENCES = %w[roles all].freeze
+  AUDIENCES = %w[users roles all].freeze
 
   class << self
     # ===== UNIFIED METHODS =====

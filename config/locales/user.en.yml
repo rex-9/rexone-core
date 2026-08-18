@@ -5,6 +5,13 @@ en:
     current_not_found: "No current user found."
     iam_fetched: "User IAM fetched"
   activerecord:
+    attributes:
+      user:
+        email: "Email"
+        username: "Username"
+        name: "Name"
+        password: "Password"
+        password_confirmation: "Password confirmation"
     errors:
       models:
         user:

@@ -9,6 +9,7 @@ module MessageService
     CHANNEL_REQUIRED = "notification.channel_required"
     INVALID_CHANNEL = "notification.invalid_channel"
     INVALID_AUDIENCE = "notification.invalid_audience"
+    USER_IDS_REQUIRED = "notification.user_ids_required"
     ROLE_IDS_REQUIRED = "notification.role_ids_required"
     INVALID_DATA = "notification.invalid_data"
     NO_RECIPIENTS = "notification.no_recipients"

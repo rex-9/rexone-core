@@ -13,7 +13,7 @@ class V1::Admin::UsersController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::USERS_RETRIEVED,
+      message: admin_user_message(MessageService::Admin::User::USERS_RETRIEVED),
       data: UserSerializer.paginated(records, pagy),
       pagy: pagy
     )
@@ -25,7 +25,7 @@ class V1::Admin::UsersController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::USER_ROLES_RETRIEVED,
+      message: admin_user_message(MessageService::Admin::User::USER_ROLES_RETRIEVED),
       data: {
         roles: Iam::RoleSerializer.new(roles).serializable_hash[:data]
       }
@@ -36,7 +36,7 @@ class V1::Admin::UsersController < V1::ApplicationController
   def show
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::USER_RETRIEVED,
+      message: admin_user_message(MessageService::Admin::User::USER_RETRIEVED),
       data: {
         user: UserSerializer.new(@user).serializable_hash[:data][:attributes]
       }
@@ -52,7 +52,7 @@ class V1::Admin::UsersController < V1::ApplicationController
 
       render_json_response(
         status_code: 201,
-        message: AdminApiMessages::USER_CREATED,
+        message: admin_user_message(MessageService::Admin::User::USER_CREATED),
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes]
         }
@@ -60,7 +60,7 @@ class V1::Admin::UsersController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: AdminApiMessages::USER_CREATE_FAILED,
+        message: admin_user_message(MessageService::Admin::User::USER_CREATE_FAILED),
         error: user.errors.full_messages.to_sentence
       )
     end
@@ -73,7 +73,7 @@ class V1::Admin::UsersController < V1::ApplicationController
 
       render_json_response(
         status_code: 200,
-        message: AdminApiMessages::USER_UPDATED,
+        message: admin_user_message(MessageService::Admin::User::USER_UPDATED),
         data: {
           user: UserSerializer.new(@user).serializable_hash[:data][:attributes]
         }
@@ -81,7 +81,7 @@ class V1::Admin::UsersController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: AdminApiMessages::USER_UPDATE_FAILED,
+        message: admin_user_message(MessageService::Admin::User::USER_UPDATE_FAILED),
         error: @user.errors.full_messages.to_sentence
       )
     end
@@ -93,7 +93,7 @@ class V1::Admin::UsersController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::USER_DELETED
+      message: admin_user_message(MessageService::Admin::User::USER_DELETED)
     )
   end
 
@@ -129,5 +129,9 @@ class V1::Admin::UsersController < V1::ApplicationController
     roles.each do |role|
       user.user_roles.find_or_create_by!(role: role)
     end
+  end
+
+  def admin_user_message(key, **options)
+    MessageService::Admin::User.t(key, **options)
   end
 end

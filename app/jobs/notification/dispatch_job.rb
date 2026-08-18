@@ -21,6 +21,7 @@ class Notification::DispatchJob < ApplicationJob
   def recipients(audience)
     users = User.where.not(confirmed_at: nil)
     return users if audience[:type] == "all"
+    return users.where(id: audience[:user_ids]) if audience[:type] == "users"
 
     users.joins(:roles).where(iam_roles: { id: audience[:role_ids] }).distinct
   end
