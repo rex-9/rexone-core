@@ -8,7 +8,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::CHAT_MESSAGES_RETRIEVED,
+      message: admin_chat_message(MessageService::Admin::Chat::MESSAGES_RETRIEVED),
       data: Chat::MessageSerializer.paginated(records, pagy),
       pagy: pagy
     )
@@ -18,7 +18,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
   def show
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::CHAT_MESSAGE_RETRIEVED,
+      message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_RETRIEVED),
       data: {
         message: Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
       }
@@ -30,7 +30,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
     if @message.update(message_params)
       render_json_response(
         status_code: 200,
-        message: AdminApiMessages::CHAT_MESSAGE_UPDATED,
+        message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_UPDATED),
         data: {
           message: Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
         }
@@ -38,7 +38,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: AdminApiMessages::CHAT_MESSAGE_UPDATE_FAILED,
+        message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_UPDATE_FAILED),
         error: @message.errors.full_messages.to_sentence
       )
     end
@@ -50,7 +50,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::CHAT_MESSAGE_DELETED
+      message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_DELETED)
     )
   end
 
@@ -62,5 +62,9 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
 
   def message_params
     params.require(:message).permit(:role, :content)
+  end
+
+  def admin_chat_message(key, **options)
+    MessageService::Admin::Chat.t(key, **options)
   end
 end

@@ -8,7 +8,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::ROLES_RETRIEVED,
+      message: iam_message(MessageService::Iam::ROLES_FETCHED),
       data: {
         roles: ::Iam::RoleSerializer.new(roles).serializable_hash[:data]
       }
@@ -21,7 +21,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::ROLE_PERMISSIONS_RETRIEVED,
+      message: iam_message(MessageService::Iam::PERMISSIONS_FETCHED),
       data: {
         permissions: ::Iam::PermissionSerializer.new(permissions).serializable_hash[:data]
       }
@@ -32,7 +32,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
   def show
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::ROLE_RETRIEVED,
+      message: iam_message(MessageService::Iam::ROLE_FETCHED),
       data: {
         role: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
       }
@@ -48,7 +48,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
       render_json_response(
         status_code: 201,
-        message: AdminApiMessages::ROLE_CREATED,
+        message: iam_message(MessageService::Iam::ROLE_CREATED),
         data: {
           role: ::Iam::RoleSerializer.new(role).serializable_hash[:data][:attributes]
         }
@@ -56,7 +56,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: AdminApiMessages::ROLE_CREATE_FAILED,
+        message: iam_message(MessageService::Iam::ROLE_CREATE_FAILED),
         error: role.errors.full_messages.to_sentence
       )
     end
@@ -69,7 +69,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
       render_json_response(
         status_code: 200,
-        message: AdminApiMessages::ROLE_UPDATED,
+        message: iam_message(MessageService::Iam::ROLE_UPDATED),
         data: {
           role: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
         }
@@ -77,7 +77,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: AdminApiMessages::ROLE_UPDATE_FAILED,
+        message: iam_message(MessageService::Iam::ROLE_UPDATE_FAILED),
         error: @role.errors.full_messages.to_sentence
       )
     end
@@ -88,8 +88,8 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     if @role.system?
       render_json_response(
         status_code: 422,
-        message: AdminApiMessages::ROLE_DELETE_FAILED,
-        error: "System roles cannot be deleted."
+        message: iam_message(MessageService::Iam::SYSTEM_ROLE_DELETE_FORBIDDEN),
+        error: iam_message(MessageService::Iam::SYSTEM_ROLE_DELETE_ERROR)
       )
       return
     end
@@ -98,7 +98,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::ROLE_DELETED
+      message: iam_message(MessageService::Iam::ROLE_DELETED)
     )
   end
 
@@ -128,5 +128,9 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     permissions.each do |permission|
       role.role_permissions.find_or_create_by!(permission: permission)
     end
+  end
+
+  def iam_message(key, **options)
+    MessageService::Iam.t(key, **options)
   end
 end

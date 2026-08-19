@@ -3,6 +3,12 @@ module MessageService
     # API responses
     PRODUCTS_FETCHED = "payment.products.fetched"
     PRODUCT_FETCHED = "payment.products.fetched_one"
+    PRODUCT_CREATED = "payment.products.created"
+    PRODUCT_CREATE_FAILED = "payment.products.create_failed"
+    PRODUCT_UPDATED = "payment.products.updated"
+    PRODUCT_UPDATE_FAILED = "payment.products.update_failed"
+    PRODUCT_DELETED = "payment.products.deleted"
+    PRODUCT_DELETE_FAILED = "payment.products.delete_failed"
     TRANSACTIONS_FETCHED = "payment.transactions.fetched"
     TRANSACTION_FETCHED = "payment.transactions.fetched_one"
     RECENT_TRANSACTIONS_FETCHED = "payment.transactions.recent_fetched"

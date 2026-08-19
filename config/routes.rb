@@ -122,6 +122,7 @@ Rails.application.routes.draw do
     namespace :admin do
       # API-only: no new/edit needed
       resources :users, only: %i[index show create update destroy] do
+        # get :read_teaching_users, path: "teachers" # GET /v1/admin/users/teachers # V1::Admin::UsersController#read_teaching_users
         collection do
           get :read_roles, path: "roles"
         end
@@ -138,6 +139,10 @@ Rails.application.routes.draw do
       namespace :chat do
         resources :rooms, only: %i[index show update destroy]
         resources :messages, only: %i[index show update destroy]
+      end
+
+      namespace :payment do
+        resources :products, only: %i[index show create update destroy]
       end
 
       resources :notifications, only: %i[create] do

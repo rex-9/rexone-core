@@ -13,4 +13,8 @@ class Payment::ProductSerializer < ApplicationSerializer
   attribute :recurring do |product|
     product.recurring?
   end
+
+  attribute :free do |product|
+    product.free?
+  end
 end

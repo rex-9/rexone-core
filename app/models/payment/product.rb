@@ -5,6 +5,10 @@
 class Payment::Product < ApplicationRecord
   self.table_name = "payment_products"
 
+  # ===== CONSTANTS =====
+  LOCAL_FREE_PRODUCT_ID = "local_free_product".freeze
+  LOCAL_FREE_PRICE_ID = "local_free_price".freeze
+
   has_many :subscriptions,
           class_name: "Payment::Subscription",
           foreign_key: :product_id,
@@ -25,7 +29,7 @@ class Payment::Product < ApplicationRecord
 
   # ===== VALIDATIONS =====
   validates :name, presence: true
-  validates :price_unit_amount, numericality: { greater_than: 0 }
+  validates :price_unit_amount, numericality: { greater_than_or_equal_to: 0 }
   validates :stripe_product_id, presence: true, uniqueness: true
   validates :stripe_price_id, presence: true, uniqueness: true
   validates :currency, presence: true
@@ -40,7 +44,19 @@ class Payment::Product < ApplicationRecord
     cycle.present?
   end
 
+  def free?
+    price_unit_amount.zero? ||
+      stripe_product_id == LOCAL_FREE_PRODUCT_ID ||
+      stripe_price_id == LOCAL_FREE_PRICE_ID
+  end
+
+  def stripe_backed?
+    !free?
+  end
+
   def display_price
+    return "Free" if free?
+
     format("%s %.2f", currency.upcase, price_unit_amount / 100.0)
   end
 

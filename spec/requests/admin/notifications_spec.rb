@@ -72,6 +72,55 @@ RSpec.describe "Admin notification broadcasts", type: :request do
     )
   end
 
+  it "queues selected users for dispatch" do
+    grant_admin_notification_permission
+
+    post "/v1/admin/notifications",
+         params: valid_params.merge(audience: { type: "users", user_ids: [ recipient.id ] }),
+         headers: headers
+
+    expect(response).to have_http_status(:accepted)
+    expect(response_data).to include("audience" => "users", "recipient_count" => 1)
+    expect(Notification::DispatchJob).to have_been_enqueued.with(
+      hash_including(audience: { type: "users", user_ids: [ recipient.id ] })
+    )
+  end
+
+  it "localizes success messages from X-Locale" do
+    grant_admin_notification_permission
+
+    post "/v1/admin/notifications",
+         params: valid_params,
+         headers: headers.merge("X-Locale" => "my")
+
+    expect(response).to have_http_status(:accepted)
+    expect(response_status["message"]).to eq(I18n.t("notification.queued", locale: :my))
+  end
+
+  it "localizes validation errors from Accept-Language" do
+    grant_admin_notification_permission
+
+    post "/v1/admin/notifications",
+         params: valid_params.except(:title),
+         headers: headers.merge("Accept-Language" => "my-MM,my;q=0.9,en;q=0.8")
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response_status["message"]).to eq(I18n.t("notification.invalid_request", locale: :my))
+    expect(response_status["error"]).to eq(I18n.t("notification.title_required", locale: :my))
+  end
+
+  it "falls back to English for unsupported locales" do
+    grant_admin_notification_permission
+
+    post "/v1/admin/notifications",
+         params: valid_params.except(:message),
+         headers: headers.merge("X-Locale" => "es")
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response_status["message"]).to eq(I18n.t("notification.invalid_request", locale: :en))
+    expect(response_status["error"]).to eq(I18n.t("notification.message_required", locale: :en))
+  end
+
   it "rejects missing content, unsupported channels, and incomplete audiences" do
     grant_admin_notification_permission
 
@@ -80,6 +129,7 @@ RSpec.describe "Admin notification broadcasts", type: :request do
       valid_params.except(:message),
       valid_params.merge(channels: []),
       valid_params.merge(channels: [ "carrier_pigeon" ]),
+      valid_params.merge(audience: { type: "users", user_ids: [] }),
       valid_params.merge(audience: { type: "roles", role_ids: [] }),
       valid_params.merge(audience: { type: "roles", role_ids: [ SecureRandom.uuid ] }),
       valid_params.merge(audience: { type: "segment" }),

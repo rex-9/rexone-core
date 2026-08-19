@@ -3,6 +3,12 @@ en:
     products:
       fetched: "Products fetched successfully."
       fetched_one: "Product fetched successfully."
+      created: "Product created successfully."
+      create_failed: "Product could not be created."
+      updated: "Product updated successfully."
+      update_failed: "Product could not be updated."
+      deleted: "Product deleted successfully."
+      delete_failed: "Product could not be deleted."
     transactions:
       fetched: "Transactions fetched successfully."
       fetched_one: "Transaction fetched successfully."

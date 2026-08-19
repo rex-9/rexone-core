@@ -4,8 +4,22 @@ RSpec.describe Payment::Product, type: :model do
   it "validates Stripe identifiers, price, currency, and name" do
     expect(build(:payment_product)).to be_valid
     expect(build(:payment_product, name: nil)).not_to be_valid
-    expect(build(:payment_product, price_unit_amount: 0)).not_to be_valid
+    expect(build(:payment_product, price_unit_amount: -1)).not_to be_valid
     expect(build(:payment_product, stripe_product_id: nil)).not_to be_valid
+  end
+
+  it "supports a local free product without changing the table shape" do
+    product = build(
+      :payment_product,
+      stripe_product_id: described_class::LOCAL_FREE_PRODUCT_ID,
+      stripe_price_id: described_class::LOCAL_FREE_PRICE_ID,
+      price_unit_amount: 0
+    )
+
+    expect(product).to be_valid
+    expect(product).to be_free
+    expect(product).not_to be_stripe_backed
+    expect(product.display_price).to eq("Free")
   end
 
   it "enforces unique Stripe product and price identifiers" do

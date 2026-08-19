@@ -52,6 +52,20 @@ RSpec.describe Notification::DispatchJob, type: :job do
     )
   end
 
+  it "fans selected users out through the requested delivery channels" do
+    described_class.perform_now(
+      audience: { type: "users", user_ids: [ second_user.id ] },
+      channels: %w[socket],
+      title: "News",
+      message: "Something new",
+      data: {}
+    )
+
+    expect(NotificationService).to have_received(:notify).once.with(
+      hash_including(user_id: second_user.id, send_socket: true, send_push: false, send_email: false)
+    )
+  end
+
   it "does not target unconfirmed accounts" do
     unconfirmed = create(:user, :unconfirmed)
     create(:user_role, user: unconfirmed, role: teacher_role)

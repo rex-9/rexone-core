@@ -8,7 +8,7 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::CHAT_ROOMS_RETRIEVED,
+      message: admin_chat_message(MessageService::Admin::Chat::ROOMS_RETRIEVED),
       data: Chat::RoomSerializer.paginated(records, pagy),
       pagy: pagy
     )
@@ -18,7 +18,7 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
   def show
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::CHAT_ROOM_RETRIEVED,
+      message: admin_chat_message(MessageService::Admin::Chat::ROOM_RETRIEVED),
       data: {
         room: Chat::RoomSerializer.new(@room).serializable_hash[:data][:attributes]
       }
@@ -30,7 +30,7 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
     if @room.update(room_params)
       render_json_response(
         status_code: 200,
-        message: AdminApiMessages::CHAT_ROOM_UPDATED,
+        message: admin_chat_message(MessageService::Admin::Chat::ROOM_UPDATED),
         data: {
           room: Chat::RoomSerializer.new(@room).serializable_hash[:data][:attributes]
         }
@@ -38,7 +38,7 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
     else
       render_json_response(
         status_code: 422,
-        message: AdminApiMessages::CHAT_ROOM_UPDATE_FAILED,
+        message: admin_chat_message(MessageService::Admin::Chat::ROOM_UPDATE_FAILED),
         error: @room.errors.full_messages.to_sentence
       )
     end
@@ -50,7 +50,7 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: AdminApiMessages::CHAT_ROOM_DELETED
+      message: admin_chat_message(MessageService::Admin::Chat::ROOM_DELETED)
     )
   end
 
@@ -62,5 +62,9 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
 
   def room_params
     params.require(:room).permit(:title)
+  end
+
+  def admin_chat_message(key, **options)
+    MessageService::Admin::Chat.t(key, **options)
   end
 end

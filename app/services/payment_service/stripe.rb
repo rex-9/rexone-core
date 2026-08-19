@@ -30,6 +30,7 @@ module PaymentService
       with_stripe_error("Create Checkout Session") do
         user = User.find(user_id)
         product = Payment::Product.find(product_id)
+        raise PaymentService::Error, "Free products do not use Stripe checkout" if product.free?
 
         checkout_params = {
           customer: user.stripe_customer,
@@ -114,6 +115,82 @@ module PaymentService
         )
 
         subscription_cancellation_state(subscription)
+      end
+    end
+
+    # ===== PRODUCTS =====
+    def create_product(attributes)
+      with_stripe_error("Create Product") do
+        return create_local_free_product(attributes) if free_product_attributes?(attributes)
+
+        stripe_product = Stripe::Product.create(
+          name: attributes.fetch(:name),
+          description: attributes[:description],
+          active: attributes.fetch(:active, true)
+        )
+
+        stripe_price = Stripe::Price.create(
+          stripe_price_params(stripe_product.id, attributes)
+        )
+
+        Stripe::Product.update(stripe_product.id, default_price: stripe_price.id)
+
+        Payment::Product.create!(
+          stripe_product_id: stripe_product.id,
+          stripe_price_id: stripe_price.id,
+          name: attributes.fetch(:name),
+          description: attributes[:description],
+          price_unit_amount: attributes.fetch(:price_unit_amount),
+          currency: attributes.fetch(:currency),
+          cycle: attributes[:cycle],
+          active: attributes.fetch(:active, true)
+        )
+      end
+    end
+
+    def update_product(product_id, attributes)
+      with_stripe_error("Update Product") do
+        product = Payment::Product.with_discarded.find(product_id)
+
+        if free_product_attributes?(product_price_attributes(product, attributes))
+          archive_stripe_product(product) if product.stripe_backed?
+          product.update!(local_free_product_attributes(product, attributes))
+          return product
+        end
+
+        if product.free?
+          stripe_product = Stripe::Product.create(
+            name: attributes.fetch(:name, product.name),
+            description: attributes.key?(:description) ? attributes[:description] : product.description,
+            active: attributes.key?(:active) ? attributes[:active] : product.active
+          )
+
+          stripe_price = Stripe::Price.create(
+            stripe_price_params(stripe_product.id, product_price_attributes(product, attributes))
+          )
+
+          Stripe::Product.update(stripe_product.id, default_price: stripe_price.id)
+          attributes = attributes.merge(
+            stripe_product_id: stripe_product.id,
+            stripe_price_id: stripe_price.id
+          )
+        else
+          attributes = update_stripe_backed_product(product, attributes)
+        end
+
+        product.update!(attributes)
+        product
+      end
+    end
+
+    def archive_product(product_id)
+      with_stripe_error("Archive Product") do
+        product = Payment::Product.with_discarded.find(product_id)
+
+        archive_stripe_product(product) if product.stripe_backed?
+        product.update!(active: false)
+        product.discard
+        product
       end
     end
 
@@ -233,6 +310,89 @@ module PaymentService
     rescue Stripe::StripeError => e
       Rails.logger.error("#{STRIPE_LOG_PREFIX} #{action} error: #{e.message}")
       { error: e.message }
+    end
+
+    def create_local_free_product(attributes)
+      Payment::Product.create!(
+        local_free_product_attributes(nil, attributes)
+      )
+    end
+
+    def local_free_product_attributes(product, attributes)
+      {
+        stripe_product_id: Payment::Product::LOCAL_FREE_PRODUCT_ID,
+        stripe_price_id: Payment::Product::LOCAL_FREE_PRICE_ID,
+        name: attributes.fetch(:name, product&.name),
+        description: attributes.key?(:description) ? attributes[:description] : product&.description,
+        price_unit_amount: 0,
+        currency: attributes.fetch(:currency, product&.currency || "usd"),
+        cycle: attributes.key?(:cycle) ? attributes[:cycle] : product&.cycle,
+        active: attributes.key?(:active) ? attributes[:active] : (product&.active.nil? ? true : product.active)
+      }
+    end
+
+    def free_product_attributes?(attributes)
+      attributes[:price_unit_amount].to_i.zero?
+    end
+
+    def archive_stripe_product(product)
+      Stripe::Product.update(product.stripe_product_id, active: false)
+      Stripe::Price.update(product.stripe_price_id, active: false)
+    end
+
+    def update_stripe_backed_product(product, attributes)
+      Stripe::Product.update(
+        product.stripe_product_id,
+        name: attributes.fetch(:name, product.name),
+        description: attributes.key?(:description) ? attributes[:description] : product.description,
+        active: attributes.key?(:active) ? attributes[:active] : product.active
+      )
+
+      return attributes unless price_changed?(product, attributes)
+
+      old_stripe_price_id = product.stripe_price_id
+      stripe_price = Stripe::Price.create(
+        stripe_price_params(product.stripe_product_id, product_price_attributes(product, attributes))
+      )
+
+      Stripe::Product.update(product.stripe_product_id, default_price: stripe_price.id)
+      Stripe::Price.update(old_stripe_price_id, active: false)
+      attributes.merge(stripe_price_id: stripe_price.id)
+    end
+
+    def stripe_price_params(stripe_product_id, attributes)
+      params = {
+        product: stripe_product_id,
+        unit_amount: attributes.fetch(:price_unit_amount),
+        currency: attributes.fetch(:currency)
+      }
+
+      cycle = stripe_cycle_interval(attributes[:cycle])
+      params[:recurring] = { interval: cycle } if cycle.present?
+      params
+    end
+
+    def price_changed?(product, attributes)
+      (
+        attributes.key?(:price_unit_amount) &&
+          attributes[:price_unit_amount] != product.price_unit_amount
+      ) ||
+        (attributes.key?(:currency) && attributes[:currency] != product.currency) ||
+        (attributes.key?(:cycle) && attributes[:cycle] != product.cycle)
+    end
+
+    def product_price_attributes(product, attributes)
+      {
+        price_unit_amount: attributes.fetch(:price_unit_amount, product.price_unit_amount),
+        currency: attributes.fetch(:currency, product.currency),
+        cycle: attributes.fetch(:cycle, product.cycle)
+      }
+    end
+
+    def stripe_cycle_interval(cycle)
+      return nil if cycle.blank?
+
+      Payment::Product.cycles.fetch(cycle.to_s, cycle.to_s)
     end
 
     def stripe_time(timestamp)
