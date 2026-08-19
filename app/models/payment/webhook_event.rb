@@ -5,8 +5,8 @@ class Payment::WebhookEvent < ApplicationRecord
 
   self.table_name = "payment_webhook_events"
 
-  # PROCESSED_RETENTION_PERIOD = 30.seconds
-  PROCESSED_RETENTION_PERIOD = 30.days
+  PROCESSED_RETENTION_PERIOD = 30.seconds
+  # PROCESSED_RETENTION_PERIOD = 30.days
   CLEANUP_BATCH_SIZE = 1_000
   FAILED_RETENTION_PERIOD = 180.days
 
