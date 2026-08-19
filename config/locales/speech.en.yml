@@ -1,0 +1,7 @@
+en:
+  speech:
+    text_required: "Text is required"
+    text_parameter_missing: "Missing text parameter"
+    generated: "Speech generated"
+    service_error: "Speech service error"
+    provider_error: "Speech service is temporarily unavailable"

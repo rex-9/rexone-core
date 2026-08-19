@@ -27,6 +27,9 @@ module AppConfig
   DEEPSEEK_BASE_URL=ENV.fetch("DEEPSEEK_BASE_URL")
   DEEPSEEK_MODEL=ENV.fetch("DEEPSEEK_MODEL")
 
+  # Speech / TTS
+  SPEECH_SERVICE_BASE_URL = ENV.fetch("SPEECH_SERVICE_BASE_URL")
+
   # Session & token timeouts
   SESSION_TIMEOUT = ENV.fetch("SESSION_TIMEOUT") { 1.week }.to_i.seconds # 7-day maximum login, Cache Active Platform Session Lifespan
   JWT_EXPIRATION = ENV.fetch("JWT_EXPIRATION") { 1.week }.to_i.seconds #  7-day inactivity timeout, JWT Token Expiration Lifespan

@@ -302,6 +302,14 @@ module Openapi
         text: { type: :string, minLength: 1 },
         type: { type: :string, enum: %w[sentiment entities keywords], default: "sentiment" }
       ),
+      speech_tts_request: object(
+        required: [ :text ],
+        text: { type: :string, minLength: 1 },
+        voiceName: {
+          type: :string,
+          description: "Provider voice name. Omit to use the provider default. snake_case voice_name is not accepted."
+        }
+      ),
       ai_message_metadata: object(
         status: { type: :string, enum: AI_STATUSES, description: "Processing state; set on queued user messages." },
         system_prompt: { type: :string, nullable: true },
@@ -756,6 +764,11 @@ module Openapi
                           errors: [ 401, 422, 500 ])
         }
       end
+
+      paths["/v1/speech/tts"] = {
+        post: operation(tags: "Speech", summary: "Synthesize speech audio and visemes from text",
+                        body: ref(:speech_tts_request), errors: [ 401, 422, 500 ])
+      }
 
       paths.each_value do |methods|
         methods.each_value do |definition|

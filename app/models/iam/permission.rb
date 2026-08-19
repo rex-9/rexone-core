@@ -18,6 +18,7 @@ module Iam
       assets
       notifications
       ai
+      speech
       clients
     ].freeze
 
