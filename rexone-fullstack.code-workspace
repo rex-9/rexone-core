@@ -1,0 +1,26 @@
+{
+  "folders": [
+    {
+      "name": "API",
+      "path": ".",
+    },
+    {
+      "name": "Web",
+      "path": "../rexone-web",
+    },
+    {
+      "name": "Mobile",
+      "path": "../rexone_mobile",
+    },
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+    },
+    "flutterTools.displayGetxContextMenu": false,
+    "flutterTools.displayMobxContextMenu": false,
+    "flutterTools.displayRiverpodContextMenu": false,
+    "flutterTools.displayModularContextMenu": false,
+    "flutterTools.displaySignalsContextMenu": false,
+  },
+}
