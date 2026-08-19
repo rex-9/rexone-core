@@ -80,7 +80,6 @@ RSpec.describe "OpenAPI V1 document" do
     metadata = document.dig(:components, :schemas, :ai_message_metadata, :properties)
     expect(metadata.keys).to contain_exactly(
       :status,
-      :notification_locale,
       :system_prompt,
       :temperature,
       :max_tokens,

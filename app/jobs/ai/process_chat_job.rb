@@ -90,7 +90,7 @@ class Ai::ProcessChatJob < ApplicationJob
 
   def notify_completed(user_message, assistant_message)
     room = user_message.room
-    message = ai_message(MessageService::Ai::RESPONSE_READY, user_message)
+    message = ai_message(MessageService::Ai::RESPONSE_READY)
     data = {
       type: "ai_response_ready",
       room_id: room.id,
@@ -116,7 +116,7 @@ class Ai::ProcessChatJob < ApplicationJob
     update_status!(user_message, Chat::Message::AI_STATUSES[:failed], error: error.message)
 
     room = user_message.room
-    message = ai_message(MessageService::Ai::RESPONSE_FAILED, user_message)
+    message = ai_message(MessageService::Ai::RESPONSE_FAILED)
     data = {
       type: "ai_response_failed",
       room_id: room.id,
@@ -152,11 +152,10 @@ class Ai::ProcessChatJob < ApplicationJob
   end
 
   def default_room_title?(room, message)
-    room.title == ai_message(MessageService::Ai::DEFAULT_ROOM_TITLE, message)
+    room.title == ai_message(MessageService::Ai::DEFAULT_ROOM_TITLE)
   end
 
-  def ai_message(key, message)
-    locale = message.ai_notification_locale.presence || I18n.default_locale
-    I18n.with_locale(locale) { MessageService::Ai.t(key) }
+  def ai_message(key)
+    MessageService::Ai.t(key)
   end
 end
