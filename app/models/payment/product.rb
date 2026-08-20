@@ -50,7 +50,7 @@ class Payment::Product < ApplicationRecord
       stripe_price_id == LOCAL_FREE_PRICE_ID
   end
 
-  def stripe_backed?
+  def premium?
     !free?
   end
 

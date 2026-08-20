@@ -27,7 +27,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # POST /v1/admin/payment/products
   def create
-    product = PaymentService::Client.create_product(coerced_product_params)
+    product = PaymentService::Client.create_product(product_attributes)
     return render_service_error(MessageService::Payment::PRODUCT_CREATE_FAILED, product[:error]) if service_error?(product)
 
     render_json_response(
@@ -43,7 +43,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # PATCH/PUT /v1/admin/payment/products/:id
   def update
-    product = PaymentService::Client.update_product(@product.id, coerced_product_params)
+    product = PaymentService::Client.update_product(@product.id, product_attributes)
     return render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, product[:error]) if service_error?(product)
 
     render_json_response(
@@ -78,7 +78,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
     params.require(:product).permit(:name, :description, :price_unit_amount, :currency, :cycle, :active)
   end
 
-  def coerced_product_params
+  def product_attributes
     values = product_params.to_h.symbolize_keys
     values[:price_unit_amount] = values[:price_unit_amount].to_i if values.key?(:price_unit_amount)
     values[:active] = ActiveModel::Type::Boolean.new.cast(values[:active]) if values.key?(:active)

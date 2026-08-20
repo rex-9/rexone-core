@@ -3,13 +3,13 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
 
   # GET /v1/admin/chat/messages
   def index
-    messages = Chat::Message.includes(:room).order(created_at: :desc)
+    messages = ::Chat::Message.includes(:room).order(created_at: :desc)
     pagy, records = pagy(:offset, messages, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGES_RETRIEVED),
-      data: Chat::MessageSerializer.paginated(records, pagy),
+      data: ::Chat::MessageSerializer.paginated(records, pagy),
       pagy: pagy
     )
   end
@@ -20,7 +20,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_RETRIEVED),
       data: {
-        message: Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
+        message: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
       }
     )
   end
@@ -32,7 +32,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
         status_code: 200,
         message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_UPDATED),
         data: {
-          message: Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
+          message: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
         }
       )
     else
@@ -57,7 +57,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
   private
 
   def set_message
-    @message = Chat::Message.find(params[:id])
+    @message = ::Chat::Message.find(params[:id])
   end
 
   def message_params

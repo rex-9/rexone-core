@@ -18,7 +18,7 @@ RSpec.describe Payment::Product, type: :model do
 
     expect(product).to be_valid
     expect(product).to be_free
-    expect(product).not_to be_stripe_backed
+    expect(product).not_to be_premium
     expect(product.display_price).to eq("Free")
   end
 

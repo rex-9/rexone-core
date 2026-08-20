@@ -2,6 +2,32 @@ require "rails_helper"
 
 RSpec.describe PaymentService::Stripe do
   describe "#create_product" do
+    it "creates Stripe records for premium products and lets webhooks persist the local record" do
+      service = described_class.new
+      stripe_product = instance_double("Stripe::Product", id: "prod_new")
+      stripe_price = instance_double("Stripe::Price", id: "price_new")
+
+      allow(Stripe::Product).to receive(:create).and_return(stripe_product)
+      allow(Stripe::Product).to receive(:update)
+      allow(Stripe::Price).to receive(:create).and_return(stripe_price)
+
+      product = service.create_product(
+        name: "Premium",
+        description: "Premium access",
+        price_unit_amount: 2_000,
+        currency: "usd",
+        cycle: "month",
+        active: true
+      )
+
+      expect(product).not_to be_persisted
+      expect(product).to be_premium
+      expect(product.stripe_product_id).to eq("prod_new")
+      expect(product.stripe_price_id).to eq("price_new")
+      expect(Payment::Product.count).to eq(0)
+      expect(Stripe::Product).to have_received(:update).with("prod_new", default_price: "price_new")
+    end
+
     it "creates a local free product without calling Stripe" do
       service = described_class.new
 
@@ -20,6 +46,7 @@ RSpec.describe PaymentService::Stripe do
       expect(product).to be_persisted
       expect(product).to be_free
       expect(product.display_price).to eq("Free")
+      expect(product.cycle).to be_nil
       expect(product.stripe_product_id).to eq(Payment::Product::LOCAL_FREE_PRODUCT_ID)
       expect(product.stripe_price_id).to eq(Payment::Product::LOCAL_FREE_PRICE_ID)
       expect(Stripe::Product).not_to have_received(:create)
@@ -52,6 +79,7 @@ RSpec.describe PaymentService::Stripe do
       )
 
       expect(result.stripe_price_id).to eq("price_new")
+      expect(product.reload.stripe_price_id).to eq("price_old")
       expect(Stripe::Product).to have_received(:update).with(
         "prod_existing",
         hash_including(default_price: "price_new")
@@ -88,6 +116,7 @@ RSpec.describe PaymentService::Stripe do
       result = service.update_product(product.id, price_unit_amount: 0)
 
       expect(result).to be_free
+      expect(result.cycle).to be_nil
       expect(result.stripe_product_id).to eq(Payment::Product::LOCAL_FREE_PRODUCT_ID)
       expect(result.stripe_price_id).to eq(Payment::Product::LOCAL_FREE_PRICE_ID)
       expect(Stripe::Product).to have_received(:update).with("prod_paid", active: false)
@@ -112,10 +141,11 @@ RSpec.describe PaymentService::Stripe do
       result = service.update_product(product.id, price_unit_amount: 2_000, currency: "usd", cycle: "month")
 
       expect(result).not_to be_free
+      expect(product.reload).to be_free
       expect(result.stripe_product_id).to eq("prod_new")
       expect(result.stripe_price_id).to eq("price_new")
       expect(Stripe::Product).to have_received(:create).with(
-        hash_including(name: product.name, active: product.active)
+        hash_including(name: product.name, active: product.active, metadata: { local_product_id: product.id })
       )
       expect(Stripe::Price).to have_received(:create)
     end

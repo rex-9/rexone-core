@@ -128,6 +128,22 @@ RSpec.describe "Authentication sessions", type: :request do
       )
     end
 
+    it "allows current IAM lookup for scoped admin roles without users permission" do
+      user = create(:user)
+      role = create(:role, name: "notification_admin")
+      permission = create(:permission, action: "read", resource: "notifications")
+      create(:role_permission, role: role, permission: permission)
+      create(:user_role, user: user, role: role)
+      token = jwt_for(user)
+      allow(CacheService).to receive(:read).and_return(token)
+
+      get "/v1/users/current/iam", headers: authorization_headers(token)
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.dig("user", "role_names")).to include("notification_admin")
+      expect(response_data.dig("user", "permissions", "notifications")).to include("read")
+    end
+
     it "rejects a missing or replaced active session" do
       user = create(:user)
       grant_users_read_permission(user)
