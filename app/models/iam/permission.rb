@@ -9,12 +9,13 @@ module Iam
     RESOURCES = %w[
       users
       roles
+      user_roles
       permissions
       products
       payments
       subscriptions
       transactions
-      accesses
+      access
       assets
       notifications
       ai

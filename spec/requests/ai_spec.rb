@@ -59,7 +59,9 @@ RSpec.describe "Queued AI chat", type: :request do
     get "/v1/ai/history", params: { room_id: room.id }, headers: headers
 
     expect(response).to have_http_status(:ok)
-    expect(response_data).to include("room_id" => room.id, "processing" => true)
+    message = response_data.first
+    expect(message.dig("attributes", "room_id")).to eq(room.id)
+    expect(message.dig("attributes", "metadata", "status")).to eq("retrying")
   end
 
   it "protects processing rooms from clearing or deletion" do
@@ -74,9 +76,88 @@ RSpec.describe "Queued AI chat", type: :request do
     expect(Chat::Room).to exist(room.id)
   end
 
+  describe "GET /v1/ai/rooms" do
+    it "returns paginated rooms for the user" do
+      create_list(:chat_room, 3, user: user)
+
+      get "/v1/ai/rooms", params: { limit: 2 }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.size).to eq(2)
+      expect(response_meta.dig("pagination", "limit")).to eq(2)
+    end
+  end
+
+  describe "POST /v1/ai/rooms" do
+    it "creates a new room" do
+      expect do
+        post "/v1/ai/rooms", params: { title: "Custom Topic" }, headers: headers
+      end.to change(user.rooms, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      expect(response_data.dig("room", "title")).to eq("Custom Topic")
+    end
+  end
+
+  describe "PUT /v1/ai/rename" do
+    it "renames a room" do
+      put "/v1/ai/rename", params: { room_id: room.id, title: "Renamed Room" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(room.reload.title).to eq("Renamed Room")
+    end
+  end
+
+  describe "DELETE /v1/ai/clear" do
+    it "clears all messages from a room" do
+      create_list(:chat_message, 2, room: room, metadata: { status: "completed" })
+
+      delete "/v1/ai/clear", params: { room_id: room.id }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(room.reload.messages).to be_empty
+    end
+  end
+
+  describe "POST /v1/ai/summarize" do
+    it "summarizes text using AI client" do
+      allow(AiService::Client).to receive(:chat)
+        .and_return("choices" => [ { "message" => { "content" => "Summary result" } } ])
+
+      post "/v1/ai/summarize", params: { text: "Long text to summarize" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include("summary" => "Summary result")
+    end
+  end
+
+  describe "POST /v1/ai/translate" do
+    it "translates text using AI client" do
+      allow(AiService::Client).to receive(:chat)
+        .and_return("choices" => [ { "message" => { "content" => "Bonjour" } } ])
+
+      post "/v1/ai/translate", params: { text: "Hello", language: "French" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include("translation" => "Bonjour")
+    end
+  end
+
+  describe "POST /v1/ai/analyze" do
+    it "analyzes text using AI client" do
+      allow(AiService::Client).to receive(:chat)
+        .and_return("choices" => [ { "message" => { "content" => "Positive sentiment" } } ])
+
+      post "/v1/ai/analyze", params: { text: "Great product!", type: "sentiment" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include("analysis" => "Positive sentiment")
+    end
+  end
+
   def grant_ai_permissions(account)
     role = create(:role, name: "ai_user")
-    %w[create read delete].each do |action|
+    %w[create read update delete].each do |action|
       permission = create(:permission, action: action, resource: "ai")
       create(:role_permission, role: role, permission: permission)
     end

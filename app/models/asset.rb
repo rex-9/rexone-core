@@ -19,8 +19,8 @@ class Asset < ApplicationRecord
   before_validation :set_extension_and_format
   after_destroy_commit :delete_from_storage_later, if: :uploaded_file?
 
-  scope :uploaded, -> { where(source: "upload") }
-  scope :google, -> { where(source: "google") }
+  scope :uploaded, -> { where(source: AssetConstants::AssetSource::UPLOAD) }
+  scope :google, -> { where(source: AssetConstants::AssetSource::GOOGLE) }
 
   def delete_from_storage_later
     return unless public_id.present?
@@ -36,11 +36,11 @@ class Asset < ApplicationRecord
   end
 
   def uploaded?
-    source == "upload"
+    source == AssetConstants::AssetSource::UPLOAD
   end
 
   def uploaded_file?
-    source == "upload" && public_id.present?
+    source == AssetConstants::AssetSource::UPLOAD && public_id.present?
   end
 
   def generate_public_id
@@ -69,12 +69,12 @@ class Asset < ApplicationRecord
 
   def storage_resource_type
     case format
-    when "video"
+    when AssetConstants::AssetFormat::VIDEO
       "video"
-    when "doc"
+    when AssetConstants::AssetFormat::DOC
       "raw"
     else
-      "image"
+      AssetConstants::AssetFormat::IMAGE
     end
   end
 
@@ -99,16 +99,16 @@ class Asset < ApplicationRecord
 
     self.format = case extension.downcase
     when "jpg", "jpeg", "png", "gif", "webp", "svg"
-                    "image"
+                    AssetConstants::AssetFormat::IMAGE
     when "mp4", "mov", "avi", "webm", "mkv"
-                    "video"
+                    AssetConstants::AssetFormat::VIDEO
     when "pdf", "doc", "docx", "txt", "rtf"
-                    "doc"
+                    AssetConstants::AssetFormat::DOC
     else
-                    "unknown"
+                    AssetConstants::AssetFormat::UNKNOWN
     end
   rescue URI::InvalidURIError
     self.extension = nil
-    self.format ||= "unknown"
+    self.format ||= AssetConstants::AssetFormat::UNKNOWN
   end
 end

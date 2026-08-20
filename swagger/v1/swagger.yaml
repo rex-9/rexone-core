@@ -467,7 +467,7 @@ components:
         text:
           type: string
           minLength: 1
-        target_language:
+        anguage:
           type: string
           minLength: 1
           description:
@@ -475,7 +475,7 @@ components:
             or Spanish; not a fixed enum.
       required:
         - text
-        - target_language
+        - language
     ai_analyze_request:
       type: object
       properties:

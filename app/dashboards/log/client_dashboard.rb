@@ -50,6 +50,7 @@ class Log::ClientDashboard < Administrate::BaseDashboard
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
     severity
+    occurrence_count
     message
     platform
     app_version

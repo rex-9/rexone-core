@@ -6,7 +6,7 @@ class CreateAssets < ActiveRecord::Migration[7.2]
       t.string :url, null: false                                        # URL to access the file (Cloudinary or other)
       t.string :category, null: false                                   # Enum: "profile", "banner"
       t.string :format, null: false                                     # "image", "video", "doc", etc.
-      t.bigint :size, null: false                                       # File size in bytes
+      t.bigint :size                                                    # File size in bytes
       t.string :source, null: false, default: "upload"                  # "google", "upload", etc...
       t.string :extension                                               # File extension (e.g., "jpg", "png")
       t.references :record, polymorphic: true, type: :uuid, null: true  # Polymorphic reference (Merit, Wish, Thanks, etc.)

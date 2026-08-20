@@ -46,6 +46,22 @@ RSpec.describe Ai::ProcessChatJob, type: :job do
     )
   end
 
+  it "prepends a system message when system_prompt is present" do
+    user_message.update!(metadata: user_message.metadata.merge("system_prompt" => "You are a helpful assistant."))
+    allow(AiService::Client).to receive(:chat).and_return(result)
+
+    described_class.perform_now(user_message.id)
+
+    expect(AiService::Client).to have_received(:chat).with(
+      messages: [
+        { role: AiConstants::ChatRole::SYSTEM, content: "You are a helpful assistant." },
+        { role: "user", content: "How are you?" }
+      ],
+      temperature: 0.4,
+      max_tokens: 500
+    )
+  end
+
   it "is idempotent once the request has completed" do
     user_message.update!(metadata: user_message.metadata.merge("status" => "completed"))
     allow(AiService::Client).to receive(:chat)

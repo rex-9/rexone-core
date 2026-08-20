@@ -289,9 +289,9 @@ module Openapi
         text: { type: :string, minLength: 1 }
       ),
       ai_translate_request: object(
-        required: %i[text target_language],
+        required: %i[text language],
         text: { type: :string, minLength: 1 },
-        target_language: {
+        language: {
           type: :string,
           minLength: 1,
           description: "Natural-language target such as English, Myanmar, Japanese, or Spanish; not a fixed enum."

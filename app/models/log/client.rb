@@ -48,7 +48,7 @@ class Log::Client < ApplicationRecord
     resolved_at.present?
   end
 
-  def unauthenticated
+  def unauthenticated?
     user_id.nil?
   end
 

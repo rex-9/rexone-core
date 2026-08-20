@@ -1,7 +1,7 @@
 # app/controllers/v1/log/clients_controller.rb
 class V1::Log::ClientsController < V1::ApplicationController
   skip_before_action :authenticate_user!, only: [ :create ]
-  before_action :set_log_client, only: [ :show, :update_resolve, :update_unresolve ]
+  before_action :set_log_client, only: [ :show, :update_resolve, :update_unresolve, :destroy ]
 
   # POST /log/clients
   def create
@@ -44,8 +44,6 @@ class V1::Log::ClientsController < V1::ApplicationController
 
   # GET /log/clients
   def index
-    authorize! :read, Log::Client
-
     logs = Log::Client.all.order(created_at: :desc)
     logs = apply_filters(logs)
 
@@ -62,7 +60,6 @@ class V1::Log::ClientsController < V1::ApplicationController
 
   # GET /log/clients/:id
   def show
-    authorize! :read, Log::Client
     render_json_response(
       status_code: 200,
       message: log_message(MessageService::Log::FETCHED_ONE),
@@ -72,7 +69,6 @@ class V1::Log::ClientsController < V1::ApplicationController
 
   # PATCH /log/clients/:id/resolve
   def update_resolve
-    authorize! :update, Log::Client
     @log_client.resolve!(resolved_by: current_user)
 
     render_json_response(
@@ -84,7 +80,6 @@ class V1::Log::ClientsController < V1::ApplicationController
 
   # PATCH /log/clients/:id/unresolve
   def update_unresolve
-    authorize! :update, Log::Client
     @log_client.unresolve!
 
     render_json_response(
@@ -96,7 +91,6 @@ class V1::Log::ClientsController < V1::ApplicationController
 
   # DELETE /log/clients/:id
   def destroy
-    authorize! :destroy, Log::Client
     @log_client.destroy!
 
     render_json_response(

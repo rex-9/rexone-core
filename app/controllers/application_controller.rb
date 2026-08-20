@@ -6,6 +6,7 @@ class ApplicationController < ActionController::API
   include Pagy::Method
   include Authorization
   include ApplicationHelper
+  include SessionPlatform
 
   around_action :switch_locale
   before_action :enforce_active_platform_session!, :set_current_auditor
@@ -20,8 +21,8 @@ class ApplicationController < ActionController::API
   def requested_locale
     candidates = [
       params[:locale],
-      request.headers["X-Locale"],
-      *request.headers["Accept-Language"].to_s.split(",")
+      request.headers[AuthConstants::Headers::LOCALE],
+      *request.headers[AuthConstants::Headers::ACCEPT_LANGUAGE].to_s.split(",")
     ]
 
     candidates.each do |candidate|
@@ -39,7 +40,7 @@ class ApplicationController < ActionController::API
   def enforce_active_platform_session!
     return unless current_user
 
-    bearer_token = request.headers["Authorization"].to_s.split(" ").last
+    bearer_token = request.headers[AuthConstants::Headers::AUTHORIZATION].to_s.split(" ").last
     return if bearer_token.blank?
 
     key = session_key(current_user.id)
@@ -60,11 +61,6 @@ class ApplicationController < ActionController::API
     Rails.logger.error(
       "#{AUTH_LOG_PREFIX} Active session verification failed: #{e.message}"
     )
-  end
-
-  def session_platform
-    value = request.headers["X-Platform"].presence || params[:platform].presence || "web"
-    %w[web mobile].include?(value) ? value : "web"
   end
 
   def auth_message(key, **options)

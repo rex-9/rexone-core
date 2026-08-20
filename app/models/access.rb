@@ -22,19 +22,19 @@ class Access < ApplicationRecord
 
   # ===== INSTANCE METHODS =====
   def active?
-    status == "active" && (expires_at.nil? || expires_at > Time.current)
+    status == AccessConstants::AccessStatus::ACTIVE && (expires_at.nil? || expires_at > Time.current)
   end
 
   def expired?
-    status == "expired" || (expires_at.present? && expires_at < Time.current)
+    status == AccessConstants::AccessStatus::EXPIRED || (expires_at.present? && expires_at < Time.current)
   end
 
   def revoke!
-    update(status: "revoked", revoked_at: Time.current)
+    update(status: AccessConstants::AccessStatus::REVOKED, revoked_at: Time.current)
   end
 
   def expire!
-    update(status: "expired", expired_at: Time.current)
+    update(status: AccessConstants::AccessStatus::EXPIRED, expired_at: Time.current)
   end
 
   def days_remaining
