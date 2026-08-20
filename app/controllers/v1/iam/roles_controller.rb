@@ -2,16 +2,16 @@
 class V1::Iam::RolesController < V1::ApplicationController
   before_action :super_admin_required!, except: [ :index ]
 
-  # GET /iam/roles/
+  # GET /iam/roles?page=1&limit=10
   def index
     roles = Iam::Role.all.includes(:permissions, :users)
+    pagy, records = pagy(:offset, roles, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::ROLES_FETCHED),
-      data: {
-        roles: Iam::RoleSerializer.new(roles).serializable_hash[:data]
-      }
+      data: Iam::RoleSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 

@@ -56,7 +56,7 @@ class Ai::ProcessChatJob < ApplicationJob
                            .map { |message| { role: message.role, content: message.content } }
 
     system_prompt = user_message.ai_system_prompt
-    messages.unshift(role: "system", content: system_prompt) if system_prompt.present?
+    messages.unshift(role: AiConstants::ChatRole::SYSTEM, content: system_prompt) if system_prompt.present?
     messages
   end
 
@@ -68,7 +68,7 @@ class Ai::ProcessChatJob < ApplicationJob
       return if user_message.ai_status == Chat::Message::AI_STATUSES[:completed]
 
       assistant_message = user_message.room.messages.create!(
-        role: "assistant",
+        role: AiConstants::ChatRole::ASSISTANT,
         content: response,
         ai_usage: result["usage"],
         ai_model: result["model"]
@@ -92,7 +92,7 @@ class Ai::ProcessChatJob < ApplicationJob
     room = user_message.room
     message = ai_message(MessageService::Ai::RESPONSE_READY)
     data = {
-      type: "ai_response_ready",
+      type: NotificationConstants::NotificationType::AI_RESPONSE_READY,
       room_id: room.id,
       message_id: assistant_message.id
     }
@@ -118,7 +118,7 @@ class Ai::ProcessChatJob < ApplicationJob
     room = user_message.room
     message = ai_message(MessageService::Ai::RESPONSE_FAILED)
     data = {
-      type: "ai_response_failed",
+      type: NotificationConstants::NotificationType::AI_RESPONSE_FAILED,
       room_id: room.id,
       message_id: user_message.id
     }

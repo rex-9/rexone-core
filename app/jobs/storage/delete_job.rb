@@ -1,4 +1,4 @@
-class StorageService::DeleteJob < ApplicationJob
+class Storage::DeleteJob < ApplicationJob
   queue_as :storage
 
   retry_on StorageService::Error,

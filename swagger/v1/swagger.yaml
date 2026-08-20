@@ -459,14 +459,14 @@ components:
         text:
           type: string
           minLength: 1
-        target_language:
+        language:
           type: string
           minLength: 1
           description: Natural-language target such as English, Myanmar, Japanese,
             or Spanish; not a fixed enum.
       required:
       - text
-      - target_language
+      - language
     ai_analyze_request:
       type: object
       properties:
@@ -494,6 +494,44 @@ components:
             voice_name is not accepted.
       required:
       - text
+    speech_stt_url_request:
+      type: object
+      properties:
+        audioUrl:
+          type: string
+          format: uri
+          minLength: 1
+      required:
+      - audioUrl
+    speech_stt_url_data:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+      - text
+    speech_stt_url_response:
+      type: object
+      properties:
+        status:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 200
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+          required:
+          - code
+          - success
+          - message
+        data:
+          "$ref": "#/components/schemas/speech_stt_url_data"
+      required:
+      - status
     ai_message_metadata:
       type: object
       properties:
@@ -4543,6 +4581,65 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/speech_tts_request"
+  "/v1/speech/stt-url":
+    post:
+      tags:
+      - Speech
+      summary: Transcribe speech from an audio URL
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/speech_stt_url_response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/speech_stt_url_request"
 servers:
 - url: "/"
   description: Current API server

@@ -7,9 +7,8 @@ require "uri"
 module SpeechService
   class NovaSpeech < Base
     LOG_PREFIX = "[NovaSpeech]".freeze
-    ENDPOINT_PATH = "/ssml-to-speech".freeze
-    READ_TIMEOUT_SECONDS = 60
-    OPEN_TIMEOUT_SECONDS = 10
+    READ_TIMEOUT_SECONDS = 120
+    OPEN_TIMEOUT_SECONDS = 20
 
     def initialize
       @base_url = AppConfig::SPEECH_SERVICE_BASE_URL.to_s.chomp("/")
@@ -19,7 +18,19 @@ module SpeechService
       payload = { "text" => text }
       payload["voiceName"] = voice_name if voice_name.present?
 
-      uri = URI.parse("#{@base_url}#{ENDPOINT_PATH}")
+      map_tts_success(post_json(AppConfig::SPEECH_TTS_ENDPOINT_PATH, payload))
+    end
+
+    def speech_to_text_with_url(audioUrl:)
+      payload = { "audioUrl" => audioUrl }
+
+      map_stt_success(post_json(AppConfig::SPEECH_STT_URL_ENDPOINT_PATH, payload))
+    end
+
+    private
+
+    def post_json(path, payload)
+      uri = URI.parse("#{@base_url}#{path}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == "https"
       http.open_timeout = OPEN_TIMEOUT_SECONDS
@@ -32,7 +43,7 @@ module SpeechService
       response = http.request(request)
 
       if response.code.to_i == 200
-        map_success(JSON.parse(response.body))
+        JSON.parse(response.body)
       else
         Rails.logger.error("#{LOG_PREFIX} API Error: #{response.body}")
         { error: provider_error_message }
@@ -45,9 +56,10 @@ module SpeechService
       { error: provider_error_message }
     end
 
-    private
+    def map_tts_success(body)
+      return body if body[:error]
 
-    def map_success(body)
+      Rails.logger.info("#{LOG_PREFIX} TTS Success: #{body}")
       audio_payload = body["audio"] || {}
       visemes_payload = body["visemes"] || []
 
@@ -61,12 +73,22 @@ module SpeechService
       }
     end
 
+ 
+
     def map_viseme(viseme)
       {
-        audio_offset: viseme["audioOffset"] ,
+        audio_offset: viseme["audioOffset"],
         viseme_id: viseme["visemeId"],
         audio_offset_ms: viseme["audioOffsetMs"]
       }
+    end
+
+    def map_stt_success(body)
+      return body if body[:error]
+
+      Rails.logger.info("#{LOG_PREFIX} STT Success: #{body}")
+
+      { text: body["data"]["text"].to_s }
     end
 
     def provider_error_message

@@ -34,13 +34,16 @@ module Openapi
     end
 
     def operation(tags:, summary:, description: nil, success: 200, body: nil, parameters: [],
-                  security: SECURITY, errors: [ 401, 422 ])
+                  security: SECURITY, errors: [ 401, 422 ], success_schema: nil)
       operation = {
         tags: Array(tags),
         summary: summary,
         parameters: parameters,
         responses: {
-          success.to_s => response(success == 201 ? "Created" : "Successful response")
+          success.to_s => response(
+            success == 201 ? "Created" : "Successful response",
+            success_schema || ref(:response)
+          )
         }
       }
       operation[:description] = description if description
@@ -289,9 +292,9 @@ module Openapi
         text: { type: :string, minLength: 1 }
       ),
       ai_translate_request: object(
-        required: %i[text target_language],
+        required: %i[text language],
         text: { type: :string, minLength: 1 },
-        target_language: {
+        language: {
           type: :string,
           minLength: 1,
           description: "Natural-language target such as English, Myanmar, Japanese, or Spanish; not a fixed enum."
@@ -309,6 +312,24 @@ module Openapi
           type: :string,
           description: "Provider voice name. Omit to use the provider default. snake_case voice_name is not accepted."
         }
+      ),
+      speech_stt_url_request: object(
+        required: [ :audioUrl ],
+        audioUrl: { type: :string, format: :uri, minLength: 1 }
+      ),
+      speech_stt_url_data: object(
+        required: [ :text ],
+        text: { type: :string }
+      ),
+      speech_stt_url_response: object(
+        required: [ :status ],
+        status: object(
+          required: %i[code success message],
+          code: { type: :integer, example: 200 },
+          success: { type: :boolean, example: true },
+          message: { type: :string }
+        ),
+        data: ref(:speech_stt_url_data)
       ),
       ai_message_metadata: object(
         status: { type: :string, enum: AI_STATUSES, description: "Processing state; set on queued user messages." },
@@ -768,6 +789,16 @@ module Openapi
       paths["/v1/speech/tts"] = {
         post: operation(tags: "Speech", summary: "Synthesize speech audio and visemes from text",
                         body: ref(:speech_tts_request), errors: [ 401, 422, 500 ])
+      }
+
+      paths["/v1/speech/stt-url"] = {
+        post: operation(
+          tags: "Speech",
+          summary: "Transcribe speech from an audio URL",
+          body: ref(:speech_stt_url_request),
+          success_schema: ref(:speech_stt_url_response),
+          errors: [ 401, 422, 500 ]
+        )
       }
 
       paths.each_value do |methods|

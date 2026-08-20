@@ -30,17 +30,18 @@ module Chat
 
     scope :chronological, -> { order(created_at: :asc) }
     scope :recent, -> { order(created_at: :desc).limit(20) }
+    scope :user_messages, -> { where(role: AiConstants::ChatRole::USER) }
     scope :ai_processing, -> {
-      where(role: "user")
+      where(role: AiConstants::ChatRole::USER)
         .where("metadata ->> 'status' IN (?)", AI_PROCESSING_STATUSES)
     }
 
     def user?
-      role == "user"
+      role == AiConstants::ChatRole::USER
     end
 
     def assistant?
-      role == "assistant"
+      role == AiConstants::ChatRole::ASSISTANT
     end
 
     def ai_processing?

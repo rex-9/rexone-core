@@ -1,5 +1,7 @@
 # app/controllers/auth/confirmations_controller.rb
 class Auth::ConfirmationsController < Devise::ConfirmationsController
+  include SessionPlatform
+
   # GET /confirmation?confirmation_token=abcdef
   def show
     self.resource = resource_class.confirm_by_token(params[:confirmation_token])
@@ -89,10 +91,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
     MessageService::Auth.t(key, **options)
   end
 
-  def session_platform
-    value = request.headers["X-Platform"].presence || params[:platform].presence || "web"
-    %w[web mobile].include?(value) ? value : "web"
-  end
+
 
   def signup_active_session!(user:, token:)
     key = "active_session:user:#{user.id}:#{session_platform}"

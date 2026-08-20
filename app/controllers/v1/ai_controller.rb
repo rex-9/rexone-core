@@ -30,7 +30,7 @@ class V1::AiController < V1::ApplicationController
       end
 
       user_message = @room.messages.create!(
-        role: "user",
+        role: AiConstants::ChatRole::USER,
         content: message,
         ai_status: Chat::Message::AI_STATUSES[:queued],
         ai_system_prompt: params[:system_prompt].presence,
@@ -61,19 +61,16 @@ class V1::AiController < V1::ApplicationController
     )
   end
 
-  # GET /ai/history
+  # GET /ai/history?page=1&limit=50
   def read_history
     messages = @room.messages.chronological
+    pagy, records = pagy(:offset, messages, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::CONVERSATION_HISTORY),
-      data: {
-        messages: Chat::MessageSerializer.new(messages).serializable_hash[:data],
-        room_id: @room.id,
-        room_title: @room.title,
-        processing: @room.processing?
-      }
+      data: Chat::MessageSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 
@@ -113,16 +110,16 @@ class V1::AiController < V1::ApplicationController
     )
   end
 
-  # GET /ai/rooms
+  # GET /ai/rooms?page=1&limit=10
   def read_rooms
     rooms = current_user.rooms.recent.includes(:messages)
+    pagy, records = pagy(:offset, rooms, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::ROOMS_FETCHED),
-      data: {
-        rooms: Chat::RoomSerializer.new(rooms).serializable_hash[:data]
-      }
+      data: Chat::RoomSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 
@@ -168,8 +165,8 @@ class V1::AiController < V1::ApplicationController
     end
 
     messages = [
-      { role: "system", content: "Summarize the following text concisely:" },
-      { role: "user", content: text }
+      { role: AiConstants::ChatRole::SYSTEM, content: AiConstants::AiPrompt::SUMMARIZE },
+      { role: AiConstants::ChatRole::USER, content: text }
     ]
 
     result = AiService::Client.chat(
@@ -199,7 +196,6 @@ class V1::AiController < V1::ApplicationController
   # POST /ai/translate
   def create_translate
     text = params[:text]
-    target_language = params[:target_language] || "English"
 
     if text.blank?
       render_json_response(
@@ -211,8 +207,8 @@ class V1::AiController < V1::ApplicationController
     end
 
     messages = [
-      { role: "system", content: "Translate the following text to #{target_language}:" },
-      { role: "user", content: text }
+      { role: AiConstants::ChatRole::SYSTEM, content: AiConstants::AiPrompt::TRANSLATE % { language: params[:language] } },
+      { role: AiConstants::ChatRole::USER, content: text }
     ]
 
     result = AiService::Client.chat(
@@ -242,7 +238,7 @@ class V1::AiController < V1::ApplicationController
   # POST /ai/analyze
   def create_analyze
     text = params[:text]
-    analysis_type = params[:type] || "sentiment"
+    analysis_type = params[:type].presence || AiConstants::AiPrompt::DEFAULT_ANALYSIS
 
     if text.blank?
       render_json_response(
@@ -265,8 +261,8 @@ class V1::AiController < V1::ApplicationController
     end
 
     messages = [
-      { role: "system", content: system_prompt },
-      { role: "user", content: text }
+      { role: AiConstants::ChatRole::SYSTEM, content: system_prompt },
+      { role: AiConstants::ChatRole::USER, content: text }
     ]
 
     result = AiService::Client.chat(

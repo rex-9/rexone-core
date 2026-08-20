@@ -210,5 +210,6 @@ Rails.application.routes.draw do
 
     # ===== SPEECH =====
     post "speech/tts", to: "speech#create_tts"
+    post "speech/stt-url", to: "speech#create_stt_url"
   end
 end

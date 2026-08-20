@@ -4,6 +4,7 @@ module SpeechService
   class Client
     class << self
       delegate :text_to_speech,
+               :speech_to_text_with_url,
                to: :provider
 
       private

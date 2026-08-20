@@ -5,18 +5,7 @@ module PaymentService
   class Stripe < Base
     Stripe = ::Stripe
     STRIPE_LOG_PREFIX = "[Stripe]".freeze
-    SUPPORTED_WEBHOOK_EVENT_TYPES = %w[
-      checkout.session.completed
-      customer.subscription.updated
-      customer.subscription.deleted
-      customer.subscription.paused
-      customer.subscription.resumed
-      product.updated
-      product.deleted
-      price.created
-      price.updated
-      price.deleted
-    ].freeze
+    SUPPORTED_WEBHOOK_EVENT_TYPES = PaymentConstants::StripeEvent::ALL
 
     def initialize
       Stripe.api_key = AppConfig::STRIPE_SECRET_KEY
@@ -37,7 +26,7 @@ module PaymentService
             price: product.stripe_price_id,
             quantity: 1
           } ],
-          mode: product.recurring? ? "subscription" : "payment",
+          mode: product.recurring? ? PaymentConstants::StripeMode::SUBSCRIPTION : PaymentConstants::StripeMode::PAYMENT,
           success_url: success_url || AppConfig::STRIPE_SUCCESS_URL,
           cancel_url: cancel_url || AppConfig::STRIPE_CANCEL_URL,
           metadata: {
@@ -156,25 +145,25 @@ module PaymentService
       event = normalize_webhook_event(event)
 
       case event.type
-      when "checkout.session.completed"
+      when PaymentConstants::StripeEvent::CHECKOUT_SESSION_COMPLETED
         handle_checkout_completed(event.data.object)
-      when "customer.subscription.updated"
+      when PaymentConstants::StripeEvent::SUBSCRIPTION_UPDATED
         handle_subscription_updated(event.data.object)
-      when "customer.subscription.deleted"
+      when PaymentConstants::StripeEvent::SUBSCRIPTION_DELETED
         handle_subscription_deleted(event.data.object)
-      when "customer.subscription.paused"
+      when PaymentConstants::StripeEvent::SUBSCRIPTION_PAUSED
         handle_subscription_updated(event.data.object)
-      when "customer.subscription.resumed"
+      when PaymentConstants::StripeEvent::SUBSCRIPTION_RESUMED
         handle_subscription_updated(event.data.object)
-      when "product.updated"
+      when PaymentConstants::StripeEvent::PRODUCT_UPDATED
         handle_product_updated(event.data.object)
-      when "product.deleted"
+      when PaymentConstants::StripeEvent::PRODUCT_DELETED
         handle_product_deleted(event.data.object)
-      when "price.created"
+      when PaymentConstants::StripeEvent::PRICE_CREATED
         handle_price_created(event.data.object)
-      when "price.updated"
+      when PaymentConstants::StripeEvent::PRICE_UPDATED
         handle_price_updated(event.data.object)
-      when "price.deleted"
+      when PaymentConstants::StripeEvent::PRICE_DELETED
         handle_price_deleted(event.data.object)
       else
         Rails.logger.info(
@@ -207,12 +196,12 @@ module PaymentService
     end
 
     def extract_payment_method_info(payment_method_id)
-      return { type: "other", details: {} } if payment_method_id.blank?
+      return { type: PaymentConstants::StripeStatus::OTHER, details: {} } if payment_method_id.blank?
 
       begin
         pm = Stripe::PaymentMethod.retrieve(payment_method_id)
         {
-          type: pm.type || "other",
+          type: pm.type || PaymentConstants::StripeStatus::OTHER,
           details: {
             brand: pm.card&.brand,
             last4: pm.card&.last4,
@@ -224,7 +213,7 @@ module PaymentService
         }
       rescue => e
         Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not retrieve payment method #{payment_method_id}: #{e.message}")
-        { type: "other", details: {} }
+        { type: PaymentConstants::StripeStatus::OTHER, details: {} }
       end
     end
 
@@ -319,7 +308,7 @@ module PaymentService
       end
 
       if previous_status.present? &&
-          previous_status != "past_due" &&
+          previous_status != PaymentConstants::StripeStatus::PAST_DUE &&
           subscription.past_due?
         NotificationService.payment_failed(
           subscription.user,
@@ -411,7 +400,7 @@ module PaymentService
       product = Payment::Product.find(product_id)
       user = User.find(user_id)
 
-      if session.mode == "subscription"
+      if session.mode == PaymentConstants::StripeMode::SUBSCRIPTION
         stripe_sub = Stripe::Subscription.retrieve(
           session.subscription
         )
@@ -468,7 +457,7 @@ module PaymentService
 
       else
         # NOTE: For some reason one-time payment not being paid
-        unless session.payment_status == "paid"
+        unless session.payment_status == PaymentConstants::StripeStatus::PAID
           Rails.logger.warn(
             "#{STRIPE_LOG_PREFIX} Ignored unpaid completed Checkout Session: #{session.id}"
           )
@@ -534,7 +523,7 @@ module PaymentService
       subscription = sync_subscription(stripe_subscription)
 
       subscription.update!(
-        status: "canceled",
+        status: PaymentConstants::StripeStatus::CANCELED,
         canceled_at: subscription.canceled_at || Time.current,
         ended_at: subscription.ended_at || Time.current
       )
@@ -545,7 +534,7 @@ module PaymentService
     #   return unless transaction
 
     #   transaction.update(
-    #     status: "refunded",
+    #     status: ::StripeStatus::REFUNDED,
     #     refunded_at: Time.at(charge.created)
     #   )
 

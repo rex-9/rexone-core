@@ -52,4 +52,22 @@ RSpec.describe SpeechService::NovaSpeech do
     allow(http).to receive(:request).and_raise(Timeout::Error)
     expect(provider.text_to_speech(text: "Hello")[:error]).to be_present
   end
+
+  it "posts audioUrl and maps the provider text response" do
+    request = nil
+    allow(http).to receive(:request) do |value|
+      request = value
+      instance_double(Net::HTTPResponse, code: "200", body: { text: "hello" }.to_json)
+    end
+
+    result = provider.speech_to_text_with_url(audioUrl: "https://cdn.example.com/audio.wav")
+
+    expect(result).to eq(text: "hello")
+    expect(JSON.parse(request.body)).to eq("audioUrl" => "https://cdn.example.com/audio.wav")
+  end
+
+  it "returns a localized provider error for STT HTTP failures" do
+    allow(http).to receive(:request).and_return(instance_double(Net::HTTPResponse, code: "500", body: "boom"))
+    expect(provider.speech_to_text_with_url(audioUrl: "https://cdn.example.com/audio.wav")[:error]).to be_present
+  end
 end

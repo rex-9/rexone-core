@@ -3,16 +3,16 @@ class V1::AssetsController < V1::ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_asset, only: [ :show, :update, :destroy ]
 
-  # GET /assets
+  # GET /assets?page=1&limit=10
   def index
     assets = Asset.all
+    pagy, records = pagy(:offset, assets, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: asset_message(MessageService::Asset::FETCHED),
-      data: {
-        assets: AssetSerializer.new(assets).serializable_hash[:data]
-      }
+      data: AssetSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 

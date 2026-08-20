@@ -26,7 +26,7 @@ module PushNotiService
         data: data,
         android_sound: sound || @default_sound,
         ios_sound: sound || @default_sound,
-        target_channel: "push"
+        target_channel: NotificationConstants::Channel::PUSH
       }
 
       send_notification(payload)
@@ -42,7 +42,7 @@ module PushNotiService
         include_aliases: {
           external_id: [ user_id ]
         },
-        target_channel: "push",
+        target_channel: NotificationConstants::Channel::PUSH,
         headings: { en: title },
         contents: { en: body },
         data: data,
@@ -61,7 +61,7 @@ module PushNotiService
       payload = {
         app_id: @app_id,
         included_segments: [ segment ],
-        target_channel: "push",
+        target_channel: NotificationConstants::Channel::PUSH,
         headings: { en: title },
         contents: { en: body },
         data: data,

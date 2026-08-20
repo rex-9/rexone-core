@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :role, class: "Iam::Role" do
-    name { "MyString" }
+    sequence(:name) { |n| "role_#{n}" }
     description { "MyText" }
   end
 end

@@ -15,7 +15,7 @@ class Auth::RegistrationsController < Devise::RegistrationsController
     return if email.blank?
 
     user = User.find_by(email: email)
-    if user && user.provider == "google"
+    if user && user.provider == AuthConstants::Provider::GOOGLE
       render_json_response(
         status_code: 422,
         message: auth_message(MessageService::Auth::SIGN_UP_FAILED),
@@ -29,7 +29,7 @@ class Auth::RegistrationsController < Devise::RegistrationsController
 
   def respond_with(resource, _opts = {})
     if request.method == "POST" && resource.persisted?
-      resource.provider = "email"
+      resource.provider = AuthConstants::Provider::EMAIL
 
       # Save resource first, then assign role
       if resource.save

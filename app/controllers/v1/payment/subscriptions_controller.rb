@@ -1,12 +1,15 @@
 # app/controllers/v1/payment/subscriptions_controller.rb
 class V1::Payment::SubscriptionsController < V1::ApplicationController
-  # GET /payment/subscriptions
+  # GET /payment/subscriptions?page=1&limit=10
   def index
     subscriptions = current_user.subscriptions.includes(:product).order(created_at: :desc)
+    pagy, records = pagy(:offset, subscriptions, limit: params[:limit])
+
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::SUBSCRIPTIONS_FETCHED),
-      data: Payment::SubscriptionSerializer.new(subscriptions).serializable_hash[:data]
+      data: Payment::SubscriptionSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 

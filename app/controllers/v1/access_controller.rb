@@ -1,28 +1,28 @@
 # app/controllers/v1/access_controller.rb:
 class V1::AccessController < V1::ApplicationController
-  # GET /access
+  # GET /access?page=1&limit=10
   def index
     accesses = AccessService.get_user_access(current_user.id)
+    pagy, records = pagy(:offset, accesses, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: access_message(MessageService::Access::FETCHED),
-      data: {
-        accesses: AccessSerializer.new(accesses).serializable_hash[:data]
-      }
+      data: AccessSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 
-  # GET /access/active
+  # GET /access/active?page=1&limit=10
   def read_active
     accesses = AccessService.get_active_access(current_user.id)
+    pagy, records = pagy(:offset, accesses, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: access_message(MessageService::Access::ACTIVE_FETCHED),
-      data: {
-        accesses: AccessSerializer.new(accesses).serializable_hash[:data]
-      }
+      data: AccessSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 

@@ -77,6 +77,51 @@ RSpec.describe "Speech synthesis", type: :request do
     expect(response).to have_http_status(:forbidden)
   end
 
+  describe "POST /v1/speech/stt-url" do
+    it "returns transcribed text for a valid audioUrl" do
+      expect(SpeechService::Client).to receive(:speech_to_text_with_url)
+        .with(audioUrl: "https://cdn.example.com/audio.wav")
+        .and_return(text: "hello")
+
+      post "/v1/speech/stt-url",
+           params: { audioUrl: "https://cdn.example.com/audio.wav" },
+           headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to eq("text" => "hello")
+    end
+
+    it "rejects a blank audioUrl without calling the provider" do
+      expect(SpeechService::Client).not_to receive(:speech_to_text_with_url)
+
+      post "/v1/speech/stt-url", params: { audioUrl: "" }, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "does not accept snake_case audio_url" do
+      expect(SpeechService::Client).not_to receive(:speech_to_text_with_url)
+
+      post "/v1/speech/stt-url",
+           params: { audio_url: "https://cdn.example.com/audio.wav" },
+           headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "surfaces provider failures as a server error" do
+      allow(SpeechService::Client).to receive(:speech_to_text_with_url)
+        .and_return(error: "Speech service is unavailable")
+
+      post "/v1/speech/stt-url",
+           params: { audioUrl: "https://cdn.example.com/audio.wav" },
+           headers: headers
+
+      expect(response).to have_http_status(:internal_server_error)
+      expect(response_status["error"]).to eq("Speech service is unavailable")
+    end
+  end
+
   def grant_speech_permissions(account)
     role = create(:role, name: "speech_user")
     permission = create(:permission, action: "create", resource: "speech")

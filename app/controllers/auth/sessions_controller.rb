@@ -1,5 +1,7 @@
 # app/controllers/auth/sessions_controller.rb
 class Auth::SessionsController < Devise::SessionsController
+  include SessionPlatform
+
   LOG_PREFIX = "[Auth]".freeze
 
   respond_to :json
@@ -146,7 +148,7 @@ class Auth::SessionsController < Devise::SessionsController
   # POST /signin/google
   def google_sign_in
     token = params[:token]
-    user_info = get_google_user_info(token)
+    user_info = GoogleAuthService.fetch_user_info(token)
 
     if !user_info || user_info["email"].blank?
       render_json_response(
@@ -250,7 +252,7 @@ class Auth::SessionsController < Devise::SessionsController
       name: challenge_data["name"],
       password: password,
       password_confirmation: password,
-      provider: "google",
+      provider: AuthConstants::Provider::GOOGLE,
       confirmed_at: Time.current
     )
 
@@ -259,10 +261,10 @@ class Auth::SessionsController < Devise::SessionsController
       asset = Asset.new(
         name: "profile_google_of_user_#{user.id}",
         url: challenge_data["picture"],
-        category: "profile",
-        format: "image",
+        category: AssetConstants::AssetCategory::PROFILE,
+        format: AssetConstants::AssetFormat::IMAGE,
         size: 0,
-        source: "google",
+        source: AssetConstants::AssetSource::GOOGLE,
         user: user,
       )
 
@@ -366,10 +368,7 @@ class Auth::SessionsController < Devise::SessionsController
     end
   end
 
-  def session_platform
-    value = request.headers["X-Platform"].presence || params[:platform].presence || "web"
-    %w[web mobile].include?(value) ? value : "web"
-  end
+
 
   def session_key_for(user_id, platform = session_platform)
     "active_session:user:#{user_id}:#{platform}"
@@ -382,7 +381,7 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def clear_active_session!(user)
-    token = request.headers["Authorization"].to_s.split(" ").last
+    token = request.headers[AuthConstants::Headers::AUTHORIZATION].to_s.split(" ").last
     key = session_key_for(user.id)
     active_token = CacheService.read(key)
 
@@ -395,26 +394,6 @@ class Auth::SessionsController < Devise::SessionsController
     Rails.logger.error("#{LOG_PREFIX} Failed to clear active session: #{e.message}")
   end
 
-  def get_google_user_info(token)
-    return nil if token.blank?
-
-    begin
-      response = RestClient.get("https://www.googleapis.com/oauth2/v3/tokeninfo", { params: { id_token: token } })
-      user_info = JSON.parse(response.body)
-      return user_info if user_info["email"].present?
-    rescue RestClient::ExceptionWithResponse
-      # Not an ID token or token is invalid. Try Google userinfo endpoint as access token.
-    end
-
-    response = RestClient.get("https://www.googleapis.com/oauth2/v1/userinfo", { params: { access_token: token, alt: "json" } })
-    JSON.parse(response.body)
-  rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.error(
-      "#{LOG_PREFIX} Google authentication failed: " \
-      "#{e.response&.body || e.response}"
-    )
-    nil
-  end
 
   def google_challenge_key(challenge_token)
     "google_signin:challenge:#{challenge_token}"

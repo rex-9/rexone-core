@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe StorageService::DeleteJob, type: :job do
+RSpec.describe Storage::DeleteJob, type: :job do
   it "symbolizes options and delegates deletion" do
     allow(StorageService::Client).to receive(:delete).and_return(true)
     described_class.perform_now(identifier: "profile/avatar", options: { "resource_type" => "image" })
