@@ -9,9 +9,9 @@ class Notification::DispatchJob < ApplicationJob
         title: title,
         message: message,
         data: data,
-        send_socket: channels.include?("socket"),
-        send_push: channels.include?("push"),
-        send_email: channels.include?("email")
+        send_socket: channels.include?(NotificationConstants::Channel::SOCKET),
+        send_push: channels.include?(NotificationConstants::Channel::PUSH),
+        send_email: channels.include?(NotificationConstants::Channel::EMAIL)
       )
     end
   end
@@ -20,8 +20,8 @@ class Notification::DispatchJob < ApplicationJob
 
   def recipients(audience)
     users = User.where.not(confirmed_at: nil)
-    return users if audience[:type] == "all"
-    return users.where(id: audience[:user_ids]) if audience[:type] == "users"
+    return users if audience[:type] == NotificationConstants::AudienceType::ALL
+    return users.where(id: audience[:user_ids]) if audience[:type] == NotificationConstants::AudienceType::USERS
 
     users.joins(:roles).where(iam_roles: { id: audience[:role_ids] }).distinct
   end

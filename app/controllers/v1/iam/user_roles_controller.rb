@@ -2,18 +2,18 @@
 class V1::Iam::UserRolesController < V1::ApplicationController
   before_action :admin_required!
 
-  # GET /iam/user_roles?user_id=:user_id
+  # GET /iam/user_roles?user_id=:user_id&page=1&limit=10
   # Returns all roles assigned to a specific user
   def index
     user = User.find(params[:user_id])
+    roles = user.roles
+    pagy, records = pagy(:offset, roles, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::USER_ROLES_FETCHED),
-      data: {
-        user_id: user.id,
-        roles: user.roles.map { |r| { id: r.id, name: r.name } }
-      }
+      data: Iam::RoleSerializer.paginated(records, pagy).merge(user_id: user.id),
+      pagy: pagy
     )
   end
 

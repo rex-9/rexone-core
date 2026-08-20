@@ -14,7 +14,7 @@ class Log::ClientSerializer < ApplicationSerializer
   attribute :storage_snapshot, &:storage_snapshot
   attribute :has_storage_issues, &:has_storage_issues?
   attribute :resolved, &:resolved?
-  attribute :public, &:public?
+  attribute :unauthenticated, &:unauthenticated?
   attribute :authenticated, &:authenticated?
 
   # ===== ASSOCIATIONS =====

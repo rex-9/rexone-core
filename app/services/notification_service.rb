@@ -70,7 +70,7 @@ class NotificationService
           product_name: product.name,
           amount: product.display_price
         ),
-        data: { type: "payment_success", product_name: product.name, amount: product.display_price },
+        data: { type: NotificationConstants::NotificationType::PAYMENT_SUCCESS, product_name: product.name, amount: product.display_price },
         send_socket: true,
         send_push: true,
         send_email: true,
@@ -93,7 +93,7 @@ class NotificationService
           product_name: product.name
         ),
         message: payment_message(MessageService::Payment::SUBSCRIPTION_CREATED_BODY),
-        data: { type: "subscription_created", product_name: product.name },
+        data: { type: NotificationConstants::NotificationType::SUBSCRIPTION_CREATED, product_name: product.name, active_until: subscription.current_period_end },
         send_socket: true,
         send_push: true,
         send_email: true,
@@ -101,8 +101,8 @@ class NotificationService
         email_template_data: {
           user_name: user.name || user.username,
           product_name: product.name,
-          current_period_start: subscription.current_period_start.strftime("%B %d, %Y"),
-          current_period_end: subscription.current_period_end.strftime("%B %d, %Y"),
+          current_period_start: format_date(Time.zone.at(subscription.current_period_start)),
+          current_period_end: format_date(Time.zone.at(subscription.current_period_end)),
           period: product.period_label
         }
       )
@@ -117,7 +117,7 @@ class NotificationService
         title: payment_message(MessageService::Payment::SUBSCRIPTION_CANCELED_TITLE),
         message: subscription_canceled_message(product, active_until),
         data: {
-          type: "subscription_canceled",
+          type: NotificationConstants::NotificationType::SUBSCRIPTION_CANCELED,
           product_name: product.name,
           active_until: active_until&.iso8601
         },
@@ -145,7 +145,7 @@ class NotificationService
           MessageService::Payment::SUBSCRIPTION_RESUMED_BODY,
           product_name: product.name
         ),
-        data: { type: "subscription_resumed", product_name: product.name },
+        data: { type: NotificationConstants::NotificationType::SUBSCRIPTION_RESUMED, product_name: product.name },
         send_socket: true,
         send_push: true,
         send_email: true,
@@ -168,7 +168,7 @@ class NotificationService
           product_name: product.name,
           amount: product.display_price
         ),
-        data: { type: "payment_failed", product_name: product.name, amount: product.display_price },
+        data: { type: NotificationConstants::NotificationType::PAYMENT_FAILED, product_name: product.name, amount: product.display_price },
         send_socket: true,
         send_push: true,
         send_email: true,
@@ -191,7 +191,7 @@ class NotificationService
           MessageService::Notification::WELCOME_BODY,
           name: name
         ),
-        data: { type: "welcome", name: name },
+        data: { type: NotificationConstants::NotificationType::WELCOME, name: name },
         send_push: true,
         send_socket: false,
         send_email: false
@@ -206,7 +206,7 @@ class NotificationService
           MessageService::Notification::SIGN_IN_ALERT_BODY,
           name: name
         ),
-        data: { type: "sign_in_alert", name: name },
+        data: { type: NotificationConstants::NotificationType::SIGN_IN_ALERT, time: Time.current.iso8601 },
         send_push: true,
         send_socket: false,
         send_email: false
@@ -249,6 +249,10 @@ class NotificationService
     end
 
     private
+
+    def format_date(time)
+      time&.strftime("%B %d, %Y")
+    end
 
     def notification_message(key, **options)
       MessageService::Notification.t(key, **options)

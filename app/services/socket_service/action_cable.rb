@@ -20,7 +20,7 @@ module SocketService
       ActionCable.server.broadcast(
         "notification_user_#{user_id}",
         {
-          type: "notification",
+          type: NotificationConstants::NotificationType::NOTIFICATION,
           message: message,
           data: data,
           created_at: Time.current.iso8601

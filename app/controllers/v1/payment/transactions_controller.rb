@@ -1,13 +1,15 @@
 # app/controllers/v1/payment/transactions_controller.rb
 class V1::Payment::TransactionsController < V1::ApplicationController
-  # GET /payment/transactions
+  # GET /payment/transactions?page=1&limit=10
   def index
     transactions = current_user.transactions.includes(:product).order(created_at: :desc)
+    pagy, records = pagy(:offset, transactions, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::TRANSACTIONS_FETCHED),
-      data: Payment::TransactionSerializer.new(transactions).serializable_hash[:data]
+      data: Payment::TransactionSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 
@@ -22,14 +24,16 @@ class V1::Payment::TransactionsController < V1::ApplicationController
     )
   end
 
-  # GET /payment/transactions/recent
+  # GET /payment/transactions/recent?page=1&limit=10
   def read_recent
     transactions = current_user.transactions.includes(:product).successful.recent
+    pagy, records = pagy(:offset, transactions, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::RECENT_TRANSACTIONS_FETCHED),
-      data: Payment::TransactionSerializer.new(transactions).serializable_hash[:data]
+      data: Payment::TransactionSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 

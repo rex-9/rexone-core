@@ -49,8 +49,8 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     raw_audience = params[:audience]
     @audience = if raw_audience.is_a?(ActionController::Parameters)
       value = { type: raw_audience[:type] }.compact
-      value[:user_ids] = Array(raw_audience[:user_ids]).uniq if raw_audience[:type] == "users"
-      value[:role_ids] = Array(raw_audience[:role_ids]).uniq if raw_audience[:type] == "roles"
+      value[:user_ids] = Array(raw_audience[:user_ids]).uniq if value[:type] == NotificationConstants::AudienceType::USERS
+      value[:role_ids] = Array(raw_audience[:role_ids]).uniq if value[:type] == NotificationConstants::AudienceType::ROLES
       value
     else
       {}
@@ -71,8 +71,8 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     return MessageService::Notification::CHANNEL_REQUIRED if channels.empty?
     return MessageService::Notification::INVALID_CHANNEL if (channels - NotificationService::CHANNELS).any?
     return MessageService::Notification::INVALID_AUDIENCE unless audience[:type].in?(NotificationService::AUDIENCES)
-    return MessageService::Notification::USER_IDS_REQUIRED if audience[:type] == "users" && audience[:user_ids].blank?
-    return MessageService::Notification::ROLE_IDS_REQUIRED if audience[:type] == "roles" && audience[:role_ids].blank?
+    return MessageService::Notification::USER_IDS_REQUIRED if audience[:type] == NotificationConstants::AudienceType::USERS && audience[:user_ids].blank?
+    return MessageService::Notification::ROLE_IDS_REQUIRED if audience[:type] == NotificationConstants::AudienceType::ROLES && audience[:role_ids].blank?
     return MessageService::Notification::INVALID_DATA if params[:data].present? && !params[:data].is_a?(ActionController::Parameters)
     return MessageService::Notification::NO_RECIPIENTS if recipient_count.zero?
 
@@ -87,8 +87,8 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
   def recipients
     users = User.where.not(confirmed_at: nil)
-    return users if audience[:type] == "all"
-    return users.where(id: audience[:user_ids]) if audience[:type] == "users"
+    return users if audience[:type] == NotificationConstants::AudienceType::ALL
+    return users.where(id: audience[:user_ids]) if audience[:type] == NotificationConstants::AudienceType::USERS
 
     users.joins(:roles).where(iam_roles: { id: audience[:role_ids] }).distinct
   end

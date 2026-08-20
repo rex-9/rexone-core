@@ -14,7 +14,7 @@ class AccessService
         user_id: user_id,
         product_id: product_id
       ) do |record|
-        record.status = "active"
+        record.status = AccessConstants::AccessStatus::ACTIVE
         record.granted_at = Time.current
         record.expires_at = resolved_expires_at
       end
@@ -24,7 +24,7 @@ class AccessService
         access.granted_at ||= Time.current
 
         access.assign_attributes(
-          status: "active",
+          status: AccessConstants::AccessStatus::ACTIVE,
           expires_at: resolved_expires_at,
           revoked_at: nil,
           expired_at: nil
@@ -53,11 +53,11 @@ class AccessService
       Access.exists?(
         user_id: user_id,
         product_id: product_id,
-        status: "active"
+        status: AccessConstants::AccessStatus::ACTIVE
       ) && Access.where(
         user_id: user_id,
         product_id: product_id,
-        status: "active"
+        status: AccessConstants::AccessStatus::ACTIVE
       ).where("expires_at IS NULL OR expires_at > ?", Time.current).exists?
     end
 
@@ -67,7 +67,7 @@ class AccessService
 
     def get_active_access(user_id)
       Access.includes(:product)
-           .where(user_id: user_id, status: "active")
+           .where(user_id: user_id, status: AccessConstants::AccessStatus::ACTIVE)
            .where("expires_at IS NULL OR expires_at > ?", Time.current)
     end
   end

@@ -3,18 +3,16 @@
 class V1::Iam::PermissionsController < V1::ApplicationController
   before_action :super_admin_required!
 
-  # GET /iam/permissions
+  # GET /iam/permissions?page=1&limit=10
   def index
     permissions = Iam::Permission.all
+    pagy, records = pagy(:offset, permissions, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::PERMISSIONS_FETCHED),
-      data: {
-        permissions: Iam::PermissionSerializer
-          .new(permissions)
-          .serializable_hash[:data]
-      }
+      data: Iam::PermissionSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 
@@ -33,34 +31,30 @@ class V1::Iam::PermissionsController < V1::ApplicationController
     )
   end
 
-  # GET /iam/permissions/discarded
+  # GET /iam/permissions/discarded?page=1&limit=10
   def discarded
     permissions = Iam::Permission.with_discarded.discarded
+    pagy, records = pagy(:offset, permissions, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::DISCARDED_PERMISSIONS_FETCHED),
-      data: {
-        permissions: Iam::PermissionSerializer
-          .new(permissions)
-          .serializable_hash[:data]
-      }
+      data: Iam::PermissionSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 
-  # GET /iam/permissions/undiscarded
+  # GET /iam/permissions/undiscarded?page=1&limit=10
   def undiscarded
     permissions = Iam::Permission.with_discarded
                                   .where.not(undiscarded_at: nil)
+    pagy, records = pagy(:offset, permissions, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::UNDISCARDED_PERMISSIONS_FETCHED),
-      data: {
-        permissions: Iam::PermissionSerializer
-          .new(permissions)
-          .serializable_hash[:data]
-      }
+      data: Iam::PermissionSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 
