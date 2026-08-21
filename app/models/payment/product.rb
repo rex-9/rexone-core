@@ -5,10 +5,6 @@
 class Payment::Product < ApplicationRecord
   self.table_name = "payment_products"
 
-  # ===== CONSTANTS =====
-  LOCAL_FREE_PRODUCT_ID = "local_free_product".freeze
-  LOCAL_FREE_PRICE_ID = "local_free_price".freeze
-
   has_many :subscriptions,
           class_name: "Payment::Subscription",
           foreign_key: :product_id,
@@ -45,9 +41,7 @@ class Payment::Product < ApplicationRecord
   end
 
   def free?
-    price_unit_amount.zero? ||
-      stripe_product_id == LOCAL_FREE_PRODUCT_ID ||
-      stripe_price_id == LOCAL_FREE_PRICE_ID
+    price_unit_amount.to_i.zero?
   end
 
   def premium?

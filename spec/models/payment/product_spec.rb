@@ -8,11 +8,9 @@ RSpec.describe Payment::Product, type: :model do
     expect(build(:payment_product, stripe_product_id: nil)).not_to be_valid
   end
 
-  it "supports a local free product without changing the table shape" do
+  it "treats zero-priced products as free" do
     product = build(
       :payment_product,
-      stripe_product_id: described_class::LOCAL_FREE_PRODUCT_ID,
-      stripe_price_id: described_class::LOCAL_FREE_PRICE_ID,
       price_unit_amount: 0
     )
 
@@ -31,6 +29,7 @@ RSpec.describe Payment::Product, type: :model do
   it "describes recurring and one-time pricing" do
     monthly = build(:payment_product, cycle: "month", price_unit_amount: 1_250)
     one_time = build(:payment_product, cycle: nil)
+    free = build(:payment_product, cycle: nil, price_unit_amount: 0)
 
     expect(monthly).to be_recurring
     expect(monthly.display_price).to eq("USD 12.50")
@@ -39,6 +38,7 @@ RSpec.describe Payment::Product, type: :model do
     expect(one_time).not_to be_recurring
     expect(one_time.period_label).to eq("One-time purchase")
     expect(one_time.cycle_in_duration).to eq(0.days)
+    expect(free.period_label).to eq("Lifetime")
   end
 
   it "separates active, one-time, and recurring products" do

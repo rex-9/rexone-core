@@ -110,13 +110,15 @@ module PaymentService
     # ===== PRODUCTS =====
     def create_product(attributes)
       with_stripe_error("Create Product") do
-        return create_local_free_product(attributes) if free_product_attributes?(attributes)
+        attributes = normalize_product_attributes(attributes)
+        stripe_product = nil
+        stripe_price = nil
 
         stripe_product = Stripe::Product.create(
           name: attributes.fetch(:name),
           description: attributes[:description],
           active: attributes.fetch(:active, true),
-          metadata: stripe_product_metadata(attributes)
+          metadata: {}
         )
 
         stripe_price = Stripe::Price.create(
@@ -125,7 +127,10 @@ module PaymentService
 
         Stripe::Product.update(stripe_product.id, default_price: stripe_price.id)
 
-        pending_product(stripe_product, stripe_price, attributes)
+        persist_product(stripe_product, stripe_price, attributes)
+      rescue ActiveRecord::ActiveRecordError
+        archive_stripe_records(stripe_product&.id, stripe_price&.id)
+        raise
       end
     end
 
@@ -133,33 +138,7 @@ module PaymentService
       with_stripe_error("Update Product") do
         product = Payment::Product.with_discarded.find(product_id)
 
-        if free_product_attributes?(product_price_attributes(product, attributes))
-          archive_stripe_product(product) if product.premium?
-          product.update!(local_free_product_attributes(product, attributes))
-          return product
-        end
-
-        if product.free?
-          stripe_product = Stripe::Product.create(
-            name: attributes.fetch(:name, product.name),
-            description: attributes.key?(:description) ? attributes[:description] : product.description,
-            active: attributes.key?(:active) ? attributes[:active] : product.active,
-            metadata: stripe_product_metadata(attributes, local_product_id: product.id)
-          )
-
-          stripe_price = Stripe::Price.create(
-            stripe_price_params(stripe_product.id, product_price_attributes(product, attributes))
-          )
-
-          Stripe::Product.update(stripe_product.id, default_price: stripe_price.id)
-          return product.tap do |record|
-            record.assign_attributes(
-              premium_product_attributes(product, stripe_product, stripe_price, attributes)
-            )
-          end
-        else
-          return update_premium_product(product, attributes)
-        end
+        update_stripe_product(product, attributes)
       end
     end
 
@@ -167,7 +146,7 @@ module PaymentService
       with_stripe_error("Archive Product") do
         product = Payment::Product.with_discarded.find(product_id)
 
-        archive_stripe_product(product) if product.premium?
+        archive_stripe_product(product)
         product.update!(active: false)
         product.discard
         product
@@ -292,30 +271,13 @@ module PaymentService
       { error: e.message }
     end
 
-    def create_local_free_product(attributes)
-      Payment::Product.create!(
-        local_free_product_attributes(nil, attributes)
-      )
+    def persist_product(stripe_product, stripe_price, attributes)
+      product = Payment::Product.find_or_initialize_by(stripe_product_id: stripe_product.id)
+      product.update!(product_attributes(stripe_product, stripe_price, attributes))
+      product
     end
 
-    def local_free_product_attributes(product, attributes)
-      {
-        stripe_product_id: Payment::Product::LOCAL_FREE_PRODUCT_ID,
-        stripe_price_id: Payment::Product::LOCAL_FREE_PRICE_ID,
-        name: attributes.fetch(:name, product&.name),
-        description: attributes.key?(:description) ? attributes[:description] : product&.description,
-        price_unit_amount: 0,
-        currency: attributes.fetch(:currency, product&.currency || "usd"),
-        cycle: nil,
-        active: attributes.key?(:active) ? attributes[:active] : (product&.active.nil? ? true : product.active)
-      }
-    end
-
-    def pending_product(stripe_product, stripe_price, attributes)
-      Payment::Product.new(pending_product_attributes(stripe_product, stripe_price, attributes))
-    end
-
-    def pending_product_attributes(stripe_product, stripe_price, attributes)
+    def product_attributes(stripe_product, stripe_price, attributes)
       {
         stripe_product_id: stripe_product.id,
         stripe_price_id: stripe_price.id,
@@ -328,56 +290,59 @@ module PaymentService
       }
     end
 
-    def premium_product_attributes(product, stripe_product, stripe_price, attributes)
-      {
-        stripe_product_id: stripe_product.id,
-        stripe_price_id: stripe_price.id,
-        name: attributes.fetch(:name, product.name),
-        description: attributes.key?(:description) ? attributes[:description] : product.description,
-        price_unit_amount: attributes.fetch(:price_unit_amount, product.price_unit_amount),
-        currency: attributes.fetch(:currency, product.currency),
-        cycle: attributes.fetch(:cycle, product.cycle),
-        active: attributes.key?(:active) ? attributes[:active] : product.active
-      }
-    end
-
-    def stripe_product_metadata(_attributes, local_product_id: nil)
-      return {} if local_product_id.blank?
-
-      { local_product_id: local_product_id }
-    end
-
-    def free_product_attributes?(attributes)
-      attributes[:price_unit_amount].to_i.zero?
-    end
-
     def archive_stripe_product(product)
-      Stripe::Product.update(product.stripe_product_id, active: false)
-      Stripe::Price.update(product.stripe_price_id, active: false)
+      archive_stripe_records(product.stripe_product_id, product.stripe_price_id)
     end
 
-    def update_premium_product(product, attributes)
+    def archive_stripe_records(stripe_product_id, stripe_price_id)
+      Stripe::Product.update(stripe_product_id, active: false) if stripe_product_id.present?
+      Stripe::Price.update(stripe_price_id, active: false) if stripe_price_id.present?
+    end
+
+    def update_stripe_product(product, attributes)
+      attributes = product_update_attributes(product, attributes)
+      previous_stripe_product_attributes = {
+        name: product.name,
+        description: product.description,
+        active: product.active
+      }
+
       Stripe::Product.update(
         product.stripe_product_id,
-        name: attributes.fetch(:name, product.name),
-        description: attributes.key?(:description) ? attributes[:description] : product.description,
-        active: attributes.key?(:active) ? attributes[:active] : product.active
+        name: attributes.fetch(:name),
+        description: attributes[:description],
+        active: attributes[:active]
       )
 
-      return product.tap { |record| record.assign_attributes(attributes) } unless price_changed?(product, attributes)
+      unless price_changed?(product, attributes)
+        begin
+          product.update!(attributes)
+        rescue ActiveRecord::ActiveRecordError
+          Stripe::Product.update(product.stripe_product_id, previous_stripe_product_attributes)
+          raise
+        end
+        return product
+      end
 
       old_stripe_price_id = product.stripe_price_id
       stripe_price = Stripe::Price.create(
-        stripe_price_params(product.stripe_product_id, product_price_attributes(product, attributes))
+        stripe_price_params(product.stripe_product_id, attributes)
       )
 
       Stripe::Product.update(product.stripe_product_id, default_price: stripe_price.id)
       Stripe::Price.update(old_stripe_price_id, active: false)
-      product.tap do |record|
-        record.assign_attributes(
-          attributes.merge(stripe_price_id: stripe_price.id)
+      begin
+        product.update!(attributes.merge(stripe_price_id: stripe_price.id))
+      rescue ActiveRecord::ActiveRecordError
+        Stripe::Product.update(
+          product.stripe_product_id,
+          previous_stripe_product_attributes.merge(default_price: old_stripe_price_id)
         )
+        Stripe::Price.update(old_stripe_price_id, active: true)
+        Stripe::Price.update(stripe_price.id, active: false)
+        raise
       end
+      product
     end
 
     def stripe_price_params(stripe_product_id, attributes)
@@ -398,15 +363,31 @@ module PaymentService
           attributes[:price_unit_amount] != product.price_unit_amount
       ) ||
         (attributes.key?(:currency) && attributes[:currency] != product.currency) ||
-        (attributes.key?(:cycle) && attributes[:cycle] != product.cycle)
+        (
+          attributes.key?(:cycle) &&
+            stripe_cycle_interval(attributes[:cycle]) != stripe_cycle_interval(product.cycle)
+        )
     end
 
-    def product_price_attributes(product, attributes)
-      {
+    def product_update_attributes(product, attributes)
+      normalize_product_attributes(
         price_unit_amount: attributes.fetch(:price_unit_amount, product.price_unit_amount),
         currency: attributes.fetch(:currency, product.currency),
-        cycle: attributes.fetch(:cycle, product.cycle)
-      }
+        cycle: attributes.fetch(:cycle, product.cycle),
+        name: attributes.fetch(:name, product.name),
+        description: attributes.key?(:description) ? attributes[:description] : product.description,
+        active: attributes.key?(:active) ? attributes[:active] : product.active
+      )
+    end
+
+    def normalize_product_attributes(attributes)
+      attributes = attributes.dup
+      attributes[:cycle] = normalized_product_cycle(attributes[:price_unit_amount], attributes[:cycle])
+      attributes
+    end
+
+    def normalized_product_cycle(price_unit_amount, cycle)
+      price_unit_amount.to_i.zero? ? nil : cycle
     end
 
     def stripe_cycle_interval(cycle)
@@ -533,7 +514,7 @@ module PaymentService
         description: stripe_product&.description,
         price_unit_amount: price.unit_amount,
         currency: price.currency,
-        cycle: price.recurring&.interval,
+        cycle: normalized_product_cycle(price.unit_amount, price.recurring&.interval),
         active: stripe_product&.active && price.active
       )
 

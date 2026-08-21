@@ -39,8 +39,11 @@ RSpec.describe "Admin payment products", type: :request do
     )
   end
 
-  it "creates a local free product without Stripe ids from the client" do
+  it "creates a free product with localized messages" do
     grant_admin_product_permission(:create)
+    product = build(:payment_product, name: "Free", price_unit_amount: 0, cycle: nil)
+
+    allow(PaymentService::Client).to receive(:create_product).and_return(product)
 
     post "/v1/admin/payment/products",
          params: {
@@ -55,8 +58,9 @@ RSpec.describe "Admin payment products", type: :request do
     expect(response).to have_http_status(:created)
     expect(response_data.dig("product", "free")).to eq(true)
     expect(response_data.dig("product", "price")).to eq("Free")
-    expect(response_data.dig("product", "stripe_product_id")).to eq(Payment::Product::LOCAL_FREE_PRODUCT_ID)
-    expect(response_data.dig("product", "stripe_price_id")).to eq(Payment::Product::LOCAL_FREE_PRICE_ID)
+    expect(PaymentService::Client).to have_received(:create_product).with(
+      hash_including(name: "Free", price_unit_amount: 0, currency: "usd", cycle: nil, active: true)
+    )
   end
 
   it "updates a Stripe-backed product" do

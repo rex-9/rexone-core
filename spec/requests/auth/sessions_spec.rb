@@ -128,20 +128,25 @@ RSpec.describe "Authentication sessions", type: :request do
       )
     end
 
-    it "allows current IAM lookup for scoped admin roles without users permission" do
-      user = create(:user)
-      role = create(:role, name: "notification_admin")
-      permission = create(:permission, action: "read", resource: "notifications")
+    it "allows current IAM lookup after signing in with an assigned users role" do
+      user = create(:user, email: "role-user@example.com")
+      role = create(:role, name: "current_user_reader")
+      permission = create(:permission, name: "read_users", action: "read", resource: "users")
       create(:role_permission, role: role, permission: permission)
       create(:user_role, user: user, role: role)
-      token = jwt_for(user)
+      post "/signin", params: { user: { signin_key: user.email, password: "password123" } }
+      token = response_data["token"]
+
+      expect(response).to have_http_status(:ok)
+      expect(token).to be_present
+
       allow(CacheService).to receive(:read).and_return(token)
 
       get "/v1/users/current/iam", headers: authorization_headers(token)
 
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("user", "role_names")).to include("notification_admin")
-      expect(response_data.dig("user", "permissions", "notifications")).to include("read")
+      expect(response_data.dig("user", "role_names")).to include("current_user_reader")
+      expect(response_data.dig("user", "permissions", "users")).to include("read")
     end
 
     it "rejects a missing or replaced active session" do

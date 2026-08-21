@@ -216,7 +216,7 @@ module Openapi
           price_unit_amount: {
             type: :integer,
             minimum: 0,
-            description: "Amount in the smallest currency unit, for example cents. Use 0 for a local free product."
+            description: "Amount in the smallest currency unit, for example cents. Use 0 for a free product."
           },
           currency: { type: :string, enum: Payment::Product.currencies.values, example: "usd" },
           cycle: {
