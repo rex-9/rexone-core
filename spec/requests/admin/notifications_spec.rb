@@ -20,6 +20,18 @@ RSpec.describe "Admin notification broadcasts", type: :request do
     expect(Notification::DispatchJob).not_to have_been_enqueued
   end
 
+  it "lists selectable and unavailable notification events" do
+    grant_admin_notification_permission(action: "read")
+
+    get "/v1/admin/notifications/templates", headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_data).to include(
+      hash_including("event" => "general_announcement", "admin_available" => true),
+      hash_including("event" => "payment_failed", "admin_available" => false, "category" => "payment")
+    )
+  end
+
   it "requires an admin role even with notification permission" do
     grant_notification_permission
 
@@ -52,9 +64,8 @@ RSpec.describe "Admin notification broadcasts", type: :request do
     expect(Notification::DispatchJob).to have_been_enqueued.with(
       audience: { type: "roles", role_ids: [ audience_role.id ] },
       channels: %w[socket email],
-      title: "Release",
-      message: "The new release is ready.",
-      data: { "path" => "/releases" }
+      event: "general_announcement",
+      locale: "en"
     )
   end
 
@@ -101,39 +112,38 @@ RSpec.describe "Admin notification broadcasts", type: :request do
     grant_admin_notification_permission
 
     post "/v1/admin/notifications",
-         params: valid_params.except(:title),
+         params: valid_params.except(:event),
          headers: headers.merge("Accept-Language" => "my-MM,my;q=0.9,en;q=0.8")
 
     expect(response).to have_http_status(:unprocessable_content)
     expect(response_status["message"]).to eq(I18n.t("notification.invalid_request", locale: :my))
-    expect(response_status["error"]).to eq(I18n.t("notification.title_required", locale: :my))
+    expect(response_status["error"]).to eq(I18n.t("notification.event_required", locale: :my))
   end
 
   it "falls back to English for unsupported locales" do
     grant_admin_notification_permission
 
     post "/v1/admin/notifications",
-         params: valid_params.except(:message),
+         params: valid_params.merge(event: "payment_failed"),
          headers: headers.merge("X-Locale" => "es")
 
     expect(response).to have_http_status(:unprocessable_content)
     expect(response_status["message"]).to eq(I18n.t("notification.invalid_request", locale: :en))
-    expect(response_status["error"]).to eq(I18n.t("notification.message_required", locale: :en))
+    expect(response_status["error"]).to eq(I18n.t("notification.invalid_event", locale: :en))
   end
 
   it "rejects missing content, unsupported channels, and incomplete audiences" do
     grant_admin_notification_permission
 
     [
-      valid_params.except(:title),
-      valid_params.except(:message),
+      valid_params.except(:event),
+      valid_params.merge(event: "payment_failed"),
       valid_params.merge(channels: []),
       valid_params.merge(channels: [ "carrier_pigeon" ]),
       valid_params.merge(audience: { type: "users", user_ids: [] }),
       valid_params.merge(audience: { type: "roles", role_ids: [] }),
       valid_params.merge(audience: { type: "roles", role_ids: [ SecureRandom.uuid ] }),
-      valid_params.merge(audience: { type: "segment" }),
-      valid_params.merge(data: "not-an-object")
+      valid_params.merge(audience: { type: "segment" })
     ].each do |invalid_params|
       post "/v1/admin/notifications", params: invalid_params, headers: headers
       expect(response).to have_http_status(:unprocessable_content)
@@ -154,11 +164,9 @@ RSpec.describe "Admin notification broadcasts", type: :request do
 
   def valid_params
     {
+      event: "general_announcement",
       audience: { type: "roles", role_ids: [ audience_role.id ] },
-      channels: %w[socket email],
-      title: "Release",
-      message: "The new release is ready.",
-      data: { path: "/releases" }
+      channels: %w[socket email]
     }
   end
 
@@ -169,9 +177,9 @@ RSpec.describe "Admin notification broadcasts", type: :request do
     create(:user_role, user: user, role: role)
   end
 
-  def grant_admin_notification_permission
+  def grant_admin_notification_permission(action: "create")
     role = create(:role, name: "admin")
-    permission = create(:permission, action: "create", resource: "notifications")
+    permission = create(:permission, action: action, resource: "notifications")
     create(:role_permission, role: role, permission: permission)
     create(:user_role, user: user, role: role)
   end

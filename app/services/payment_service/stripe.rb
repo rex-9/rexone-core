@@ -202,7 +202,8 @@ module PaymentService
         handle_subscription_updated(event.data.object)
       when PaymentConstants::StripeEvent::SUBSCRIPTION_RESUMED
         handle_subscription_updated(event.data.object)
-      when PaymentConstants::StripeEvent::PRODUCT_UPDATED
+      when PaymentConstants::StripeEvent::PRODUCT_CREATED,
+           PaymentConstants::StripeEvent::PRODUCT_UPDATED
         handle_product_updated(event.data.object)
       when PaymentConstants::StripeEvent::PRODUCT_DELETED
         handle_product_deleted(event.data.object)

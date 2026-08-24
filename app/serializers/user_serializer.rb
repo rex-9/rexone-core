@@ -1,7 +1,7 @@
 # app/serializers/user_serializer.rb:
 
 class UserSerializer < ApplicationSerializer
-  attributes :id, :email, :username, :name, :provider, :created_at, :updated_at
+  attributes :id, :email, :username, :name, :provider, :created_at, :updated_at, :discarded_at
 
   attribute :profile_pic_url do |user|
     user.get_profile_pic_url

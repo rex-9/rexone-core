@@ -257,6 +257,31 @@ RSpec.describe PaymentService::Stripe do
   end
 
   describe "webhook product sync" do
+    it "accepts and dispatches Stripe product creation events" do
+      service = described_class.new
+      event = {
+        "id" => "evt_product_created",
+        "object" => "event",
+        "type" => PaymentConstants::StripeEvent::PRODUCT_CREATED,
+        "data" => {
+          "object" => {
+            "id" => "prod_created",
+            "object" => "product"
+          }
+        }
+      }
+
+      allow(service).to receive(:handle_product_updated)
+
+      expect(service).to be_supported_webhook_event(event.fetch("type"))
+
+      service.process_webhook(event)
+
+      expect(service).to have_received(:handle_product_updated).with(
+        have_attributes(id: "prod_created")
+      )
+    end
+
     it "creates a database premium product from a Stripe price webhook" do
       service = described_class.new
       stripe_product = instance_double(

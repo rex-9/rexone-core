@@ -2,6 +2,7 @@ module MessageService
   class Notification < Base
     QUEUED = "notification.queued"
     RECIPIENTS_FETCHED = "notification.recipients_fetched"
+    TEMPLATES_FETCHED = "notification.templates_fetched"
     QUEUE_FAILED = "notification.queue_failed"
     INVALID_REQUEST = "notification.invalid_request"
     TITLE_REQUIRED = "notification.title_required"
@@ -13,6 +14,8 @@ module MessageService
     ROLE_IDS_REQUIRED = "notification.role_ids_required"
     INVALID_DATA = "notification.invalid_data"
     NO_RECIPIENTS = "notification.no_recipients"
+    EVENT_REQUIRED = "notification.event_required"
+    INVALID_EVENT = "notification.invalid_event"
     DEFAULT_TITLE = "notification.default_title"
     DEFAULT_BODY = "notification.default_body"
     TEMPLATE_NOT_FOUND = "notification.template_not_found"

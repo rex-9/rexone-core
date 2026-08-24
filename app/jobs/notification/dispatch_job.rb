@@ -1,18 +1,26 @@
 class Notification::DispatchJob < ApplicationJob
   queue_as :notifications
 
-  def perform(audience:, channels:, title:, message:, data: {})
-    recipients(audience.symbolize_keys).find_each do |user|
-      NotificationService.notify(
-        user_id: user.id,
-        user_email: user.email,
-        title: title,
-        message: message,
-        data: data,
-        send_socket: channels.include?(NotificationConstants::Channel::SOCKET),
-        send_push: channels.include?(NotificationConstants::Channel::PUSH),
-        send_email: channels.include?(NotificationConstants::Channel::EMAIL)
-      )
+  def perform(audience:, channels:, event:, locale: I18n.default_locale.to_s)
+    I18n.with_locale(locale) do
+      template = EmailService::Templates.render(event)
+
+      recipients(audience.symbolize_keys).find_each do |user|
+        NotificationService.notify(
+          user_id: user.id,
+          user_email: user.email,
+          title: template.fetch(:title),
+          message: template.fetch(:message),
+          data: template.fetch(:data),
+          email_template: template.fetch(:email_template),
+          email_template_data: template.fetch(:email_template_data).merge(
+            user_name: user.name || user.username
+          ),
+          send_socket: channels.include?(NotificationConstants::Channel::SOCKET),
+          send_push: channels.include?(NotificationConstants::Channel::PUSH),
+          send_email: channels.include?(NotificationConstants::Channel::EMAIL)
+        )
+      end
     end
   end
 

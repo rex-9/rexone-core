@@ -9,7 +9,10 @@ RSpec.describe EmailService::Templates do
       "payment_subscription_confirmation",
       "payment_subscription_canceled",
       "payment_subscription_resumed",
-      "payment_failed"
+      "payment_failed",
+      "general_announcement",
+      "maintenance_notice",
+      "feature_update"
     )
   end
 end

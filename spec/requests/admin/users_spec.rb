@@ -33,13 +33,64 @@ RSpec.describe "Admin users", type: :request do
     expect(response_status["message"]).to eq(I18n.t("admin.user.user_created", locale: :my))
   end
 
-  it "localizes delete success messages from X-Locale" do
+  it "discards and restores a user with localized messages" do
     grant_admin_user_permission(:delete)
 
-    delete "/v1/admin/users/#{user.id}", headers: headers.merge("X-Locale" => "my")
+    post "/v1/admin/users/#{user.id}/discard", headers: headers.merge("X-Locale" => "my")
 
     expect(response).to have_http_status(:ok)
-    expect(response_status["message"]).to eq(I18n.t("admin.user.user_deleted", locale: :my))
+    expect(response_status["message"]).to eq(I18n.t("admin.user.user_discarded", locale: :my))
+    expect(User.with_discarded.find(user.id)).to be_discarded
+
+    post "/v1/admin/users/#{user.id}/undiscard", headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_status["message"]).to eq(I18n.t("admin.user.user_restored"))
+    expect(User.find(user.id)).to be_kept
+  end
+
+  it "lists discarded users and only permanently deletes discarded users" do
+    grant_admin_user_permission(:delete)
+    grant_admin_user_permission(:read)
+    user.discard!
+
+    get "/v1/admin/users/discarded", headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_data).to include(hash_including("id" => user.id))
+
+    delete "/v1/admin/users/#{user.id}", headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect { User.with_discarded.find(user.id) }.to raise_error(ActiveRecord::RecordNotFound)
+  end
+
+  it "rejects permanent deletion of an active user" do
+    grant_admin_user_permission(:delete)
+
+    delete "/v1/admin/users/#{user.id}", headers: headers
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response_status["message"]).to eq(I18n.t("admin.user.user_not_discarded"))
+  end
+
+  it "prevents an admin from discarding their own account" do
+    grant_admin_user_permission(:delete)
+
+    post "/v1/admin/users/#{admin.id}/discard", headers: headers
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response_status["message"]).to eq(I18n.t("admin.user.self_lifecycle_protected"))
+  end
+
+  it "prevents an admin from discarding the last super admin" do
+    grant_admin_user_permission(:delete)
+    super_admin = create(:user, :super_admin)
+
+    post "/v1/admin/users/#{super_admin.id}/discard", headers: headers
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response_status["message"]).to eq(I18n.t("admin.user.last_super_admin_protected"))
   end
 
   it "localizes user validation errors from X-Locale" do

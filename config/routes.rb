@@ -138,6 +138,12 @@ Rails.application.routes.draw do
 
         collection do
           get :read_roles, path: "roles"
+          get :read_discarded, path: "discarded"
+        end
+
+        member do
+          post :discard
+          post :undiscard
         end
       end
 
@@ -161,6 +167,7 @@ Rails.application.routes.draw do
       resources :notifications, only: %i[create] do
         collection do
           get :read_recipients, path: "recipients"
+          get :read_templates, path: "templates"
         end
       end
     end

@@ -265,18 +265,13 @@ module Openapi
           }
         )
       ),
-      notification_data: {
-        type: :object,
-        description: <<~DESCRIPTION.squish,
-          Optional JSON object delivered unchanged to socket and push clients. There are no reserved or required keys for
-          admin-created notifications. Clients should agree on their own stable keys; a conventional `type` string may be
-          used as an event discriminator. Values must be JSON-safe.
-        DESCRIPTION
-        additionalProperties: true,
-        example: { type: "campaign_announcement", campaign_id: "summer-2026", path: "/offers" }
-      },
       notification_request: object(
-        required: %i[audience channels title message],
+        required: %i[event audience channels],
+        event: {
+          type: :string,
+          enum: EmailService::Templates::CATALOG.filter_map { |event, metadata| event if metadata[:admin_available] },
+          description: "Admin-enabled event whose server-side template supplies the title and message."
+        },
         audience: {
           description: "Use exactly one audience shape. Role matches use OR semantics and each user is notified once.",
           oneOf: [
@@ -299,10 +294,7 @@ module Openapi
           uniqueItems: true,
           items: { type: :string, enum: NotificationService::CHANNELS },
           description: "One or more delivery channels: socket, push, or email."
-        },
-        title: { type: :string, minLength: 1, example: "A new chapter awaits" },
-        message: { type: :string, minLength: 1, example: "Return to the app to see what is new." },
-        data: ref(:notification_data)
+        }
       ),
       asset_upload_request: object(
         required: [ :file ],
@@ -628,15 +620,25 @@ module Openapi
         get: operation(tags: "Admin / Users", summary: "List assignable roles for admin user forms",
                        errors: [ 401, 403 ])
       }
+      paths["/v1/admin/users/discarded"] = {
+        get: operation(tags: "Admin / Users", summary: "List discarded users in the recycle bin",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+      }
       paths["/v1/admin/users/{id}"] = {
         get: operation(tags: "Admin / Users", summary: "Get an admin-managed user",
                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
         patch: operation(tags: "Admin / Users", summary: "Update an admin-managed user",
                          parameters: [ path_parameter(:id) ], body: ref(:admin_user_request),
                          errors: [ 401, 403, 404, 422 ]),
-        delete: operation(tags: "Admin / Users", summary: "Delete an admin-managed user",
-                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+        delete: operation(tags: "Admin / Users", summary: "Permanently delete a discarded user",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
+      %w[discard undiscard].each do |action|
+        paths["/v1/admin/users/{id}/#{action}"] = {
+          post: operation(tags: "Admin / Users", summary: "#{action.capitalize} an admin-managed user",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+        }
+      end
       paths["/v1/admin/iam/roles"] = {
         get: operation(tags: "Admin / IAM Roles", summary: "List roles for the admin client", errors: [ 401, 403 ]),
         post: operation(tags: "Admin / IAM Roles", summary: "Create an admin-managed role", success: 201,
@@ -787,6 +789,14 @@ module Openapi
       paths["/v1/admin/notifications/recipients"] = {
         get: operation(tags: "Admin / Notifications", summary: "List users available for admin notification recipients",
                        errors: [ 401, 403 ])
+      }
+      paths["/v1/admin/notifications/templates"] = {
+        get: operation(
+          tags: "Admin / Notifications",
+          summary: "List notification events and their admin availability",
+          description: "Returns both selectable broadcast events and unavailable transactional events for display.",
+          errors: [ 401, 403 ]
+        )
       }
 
       paths["/v1/payment/products"] = {

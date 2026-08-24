@@ -1,4 +1,13 @@
 class V1::Admin::NotificationsController < V1::ApplicationController
+  # GET /v1/admin/notifications/templates
+  def read_templates
+    render_json_response(
+      status_code: 200,
+      message: notification_message(MessageService::Notification::TEMPLATES_FETCHED),
+      data: EmailService::Templates.catalog
+    )
+  end
+
   # GET /v1/admin/notifications/recipients
   def read_recipients
     users = User.order(:email)
@@ -17,9 +26,8 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     job = Notification::DispatchJob.perform_later(
       audience: audience,
       channels: channels,
-      title: params[:title],
-      message: params[:message],
-      data: notification_data
+      event: params[:event],
+      locale: I18n.locale.to_s
     )
 
     render_json_response(
@@ -61,19 +69,14 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     @channels ||= params[:channels].is_a?(Array) ? params[:channels].map(&:to_s).uniq : []
   end
 
-  def notification_data
-    params[:data].is_a?(ActionController::Parameters) ? params[:data].to_unsafe_h : {}
-  end
-
   def request_error
-    return MessageService::Notification::TITLE_REQUIRED if params[:title].blank?
-    return MessageService::Notification::MESSAGE_REQUIRED if params[:message].blank?
+    return MessageService::Notification::EVENT_REQUIRED if params[:event].blank?
+    return MessageService::Notification::INVALID_EVENT unless EmailService::Templates.admin_available?(params[:event])
     return MessageService::Notification::CHANNEL_REQUIRED if channels.empty?
     return MessageService::Notification::INVALID_CHANNEL if (channels - NotificationService::CHANNELS).any?
     return MessageService::Notification::INVALID_AUDIENCE unless audience[:type].in?(NotificationService::AUDIENCES)
     return MessageService::Notification::USER_IDS_REQUIRED if audience[:type] == NotificationConstants::AudienceType::USERS && audience[:user_ids].blank?
     return MessageService::Notification::ROLE_IDS_REQUIRED if audience[:type] == NotificationConstants::AudienceType::ROLES && audience[:role_ids].blank?
-    return MessageService::Notification::INVALID_DATA if params[:data].present? && !params[:data].is_a?(ActionController::Parameters)
     return MessageService::Notification::NO_RECIPIENTS if recipient_count.zero?
 
     nil
