@@ -30,7 +30,7 @@ module AppConfig
   # Speech
   SPEECH_SERVICE_BASE_URL = ENV.fetch("SPEECH_SERVICE_BASE_URL")
   SPEECH_TTS_ENDPOINT_PATH = ENV.fetch("SPEECH_TTS_ENDPOINT_PATH", "/ssml-to-speech")
-  SPEECH_STT_URL_ENDPOINT_PATH = ENV.fetch("SPEECH_STT_URL_ENDPOINT_PATH", "/speech-to-text-url")
+  SPEECH_STT_ENDPOINT_PATH = ENV.fetch("SPEECH_STT_ENDPOINT_PATH", "/speech-to-text")
 
   # Session & token timeouts
   SESSION_TIMEOUT = ENV.fetch("SESSION_TIMEOUT") { 1.week }.to_i.seconds # 7-day maximum login, Cache Active Platform Session Lifespan

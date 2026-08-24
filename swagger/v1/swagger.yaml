@@ -35,6 +35,8 @@ tags:
   description: Synchronous multipart asset upload.
 - name: AI
   description: Durable queued chat plus synchronous text utilities.
+- name: Speech
+  description: Text-to-speech synthesis and speech-to-text transcription.
 - name: Client Logs
   description: Client error ingestion and authorized operational review.
 - name: Webhooks
@@ -488,29 +490,40 @@ components:
         text:
           type: string
           minLength: 1
-        voiceName:
+        voice_name:
           type: string
-          description: Provider voice name. Omit to use the provider default. snake_case
-            voice_name is not accepted.
+          description: Provider voice name. Omit to use the provider default. camelCase
+            voiceName is not accepted.
       required:
       - text
+    speech_stt_file_request:
+      type: object
+      properties:
+        audio:
+          type: string
+          format: binary
+          description: Audio file. Takes precedence over audio_url when both are sent.
+      required:
+      - audio
     speech_stt_url_request:
       type: object
       properties:
-        audioUrl:
+        audio_url:
           type: string
           format: uri
           minLength: 1
+          description: Used when no audio file is uploaded. camelCase audioUrl is
+            not accepted.
       required:
-      - audioUrl
-    speech_stt_url_data:
+      - audio_url
+    speech_stt_data:
       type: object
       properties:
         text:
           type: string
       required:
       - text
-    speech_stt_url_response:
+    speech_stt_response:
       type: object
       properties:
         status:
@@ -529,7 +542,7 @@ components:
           - success
           - message
         data:
-          "$ref": "#/components/schemas/speech_stt_url_data"
+          "$ref": "#/components/schemas/speech_stt_data"
       required:
       - status
     ai_message_metadata:
@@ -4526,7 +4539,7 @@ paths:
     post:
       tags:
       - Speech
-      summary: Synthesize speech audio and visemes from text
+      summary: Synthesize speech as an MP3 file from text
       parameters:
       - name: X-Locale
         in: header
@@ -4550,11 +4563,12 @@ paths:
           default: web
       responses:
         '200':
-          description: Successful response
+          description: MP3 audio
           content:
-            application/json:
+            audio/mpeg:
               schema:
-                "$ref": "#/components/schemas/response"
+                type: string
+                format: binary
         '401':
           description: Unauthorized
           content:
@@ -4581,11 +4595,11 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/speech_tts_request"
-  "/v1/speech/stt-url":
+  "/v1/speech/stt":
     post:
       tags:
       - Speech
-      summary: Transcribe speech from an audio URL
+      summary: Transcribe speech from an audio file or audio URL
       parameters:
       - name: X-Locale
         in: header
@@ -4613,7 +4627,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/speech_stt_url_response"
+                "$ref": "#/components/schemas/speech_stt_response"
         '401':
           description: Unauthorized
           content:
@@ -4637,6 +4651,9 @@ paths:
       requestBody:
         required: true
         content:
+          multipart/form-data:
+            schema:
+              "$ref": "#/components/schemas/speech_stt_file_request"
           application/json:
             schema:
               "$ref": "#/components/schemas/speech_stt_url_request"

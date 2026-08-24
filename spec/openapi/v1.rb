@@ -308,20 +308,29 @@ module Openapi
       speech_tts_request: object(
         required: [ :text ],
         text: { type: :string, minLength: 1 },
-        voiceName: {
+        voice_name: {
           type: :string,
-          description: "Provider voice name. Omit to use the provider default. snake_case voice_name is not accepted."
+          description: "Provider voice name. Omit to use the provider default. camelCase voiceName is not accepted."
         }
       ),
-      speech_stt_url_request: object(
-        required: [ :audioUrl ],
-        audioUrl: { type: :string, format: :uri, minLength: 1 }
+      speech_stt_file_request: object(
+        required: [ :audio ],
+        audio: { type: :string, format: :binary, description: "Audio file. Takes precedence over audio_url when both are sent." }
       ),
-      speech_stt_url_data: object(
+      speech_stt_url_request: object(
+        required: [ :audio_url ],
+        audio_url: {
+          type: :string,
+          format: :uri,
+          minLength: 1,
+          description: "Used when no audio file is uploaded. camelCase audioUrl is not accepted."
+        }
+      ),
+      speech_stt_data: object(
         required: [ :text ],
         text: { type: :string }
       ),
-      speech_stt_url_response: object(
+      speech_stt_response: object(
         required: [ :status ],
         status: object(
           required: %i[code success message],
@@ -329,7 +338,7 @@ module Openapi
           success: { type: :boolean, example: true },
           message: { type: :string }
         ),
-        data: ref(:speech_stt_url_data)
+        data: ref(:speech_stt_data)
       ),
       ai_message_metadata: object(
         status: { type: :string, enum: AI_STATUSES, description: "Processing state; set on queued user messages." },
@@ -787,18 +796,32 @@ module Openapi
       end
 
       paths["/v1/speech/tts"] = {
-        post: operation(tags: "Speech", summary: "Synthesize speech audio and visemes from text",
+        post: operation(tags: "Speech", summary: "Synthesize speech as an MP3 file from text",
                         body: ref(:speech_tts_request), errors: [ 401, 422, 500 ])
       }
+      paths["/v1/speech/tts"][:post][:responses]["200"] = {
+        description: "MP3 audio",
+        content: {
+          "audio/mpeg" => {
+            schema: { type: :string, format: :binary }
+          }
+        }
+      }
 
-      paths["/v1/speech/stt-url"] = {
+      paths["/v1/speech/stt"] = {
         post: operation(
           tags: "Speech",
-          summary: "Transcribe speech from an audio URL",
-          body: ref(:speech_stt_url_request),
-          success_schema: ref(:speech_stt_url_response),
+          summary: "Transcribe speech from an audio file or audio URL",
+          success_schema: ref(:speech_stt_response),
           errors: [ 401, 422, 500 ]
         )
+      }
+      paths["/v1/speech/stt"][:post][:requestBody] = {
+        required: true,
+        content: {
+          "multipart/form-data" => { schema: ref(:speech_stt_file_request) },
+          JSON_CONTENT => { schema: ref(:speech_stt_url_request) }
+        }
       }
 
       paths.each_value do |methods|

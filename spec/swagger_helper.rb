@@ -48,6 +48,7 @@ RSpec.configure do |config|
         { name: 'Access', description: 'Product-access inspection and revocation.' },
         { name: 'Media', description: 'Synchronous multipart asset upload.' },
         { name: 'AI', description: 'Durable queued chat plus synchronous text utilities.' },
+        { name: 'Speech', description: 'Text-to-speech synthesis and speech-to-text transcription.' },
         { name: 'Client Logs', description: 'Client error ingestion and authorized operational review.' },
         { name: 'Webhooks', description: 'Provider-signed inbound webhooks.' }
       ],

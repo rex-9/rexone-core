@@ -2,8 +2,8 @@ en:
   speech:
     text_required: "Text is required"
     text_parameter_missing: "Missing text parameter"
-    audio_url_required: "Audio URL is required"
-    audio_url_parameter_missing: "Missing audioUrl parameter"
+    audio_required: "Audio file or audio_url is required"
+    audio_parameter_missing: "Missing audio file or audio_url parameter"
     generated: "Speech generated"
     transcribed: "Transcription generated"
     service_error: "Speech service error"
