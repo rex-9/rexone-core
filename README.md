@@ -224,8 +224,9 @@ The AI layer remains isolated behind its provider boundary so product-specific w
 - Global soft deletion through Discard, with kept records as the default scope.
 - Actor-aware creation, update, discard, and restore auditing through `Current.auditor`.
 - JSON:API serializers for stable resource representation.
-- A consistent response envelope for status, errors, data, and pagination metadata.
-- Pagy-backed offset pagination for efficient collection endpoints.
+- A consistent response envelope (`status`, `message`, `data`, `error`, `meta.pagination`) across all standard endpoints.
+- Pagy-backed offset pagination unified across all collection and list endpoints.
+- Intentionally namespaced constants organized by domain in `app/constants/` (`AiConstants`, `PaymentConstants`, `AccessConstants`, `AssetConstants`, `AuthConstants`, `NotificationConstants`).
 - Versioned client routes under `/v1` and a separate admin API namespace.
 - Modular I18n-backed client messages, organized by product domain.
 - OpenAPI documentation served through Rswag.
