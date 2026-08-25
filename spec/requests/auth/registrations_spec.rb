@@ -21,8 +21,10 @@ RSpec.describe "Authentication registration", type: :request do
       expect(response).to have_http_status(:created)
       expect(user).not_to be_confirmed
       expect(user.provider).to eq("email")
+      expect(user.name).to eq("New User")
       expect(user.role_names).to eq([ "user" ])
       expect(response_data.dig("user", "email")).to eq(user.email)
+      expect(response_data.dig("user", "name")).to eq("New User")
       expect(response_data.dig("user", "encrypted_password")).to be_nil
     end
 
@@ -31,13 +33,14 @@ RSpec.describe "Authentication registration", type: :request do
       expect(User.last.email).to eq("new@example.com")
     end
 
-    it "rejects duplicate email, duplicate username, unsafe names, and mismatched passwords" do
+    it "rejects duplicate email, duplicate username, unsafe names, missing name, and mismatched passwords" do
       create(:user, email: "taken@example.com", username: "taken_user")
 
       invalid_sets = [
         valid_attributes.merge(email: "taken@example.com"),
         valid_attributes.merge(username: "TAKEN_USER"),
         valid_attributes.merge(name: "Bad<Name"),
+        valid_attributes.except(:name),
         valid_attributes.merge(password_confirmation: "different")
       ]
 
