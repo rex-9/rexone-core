@@ -27,5 +27,5 @@ my:
     user_existence_checked: "အသုံးပြုသူ ရှိ၊ မရှိ စစ်ဆေးပြီးပါပြီ။"
     too_many_attempts: "ကြိုးစားမှု အကြိမ်များလွန်းပါသည်"
     too_many_attempts_with_wait: "ကြိုးစားမှု အကြိမ်များလွန်းပါသည်။ %{seconds} စက္ကန့် စောင့်ပြီး ထပ်မံကြိုးစားပါ။"
-    set_passcode: "အကောင့်ဖန်တီးမှု ပြီးဆုံးရန် လျှို့ဝှက်နံပါတ် သတ်မှတ်ပါ။"
-    challenge_and_passcode_required: "Challenge token နှင့် လျှို့ဝှက်နံပါတ် လိုအပ်ပါသည်။"
+    set_password: "အကောင့်ဖန်တီးမှု ပြီးဆုံးရန် လျှို့ဝှက်နံပါတ် သတ်မှတ်ပါ။"
+    challenge_and_password_required: "Challenge token နှင့် လျှို့ဝှက်နံပါတ် လိုအပ်ပါသည်။"

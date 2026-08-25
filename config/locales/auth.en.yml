@@ -27,5 +27,5 @@ en:
     user_existence_checked: "User existence checked successfully."
     too_many_attempts: "Too many attempts"
     too_many_attempts_with_wait: "Too many attempts. Please wait %{seconds} seconds."
-    set_passcode: "Set a passcode to complete account creation."
-    challenge_and_passcode_required: "Challenge token and passcode are required."
+    set_password: "Set a passcode to complete account creation."
+    challenge_and_password_required: "Challenge token and passcode are required."
