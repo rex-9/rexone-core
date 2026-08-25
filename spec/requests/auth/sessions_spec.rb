@@ -177,6 +177,68 @@ RSpec.describe "Authentication sessions", type: :request do
     end
   end
 
+  describe "Google sign-in flows" do
+    let(:google_user_info) do
+      {
+        "email" => "google_user@example.com",
+        "name" => "Google User",
+        "picture" => "https://example.com/avatar.jpg"
+      }
+    end
+
+    before do
+      allow(GoogleAuthService).to receive(:fetch_user_info).and_return(google_user_info)
+    end
+
+    it "signs in an existing confirmed user directly" do
+      user = create(:user, email: "google_user@example.com", confirmed_at: Time.current)
+
+      post "/signin/google", params: { token: "valid_google_token" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["user"]["id"]).to eq(user.id)
+      expect(response_data["token"]).to be_present
+    end
+
+    it "returns password_required and challenge_token for a new user" do
+      post "/signin/google", params: { token: "valid_google_token" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["password_required"]).to be true
+      expect(response_data["challenge_token"]).to be_present
+    end
+
+    it "requires password setup and confirms a user who dropped previous email onboarding without confirming" do
+      # 1. Unconfirmed user created via earlier email signup
+      unconfirmed_user = create(:user, email: "google_user@example.com", confirmed_at: nil, provider: "email")
+      expect(unconfirmed_user.confirmed?).to be false
+
+      # 2. Next time user logs in with Google SSO -> returns challenge token
+      post "/signin/google", params: { token: "valid_google_token" }
+      expect(response).to have_http_status(:ok)
+      expect(response_data["password_required"]).to be true
+      challenge_token = response_data["challenge_token"]
+
+      # Stub cache read for null_store in test env
+      allow(CacheService).to receive(:read).with("google_signin:challenge:#{challenge_token}").and_return(
+        { "email" => "google_user@example.com", "name" => "Google User" }.to_json
+      )
+
+      # 3. User sets 6-digit password via google_sign_in_complete
+      post "/signin/google/complete", params: { challenge_token: challenge_token, password: "654321" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["user"]["id"]).to eq(unconfirmed_user.id)
+      expect(response_data["token"]).to be_present
+
+      # 4. User is now confirmed, provider is google, and new password is set
+      unconfirmed_user.reload
+      expect(unconfirmed_user.confirmed?).to be true
+      expect(unconfirmed_user.provider).to eq(AuthConstants::Provider::GOOGLE)
+      expect(unconfirmed_user.valid_password?("654321")).to be true
+    end
+  end
+
   def grant_users_read_permission(user)
     role = create(:role, name: "session_test_role")
     permission = create(:permission, name: "read_users", action: "read", resource: "users")
