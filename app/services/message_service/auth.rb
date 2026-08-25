@@ -22,6 +22,7 @@ module MessageService
     INVALID_TOKEN = "auth.invalid_token"
     ACCOUNT_CREATED_AND_SIGNED_IN = "auth.account_created_and_signed_in"
     ACCOUNT_DELETED = "auth.account_deleted"
+    ACCOUNT_DISCARDED = "auth.account_discarded"
     EMAIL_REQUIRED = "auth.email_required"
     EMAIL_MISSING = "auth.email_missing"
     USER_EXISTENCE_CHECKED = "auth.user_existence_checked"

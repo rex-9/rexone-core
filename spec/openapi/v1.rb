@@ -548,24 +548,24 @@ module Openapi
         },
         "/signin" => {
           post: operation(tags: "Authentication", summary: "Sign in with email or username",
-                          security: nil, body: ref(:signin_request), errors: [ 401, 429 ])
+                          security: nil, body: ref(:signin_request), errors: [ 401, 403, 429 ])
         },
         "/signout" => {
           delete: operation(tags: "Authentication", summary: "Sign out the active platform session", errors: [ 401 ])
         },
         "/signin/token" => {
           post: operation(tags: "Authentication", summary: "Exchange a one-time account token for a JWT",
-                          security: nil, body: ref(:token_signin_request), errors: [ 401 ])
+                          security: nil, body: ref(:token_signin_request), errors: [ 401, 403 ])
         },
         "/signin/google" => {
           post: operation(tags: "Authentication", summary: "Start Google sign-in",
-                          security: nil, body: ref(:google_signin_request), errors: [ 401 ])
+                          security: nil, body: ref(:google_signin_request), errors: [ 401, 403 ])
         },
         "/signin/google/complete" => {
           post: operation(
             tags: "Authentication", summary: "Complete Google registration with a passcode", security: nil,
             body: ref(:google_registration_request),
-            errors: [ 401, 422 ]
+            errors: [ 401, 403, 422 ]
           )
         },
         "/confirmation" => {
@@ -688,14 +688,22 @@ module Openapi
         post: operation(tags: "Admin / Payment Products", summary: "Create a Stripe-backed product", success: 201,
                         body: ref(:admin_product_request), errors: [ 401, 403, 422 ])
       }
+      paths["/v1/admin/payment/products/discarded"] = {
+        get: operation(tags: "Admin / Payment Products", summary: "List discarded Stripe-backed products for the recycle bin",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+      }
       paths["/v1/admin/payment/products/{id}"] = {
         get: operation(tags: "Admin / Payment Products", summary: "Get a Stripe-backed product",
                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
         patch: operation(tags: "Admin / Payment Products", summary: "Update a Stripe-backed product",
                          parameters: [ path_parameter(:id) ], body: ref(:admin_product_request),
                          errors: [ 401, 403, 404, 422 ]),
-        delete: operation(tags: "Admin / Payment Products", summary: "Archive a Stripe-backed product",
+        delete: operation(tags: "Admin / Payment Products", summary: "Discard a Stripe-backed product",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+      }
+      paths["/v1/admin/payment/products/{id}/undiscard"] = {
+        post: operation(tags: "Admin / Payment Products", summary: "Restore a discarded Stripe-backed product",
+                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
       paths["/v1/iam/permissions"] = {
         get: operation(tags: "IAM Permissions", summary: "List permissions", errors: [ 401, 403 ])

@@ -1,14 +1,28 @@
 class V1::Admin::Payment::ProductsController < V1::ApplicationController
-  before_action :set_product, only: %i[show update destroy]
+  before_action :set_active_product, only: %i[show update destroy]
+  before_action :set_product_including_discarded, only: :undiscard
 
   # GET /v1/admin/payment/products
   def index
-    products = ::Payment::Product.with_discarded.order(created_at: :desc)
+    products = ::Payment::Product.order(created_at: :desc)
     pagy, records = pagy(:offset, products, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::PRODUCTS_FETCHED),
+      data: ::Payment::ProductSerializer.paginated(records, pagy),
+      pagy: pagy
+    )
+  end
+
+  # GET /v1/admin/payment/products/discarded
+  def read_discarded
+    products = ::Payment::Product.with_discarded.discarded.order(discarded_at: :desc)
+    pagy, records = pagy(:offset, products, limit: params[:limit])
+
+    render_json_response(
+      status_code: 200,
+      message: payment_message(MessageService::Payment::DISCARDED_PRODUCTS_FETCHED),
       data: ::Payment::ProductSerializer.paginated(records, pagy),
       pagy: pagy
     )
@@ -57,20 +71,38 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
     render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, error.record.errors.full_messages.to_sentence)
   end
 
-  # DELETE /v1/admin/payment/products/:id
+  # DELETE /v1/admin/payment/products/:id (discard/archive; route retained for API compatibility)
   def destroy
     product = PaymentService::Client.archive_product(@product.id)
-    return render_service_error(MessageService::Payment::PRODUCT_DELETE_FAILED, product[:error]) if service_error?(product)
+    return render_service_error(MessageService::Payment::PRODUCT_DISCARD_FAILED, product[:error]) if service_error?(product)
 
     render_json_response(
       status_code: 200,
-      message: payment_message(MessageService::Payment::PRODUCT_DELETED)
+      message: payment_message(MessageService::Payment::PRODUCT_DISCARDED)
+    )
+  end
+
+  # POST /v1/admin/payment/products/:id/undiscard
+  def undiscard
+    product = PaymentService::Client.restore_product(@product.id)
+    return render_service_error(MessageService::Payment::PRODUCT_RESTORE_FAILED, product[:error]) if service_error?(product)
+
+    render_json_response(
+      status_code: 200,
+      message: payment_message(MessageService::Payment::PRODUCT_RESTORED),
+      data: {
+        product: ::Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
+      }
     )
   end
 
   private
 
-  def set_product
+  def set_active_product
+    @product = ::Payment::Product.find(params[:id])
+  end
+
+  def set_product_including_discarded
     @product = ::Payment::Product.with_discarded.find(params[:id])
   end
 

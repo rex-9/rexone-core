@@ -22,6 +22,7 @@ en:
     invalid_token: "Invalid authentication token"
     account_created_and_signed_in: "Account created and signed in successfully."
     account_deleted: "Account deleted successfully."
+    account_discarded: "This account is in the recycle bin. Contact an administrator to restore it."
     email_required: "Email parameter is required."
     email_missing: "Missing email address."
     user_existence_checked: "User existence checked successfully."

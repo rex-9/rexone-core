@@ -1,6 +1,15 @@
 require "rails_helper"
 
 RSpec.describe Payment::Product, type: :model do
+  it "becomes inactive when discarded" do
+    product = create(:payment_product, active: true)
+
+    product.discard!
+
+    expect(product.reload).to be_discarded
+    expect(product.active).to be(false)
+  end
+
   it "validates Stripe identifiers, price, currency, and name" do
     expect(build(:payment_product)).to be_valid
     expect(build(:payment_product, name: nil)).not_to be_valid
@@ -38,7 +47,7 @@ RSpec.describe Payment::Product, type: :model do
     expect(one_time).not_to be_recurring
     expect(one_time.period_label).to eq("One-time purchase")
     expect(one_time.cycle_in_duration).to eq(0.days)
-    expect(free.period_label).to eq("Lifetime")
+    expect(free.period_label).to eq("One-time purchase")
   end
 
   it "separates active, one-time, and recurring products" do

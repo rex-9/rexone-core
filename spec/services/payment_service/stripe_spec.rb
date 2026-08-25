@@ -90,6 +90,29 @@ RSpec.describe PaymentService::Stripe do
     end
   end
 
+  describe "#restore_product" do
+    it "reactivates the Stripe product and price before restoring the local record" do
+      service = described_class.new
+      product = create(
+        :payment_product,
+        stripe_product_id: "prod_discarded",
+        stripe_price_id: "price_discarded",
+        active: false
+      )
+      product.discard!
+
+      allow(Stripe::Product).to receive(:update)
+      allow(Stripe::Price).to receive(:update)
+
+      result = service.restore_product(product.id)
+
+      expect(result).to be_active
+      expect(result).not_to be_discarded
+      expect(Stripe::Product).to have_received(:update).with("prod_discarded", active: true)
+      expect(Stripe::Price).to have_received(:update).with("price_discarded", active: true)
+    end
+  end
+
   describe "#update_product" do
     it "archives the previous Stripe price after creating a replacement price" do
       service = described_class.new
@@ -257,6 +280,16 @@ RSpec.describe PaymentService::Stripe do
   end
 
   describe "webhook product sync" do
+    it "removes the matching local product after Stripe deletes it" do
+      service = described_class.new
+      product = create(:payment_product, stripe_product_id: "prod_deleted")
+      stripe_product = instance_double("Stripe::Product", id: "prod_deleted")
+
+      service.send(:handle_product_deleted, stripe_product)
+
+      expect(Payment::Product.with_discarded.find_by(id: product.id)).to be_nil
+    end
+
     it "accepts and dispatches Stripe product creation events" do
       service = described_class.new
       event = {
@@ -313,6 +346,40 @@ RSpec.describe PaymentService::Stripe do
       expect(product.cycle).to eq("monthly")
     end
 
+    it "discards the local product when Stripe archives its product" do
+      service = described_class.new
+      product = create(
+        :payment_product,
+        stripe_product_id: "prod_archived",
+        stripe_price_id: "price_archived",
+        active: true
+      )
+      stripe_product = instance_double(
+        "Stripe::Product",
+        id: "prod_archived",
+        name: product.name,
+        description: product.description,
+        active: false,
+        metadata: {}
+      )
+      stripe_price = instance_double(
+        "Stripe::Price",
+        id: "price_archived",
+        product: "prod_archived",
+        unit_amount: product.price_unit_amount,
+        currency: product.currency,
+        recurring: nil,
+        active: true
+      )
+
+      allow(Stripe::Product).to receive(:retrieve).with("prod_archived").and_return(stripe_product)
+
+      service.send(:sync_price, stripe_price)
+
+      expect(product.reload).to be_discarded
+      expect(product.active).to be(false)
+    end
+
     it "creates a database free lifetime product from a Stripe price webhook" do
       service = described_class.new
       stripe_product = instance_double(
@@ -342,7 +409,7 @@ RSpec.describe PaymentService::Stripe do
       expect(product.stripe_price_id).to eq("price_webhook_free")
       expect(product.price_unit_amount).to eq(0)
       expect(product.cycle).to be_nil
-      expect(product.period_label).to eq("Lifetime")
+      expect(product.period_label).to eq("One-time purchase")
     end
   end
 end

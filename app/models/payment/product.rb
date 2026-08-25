@@ -35,6 +35,8 @@ class Payment::Product < ApplicationRecord
   scope :one_time, -> { where(cycle: nil) }
   scope :recurring, -> { where.not(cycle: nil) }
 
+  before_discard :deactivate
+
   # ===== INSTANCE METHODS =====
   def recurring?
     cycle.present?
@@ -72,5 +74,11 @@ class Payment::Product < ApplicationRecord
   def period_label
     return "One-time purchase" unless recurring?
     cycle.humanize.downcase
+  end
+
+  private
+
+  def deactivate
+    self.active = false
   end
 end

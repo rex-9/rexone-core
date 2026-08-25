@@ -7,8 +7,11 @@ en:
       create_failed: "Product could not be created."
       updated: "Product updated successfully."
       update_failed: "Product could not be updated."
-      deleted: "Product deleted successfully."
-      delete_failed: "Product could not be deleted."
+      discarded: "Product discarded successfully."
+      discard_failed: "Product could not be discarded."
+      discarded_fetched: "Discarded products fetched successfully."
+      restored: "Product restored successfully."
+      restore_failed: "Product could not be restored."
     transactions:
       fetched: "Transactions fetched successfully."
       fetched_one: "Transaction fetched successfully."

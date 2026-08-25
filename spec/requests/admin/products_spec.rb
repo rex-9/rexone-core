@@ -21,6 +21,26 @@ RSpec.describe "Admin payment products", type: :request do
     expect(response_data).not_to be_empty
   end
 
+  it "keeps discarded products out of the active list and returns them from the recycle bin" do
+    grant_admin_product_permission(:read)
+    active_product = create(:payment_product, name: "Active")
+    discarded_product = create(:payment_product, name: "Discarded")
+    discarded_product.discard!
+
+    get "/v1/admin/payment/products", headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_data.map { |record| record.dig("attributes", "id") }).to include(active_product.id)
+    expect(response_data.map { |record| record.dig("attributes", "id") }).not_to include(discarded_product.id)
+
+    get "/v1/admin/payment/products/discarded", headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_status["message"]).to eq(I18n.t("payment.products.discarded_fetched"))
+    expect(response_data.first.dig("attributes", "id")).to eq(discarded_product.id)
+    expect(response_data.first.dig("attributes", "discarded_at")).to be_present
+  end
+
   it "creates a Stripe-backed product with localized messages" do
     grant_admin_product_permission(:create)
     product = build(:payment_product, name: "Premium", price_unit_amount: 2_500)
@@ -78,7 +98,7 @@ RSpec.describe "Admin payment products", type: :request do
     expect(PaymentService::Client).to have_received(:update_product).with(product.id, hash_including(name: "Updated"))
   end
 
-  it "archives a Stripe-backed product instead of hard deleting it" do
+  it "discards a Stripe-backed product instead of hard deleting it" do
     grant_admin_product_permission(:delete)
     product = create(:payment_product)
 
@@ -87,8 +107,22 @@ RSpec.describe "Admin payment products", type: :request do
     delete "/v1/admin/payment/products/#{product.id}", headers: headers
 
     expect(response).to have_http_status(:ok)
-    expect(response_status["message"]).to eq(I18n.t("payment.products.deleted"))
+    expect(response_status["message"]).to eq(I18n.t("payment.products.discarded"))
     expect(PaymentService::Client).to have_received(:archive_product).with(product.id)
+  end
+
+  it "restores a discarded Stripe-backed product" do
+    grant_admin_product_permission(:delete)
+    product = create(:payment_product)
+    product.discard!
+
+    allow(PaymentService::Client).to receive(:restore_product).and_return(product.undiscard! && product)
+
+    post "/v1/admin/payment/products/#{product.id}/undiscard", headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_status["message"]).to eq(I18n.t("payment.products.restored"))
+    expect(PaymentService::Client).to have_received(:restore_product).with(product.id)
   end
 
   it "requires product permissions" do

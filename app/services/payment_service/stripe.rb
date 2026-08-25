@@ -153,6 +153,18 @@ module PaymentService
       end
     end
 
+    def restore_product(product_id)
+      with_stripe_error("Restore Product") do
+        product = Payment::Product.with_discarded.find(product_id)
+
+        Stripe::Product.update(product.stripe_product_id, active: true)
+        Stripe::Price.update(product.stripe_price_id, active: true)
+        product.update!(active: true)
+        product.undiscard
+        product
+      end
+    end
+
     # ===== REFUND =====
     # def refund_payment(payment_intent_id, amount: nil)
     #   with_stripe_error("Refund Payment") do
@@ -508,6 +520,7 @@ module PaymentService
     def sync_price(price)
       stripe_product = Stripe::Product.retrieve(price.product)
       record = product_record_for_stripe_price(price, stripe_product)
+      archived_in_stripe = !stripe_product&.active || !price.active
 
       record.assign_attributes(
         stripe_price_id: price.id,
@@ -516,10 +529,11 @@ module PaymentService
         price_unit_amount: price.unit_amount,
         currency: price.currency,
         cycle: normalized_product_cycle(price.unit_amount, price.recurring&.interval),
-        active: stripe_product&.active && price.active
+        active: record.discarded? ? false : !archived_in_stripe
       )
 
       if record.save
+        record.discard if archived_in_stripe && !record.discarded?
         Rails.logger.info("#{STRIPE_LOG_PREFIX} Price synced: #{price.id} for product #{price.product}")
       else
         Rails.logger.error("#{STRIPE_LOG_PREFIX} Price sync failed: #{record.errors.full_messages}")
@@ -530,9 +544,9 @@ module PaymentService
       local_product_id = stripe_metadata_value(stripe_product, :local_product_id)
 
       if local_product_id.present?
-        Payment::Product.find_or_initialize_by(id: local_product_id)
+        Payment::Product.with_discarded.find_or_initialize_by(id: local_product_id)
       else
-        Payment::Product.find_or_initialize_by(stripe_product_id: price.product)
+        Payment::Product.with_discarded.find_or_initialize_by(stripe_product_id: price.product)
       end
     end
 
@@ -563,10 +577,10 @@ module PaymentService
     end
 
     def handle_product_deleted(product)
-      record = Payment::Product.find_by(stripe_product_id: product.id)
+      record = Payment::Product.with_discarded.find_by(stripe_product_id: product.id)
       return unless record
 
-      record.update!(active: false)
+      record.destroy!
 
       Rails.logger.info("#{STRIPE_LOG_PREFIX} Product deleted: #{product.id}")
     end

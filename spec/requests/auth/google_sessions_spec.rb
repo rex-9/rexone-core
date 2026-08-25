@@ -19,6 +19,18 @@ RSpec.describe "Google authentication", type: :request do
       expect(NotificationService).to have_received(:sign_in_alert)
     end
 
+    it "rejects a discarded account returned by Google" do
+      user = create(:user, :google_provider, email: "google@example.com")
+      user.discard!
+      stub_google_token(email: user.email, name: user.name)
+
+      post "/signin/google", params: { token: "google-token" }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
+      expect(CacheService).not_to have_received(:write)
+    end
+
     it "stores a short-lived challenge for a new account" do
       stub_google_token(email: "new.google@example.com", name: "Google User", picture: "https://example.com/avatar.jpg")
       allow(SecureRandom).to receive(:urlsafe_base64).and_return("challenge-token")
@@ -99,6 +111,18 @@ RSpec.describe "Google authentication", type: :request do
       end.not_to change(User, :count)
       expect(response).to have_http_status(:ok)
       expect(response_data.dig("user", "id")).to eq(user.id)
+    end
+
+    it "rejects an account discarded while its challenge was outstanding" do
+      user = create(:user, email: "new.user@example.com")
+      user.discard!
+      allow(CacheService).to receive(:read).and_return(challenge)
+
+      post "/signin/google/complete", params: { challenge_token: "challenge", password: "password123" }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
+      expect(CacheService).not_to have_received(:write)
     end
 
     it "keeps a valid challenge when account validation fails" do

@@ -21,14 +21,15 @@ class Auth::SessionsController < Devise::SessionsController
       return
     end
 
-    user = User.find_by(email: email)
+    user = User.with_discarded.find_by(email: email)
 
     render_json_response(
       status_code: 200,
       message: auth_message(MessageService::Auth::USER_EXISTENCE_CHECKED),
       data: {
         user_exists: user.present?,
-        confirmed: user&.confirmed? || false
+        confirmed: user&.confirmed? || false,
+        discarded: user&.discarded? || false
       }
     )
   end
@@ -37,7 +38,10 @@ class Auth::SessionsController < Devise::SessionsController
   def create
     signin_key = params.dig(:user, :signin_key).to_s.strip
     password = params.dig(:user, :password)
-    user = User.find_by("email = :signin_key OR username = :signin_key", signin_key: signin_key)
+    user = User.with_discarded.find_by(
+      "email = :signin_key OR username = :signin_key",
+      signin_key: signin_key
+    )
 
     if user.nil?
       render_json_response(
@@ -47,6 +51,8 @@ class Auth::SessionsController < Devise::SessionsController
       )
       return
     end
+
+    return if reject_discarded_account!(user)
 
     limiter = PasswordService.new(user.id)
     unless limiter.allowed?
@@ -123,8 +129,10 @@ class Auth::SessionsController < Devise::SessionsController
 
   # POST /signin/token
   def token_sign_in
-    user = User.find_by(jti: params[:token])
+    user = User.with_discarded.find_by(jti: params[:token])
     if user
+      return if reject_discarded_account!(user)
+
       sign_in(user)
       token = AppConfig::JWT_TOKEN.call(user)
       signup_active_session!(user: user, token: token)
@@ -160,26 +168,30 @@ class Auth::SessionsController < Devise::SessionsController
       return
     end
 
-    user = User.find_by(email: user_info["email"])
+    user = User.with_discarded.find_by(email: user_info["email"])
 
-    if user && user.confirmed?
-      token = AppConfig::JWT_TOKEN.call(user)
-      signup_active_session!(user: user, token: token)
-      NotificationService.sign_in_alert(
-        user_id: user.id,
-        name: user.name || user.username
-      )
+    if user
+      return if reject_discarded_account!(user)
 
-      # Existing confirmed user - just return user + token
-      render_json_response(
-        status_code: 200,
-        message: auth_message(MessageService::Auth::SIGNED_IN),
-        data: {
-          user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-          token: token
-        }
-      )
-      return
+      if user.confirmed?
+        token = AppConfig::JWT_TOKEN.call(user)
+        signup_active_session!(user: user, token: token)
+        NotificationService.sign_in_alert(
+          user_id: user.id,
+          name: user.name || user.username
+        )
+
+        # Existing confirmed user - just return user + token
+        render_json_response(
+          status_code: 200,
+          message: auth_message(MessageService::Auth::SIGNED_IN),
+          data: {
+            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+            token: token
+          }
+        )
+        return
+      end
     end
 
     # New user or unconfirmed user - return challenge token
@@ -227,7 +239,10 @@ class Auth::SessionsController < Devise::SessionsController
       return
     end
 
-    user = User.find_or_initialize_by(email: challenge_data["email"])
+    user = User.with_discarded.find_by(email: challenge_data["email"])
+
+    if user
+      return if reject_discarded_account!(user)
 
     if user.persisted?
       # User exists but was unconfirmed - update credentials, provider, and confirm
@@ -281,8 +296,10 @@ class Auth::SessionsController < Devise::SessionsController
       end
       return
     end
+    end
 
     # New user - create them
+    user = User.new(email: challenge_data["email"])
     sanitized_username = sanitize_email(challenge_data["email"])
     user.assign_attributes(
       username: sanitized_username,
@@ -340,6 +357,8 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def respond_with(resource, _opts = {})
+    return if resource.persisted? && reject_discarded_account!(resource)
+
     if resource.persisted?
       token = AppConfig::JWT_TOKEN.call(resource)
       signup_active_session!(user: resource, token: token)
@@ -392,6 +411,17 @@ class Auth::SessionsController < Devise::SessionsController
 
   def auth_message(key, **options)
     MessageService::Auth.t(key, **options)
+  end
+
+  def reject_discarded_account!(user)
+    return false unless user.discarded?
+
+    render_json_response(
+      status_code: 403,
+      message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
+      error: auth_message(MessageService::Auth::ACCOUNT_DISCARDED)
+    )
+    true
   end
 
   # Helper method to sanitize email addresses from Google sign-in

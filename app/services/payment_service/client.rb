@@ -9,6 +9,7 @@ module PaymentService
                :create_product,
                :update_product,
                :archive_product,
+               :restore_product,
                :supported_webhook_event?,
                :verify_webhook,
                :process_webhook,

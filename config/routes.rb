@@ -161,7 +161,15 @@ Rails.application.routes.draw do
       end
 
       namespace :payment do
-        resources :products, only: %i[index show create update destroy]
+        resources :products, only: %i[index show create update destroy] do
+          collection do
+            get :read_discarded, path: "discarded"
+          end
+
+          member do
+            post :undiscard
+          end
+        end
       end
 
       resources :notifications, only: %i[create] do

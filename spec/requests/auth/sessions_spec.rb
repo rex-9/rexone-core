@@ -19,12 +19,22 @@ RSpec.describe "Authentication sessions", type: :request do
       get "/peek", params: { email: " KNOWN@EXAMPLE.COM " }
 
       expect(response).to have_http_status(:ok)
-      expect(response_data).to eq("user_exists" => true, "confirmed" => true)
+      expect(response_data).to eq("user_exists" => true, "confirmed" => true, "discarded" => false)
     end
 
     it "does not reveal anything beyond existence and confirmation" do
       get "/peek", params: { email: "missing@example.com" }
-      expect(response_data).to eq("user_exists" => false, "confirmed" => false)
+      expect(response_data).to eq("user_exists" => false, "confirmed" => false, "discarded" => false)
+    end
+
+    it "identifies a discarded account so the client can block sign-in before the passcode step" do
+      user = create(:user, email: "discarded@example.com")
+      user.discard!
+
+      get "/peek", params: { email: user.email }
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to eq("user_exists" => true, "confirmed" => true, "discarded" => true)
     end
   end
 
@@ -61,6 +71,17 @@ RSpec.describe "Authentication sessions", type: :request do
     it "rejects an unknown account" do
       post "/signin", params: { user: { signin_key: "missing", password: "password123" } }
       expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "rejects a discarded account before checking its password" do
+      user.discard!
+
+      post "/signin", params: { user: { signin_key: user.email, password: "password123" } }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
+      expect(limiter).not_to have_received(:allowed?)
+      expect(CacheService).not_to have_received(:write)
     end
 
     it "returns remaining attempts after a wrong password" do
@@ -111,6 +132,17 @@ RSpec.describe "Authentication sessions", type: :request do
     it "rejects an invalid JTI" do
       post "/signin/token", params: { token: "invalid" }
       expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "rejects a discarded account JTI" do
+      user = create(:user)
+      user.discard!
+
+      post "/signin/token", params: { token: user.jti }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
+      expect(CacheService).not_to have_received(:write)
     end
   end
 
