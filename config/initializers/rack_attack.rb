@@ -10,6 +10,9 @@ require "active_support/core_ext/numeric/time"
 
 Rails.application.config.middleware.use Rack::Attack
 
+# Disable throttling in development and test so local development and E2E suites can run freely
+Rack::Attack.enabled = false if Rails.env.development? || Rails.env.test?
+
 # Use Rails' configured cache backend (Solid Cache).
 Rack::Attack.cache.store = Rails.cache
 
@@ -35,7 +38,8 @@ class Rack::Attack
 
   # ── Responses ─────────────────────────────────────────────────────────────
 
-  self.throttled_responder = lambda do |env|
+  self.throttled_responder = lambda do |req|
+    env = req.respond_to?(:env) ? req.env : req
     match_data = env["rack.attack.match_data"] || {}
     period = match_data[:period] || 60
     retry_after = period - (Time.now.to_i % period)

@@ -4,7 +4,7 @@ source "https://rubygems.org"
 # Rails
 # ============================================================
 
-gem "psych", "~> 5.4.0"
+gem "psych", "~> 5.5.0"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3"
 # Use postgresql as the database for Active Record
