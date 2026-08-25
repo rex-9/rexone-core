@@ -105,11 +105,12 @@ class Auth::SessionsController < Devise::SessionsController
       end
     else
       failure_data = limiter.record_failure
+      is_cooldown = (failure_data[:cooldown_remaining] || 0) > 0
 
       render_json_response(
-        status_code: failure_data[:cooldown_active] ? 429 : 401,
+        status_code: is_cooldown ? 429 : 401,
         message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
-        error: failure_data[:cooldown_active] ?
+        error: is_cooldown ?
           auth_message(MessageService::Auth::TOO_MANY_ATTEMPTS) :
           auth_message(MessageService::Auth::INVALID_CREDENTIALS),
         data: {
