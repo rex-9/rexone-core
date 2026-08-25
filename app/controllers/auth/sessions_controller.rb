@@ -246,7 +246,7 @@ class Auth::SessionsController < Devise::SessionsController
             source: AssetConstants::AssetSource::GOOGLE
           )
           asset.assign_attributes(
-            name: "profile_google_of_user_#{user.id}",
+            name: AssetConstants::AssetName.google_profile(user.id),
             url: challenge_data["picture"],
             format: AssetConstants::AssetFormat::IMAGE,
             size: 0
@@ -296,7 +296,7 @@ class Auth::SessionsController < Devise::SessionsController
     if user.save
       # Save google profile picture
       asset = Asset.new(
-        name: "profile_google_of_user_#{user.id}",
+        name: AssetConstants::AssetName.google_profile(user.id),
         url: challenge_data["picture"],
         category: AssetConstants::AssetCategory::PROFILE,
         format: AssetConstants::AssetFormat::IMAGE,
