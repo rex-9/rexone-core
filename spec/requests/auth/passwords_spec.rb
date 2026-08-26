@@ -21,6 +21,17 @@ RSpec.describe "Password recovery", type: :request do
       expect(response).to have_http_status(:not_found)
       expect(NotificationService).not_to have_received(:password_reset_email)
     end
+
+    it "blocks reset instructions for a discarded account" do
+      user = create(:user)
+      user.discard!
+
+      post "/password/forgot", params: { email: user.email }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
+      expect(NotificationService).not_to have_received(:password_reset_email)
+    end
   end
 
   describe "PUT /password/reset" do

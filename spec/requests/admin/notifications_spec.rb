@@ -32,6 +32,22 @@ RSpec.describe "Admin notification broadcasts", type: :request do
     )
   end
 
+  it "limits recipient results and filters them by email" do
+    grant_admin_notification_permission(action: "read")
+    matching_user = create(:user, email: "recipient.search@example.com")
+    create_list(:user, 25)
+
+    get "/v1/admin/notifications/recipients", params: { email: "recipient.search" }, headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_data).to contain_exactly(hash_including("id" => matching_user.id))
+
+    get "/v1/admin/notifications/recipients", headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_data.size).to eq(20)
+  end
+
   it "requires an admin role even with notification permission" do
     grant_notification_permission
 

@@ -53,7 +53,7 @@ RSpec.describe "Admin payment products", type: :request do
 
     expect(response).to have_http_status(:created)
     expect(response_status["message"]).to eq(I18n.t("payment.products.created", locale: :my))
-    expect(response_data.dig("product", "name")).to eq("Premium")
+    expect(response_data.fetch("name")).to eq("Premium")
     expect(PaymentService::Client).to have_received(:create_product).with(
       hash_including(name: "Premium", price_unit_amount: 2_500, currency: "usd", cycle: "month", active: true)
     )
@@ -76,8 +76,8 @@ RSpec.describe "Admin payment products", type: :request do
          headers: headers
 
     expect(response).to have_http_status(:created)
-    expect(response_data.dig("product", "free")).to eq(true)
-    expect(response_data.dig("product", "price")).to eq("Free")
+    expect(response_data.fetch("free")).to eq(true)
+    expect(response_data.fetch("price")).to eq("Free")
     expect(PaymentService::Client).to have_received(:create_product).with(
       hash_including(name: "Free", price_unit_amount: 0, currency: "usd", cycle: nil, active: true)
     )
@@ -102,13 +102,13 @@ RSpec.describe "Admin payment products", type: :request do
     grant_admin_product_permission(:delete)
     product = create(:payment_product)
 
-    allow(PaymentService::Client).to receive(:archive_product).and_return(product)
+    allow(PaymentService::Client).to receive(:discard_product).and_return(product)
 
     delete "/v1/admin/payment/products/#{product.id}", headers: headers
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("payment.products.discarded"))
-    expect(PaymentService::Client).to have_received(:archive_product).with(product.id)
+    expect(PaymentService::Client).to have_received(:discard_product).with(product.id)
   end
 
   it "restores a discarded Stripe-backed product" do
@@ -116,13 +116,13 @@ RSpec.describe "Admin payment products", type: :request do
     product = create(:payment_product)
     product.discard!
 
-    allow(PaymentService::Client).to receive(:restore_product).and_return(product.undiscard! && product)
+    allow(PaymentService::Client).to receive(:undiscard_product).and_return(product.undiscard! && product)
 
     post "/v1/admin/payment/products/#{product.id}/undiscard", headers: headers
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("payment.products.restored"))
-    expect(PaymentService::Client).to have_received(:restore_product).with(product.id)
+    expect(PaymentService::Client).to have_received(:undiscard_product).with(product.id)
   end
 
   it "requires product permissions" do

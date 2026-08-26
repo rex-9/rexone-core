@@ -19,9 +19,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_RETRIEVED),
-      data: {
-        message: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
-      }
+      data: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
     )
   end
 
@@ -31,9 +29,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_UPDATED),
-        data: {
-          message: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
-        }
+        data: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
       )
     else
       render_json_response(

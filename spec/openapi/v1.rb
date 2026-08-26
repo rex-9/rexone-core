@@ -795,7 +795,8 @@ module Openapi
         )
       }
       paths["/v1/admin/notifications/recipients"] = {
-        get: operation(tags: "Admin / Notifications", summary: "List users available for admin notification recipients",
+        get: operation(tags: "Admin / Notifications", summary: "Search users available for admin notification recipients",
+                       description: "Returns at most 20 active users. Pass the optional email query parameter to search by email.",
                        errors: [ 401, 403 ])
       }
       paths["/v1/admin/notifications/templates"] = {

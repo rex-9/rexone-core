@@ -17,12 +17,12 @@ RSpec.describe "Admin IAM roles", type: :request do
     get "/v1/admin/iam/roles", headers: headers
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("iam.roles.fetched"))
-    expect(response_data.fetch("roles")).not_to be_empty
+    expect(response_data).not_to be_empty
 
     get "/v1/admin/iam/roles/permissions", headers: headers
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("iam.permissions.fetched"))
-    expect(response_data.fetch("permissions")).not_to be_empty
+    expect(response_data).not_to be_empty
   end
 
   it "creates, updates, and deletes a custom role with localized messages" do
@@ -38,7 +38,7 @@ RSpec.describe "Admin IAM roles", type: :request do
 
     expect(response).to have_http_status(:created)
     expect(response_status["message"]).to eq(I18n.t("iam.roles.created", locale: :my))
-    role_id = response_data.dig("role", "id")
+    role_id = response_data.fetch("id")
 
     patch "/v1/admin/iam/roles/#{role_id}",
           params: { description: "Notification admins", permission_ids: [] },

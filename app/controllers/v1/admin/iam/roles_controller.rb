@@ -9,9 +9,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::ROLES_FETCHED),
-      data: {
-        roles: ::Iam::RoleSerializer.new(roles).serializable_hash[:data]
-      }
+      data: ::Iam::RoleSerializer.new(roles).serializable_hash[:data]
     )
   end
 
@@ -22,9 +20,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::PERMISSIONS_FETCHED),
-      data: {
-        permissions: ::Iam::PermissionSerializer.new(permissions).serializable_hash[:data]
-      }
+      data: ::Iam::PermissionSerializer.new(permissions).serializable_hash[:data]
     )
   end
 
@@ -33,9 +29,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::ROLE_FETCHED),
-      data: {
-        role: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
-      }
+      data: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
     )
   end
 
@@ -49,9 +43,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
       render_json_response(
         status_code: 201,
         message: iam_message(MessageService::Iam::ROLE_CREATED),
-        data: {
-          role: ::Iam::RoleSerializer.new(role).serializable_hash[:data][:attributes]
-        }
+        data: ::Iam::RoleSerializer.new(role).serializable_hash[:data][:attributes]
       )
     else
       render_json_response(
@@ -70,9 +62,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: iam_message(MessageService::Iam::ROLE_UPDATED),
-        data: {
-          role: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
-        }
+        data: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
       )
     else
       render_json_response(

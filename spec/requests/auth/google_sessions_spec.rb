@@ -74,19 +74,19 @@ RSpec.describe "Google authentication", type: :request do
       end
     end
 
-    it "creates a confirmed Google account, profile asset, session, and welcome notification" do
+    it "creates a confirmed Google account, session, and welcome notification" do
       create(:role, name: "user")
       allow(CacheService).to receive(:read).and_return(challenge)
 
       expect do
         post "/signin/google/complete", params: { challenge_token: "challenge", password: "password123" }
-      end.to change(User, :count).by(1).and change(Asset, :count).by(1)
+      end.to change(User, :count).by(1)
 
       user = User.find_by!(email: "new.user@example.com")
       expect(response).to have_http_status(:created)
       expect(user).to be_confirmed
       expect(user).to have_attributes(username: "new_user", provider: "google")
-      expect(user.assets.first).to have_attributes(source: "google", url: "https://example.com/avatar.jpg")
+      expect(user.assets).to be_empty
       expect(NotificationService).to have_received(:welcome).with(user_id: user.id, name: user.name)
       expect(CacheService).to have_received(:delete).with("google_signin:challenge:challenge")
     end

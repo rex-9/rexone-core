@@ -19,22 +19,22 @@ RSpec.describe "Authentication sessions", type: :request do
       get "/peek", params: { email: " KNOWN@EXAMPLE.COM " }
 
       expect(response).to have_http_status(:ok)
-      expect(response_data).to eq("user_exists" => true, "confirmed" => true, "discarded" => false)
+      expect(response_data).to eq("user_exists" => true, "confirmed" => true)
     end
 
     it "does not reveal anything beyond existence and confirmation" do
       get "/peek", params: { email: "missing@example.com" }
-      expect(response_data).to eq("user_exists" => false, "confirmed" => false, "discarded" => false)
+      expect(response_data).to eq("user_exists" => false, "confirmed" => false)
     end
 
-    it "identifies a discarded account so the client can block sign-in before the passcode step" do
+    it "blocks a discarded account before the passcode step" do
       user = create(:user, email: "discarded@example.com")
       user.discard!
 
       get "/peek", params: { email: user.email }
 
-      expect(response).to have_http_status(:ok)
-      expect(response_data).to eq("user_exists" => true, "confirmed" => true, "discarded" => true)
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
     end
   end
 

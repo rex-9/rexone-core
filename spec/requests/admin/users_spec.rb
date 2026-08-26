@@ -40,12 +40,14 @@ RSpec.describe "Admin users", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("admin.user.user_discarded", locale: :my))
+    expect(response_data).to include("id" => user.id, "discarded_at" => be_present)
     expect(User.with_discarded.find(user.id)).to be_discarded
 
     post "/v1/admin/users/#{user.id}/undiscard", headers: headers
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("admin.user.user_restored"))
+    expect(response_data).to include("id" => user.id, "undiscarded_at" => be_present)
     expect(User.find(user.id)).to be_kept
   end
 

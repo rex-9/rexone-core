@@ -129,7 +129,7 @@ module PaymentService
 
         persist_product(stripe_product, stripe_price, attributes)
       rescue ActiveRecord::ActiveRecordError
-        archive_stripe_records(stripe_product&.id, stripe_price&.id)
+        discard_stripe_records(stripe_product&.id, stripe_price&.id)
         raise
       end
     end
@@ -137,24 +137,65 @@ module PaymentService
     def update_product(product_id, attributes)
       with_stripe_error("Update Product") do
         product = Payment::Product.with_discarded.find(product_id)
+        attributes = product_update_attributes(product, attributes)
+        previous_stripe_product_attributes = {
+          name: product.name,
+          description: product.description,
+          active: product.active
+        }
 
-        update_stripe_product(product, attributes)
+        Stripe::Product.update(
+          product.stripe_product_id,
+          name: attributes.fetch(:name),
+          description: attributes[:description],
+          active: attributes[:active]
+        )
+
+        unless price_changed?(product, attributes)
+          begin
+            product.update!(attributes)
+          rescue ActiveRecord::ActiveRecordError
+            Stripe::Product.update(product.stripe_product_id, previous_stripe_product_attributes)
+            raise
+          end
+          return product
+        end
+
+        old_stripe_price_id = product.stripe_price_id
+        stripe_price = Stripe::Price.create(
+          stripe_price_params(product.stripe_product_id, attributes)
+        )
+
+        Stripe::Product.update(product.stripe_product_id, default_price: stripe_price.id)
+        Stripe::Price.update(old_stripe_price_id, active: false)
+        begin
+          product.update!(attributes.merge(stripe_price_id: stripe_price.id))
+        rescue ActiveRecord::ActiveRecordError
+          Stripe::Product.update(
+            product.stripe_product_id,
+            previous_stripe_product_attributes.merge(default_price: old_stripe_price_id)
+          )
+          Stripe::Price.update(old_stripe_price_id, active: true)
+          Stripe::Price.update(stripe_price.id, active: false)
+          raise
+        end
+        product
       end
     end
 
-    def archive_product(product_id)
-      with_stripe_error("Archive Product") do
+    def discard_product(product_id)
+      with_stripe_error("Discard Product") do
         product = Payment::Product.with_discarded.find(product_id)
 
-        archive_stripe_product(product)
+        discard_stripe_records(product.stripe_product_id, product.stripe_price_id)
         product.update!(active: false)
         product.discard
         product
       end
     end
 
-    def restore_product(product_id)
-      with_stripe_error("Restore Product") do
+    def undiscard_product(product_id)
+      with_stripe_error("Undiscard Product") do
         product = Payment::Product.with_discarded.find(product_id)
 
         Stripe::Product.update(product.stripe_product_id, active: true)
@@ -217,8 +258,6 @@ module PaymentService
       when PaymentConstants::StripeEvent::PRODUCT_CREATED,
            PaymentConstants::StripeEvent::PRODUCT_UPDATED
         handle_product_updated(event.data.object)
-      when PaymentConstants::StripeEvent::PRODUCT_DELETED
-        handle_product_deleted(event.data.object)
       when PaymentConstants::StripeEvent::PRICE_CREATED
         handle_price_created(event.data.object)
       when PaymentConstants::StripeEvent::PRICE_UPDATED
@@ -303,59 +342,9 @@ module PaymentService
       }
     end
 
-    def archive_stripe_product(product)
-      archive_stripe_records(product.stripe_product_id, product.stripe_price_id)
-    end
-
-    def archive_stripe_records(stripe_product_id, stripe_price_id)
+    def discard_stripe_records(stripe_product_id, stripe_price_id)
       Stripe::Product.update(stripe_product_id, active: false) if stripe_product_id.present?
       Stripe::Price.update(stripe_price_id, active: false) if stripe_price_id.present?
-    end
-
-    def update_stripe_product(product, attributes)
-      attributes = product_update_attributes(product, attributes)
-      previous_stripe_product_attributes = {
-        name: product.name,
-        description: product.description,
-        active: product.active
-      }
-
-      Stripe::Product.update(
-        product.stripe_product_id,
-        name: attributes.fetch(:name),
-        description: attributes[:description],
-        active: attributes[:active]
-      )
-
-      unless price_changed?(product, attributes)
-        begin
-          product.update!(attributes)
-        rescue ActiveRecord::ActiveRecordError
-          Stripe::Product.update(product.stripe_product_id, previous_stripe_product_attributes)
-          raise
-        end
-        return product
-      end
-
-      old_stripe_price_id = product.stripe_price_id
-      stripe_price = Stripe::Price.create(
-        stripe_price_params(product.stripe_product_id, attributes)
-      )
-
-      Stripe::Product.update(product.stripe_product_id, default_price: stripe_price.id)
-      Stripe::Price.update(old_stripe_price_id, active: false)
-      begin
-        product.update!(attributes.merge(stripe_price_id: stripe_price.id))
-      rescue ActiveRecord::ActiveRecordError
-        Stripe::Product.update(
-          product.stripe_product_id,
-          previous_stripe_product_attributes.merge(default_price: old_stripe_price_id)
-        )
-        Stripe::Price.update(old_stripe_price_id, active: true)
-        Stripe::Price.update(stripe_price.id, active: false)
-        raise
-      end
-      product
     end
 
     def stripe_price_params(stripe_product_id, attributes)
@@ -395,12 +384,13 @@ module PaymentService
 
     def normalize_product_attributes(attributes)
       attributes = attributes.dup
+      attributes[:price_unit_amount] = attributes[:price_unit_amount].to_i
       attributes[:cycle] = normalized_product_cycle(attributes[:price_unit_amount], attributes[:cycle])
       attributes
     end
 
     def normalized_product_cycle(price_unit_amount, cycle)
-      price_unit_amount.to_i.zero? ? nil : cycle
+      price_unit_amount.to_i.zero? ? nil : cycle.presence
     end
 
     def stripe_cycle_interval(cycle)
@@ -519,8 +509,10 @@ module PaymentService
 
     def sync_price(price)
       stripe_product = Stripe::Product.retrieve(price.product)
-      record = product_record_for_stripe_price(price, stripe_product)
-      archived_in_stripe = !stripe_product&.active || !price.active
+      record = Payment::Product.with_discarded.find_or_initialize_by(
+        stripe_product_id: price.product
+      )
+      inactive_in_stripe = !stripe_product&.active || !price.active
 
       record.assign_attributes(
         stripe_price_id: price.id,
@@ -529,33 +521,15 @@ module PaymentService
         price_unit_amount: price.unit_amount,
         currency: price.currency,
         cycle: normalized_product_cycle(price.unit_amount, price.recurring&.interval),
-        active: record.discarded? ? false : !archived_in_stripe
+        active: record.discarded? ? false : !inactive_in_stripe
       )
 
       if record.save
-        record.discard if archived_in_stripe && !record.discarded?
+        record.discard if inactive_in_stripe && !record.discarded?
         Rails.logger.info("#{STRIPE_LOG_PREFIX} Price synced: #{price.id} for product #{price.product}")
       else
         Rails.logger.error("#{STRIPE_LOG_PREFIX} Price sync failed: #{record.errors.full_messages}")
       end
-    end
-
-    def product_record_for_stripe_price(price, stripe_product)
-      local_product_id = stripe_metadata_value(stripe_product, :local_product_id)
-
-      if local_product_id.present?
-        Payment::Product.with_discarded.find_or_initialize_by(id: local_product_id)
-      else
-        Payment::Product.with_discarded.find_or_initialize_by(stripe_product_id: price.product)
-      end
-    end
-
-    def stripe_metadata_value(stripe_object, key)
-      metadata = stripe_object.metadata
-      return metadata[key] if metadata.respond_to?(:[])
-      return metadata.public_send(key) if metadata.respond_to?(key)
-
-      nil
     end
 
     # === Webhooks ===
@@ -574,15 +548,6 @@ module PaymentService
     def handle_price_updated(price)
       Rails.logger.info("#{STRIPE_LOG_PREFIX} Price updated: #{price.id}")
       sync_price(price)
-    end
-
-    def handle_product_deleted(product)
-      record = Payment::Product.with_discarded.find_by(stripe_product_id: product.id)
-      return unless record
-
-      record.destroy!
-
-      Rails.logger.info("#{STRIPE_LOG_PREFIX} Product deleted: #{product.id}")
     end
 
     def handle_price_deleted(price)

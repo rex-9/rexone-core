@@ -10,12 +10,14 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
   # GET /v1/admin/notifications/recipients
   def read_recipients
-    users = User.order(:email)
+    email = params[:email].to_s.strip
+    users = User.kept.order(:email)
+    users = users.where("email ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(email)}%") if email.present?
 
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::RECIPIENTS_FETCHED),
-      data: UserSerializer.new(users).serializable_hash[:data]
+      data: UserSerializer.new(users.limit(20)).serializable_hash[:data]
     )
   end
 

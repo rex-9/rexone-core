@@ -3,13 +3,13 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
 
   # GET /v1/admin/chat/rooms
   def index
-    rooms = Chat::Room.includes(:user, :messages).order(created_at: :desc)
+    rooms = ::Chat::Room.includes(:user, :messages).order(created_at: :desc)
     pagy, records = pagy(:offset, rooms, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::ROOMS_RETRIEVED),
-      data: Chat::RoomSerializer.paginated(records, pagy),
+      data: ::Chat::RoomSerializer.paginated(records, pagy),
       pagy: pagy
     )
   end
@@ -19,9 +19,7 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::ROOM_RETRIEVED),
-      data: {
-        room: Chat::RoomSerializer.new(@room).serializable_hash[:data][:attributes]
-      }
+      data: ::Chat::RoomSerializer.new(@room).serializable_hash[:data][:attributes]
     )
   end
 
@@ -31,9 +29,7 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: admin_chat_message(MessageService::Admin::Chat::ROOM_UPDATED),
-        data: {
-          room: Chat::RoomSerializer.new(@room).serializable_hash[:data][:attributes]
-        }
+        data: ::Chat::RoomSerializer.new(@room).serializable_hash[:data][:attributes]
       )
     else
       render_json_response(
@@ -57,7 +53,7 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
   private
 
   def set_room
-    @room = Chat::Room.find(params[:id])
+    @room = ::Chat::Room.find(params[:id])
   end
 
   def room_params

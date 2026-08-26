@@ -25,12 +25,12 @@ module PaymentService
       raise NotImplementedError, "#{self.class} must implement #update_product"
     end
 
-    def archive_product(product_id)
-      raise NotImplementedError, "#{self.class} must implement #archive_product"
+    def discard_product(product_id)
+      raise NotImplementedError, "#{self.class} must implement #discard_product"
     end
 
-    def restore_product(product_id)
-      raise NotImplementedError, "#{self.class} must implement #restore_product"
+    def undiscard_product(product_id)
+      raise NotImplementedError, "#{self.class} must implement #undiscard_product"
     end
 
     def supported_webhook_event?(event_type)

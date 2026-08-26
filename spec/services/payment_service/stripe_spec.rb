@@ -60,7 +60,7 @@ RSpec.describe PaymentService::Stripe do
       expect(Stripe::Product).to have_received(:update).with("prod_free", default_price: "price_free")
     end
 
-    it "archives Stripe records when database product persistence fails" do
+    it "deactivates Stripe records when database product persistence fails" do
       service = described_class.new
       stripe_product = instance_double("Stripe::Product", id: "prod_new")
       stripe_price = instance_double("Stripe::Price", id: "price_new")
@@ -90,7 +90,7 @@ RSpec.describe PaymentService::Stripe do
     end
   end
 
-  describe "#restore_product" do
+  describe "#undiscard_product" do
     it "reactivates the Stripe product and price before restoring the local record" do
       service = described_class.new
       product = create(
@@ -104,7 +104,7 @@ RSpec.describe PaymentService::Stripe do
       allow(Stripe::Product).to receive(:update)
       allow(Stripe::Price).to receive(:update)
 
-      result = service.restore_product(product.id)
+      result = service.undiscard_product(product.id)
 
       expect(result).to be_active
       expect(result).not_to be_discarded
@@ -114,7 +114,7 @@ RSpec.describe PaymentService::Stripe do
   end
 
   describe "#update_product" do
-    it "archives the previous Stripe price after creating a replacement price" do
+    it "deactivates the previous Stripe price after creating a replacement price" do
       service = described_class.new
       product = create(
         :payment_product,
@@ -146,7 +146,7 @@ RSpec.describe PaymentService::Stripe do
       expect(Stripe::Price).to have_received(:update).with("price_old", active: false)
     end
 
-    it "does not create or archive a price when only product fields change" do
+    it "does not create or deactivate a price when only product fields change" do
       service = described_class.new
       product = create(:payment_product, stripe_product_id: "prod_existing", stripe_price_id: "price_old")
 
@@ -160,7 +160,7 @@ RSpec.describe PaymentService::Stripe do
       expect(Stripe::Price).not_to have_received(:update)
     end
 
-    it "does not create or archive a price when the incoming cycle matches the existing enum value" do
+    it "does not create or deactivate a price when the incoming cycle matches the existing enum value" do
       service = described_class.new
       product = create(
         :payment_product,
@@ -280,16 +280,6 @@ RSpec.describe PaymentService::Stripe do
   end
 
   describe "webhook product sync" do
-    it "removes the matching local product after Stripe deletes it" do
-      service = described_class.new
-      product = create(:payment_product, stripe_product_id: "prod_deleted")
-      stripe_product = instance_double("Stripe::Product", id: "prod_deleted")
-
-      service.send(:handle_product_deleted, stripe_product)
-
-      expect(Payment::Product.with_discarded.find_by(id: product.id)).to be_nil
-    end
-
     it "accepts and dispatches Stripe product creation events" do
       service = described_class.new
       event = {
@@ -346,7 +336,7 @@ RSpec.describe PaymentService::Stripe do
       expect(product.cycle).to eq("monthly")
     end
 
-    it "discards the local product when Stripe archives its product" do
+    it "discards the local product when Stripe deactivates its product" do
       service = described_class.new
       product = create(
         :payment_product,

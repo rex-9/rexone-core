@@ -27,6 +27,7 @@ RSpec.describe "Admin chat", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("admin.chat.room_updated", locale: :my))
+    expect(response_data).to include("id" => room.id, "title" => "Updated support chat")
   end
 
   it "lists and updates chat messages with localized messages" do
@@ -44,6 +45,7 @@ RSpec.describe "Admin chat", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("admin.chat.message_updated", locale: :my))
+    expect(response_data).to include("id" => message.id, "content" => "Updated message")
   end
 
   it "deletes chat records through admin endpoints" do
