@@ -39,13 +39,13 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # POST /v1/admin/payment/products
   def create
-    product = PaymentService::Client.create_product(product_params)
-    return render_service_error(MessageService::Payment::PRODUCT_CREATE_FAILED, product[:error]) if service_error?(product)
+    result = PaymentService::Client.create_product(product_params)
+    return render_service_error(MessageService::Payment::PRODUCT_CREATE_FAILED, result[:error]) if result[:error]
 
     render_json_response(
       status_code: 201,
       message: payment_message(MessageService::Payment::PRODUCT_CREATED),
-      data: ::Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
+      data: ::Payment::ProductSerializer.new(result[:data]).serializable_hash[:data][:attributes]
     )
   rescue ActiveRecord::RecordInvalid => error
     render_service_error(MessageService::Payment::PRODUCT_CREATE_FAILED, error.record.errors.full_messages.to_sentence)
@@ -53,13 +53,13 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # PATCH/PUT /v1/admin/payment/products/:id
   def update
-    product = PaymentService::Client.update_product(@product.id, product_params)
-    return render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, product[:error]) if service_error?(product)
+    result = PaymentService::Client.update_product(@product.id, product_params)
+    return render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, result[:error]) if result[:error]
 
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::PRODUCT_UPDATED),
-      data: ::Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
+      data: ::Payment::ProductSerializer.new(result[:data]).serializable_hash[:data][:attributes]
     )
   rescue ActiveRecord::RecordInvalid => error
     render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, error.record.errors.full_messages.to_sentence)
@@ -67,8 +67,8 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # DELETE /v1/admin/payment/products/:id (discard; route retained for API compatibility)
   def destroy
-    product = PaymentService::Client.discard_product(@product.id)
-    return render_service_error(MessageService::Payment::PRODUCT_DISCARD_FAILED, product[:error]) if service_error?(product)
+    result = PaymentService::Client.discard_product(@product.id)
+    return render_service_error(MessageService::Payment::PRODUCT_DISCARD_FAILED, result[:error]) if result[:error]
 
     render_json_response(
       status_code: 200,
@@ -78,13 +78,13 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # POST /v1/admin/payment/products/:id/undiscard
   def undiscard
-    product = PaymentService::Client.undiscard_product(@product.id)
-    return render_service_error(MessageService::Payment::PRODUCT_RESTORE_FAILED, product[:error]) if service_error?(product)
+    result = PaymentService::Client.undiscard_product(@product.id)
+    return render_service_error(MessageService::Payment::PRODUCT_RESTORE_FAILED, result[:error]) if result[:error]
 
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::PRODUCT_RESTORED),
-      data: ::Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
+      data: ::Payment::ProductSerializer.new(result[:data]).serializable_hash[:data][:attributes]
     )
   end
 
@@ -104,9 +104,6 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
                    .to_h
                    .symbolize_keys
 
-    values[:price_unit_amount] = values[:price_unit_amount].to_i if values.key?(:price_unit_amount)
-    values[:active] = ActiveModel::Type::Boolean.new.cast(values[:active]) if values.key?(:active)
-    values[:cycle] = nil if values[:cycle].blank?
     values
   end
 
@@ -116,10 +113,6 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
       message: payment_message(message_key),
       error: error
     )
-  end
-
-  def service_error?(result)
-    result.is_a?(Hash) && result[:error].present?
   end
 
   def payment_message(key, **options)

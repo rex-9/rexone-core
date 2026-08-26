@@ -11,7 +11,7 @@ RSpec.describe PaymentService::Stripe do
       allow(Stripe::Product).to receive(:update)
       allow(Stripe::Price).to receive(:create).and_return(stripe_price)
 
-      product = service.create_product(
+      result = service.create_product(
         name: "Premium",
         description: "Premium access",
         price_unit_amount: 2_000,
@@ -19,6 +19,7 @@ RSpec.describe PaymentService::Stripe do
         cycle: "month",
         active: true
       )
+      product = result[:data]
 
       expect(product).to be_persisted
       expect(product).to be_premium
@@ -37,7 +38,7 @@ RSpec.describe PaymentService::Stripe do
       allow(Stripe::Product).to receive(:update)
       allow(Stripe::Price).to receive(:create).and_return(stripe_price)
 
-      product = service.create_product(
+      result = service.create_product(
         name: "Free",
         description: "Free access",
         price_unit_amount: 0,
@@ -45,6 +46,7 @@ RSpec.describe PaymentService::Stripe do
         cycle: "month",
         active: true
       )
+      product = result[:data]
 
       expect(product).to be_persisted
       expect(product).to be_free
@@ -105,9 +107,10 @@ RSpec.describe PaymentService::Stripe do
       allow(Stripe::Price).to receive(:update)
 
       result = service.undiscard_product(product.id)
+      restored_product = result[:data]
 
-      expect(result).to be_active
-      expect(result).not_to be_discarded
+      expect(restored_product).to be_active
+      expect(restored_product).not_to be_discarded
       expect(Stripe::Product).to have_received(:update).with("prod_discarded", active: true)
       expect(Stripe::Price).to have_received(:update).with("price_discarded", active: true)
     end
@@ -136,8 +139,9 @@ RSpec.describe PaymentService::Stripe do
         currency: "usd",
         cycle: "month"
       )
+      updated_product = result[:data]
 
-      expect(result.stripe_price_id).to eq("price_new")
+      expect(updated_product.stripe_price_id).to eq("price_new")
       expect(product.reload.stripe_price_id).to eq("price_new")
       expect(Stripe::Product).to have_received(:update).with(
         "prod_existing",
@@ -194,11 +198,12 @@ RSpec.describe PaymentService::Stripe do
       allow(Stripe::Price).to receive(:update)
 
       result = service.update_product(product.id, price_unit_amount: 0)
+      updated_product = result[:data]
 
-      expect(result).to be_free
-      expect(result.cycle).to be_nil
-      expect(result.stripe_product_id).to eq("prod_paid")
-      expect(result.stripe_price_id).to eq("price_free")
+      expect(updated_product).to be_free
+      expect(updated_product.cycle).to be_nil
+      expect(updated_product.stripe_product_id).to eq("prod_paid")
+      expect(updated_product.stripe_price_id).to eq("price_free")
       expect(Stripe::Price).to have_received(:create).with(
         product: "prod_paid",
         unit_amount: 0,
@@ -224,11 +229,12 @@ RSpec.describe PaymentService::Stripe do
       allow(Stripe::Price).to receive(:update)
 
       result = service.update_product(product.id, price_unit_amount: 2_000, currency: "usd", cycle: "month")
+      updated_product = result[:data]
 
-      expect(result).not_to be_free
+      expect(updated_product).not_to be_free
       expect(product.reload).not_to be_free
-      expect(result.stripe_product_id).to eq("prod_free")
-      expect(result.stripe_price_id).to eq("price_new")
+      expect(updated_product.stripe_product_id).to eq("prod_free")
+      expect(updated_product.stripe_price_id).to eq("price_new")
       expect(Stripe::Price).to have_received(:create).with(
         hash_including(product: "prod_free", unit_amount: 2_000, currency: "usd", recurring: { interval: "month" })
       )
@@ -280,15 +286,15 @@ RSpec.describe PaymentService::Stripe do
   end
 
   describe "webhook product sync" do
-    it "accepts and dispatches Stripe product creation events" do
+    it "accepts and dispatches Stripe product update events" do
       service = described_class.new
       event = {
-        "id" => "evt_product_created",
+        "id" => "evt_product_updated",
         "object" => "event",
-        "type" => PaymentConstants::StripeEvent::PRODUCT_CREATED,
+        "type" => PaymentConstants::StripeEvent::PRODUCT_UPDATED,
         "data" => {
           "object" => {
-            "id" => "prod_created",
+            "id" => "prod_updated",
             "object" => "product"
           }
         }
@@ -301,7 +307,7 @@ RSpec.describe PaymentService::Stripe do
       service.process_webhook(event)
 
       expect(service).to have_received(:handle_product_updated).with(
-        have_attributes(id: "prod_created")
+        have_attributes(id: "prod_updated")
       )
     end
 

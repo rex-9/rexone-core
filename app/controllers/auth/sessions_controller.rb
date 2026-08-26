@@ -343,7 +343,7 @@ class Auth::SessionsController < Devise::SessionsController
 
     render_json_response(
       status_code: 403,
-      message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
+      message: auth_message(MessageService::Auth::ACCOUNT_DISCARDED),
       error: auth_message(MessageService::Auth::ACCOUNT_DISCARDED)
     )
     true

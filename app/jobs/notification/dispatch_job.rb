@@ -11,9 +11,9 @@ class Notification::DispatchJob < ApplicationJob
           user_email: user.email,
           title: template.fetch(:title),
           message: template.fetch(:message),
-          data: template.fetch(:data),
+          data: { type: template.fetch(:event) },
           email_template: template.fetch(:email_template),
-          email_template_data: template.fetch(:email_template_data).merge(
+          email_template_data: template.slice(:event, :title, :message).merge(
             user_name: user.name || user.username
           ),
           send_socket: channels.include?(NotificationConstants::Channel::SOCKET),

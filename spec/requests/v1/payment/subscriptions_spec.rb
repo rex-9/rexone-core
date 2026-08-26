@@ -10,8 +10,8 @@ RSpec.describe "V1 Payment Subscriptions API", type: :request do
   before do
     allow(CacheService).to receive(:read).and_return(token)
     allow(CacheService).to receive(:write)
-    allow(NotificationService).to receive(:subscription_canceled)
-    allow(NotificationService).to receive(:subscription_resumed)
+    allow(NotificationService::Center).to receive(:subscription_canceled)
+    allow(NotificationService::Center).to receive(:subscription_resumed)
     grant_permissions(user, "subscriptions", :read, :create, :delete)
   end
 
@@ -66,7 +66,7 @@ RSpec.describe "V1 Payment Subscriptions API", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(subscription.reload.cancel_at_period_end).to be true
-      expect(NotificationService).to have_received(:subscription_canceled)
+      expect(NotificationService::Center).to have_received(:subscription_canceled)
     end
 
     it "rejects when already scheduled for cancellation" do
@@ -105,7 +105,7 @@ RSpec.describe "V1 Payment Subscriptions API", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(subscription.reload.cancel_at_period_end).to be false
-      expect(NotificationService).to have_received(:subscription_resumed)
+      expect(NotificationService::Center).to have_received(:subscription_resumed)
     end
 
     it "rejects when not scheduled for cancellation" do

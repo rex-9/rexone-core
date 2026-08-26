@@ -62,7 +62,7 @@ class Auth::PasswordsController < Devise::PasswordsController
   def render_discarded_account
     render_json_response(
       status_code: 403,
-      message: auth_message(MessageService::Auth::PASSWORD_RESET_FAILED),
+      message: auth_message(MessageService::Auth::ACCOUNT_DISCARDED),
       error: auth_message(MessageService::Auth::ACCOUNT_DISCARDED)
     )
   end

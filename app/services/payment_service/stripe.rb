@@ -19,7 +19,7 @@ module PaymentService
       with_stripe_error("Create Checkout Session") do
         user = User.find(user_id)
         product = Payment::Product.find(product_id)
-        raise PaymentService::Error, "Free products do not use Stripe checkout" if product.free?
+        # raise PaymentService::Error, "Free products do not use Stripe checkout" if product.free?
 
         checkout_params = {
           customer: user.stripe_customer,
@@ -127,7 +127,7 @@ module PaymentService
 
         Stripe::Product.update(stripe_product.id, default_price: stripe_price.id)
 
-        persist_product(stripe_product, stripe_price, attributes)
+        { data: persist_product(stripe_product, stripe_price, attributes) }
       rescue ActiveRecord::ActiveRecordError
         discard_stripe_records(stripe_product&.id, stripe_price&.id)
         raise
@@ -158,7 +158,7 @@ module PaymentService
             Stripe::Product.update(product.stripe_product_id, previous_stripe_product_attributes)
             raise
           end
-          return product
+          return { data: product }
         end
 
         old_stripe_price_id = product.stripe_price_id
@@ -179,7 +179,7 @@ module PaymentService
           Stripe::Price.update(stripe_price.id, active: false)
           raise
         end
-        product
+        { data: product }
       end
     end
 
@@ -190,7 +190,7 @@ module PaymentService
         discard_stripe_records(product.stripe_product_id, product.stripe_price_id)
         product.update!(active: false)
         product.discard
-        product
+        { data: product }
       end
     end
 
@@ -202,7 +202,7 @@ module PaymentService
         Stripe::Price.update(product.stripe_price_id, active: true)
         product.update!(active: true)
         product.undiscard
-        product
+        { data: product }
       end
     end
 
@@ -255,8 +255,7 @@ module PaymentService
         handle_subscription_updated(event.data.object)
       when PaymentConstants::StripeEvent::SUBSCRIPTION_RESUMED
         handle_subscription_updated(event.data.object)
-      when PaymentConstants::StripeEvent::PRODUCT_CREATED,
-           PaymentConstants::StripeEvent::PRODUCT_UPDATED
+      when PaymentConstants::StripeEvent::PRODUCT_UPDATED
         handle_product_updated(event.data.object)
       when PaymentConstants::StripeEvent::PRICE_CREATED
         handle_price_created(event.data.object)

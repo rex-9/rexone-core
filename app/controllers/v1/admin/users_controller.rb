@@ -3,11 +3,11 @@ class V1::Admin::UsersController < V1::ApplicationController
   LOG_PREFIX = "[Admin::Users]".freeze
 
   before_action :set_active_user, only: %i[show update discard]
-  before_action :set_user_including_discarded, only: %i[undiscard destroy]
+  before_action :set_user_including_discarded, only: :undiscard
 
   # GET /users?page=2&limit=25
   def index
-    users = User.includes(:roles).order(created_at: :desc)
+    users = search_users(User.includes(:roles)).order(created_at: :desc)
     Rails.logger.info("#{LOG_PREFIX} Query: #{users.to_sql}")
 
     pagy, records = pagy(:offset, users, limit: params[:limit])
@@ -23,17 +23,19 @@ class V1::Admin::UsersController < V1::ApplicationController
   # GET /v1/admin/users/roles
   def read_roles
     roles = Iam::Role.includes(:permissions).order(:name)
+    pagy, records = pagy(:offset, roles, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USER_ROLES_RETRIEVED),
-      data: Iam::RoleSerializer.new(roles).serializable_hash[:data]
+      data: Iam::RoleSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 
   # GET /v1/admin/users/discarded?page=1&limit=25
   def read_discarded
-    users = User.with_discarded.discarded.includes(:roles).order(discarded_at: :desc)
+    users = search_users(User.with_discarded.discarded.includes(:roles)).order(discarded_at: :desc)
     pagy, records = pagy(:offset, users, limit: params[:limit])
 
     render_json_response(
@@ -117,25 +119,6 @@ class V1::Admin::UsersController < V1::ApplicationController
     )
   end
 
-  # DELETE /v1/admin/users/:id
-  def destroy
-    return if protected_lifecycle_user?
-
-    unless @user.discarded?
-      return render_json_response(
-        status_code: 422,
-        message: admin_user_message(MessageService::Admin::User::USER_NOT_DISCARDED)
-      )
-    end
-
-    @user.destroy!
-
-    render_json_response(
-      status_code: 200,
-      message: admin_user_message(MessageService::Admin::User::USER_DELETED)
-    )
-  end
-
   private
 
   def set_active_user
@@ -144,6 +127,17 @@ class V1::Admin::UsersController < V1::ApplicationController
 
   def set_user_including_discarded
     @user = User.with_discarded.find(params[:id])
+  end
+
+  def search_users(scope)
+    search = params[:search].to_s.strip
+    return scope if search.blank?
+
+    pattern = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"
+    scope.where(
+      "users.username ILIKE :search OR users.name ILIKE :search OR users.email ILIKE :search",
+      search: pattern
+    )
   end
 
   def protected_lifecycle_user?

@@ -20,32 +20,17 @@ RSpec.describe "Admin notification broadcasts", type: :request do
     expect(Notification::DispatchJob).not_to have_been_enqueued
   end
 
-  it "lists selectable and unavailable notification events" do
+  it "lists only admin notification events" do
     grant_admin_notification_permission(action: "read")
 
     get "/v1/admin/notifications/templates", headers: headers
 
     expect(response).to have_http_status(:ok)
-    expect(response_data).to include(
+    expect(response_data).to contain_exactly(
       hash_including("event" => "general_announcement", "admin_available" => true),
-      hash_including("event" => "payment_failed", "admin_available" => false, "category" => "payment")
+      hash_including("event" => "maintenance_notice", "admin_available" => true),
+      hash_including("event" => "feature_update", "admin_available" => true)
     )
-  end
-
-  it "limits recipient results and filters them by email" do
-    grant_admin_notification_permission(action: "read")
-    matching_user = create(:user, email: "recipient.search@example.com")
-    create_list(:user, 25)
-
-    get "/v1/admin/notifications/recipients", params: { email: "recipient.search" }, headers: headers
-
-    expect(response).to have_http_status(:ok)
-    expect(response_data).to contain_exactly(hash_including("id" => matching_user.id))
-
-    get "/v1/admin/notifications/recipients", headers: headers
-
-    expect(response).to have_http_status(:ok)
-    expect(response_data.size).to eq(20)
   end
 
   it "requires an admin role even with notification permission" do

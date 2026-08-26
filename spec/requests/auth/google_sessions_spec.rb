@@ -2,8 +2,8 @@ require "rails_helper"
 
 RSpec.describe "Google authentication", type: :request do
   before do
-    allow(NotificationService).to receive(:sign_in_alert)
-    allow(NotificationService).to receive(:welcome)
+    allow(NotificationService::Center).to receive(:sign_in_alert)
+    allow(NotificationService::Center).to receive(:welcome)
     allow(CacheService).to receive(:write)
     allow(CacheService).to receive(:delete)
   end
@@ -16,7 +16,7 @@ RSpec.describe "Google authentication", type: :request do
       post "/signin/google", params: { token: "google-token" }
       expect(response).to have_http_status(:ok)
       expect(response_data.dig("user", "id")).to eq(user.id)
-      expect(NotificationService).to have_received(:sign_in_alert)
+      expect(NotificationService::Center).to have_received(:sign_in_alert)
     end
 
     it "rejects a discarded account returned by Google" do
@@ -27,6 +27,7 @@ RSpec.describe "Google authentication", type: :request do
       post "/signin/google", params: { token: "google-token" }
 
       expect(response).to have_http_status(:forbidden)
+      expect(response_status["message"]).to eq(I18n.t("auth.account_discarded"))
       expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
       expect(CacheService).not_to have_received(:write)
     end
@@ -87,7 +88,7 @@ RSpec.describe "Google authentication", type: :request do
       expect(user).to be_confirmed
       expect(user).to have_attributes(username: "new_user", provider: "google")
       expect(user.assets).to be_empty
-      expect(NotificationService).to have_received(:welcome).with(user_id: user.id, name: user.name)
+      expect(NotificationService::Center).to have_received(:welcome).with(user_id: user.id, name: user.name)
       expect(CacheService).to have_received(:delete).with("google_signin:challenge:challenge")
     end
 
@@ -121,6 +122,7 @@ RSpec.describe "Google authentication", type: :request do
       post "/signin/google/complete", params: { challenge_token: "challenge", password: "password123" }
 
       expect(response).to have_http_status(:forbidden)
+      expect(response_status["message"]).to eq(I18n.t("auth.account_discarded"))
       expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
       expect(CacheService).not_to have_received(:write)
     end

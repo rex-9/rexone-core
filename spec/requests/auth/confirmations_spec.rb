@@ -2,8 +2,8 @@ require "rails_helper"
 
 RSpec.describe "Email confirmation", type: :request do
   before do
-    allow(NotificationService).to receive(:confirmation_email)
-    allow(NotificationService).to receive(:welcome)
+    allow(NotificationService::Center).to receive(:confirmation_email)
+    allow(NotificationService::Center).to receive(:welcome)
     allow(CacheService).to receive(:write)
   end
 
@@ -17,7 +17,7 @@ RSpec.describe "Email confirmation", type: :request do
       end
 
       expect(user.reload.confirmation_code).to match(/\A\d{6}\z/)
-      expect(NotificationService).to have_received(:confirmation_email).twice
+      expect(NotificationService::Center).to have_received(:confirmation_email).twice
     end
 
     it "rejects an already confirmed account" do
@@ -42,7 +42,7 @@ RSpec.describe "Email confirmation", type: :request do
       expect(response).to have_http_status(:ok)
       expect(user.reload).to be_confirmed
       expect(response_data["token"]).to be_present
-      expect(NotificationService).to have_received(:welcome).with(user_id: user.id, name: user.name)
+      expect(NotificationService::Center).to have_received(:welcome).with(user_id: user.id, name: user.name)
       expect(CacheService).to have_received(:write).with(
         "active_session:user:#{user.id}:web",
         response_data["token"],

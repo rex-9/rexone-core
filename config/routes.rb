@@ -121,7 +121,7 @@ Rails.application.routes.draw do
     # Requires an admin role ("admin" or a role ending with "_admin") plus normal resource permissions.
     namespace :admin do
       # API-only: no new/edit needed
-      resources :users, only: %i[index show create update destroy] do
+      resources :users, only: %i[index show create update] do
         # collection do
         #   get    :read_teaching_users, path: "teachers" # GET /v1/admin/users/teachers # V1::Admin::UsersController#read_teaching_users
         #   post   :create_users
@@ -174,7 +174,6 @@ Rails.application.routes.draw do
 
       resources :notifications, only: %i[create] do
         collection do
-          get :read_recipients, path: "recipients"
           get :read_templates, path: "templates"
         end
       end

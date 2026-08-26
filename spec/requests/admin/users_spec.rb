@@ -51,7 +51,7 @@ RSpec.describe "Admin users", type: :request do
     expect(User.find(user.id)).to be_kept
   end
 
-  it "lists discarded users and only permanently deletes discarded users" do
+  it "lists discarded users" do
     grant_admin_user_permission(:delete)
     grant_admin_user_permission(:read)
     user.discard!
@@ -60,20 +60,6 @@ RSpec.describe "Admin users", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_data).to include(hash_including("id" => user.id))
-
-    delete "/v1/admin/users/#{user.id}", headers: headers
-
-    expect(response).to have_http_status(:ok)
-    expect { User.with_discarded.find(user.id) }.to raise_error(ActiveRecord::RecordNotFound)
-  end
-
-  it "rejects permanent deletion of an active user" do
-    grant_admin_user_permission(:delete)
-
-    delete "/v1/admin/users/#{user.id}", headers: headers
-
-    expect(response).to have_http_status(:unprocessable_content)
-    expect(response_status["message"]).to eq(I18n.t("admin.user.user_not_discarded"))
   end
 
   it "prevents an admin from discarding their own account" do

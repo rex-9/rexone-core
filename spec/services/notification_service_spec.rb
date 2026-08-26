@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe NotificationService do
+RSpec.describe NotificationService::Center do
   before { ActiveJob::Base.queue_adapter.enqueued_jobs.clear }
 
   it "enqueues only explicitly requested channels" do

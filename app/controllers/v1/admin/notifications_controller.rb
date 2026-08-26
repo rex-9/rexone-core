@@ -8,19 +8,6 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     )
   end
 
-  # GET /v1/admin/notifications/recipients
-  def read_recipients
-    email = params[:email].to_s.strip
-    users = User.kept.order(:email)
-    users = users.where("email ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(email)}%") if email.present?
-
-    render_json_response(
-      status_code: 200,
-      message: notification_message(MessageService::Notification::RECIPIENTS_FETCHED),
-      data: UserSerializer.new(users.limit(20)).serializable_hash[:data]
-    )
-  end
-
   # POST /v1/admin/notifications
   def create
     return render_invalid_request if request_error
@@ -75,8 +62,8 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     return MessageService::Notification::EVENT_REQUIRED if params[:event].blank?
     return MessageService::Notification::INVALID_EVENT unless NotificationService::Templates.admin_available?(params[:event])
     return MessageService::Notification::CHANNEL_REQUIRED if channels.empty?
-    return MessageService::Notification::INVALID_CHANNEL if (channels - NotificationService::CHANNELS).any?
-    return MessageService::Notification::INVALID_AUDIENCE unless audience[:type].in?(NotificationService::AUDIENCES)
+    return MessageService::Notification::INVALID_CHANNEL if (channels - NotificationService::Center::CHANNELS).any?
+    return MessageService::Notification::INVALID_AUDIENCE unless audience[:type].in?(NotificationService::Center::AUDIENCES)
     return MessageService::Notification::USER_IDS_REQUIRED if audience[:type] == NotificationConstants::AudienceType::USERS && audience[:user_ids].blank?
     return MessageService::Notification::ROLE_IDS_REQUIRED if audience[:type] == NotificationConstants::AudienceType::ROLES && audience[:role_ids].blank?
     return MessageService::Notification::NO_RECIPIENTS if recipient_count.zero?
@@ -102,7 +89,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 422,
       message: notification_message(MessageService::Notification::INVALID_REQUEST),
-      error: notification_message(request_error, channels: NotificationService::CHANNELS.join(", "))
+      error: notification_message(request_error, channels: NotificationService::Center::CHANNELS.join(", "))
     )
   end
 

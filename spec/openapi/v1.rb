@@ -269,7 +269,7 @@ module Openapi
         required: %i[event audience channels],
         event: {
           type: :string,
-          enum: NotificationService::Templates::CATALOG.filter_map { |event, metadata| event if metadata[:admin_available] },
+          enum: NotificationService::Templates.events,
           description: "Admin-enabled event whose server-side template supplies the title and message."
         },
         audience: {
@@ -292,7 +292,7 @@ module Openapi
           type: :array,
           minItems: 1,
           uniqueItems: true,
-          items: { type: :string, enum: NotificationService::CHANNELS },
+          items: { type: :string, enum: NotificationService::Center::CHANNELS },
           description: "One or more delivery channels: socket, push, or email."
         }
       ),
@@ -612,13 +612,16 @@ module Openapi
 
       paths["/v1/admin/users"] = {
         get: operation(tags: "Admin / Users", summary: "List users for the admin client",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ]),
+                       parameters: [
+                         query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:search, type: :string)
+                       ], errors: [ 401, 403 ]),
         post: operation(tags: "Admin / Users", summary: "Create an admin-managed user", success: 201,
                         body: ref(:admin_user_request), errors: [ 401, 403, 422 ])
       }
       paths["/v1/admin/users/roles"] = {
         get: operation(tags: "Admin / Users", summary: "List assignable roles for admin user forms",
-                       errors: [ 401, 403 ])
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
       }
       paths["/v1/admin/users/discarded"] = {
         get: operation(tags: "Admin / Users", summary: "List discarded users in the recycle bin",
@@ -629,9 +632,7 @@ module Openapi
                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
         patch: operation(tags: "Admin / Users", summary: "Update an admin-managed user",
                          parameters: [ path_parameter(:id) ], body: ref(:admin_user_request),
-                         errors: [ 401, 403, 404, 422 ]),
-        delete: operation(tags: "Admin / Users", summary: "Permanently delete a discarded user",
-                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+                         errors: [ 401, 403, 404, 422 ])
       }
       %w[discard undiscard].each do |action|
         paths["/v1/admin/users/{id}/#{action}"] = {
@@ -793,11 +794,6 @@ module Openapi
           body: ref(:notification_request),
           errors: [ 401, 403, 422, 503 ]
         )
-      }
-      paths["/v1/admin/notifications/recipients"] = {
-        get: operation(tags: "Admin / Notifications", summary: "Search users available for admin notification recipients",
-                       description: "Returns at most 20 active users. Pass the optional email query parameter to search by email.",
-                       errors: [ 401, 403 ])
       }
       paths["/v1/admin/notifications/templates"] = {
         get: operation(

@@ -75,7 +75,7 @@ module NotificationService
           send_socket: true,
           send_push: true,
           send_email: true,
-          email_template: NotificationService::Templates::PURCHASE_CONFIRMATION,
+          email_template: "payment_purchase_confirmation",
           email_template_data: {
             user_name: user.name || user.username,
             product_name: product.name,
@@ -98,7 +98,7 @@ module NotificationService
           send_socket: true,
           send_push: true,
           send_email: true,
-          email_template: NotificationService::Templates::SUBSCRIPTION_CONFIRMATION,
+          email_template: "payment_subscription_confirmation",
           email_template_data: {
             user_name: user.name || user.username,
             product_name: product.name,
@@ -125,7 +125,7 @@ module NotificationService
           send_socket: true,
           send_push: true,
           send_email: true,
-          email_template: NotificationService::Templates::SUBSCRIPTION_CANCELED,
+          email_template: "payment_subscription_canceled",
           email_template_data: {
             user_name: user.name || user.username,
             product_name: product.name,
@@ -150,7 +150,7 @@ module NotificationService
           send_socket: true,
           send_push: true,
           send_email: true,
-          email_template: NotificationService::Templates::SUBSCRIPTION_RESUMED,
+          email_template: "payment_subscription_resumed",
           email_template_data: {
             user_name: user.name || user.username,
             product_name: product.name,
@@ -173,7 +173,7 @@ module NotificationService
           send_socket: true,
           send_push: true,
           send_email: true,
-          email_template: NotificationService::Templates::PAYMENT_FAILED,
+          email_template: "payment_failed",
           email_template_data: {
             user_name: user.name || user.username,
             product_name: product.name,
@@ -220,7 +220,7 @@ module NotificationService
         enqueue(:email) do
           {
             to: email,
-            template_id: NotificationService::Templates::CONFIRMATION,
+            template_id: "email_confirmation",
             template_data: {
               code: code,
               email: email
@@ -233,7 +233,7 @@ module NotificationService
         enqueue(:email) do
           {
             to: email,
-            template_id: NotificationService::Templates::PASSWORD_RESET,
+            template_id: "password_reset",
             template_data: {
               token: token,
               email: email,

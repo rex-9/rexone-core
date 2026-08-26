@@ -45,11 +45,12 @@ RSpec.describe "Admin payment products", type: :request do
     grant_admin_product_permission(:create)
     product = build(:payment_product, name: "Premium", price_unit_amount: 2_500)
 
-    allow(PaymentService::Client).to receive(:create_product).and_return(product)
+    allow(PaymentService::Client).to receive(:create_product).and_return(data: product)
 
     post "/v1/admin/payment/products",
          params: { product: valid_product_params },
-         headers: headers.merge("X-Locale" => "my")
+         headers: headers.merge("X-Locale" => "my"),
+         as: :json
 
     expect(response).to have_http_status(:created)
     expect(response_status["message"]).to eq(I18n.t("payment.products.created", locale: :my))
@@ -63,23 +64,42 @@ RSpec.describe "Admin payment products", type: :request do
     grant_admin_product_permission(:create)
     product = build(:payment_product, name: "Free", price_unit_amount: 0, cycle: nil)
 
-    allow(PaymentService::Client).to receive(:create_product).and_return(product)
+    allow(PaymentService::Client).to receive(:create_product).and_return(data: product)
 
     post "/v1/admin/payment/products",
          params: {
-           product: valid_product_params.merge(
+           product: valid_product_params.except(:cycle).merge(
              name: "Free",
-             price_unit_amount: 0,
-             cycle: ""
+             price_unit_amount: 0
            )
          },
-         headers: headers
+         headers: headers,
+         as: :json
 
     expect(response).to have_http_status(:created)
     expect(response_data.fetch("free")).to eq(true)
     expect(response_data.fetch("price")).to eq("Free")
     expect(PaymentService::Client).to have_received(:create_product).with(
-      hash_including(name: "Free", price_unit_amount: 0, currency: "usd", cycle: nil, active: true)
+      hash_including(name: "Free", price_unit_amount: 0, currency: "usd", active: true)
+    )
+  end
+
+  it "creates a one-time paid product without requiring cycle" do
+    grant_admin_product_permission(:create)
+    product = build(:payment_product, name: "One Time", price_unit_amount: 2_500, cycle: nil)
+
+    allow(PaymentService::Client).to receive(:create_product).and_return(data: product)
+
+    post "/v1/admin/payment/products",
+         params: {
+           product: valid_product_params.except(:cycle).merge(name: "One Time")
+         },
+         headers: headers,
+         as: :json
+
+    expect(response).to have_http_status(:created)
+    expect(PaymentService::Client).to have_received(:create_product).with(
+      hash_including(name: "One Time", price_unit_amount: 2_500, currency: "usd", active: true)
     )
   end
 
@@ -87,7 +107,7 @@ RSpec.describe "Admin payment products", type: :request do
     grant_admin_product_permission(:update)
     product = create(:payment_product)
 
-    allow(PaymentService::Client).to receive(:update_product).and_return(product.tap { |record| record.name = "Updated" })
+    allow(PaymentService::Client).to receive(:update_product).and_return(data: product.tap { |record| record.name = "Updated" })
 
     patch "/v1/admin/payment/products/#{product.id}",
           params: { product: { name: "Updated" } },
@@ -102,7 +122,7 @@ RSpec.describe "Admin payment products", type: :request do
     grant_admin_product_permission(:delete)
     product = create(:payment_product)
 
-    allow(PaymentService::Client).to receive(:discard_product).and_return(product)
+    allow(PaymentService::Client).to receive(:discard_product).and_return(data: product)
 
     delete "/v1/admin/payment/products/#{product.id}", headers: headers
 
@@ -116,7 +136,7 @@ RSpec.describe "Admin payment products", type: :request do
     product = create(:payment_product)
     product.discard!
 
-    allow(PaymentService::Client).to receive(:undiscard_product).and_return(product.undiscard! && product)
+    allow(PaymentService::Client).to receive(:undiscard_product).and_return(data: product.undiscard! && product)
 
     post "/v1/admin/payment/products/#{product.id}/undiscard", headers: headers
 

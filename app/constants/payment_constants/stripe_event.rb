@@ -7,7 +7,6 @@ module PaymentConstants
     SUBSCRIPTION_DELETED       = "customer.subscription.deleted".freeze
     SUBSCRIPTION_PAUSED        = "customer.subscription.paused".freeze
     SUBSCRIPTION_RESUMED       = "customer.subscription.resumed".freeze
-    PRODUCT_CREATED            = "product.created".freeze
     PRODUCT_UPDATED            = "product.updated".freeze
     PRICE_CREATED              = "price.created".freeze
     PRICE_UPDATED              = "price.updated".freeze
@@ -17,7 +16,7 @@ module PaymentConstants
       CHECKOUT_SESSION_COMPLETED,
       SUBSCRIPTION_UPDATED, SUBSCRIPTION_DELETED,
       SUBSCRIPTION_PAUSED, SUBSCRIPTION_RESUMED,
-      PRODUCT_CREATED, PRODUCT_UPDATED,
+      PRODUCT_UPDATED,
       PRICE_CREATED, PRICE_UPDATED, PRICE_DELETED
     ].freeze
   end

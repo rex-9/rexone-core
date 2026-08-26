@@ -7,7 +7,7 @@ RSpec.describe Notification::DispatchJob, type: :job do
   let(:admin_role) { create(:role, name: "admin") }
 
   before do
-    allow(NotificationService).to receive(:notify)
+    allow(NotificationService::Center).to receive(:notify)
   end
 
   it "fans selected roles out through the requested delivery channels without duplicates" do
@@ -21,7 +21,7 @@ RSpec.describe Notification::DispatchJob, type: :job do
       locale: "en"
     )
 
-    expect(NotificationService).to have_received(:notify).once.with(
+    expect(NotificationService::Center).to have_received(:notify).once.with(
       user_id: first_user.id,
       user_email: first_user.email,
       title: "Announcement",
@@ -47,11 +47,11 @@ RSpec.describe Notification::DispatchJob, type: :job do
       event: "feature_update"
     )
 
-    expect(NotificationService).to have_received(:notify).twice
-    expect(NotificationService).to have_received(:notify).with(
+    expect(NotificationService::Center).to have_received(:notify).twice
+    expect(NotificationService::Center).to have_received(:notify).with(
       hash_including(user_id: first_user.id, send_push: true, send_socket: false, send_email: false)
     )
-    expect(NotificationService).to have_received(:notify).with(
+    expect(NotificationService::Center).to have_received(:notify).with(
       hash_including(user_id: second_user.id, send_push: true, send_socket: false, send_email: false)
     )
   end
@@ -63,8 +63,28 @@ RSpec.describe Notification::DispatchJob, type: :job do
       event: "general_announcement"
     )
 
-    expect(NotificationService).to have_received(:notify).once.with(
+    expect(NotificationService::Center).to have_received(:notify).once.with(
       hash_including(user_id: second_user.id, send_socket: true, send_push: false, send_email: false)
+    )
+  end
+
+  it "enqueues in-app notification delivery with message" do
+    allow(NotificationService::Center).to receive(:notify).and_call_original
+
+    described_class.perform_now(
+      audience: { type: "users", user_ids: [ second_user.id ] },
+      channels: %w[socket],
+      event: "general_announcement",
+      locale: "en"
+    )
+
+    expect(Notification::DeliverJob).to have_been_enqueued.with(
+      channel: :socket,
+      payload: {
+        user_id: second_user.id,
+        message: "We have an important announcement for you.",
+        data: { type: "general_announcement" }
+      }
     )
   end
 
@@ -78,6 +98,6 @@ RSpec.describe Notification::DispatchJob, type: :job do
       event: "general_announcement"
     )
 
-    expect(NotificationService).not_to have_received(:notify)
+    expect(NotificationService::Center).not_to have_received(:notify)
   end
 end
