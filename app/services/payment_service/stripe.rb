@@ -485,7 +485,7 @@ module PaymentService
       if previous_status.present? &&
           previous_status != PaymentConstants::StripeStatus::PAST_DUE &&
           subscription.past_due?
-        NotificationService.payment_failed(
+        NotificationService::Center.payment_failed(
           subscription.user,
           subscription.product,
           subscription
@@ -613,7 +613,7 @@ module PaymentService
         )
 
         if new_subscription
-          NotificationService.subscription_created(
+          NotificationService::Center.subscription_created(
             user,
             product,
             subscription
@@ -672,7 +672,7 @@ module PaymentService
           )
 
           if new_transaction
-            NotificationService.payment_success(
+            NotificationService::Center.payment_success(
               user, product, transaction
             )
           end

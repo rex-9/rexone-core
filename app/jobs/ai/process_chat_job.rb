@@ -97,7 +97,7 @@ class Ai::ProcessChatJob < ApplicationJob
       message_id: assistant_message.id
     }
 
-    NotificationService.notify(
+    NotificationService::Center.notify(
       user_id: room.user_id,
       title: message,
       message: message,
@@ -123,7 +123,7 @@ class Ai::ProcessChatJob < ApplicationJob
       message_id: user_message.id
     }
 
-    NotificationService.notify(
+    NotificationService::Center.notify(
       user_id: room.user_id,
       title: message,
       message: message,

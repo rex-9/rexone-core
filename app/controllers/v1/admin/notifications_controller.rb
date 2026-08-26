@@ -4,7 +4,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::TEMPLATES_FETCHED),
-      data: EmailService::Templates.catalog
+      data: NotificationService::Templates.catalog
     )
   end
 
@@ -73,7 +73,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
   def request_error
     return MessageService::Notification::EVENT_REQUIRED if params[:event].blank?
-    return MessageService::Notification::INVALID_EVENT unless EmailService::Templates.admin_available?(params[:event])
+    return MessageService::Notification::INVALID_EVENT unless NotificationService::Templates.admin_available?(params[:event])
     return MessageService::Notification::CHANNEL_REQUIRED if channels.empty?
     return MessageService::Notification::INVALID_CHANNEL if (channels - NotificationService::CHANNELS).any?
     return MessageService::Notification::INVALID_AUDIENCE unless audience[:type].in?(NotificationService::AUDIENCES)

@@ -10,7 +10,7 @@ class Auth::PasswordsController < Devise::PasswordsController
       return render_discarded_account if user.discarded?
 
       token = user.send_reset_password_instructions
-      NotificationService.password_reset_email(
+      NotificationService::Center.password_reset_email(
         email: user.email,
         token: token
       )

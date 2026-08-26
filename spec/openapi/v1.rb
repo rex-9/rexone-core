@@ -269,7 +269,7 @@ module Openapi
         required: %i[event audience channels],
         event: {
           type: :string,
-          enum: EmailService::Templates::CATALOG.filter_map { |event, metadata| event if metadata[:admin_available] },
+          enum: NotificationService::Templates::CATALOG.filter_map { |event, metadata| event if metadata[:admin_available] },
           description: "Admin-enabled event whose server-side template supplies the title and message."
         },
         audience: {

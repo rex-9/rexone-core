@@ -21,7 +21,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
       if !user.confirmed?
         user.generate_confirmation_code
         user.send_confirmation_instructions
-        NotificationService.confirmation_email(
+        NotificationService::Center.confirmation_email(
           email: user.email,
           code: user.confirmation_code
         )
@@ -57,7 +57,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
         sign_in(resource) # Automatically sign in the resource
         token = AppConfig::JWT_TOKEN.call(resource)
         signup_active_session!(user: resource, token: token)
-        NotificationService.welcome(
+        NotificationService::Center.welcome(
           user_id: resource.id,
           name: resource.name || resource.username
         )

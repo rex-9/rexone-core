@@ -61,7 +61,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
 
     sync_cancellation_state!(subscription, result)
 
-    NotificationService.subscription_canceled(
+    NotificationService::Center.subscription_canceled(
       subscription.user,
       subscription.product,
       subscription
@@ -112,7 +112,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
 
     sync_cancellation_state!(subscription, result)
 
-    NotificationService.subscription_resumed(
+    NotificationService::Center.subscription_resumed(
       subscription.user,
       subscription.product,
       subscription

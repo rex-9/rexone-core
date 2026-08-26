@@ -27,7 +27,7 @@ RSpec.describe Notification::DispatchJob, type: :job do
       title: "Announcement",
       message: "We have an important announcement for you.",
       data: { type: "general_announcement" },
-      email_template: EmailService::Templates::GENERAL_ANNOUNCEMENT,
+      email_template: NotificationService::Templates::GENERAL_ANNOUNCEMENT,
       email_template_data: {
         event: "general_announcement",
         title: "Announcement",

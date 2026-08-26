@@ -79,7 +79,7 @@ class Auth::SessionsController < Devise::SessionsController
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
 
-        NotificationService.sign_in_alert(
+        NotificationService::Center.sign_in_alert(
           user_id: user.id,
           name: user.name || user.username
         )
@@ -96,7 +96,7 @@ class Auth::SessionsController < Devise::SessionsController
         user.generate_confirmation_code
         user.send_confirmation_instructions
 
-        NotificationService.confirmation_email(
+        NotificationService::Center.confirmation_email(
           email: user.email,
           code: user.confirmation_code
         )
@@ -177,7 +177,7 @@ class Auth::SessionsController < Devise::SessionsController
       if user.confirmed?
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
-        NotificationService.sign_in_alert(
+        NotificationService::Center.sign_in_alert(
           user_id: user.id,
           name: user.name || user.username
         )
@@ -259,7 +259,7 @@ class Auth::SessionsController < Devise::SessionsController
       token = AppConfig::JWT_TOKEN.call(user)
       signup_active_session!(user: user, token: token)
 
-      NotificationService.welcome(
+      NotificationService::Center.welcome(
         user_id: user.id,
         name: user.name || user.username
       )

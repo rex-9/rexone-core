@@ -1,4 +1,5 @@
-module EmailService
+# app/services/notification_service/templates.rb
+module NotificationService
   module Templates
     CONFIRMATION = "email_confirmation"
     PASSWORD_RESET = "password_reset"
