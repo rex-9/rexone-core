@@ -8,3 +8,4 @@ en:
     transcribed: "Transcription generated"
     service_error: "Speech service error"
     provider_error: "Speech service is temporarily unavailable"
+    live_not_configured: "Live transcription is not configured"

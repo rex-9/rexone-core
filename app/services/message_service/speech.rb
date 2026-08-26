@@ -8,5 +8,6 @@ module MessageService
     TRANSCRIBED = "speech.transcribed"
     SERVICE_ERROR = "speech.service_error"
     PROVIDER_ERROR = "speech.provider_error"
+    LIVE_NOT_CONFIGURED = "speech.live_not_configured"
   end
 end

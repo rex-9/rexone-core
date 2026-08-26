@@ -13,5 +13,9 @@ module SpeechService
     def speech_to_text_from_url(audio_url:)
       raise NotImplementedError, "#{self.class} must implement #speech_to_text_from_url"
     end
+
+    def start_live_stt(language: nil, on_event:, socket: nil)
+      raise NotImplementedError, "#{self.class} must implement #start_live_stt"
+    end
   end
 end
