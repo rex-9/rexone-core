@@ -1,5 +1,6 @@
 en:
   user:
+    users_retrieved: "Users retrieved successfully."
     current_fetched: "Current user fetched successfully."
     not_authenticated: "User not authenticated."
     current_not_found: "No current user found."
