@@ -246,12 +246,13 @@ class Auth::SessionsController < Devise::SessionsController
     if user.persisted?
       # User exists but was unconfirmed - update credentials, provider, and confirm
       user.assign_attributes(
+        username: sanitized_username,
+        name: challenge_data["name"],
         password: password,
         password_confirmation: password,
         provider: AuthConstants::Provider::GOOGLE,
         confirmed_at: user.confirmed_at || Time.current
       )
-      user.name = challenge_data["name"] if challenge_data["name"].present? && user.name.blank?
 
       if user.save
         if challenge_data["picture"].present?
@@ -299,13 +300,14 @@ class Auth::SessionsController < Devise::SessionsController
     # New user - create them
     sanitized_username = sanitize_email(challenge_data["email"])
     user.assign_attributes(
+      username: sanitized_username,
+      name: challenge_data["name"],
       password: password,
       password_confirmation: password,
       provider: AuthConstants::Provider::GOOGLE,
       confirmed_at: user.confirmed_at || Time.current
     )
-    user.username = sanitize_email(challenge_data["email"]) if created
-    user.name = challenge_data["name"] if challenge_data["name"].present? && user.name.blank?
+   
 
     if user.save
       # Save google profile picture
@@ -349,7 +351,7 @@ class Auth::SessionsController < Devise::SessionsController
       )
 
       render_json_response(
-        status_code: created ? 201 : 200,
+        status_code: 201,
         message: auth_message(MessageService::Auth::ACCOUNT_CREATED_AND_SIGNED_IN),
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes],
