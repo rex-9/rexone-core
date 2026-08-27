@@ -47,4 +47,19 @@ RSpec.describe Chat::Message, type: :model do
       ai_max_tokens: 500
     )
   end
+
+  it "declares TTS metadata fields" do
+    message = build(
+      :chat_message,
+      audio_url: "https://cdn.example.com/speech.mp3",
+      tts_status: described_class::TTS_STATUSES[:completed],
+      tts_error: nil
+    )
+
+    expect(message).to have_attributes(
+      audio_url: "https://cdn.example.com/speech.mp3",
+      tts_status: "completed",
+      tts_error: nil
+    )
+  end
 end

@@ -306,12 +306,37 @@ module Openapi
         type: { type: :string, enum: %w[sentiment entities keywords], default: "sentiment" }
       ),
       speech_tts_request: object(
-        required: [ :text ],
-        text: { type: :string, minLength: 1 },
+        text: {
+          type: :string,
+          minLength: 1,
+          description: "Required for sync MP3 responses. Ignored when message_id is present."
+        },
+        message_id: {
+          type: :string,
+          format: :uuid,
+          description: "Queue async TTS for a chat message owned by the current user. Text comes from the message content."
+        },
         voice_name: {
           type: :string,
-          description: "Provider voice name. Omit to use the provider default. camelCase voiceName is not accepted."
+          description: "Provider voice name for sync TTS only. Omit to use the provider default. camelCase voiceName is not accepted."
         }
+      ),
+      speech_tts_queued_data: object(
+        required: %i[message_id room_id status job_id],
+        message_id: UUID,
+        room_id: UUID,
+        status: { type: :string, enum: Chat::Message::TTS_STATUSES.values },
+        job_id: { type: :string }
+      ),
+      speech_tts_queued_response: object(
+        required: [ :status ],
+        status: object(
+          required: %i[code success message],
+          code: { type: :integer, example: 200 },
+          success: { type: :boolean, example: true },
+          message: { type: :string }
+        ),
+        data: ref(:speech_tts_queued_data)
       ),
       speech_stt_file_request: object(
         required: [ :audio ],
@@ -796,14 +821,22 @@ module Openapi
       end
 
       paths["/v1/speech/tts"] = {
-        post: operation(tags: "Speech", summary: "Synthesize speech as an MP3 file from text",
-                        body: ref(:speech_tts_request), errors: [ 401, 422, 500 ])
+        post: operation(
+          tags: "Speech",
+          summary: "Synthesize speech from text (MP3) or queue TTS for a chat message",
+          description: "Send text for a sync MP3 response, or message_id to queue Azure TTS for that chat message and receive NotificationChannel tts_ready when done.",
+          body: ref(:speech_tts_request),
+          errors: [ 401, 404, 422, 500, 503 ]
+        )
       }
       paths["/v1/speech/tts"][:post][:responses]["200"] = {
-        description: "MP3 audio",
+        description: "MP3 audio (sync) or queued JSON (async message_id)",
         content: {
           "audio/mpeg" => {
             schema: { type: :string, format: :binary }
+          },
+          JSON_CONTENT => {
+            schema: ref(:speech_tts_queued_response)
           }
         }
       }

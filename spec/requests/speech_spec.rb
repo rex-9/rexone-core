@@ -77,6 +77,78 @@ RSpec.describe "Speech synthesis", type: :request do
     expect(response).to have_http_status(:forbidden)
   end
 
+  describe "async TTS with message_id" do
+    let(:room) { create(:chat_room, user: user) }
+    let(:message) { create(:chat_message, room: room, role: "assistant", content: "Hello there") }
+
+    it "queues TTS for an owned chat message" do
+      expect(SpeechService::Client).not_to receive(:text_to_speech)
+
+      expect {
+        post "/v1/speech/tts",
+             params: { message_id: message.id },
+             headers: headers,
+             as: :json
+      }.to have_enqueued_job(Speech::ProcessTtsJob).with(message.id)
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include(
+        "message_id" => message.id,
+        "room_id" => room.id,
+        "status" => "queued"
+      )
+      expect(response_data["job_id"]).to be_present
+      expect(message.reload.tts_status).to eq("queued")
+      expect(message.audio_url).to be_nil
+    end
+
+    it "returns 404 when the message belongs to another user" do
+      other_message = create(:chat_message, role: "assistant", content: "Nope")
+
+      expect {
+        post "/v1/speech/tts",
+             params: { message_id: other_message.id },
+             headers: headers,
+             as: :json
+      }.not_to have_enqueued_job(Speech::ProcessTtsJob)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "returns 404 for an unknown message_id" do
+      post "/v1/speech/tts",
+           params: { message_id: SecureRandom.uuid },
+           headers: headers,
+           as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "prefers message_id over text and does not synthesize sync" do
+      expect(SpeechService::Client).not_to receive(:text_to_speech)
+
+      post "/v1/speech/tts",
+           params: { message_id: message.id, text: "ignored" },
+           headers: headers,
+           as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["status"]).to eq("queued")
+    end
+
+    it "surfaces queue failures as service unavailable" do
+      allow(Speech::ProcessTtsJob).to receive(:perform_later)
+        .and_raise(SolidQueue::Job::EnqueueError.new("queue unavailable"))
+
+      post "/v1/speech/tts",
+           params: { message_id: message.id },
+           headers: headers,
+           as: :json
+
+      expect(response).to have_http_status(:service_unavailable)
+    end
+  end
+
   describe "POST /v1/speech/stt" do
     let(:audio) { fixture_file_upload("clip.m4a", "audio/mp4") }
 

@@ -34,6 +34,7 @@ module AppConfig
   AZURE_SPEECH_KEY = ENV.fetch("AZURE_SPEECH_KEY", "")
   AZURE_SPEECH_REGION = ENV.fetch("AZURE_SPEECH_REGION", "southeastasia")
   AZURE_SPEECH_LANGUAGE = ENV.fetch("AZURE_SPEECH_LANGUAGE", "en-US")
+  AZURE_SPEECH_VOICE = ENV.fetch("AZURE_SPEECH_VOICE", "en-US-AvaNeural")
 
   # Session & token timeouts
   SESSION_TIMEOUT = ENV.fetch("SESSION_TIMEOUT") { 1.week }.to_i.seconds # 7-day maximum login, Cache Active Platform Session Lifespan

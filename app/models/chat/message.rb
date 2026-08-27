@@ -12,6 +12,14 @@ module Chat
     }.freeze
     AI_PROCESSING_STATUSES = AI_STATUSES.values_at(:queued, :processing, :retrying).freeze
 
+    TTS_STATUSES = {
+      queued: "queued",
+      processing: "processing",
+      retrying: "retrying",
+      completed: "completed",
+      failed: "failed"
+    }.freeze
+
     store_accessor :metadata,
                    :status,
                    :system_prompt,
@@ -22,6 +30,8 @@ module Chat
                    :usage,
                    :model,
                    prefix: :ai
+
+    store_accessor :metadata, :audio_url, :tts_status, :tts_error
 
     belongs_to :room, class_name: "Chat::Room"
 

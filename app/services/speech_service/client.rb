@@ -3,12 +3,13 @@
 module SpeechService
   class Client
     class << self
-      delegate :text_to_speech,
-               :speech_to_text_from_file,
+      delegate :speech_to_text_from_file,
                :speech_to_text_from_url,
                to: :provider
 
-      delegate :start_live_stt, to: :live_provider
+      delegate :text_to_speech,
+               :start_live_stt,
+               to: :azure_provider
 
       private
 
@@ -16,8 +17,8 @@ module SpeechService
         @provider ||= NovaSpeech.new
       end
 
-      def live_provider
-        @live_provider ||= AzureSpeech.new
+      def azure_provider
+        @azure_provider ||= AzureSpeech.new
       end
     end
   end

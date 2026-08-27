@@ -137,4 +137,69 @@ RSpec.describe SpeechService::AzureSpeech do
     ])
     session.stop
   end
+
+  describe "#text_to_speech" do
+    let(:http) { instance_double(Net::HTTP) }
+
+    before do
+      stub_const("AppConfig::AZURE_SPEECH_KEY", "test-key")
+      stub_const("AppConfig::AZURE_SPEECH_REGION", "southeastasia")
+      stub_const("AppConfig::AZURE_SPEECH_LANGUAGE", "en-US")
+      stub_const("AppConfig::AZURE_SPEECH_VOICE", "en-US-AvaNeural")
+
+      allow(Net::HTTP).to receive(:new).and_return(http)
+      allow(http).to receive(:use_ssl=)
+      allow(http).to receive(:open_timeout=)
+      allow(http).to receive(:read_timeout=)
+    end
+
+    it "posts SSML to Azure and returns MP3 bytes" do
+      request = nil
+      allow(http).to receive(:request) do |value|
+        request = value
+        instance_double(Net::HTTPResponse, code: "200", body: "ID3fake")
+      end
+
+      result = provider.text_to_speech(text: "Hello <world>", voice_name: "en-US-JennyNeural")
+
+      expect(result).to eq(
+        bytes: "ID3fake",
+        content_type: "audio/mpeg",
+        filename: "speech.mp3"
+      )
+      expect(request["Content-Type"]).to eq("application/ssml+xml")
+      expect(request["Ocp-Apim-Subscription-Key"]).to eq("test-key")
+      expect(request["X-Microsoft-OutputFormat"]).to eq("audio-16khz-128kbitrate-mono-mp3")
+      expect(request["User-Agent"]).to eq("rexone-core")
+      expect(request.body).to include('xml:lang="en-US"')
+      expect(request.body).to include('name="en-US-JennyNeural"')
+      expect(request.body).to include("Hello &lt;world&gt;")
+      expect(request.body).not_to include("Hello <world>")
+    end
+
+    it "uses the configured default voice when none is passed" do
+      allow(http).to receive(:request) do |value|
+        expect(value.body).to include('name="en-US-AvaNeural"')
+        instance_double(Net::HTTPResponse, code: "200", body: "ID3fake")
+      end
+
+      expect(provider.text_to_speech(text: "Hello")).to include(bytes: "ID3fake")
+    end
+
+    it "returns a localized error when the key is blank" do
+      stub_const("AppConfig::AZURE_SPEECH_KEY", "")
+
+      expect(provider.text_to_speech(text: "Hello")[:error])
+        .to eq(MessageService::Speech.t(MessageService::Speech::PROVIDER_ERROR))
+    end
+
+    it "returns a localized error for HTTP and network failures" do
+      allow(http).to receive(:request)
+        .and_return(instance_double(Net::HTTPResponse, code: "500", body: "boom"))
+      expect(provider.text_to_speech(text: "Hello")[:error]).to be_present
+
+      allow(http).to receive(:request).and_raise(Timeout::Error)
+      expect(provider.text_to_speech(text: "Hello")[:error]).to be_present
+    end
+  end
 end
