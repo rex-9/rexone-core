@@ -299,11 +299,18 @@ module Openapi
       asset_upload_request: object(
         required: [ :file ],
         file: { type: :string, format: :binary },
-        category: {
+        type: {
           type: :string,
-          default: "profile",
-          description: "Storage folder and persisted asset category. Free-form string; defaults to profile."
-        }
+          default: "general",
+          description: "Asset type: avatar, cover, card, audio, video, attachment, general."
+        },
+        resource_model: {
+          type: :string,
+          description: "Resource model name: user, course, lesson, monastery, teacher, message."
+        },
+        resource_id: UUID.merge(description: "UUID of the linked resource."),
+        duration_secs: { type: :integer, description: "Duration in seconds for audio / video files." },
+        size_bytes: { type: :integer, description: "Exact file size in bytes." }
       ),
       checkout_session_request: object(
         required: %i[product_id success_url cancel_url],

@@ -1,27 +1,17 @@
-require 'faker'
+require "faker"
 
 FactoryBot.define do
   factory :asset do
-    sequence(:name) { |n| "profile_photo_#{n}" }
-    sequence(:url) { |n| "https://example.com/photo_#{n}.jpg" }
-    category { "profile" }
+    sequence(:name) { |n| "asset_file_#{n}" }
+    sequence(:url) { |n| "https://example.com/asset_#{n}.jpg" }
+    type { "avatar" }
     format { "image" }
-    size { 1024 }
+    size_bytes { 1024 }
+    duration_secs { nil }
     source { "upload" }
-    sequence(:public_id) { |n| "profile/profile_photo_#{n}" }
-    user
+    sequence(:storage_key) { |n| "avatar/asset_file_#{n}" }
+    association :creator, factory: :user
+    resource_model { "user" }
+    resource_id { creator&.id || SecureRandom.uuid }
   end
-  # factory :asset do
-  #   sequence(:name) { |n| "google_profile_picture_#{n}" }
-  #   url { |n| "https://res.cloudinary.com/rexone/image/upload/v1733153191/cld-sample-#{n}.jpg" }
-  #   category { %w[profile banner merit wish thank].sample }
-  #   format { 'image' }
-  #   size { rand(1000..5000) } # Random size between 1000 and 5000 bytes
-  #   source { %w[google upload].sample }
-  #   association :user
-
-  #   before(:create) do |asset|
-  #     asset.extension = File.extname(URI.parse(asset.url).path).delete(".")
-  #   end
-  # end
 end

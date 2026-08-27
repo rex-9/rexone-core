@@ -25,7 +25,7 @@ RSpec.describe "Asset uploads", type: :request do
 
   it "uploads and persists an image using the configured storage boundary" do
     allow(StorageService::Client).to receive(:upload).and_return(
-      public_id: "profile/avatar",
+      storage_key: "profile/avatar",
       url: "https://cdn.example.com/avatar.png",
       bytes: 11,
       format: "png",
@@ -33,25 +33,28 @@ RSpec.describe "Asset uploads", type: :request do
     )
 
     expect do
-      post "/v1/media/upload", params: { file: file, category: "profile" }, headers: headers
+      post "/v1/media/upload", params: { file: file, type: "avatar", resource_model: "user", resource_id: user.id }, headers: headers
     end.to change(Asset, :count).by(1)
 
     expect(response).to have_http_status(:created)
     expect(Asset.last).to have_attributes(
-      user_id: user.id,
-      public_id: "profile/avatar",
+      created_by_id: user.id,
+      resource_model: "user",
+      resource_id: user.id,
+      type: "avatar",
+      storage_key: "profile/avatar",
       format: "image",
       source: "upload"
     )
     expect(StorageService::Client).to have_received(:upload).with(
       kind_of(ActionDispatch::Http::UploadedFile),
-      hash_including(folder: "profile", resource_type: "image")
+      hash_including(folder: "avatar", resource_type: "image")
     )
   end
 
   it "maps documents and unknown extensions to their storage resource types" do
     allow(StorageService::Client).to receive(:upload).and_return(
-      public_id: "docs/report", url: "https://cdn.example.com/report.pdf", bytes: 4,
+      storage_key: "docs/report", url: "https://cdn.example.com/report.pdf", bytes: 4,
       format: "pdf", resource_type: "raw"
     )
     document = fixture_file_upload("report.pdf", "application/pdf")
@@ -65,7 +68,7 @@ RSpec.describe "Asset uploads", type: :request do
   it "queues remote cleanup when the uploaded result cannot be saved" do
     existing = create(:asset, url: "https://cdn.example.com/taken.png")
     allow(StorageService::Client).to receive(:upload).and_return(
-      public_id: "profile/new", url: existing.url, bytes: 11, format: "png", resource_type: "image"
+      storage_key: "profile/new", url: existing.url, bytes: 11, format: "png", resource_type: "image"
     )
     allow(StorageService::Client).to receive(:delete_later)
 

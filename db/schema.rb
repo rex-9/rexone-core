@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_25_214522) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_27_075325) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -45,34 +45,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_25_214522) do
   end
 
   create_table "assets", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "category", null: false
     t.datetime "created_at", null: false
     t.uuid "created_by_id"
     t.datetime "discarded_at"
     t.uuid "discarded_by_id"
+    t.integer "duration_secs"
     t.string "extension"
-    t.string "format", null: false
+    t.string "format"
     t.string "name", null: false
-    t.string "public_id"
-    t.uuid "record_id"
-    t.string "record_type"
-    t.bigint "size", null: false
+    t.uuid "resource_id"
+    t.string "resource_model"
+    t.bigint "size_bytes"
     t.string "source", default: "upload", null: false
+    t.string "storage_key"
+    t.string "type", default: "general", null: false
     t.datetime "undiscarded_at"
     t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
     t.uuid "updated_by_id"
     t.string "url", null: false
-    t.uuid "user_id"
     t.index ["created_by_id"], name: "index_assets_on_created_by_id"
     t.index ["discarded_at"], name: "index_assets_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_assets_on_discarded_by_id"
-    t.index ["name"], name: "index_assets_on_name", unique: true
-    t.index ["record_type", "record_id"], name: "index_assets_on_record"
+    t.index ["name"], name: "index_assets_on_name"
+    t.index ["resource_model", "resource_id"], name: "index_assets_on_resource_model_and_resource_id"
+    t.index ["type"], name: "index_assets_on_type"
     t.index ["undiscarded_by_id"], name: "index_assets_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_assets_on_updated_by_id"
     t.index ["url"], name: "index_assets_on_url", unique: true
-    t.index ["user_id"], name: "index_assets_on_user_id"
   end
 
   create_table "chat_messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -775,6 +775,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_25_214522) do
     t.index ["key_hash"], name: "index_solid_cache_entries_on_key_hash", unique: true
   end
 
+  create_table "solid_queue_batch_executions", force: :cascade do |t|
+    t.bigint "batch_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "job_id", null: false
+    t.index ["batch_id"], name: "index_solid_queue_batch_executions_on_batch_id"
+    t.index ["job_id"], name: "index_solid_queue_batch_executions_on_job_id", unique: true
+  end
+
+  create_table "solid_queue_batches", force: :cascade do |t|
+    t.string "active_job_batch_id"
+    t.integer "completed_jobs", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.datetime "enqueued_at"
+    t.datetime "failed_at"
+    t.integer "failed_jobs", default: 0, null: false
+    t.datetime "finished_at"
+    t.text "metadata"
+    t.text "on_failure"
+    t.text "on_finish"
+    t.text "on_success"
+    t.integer "total_jobs", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active_job_batch_id"], name: "index_solid_queue_batches_on_active_job_batch_id", unique: true
+    t.index ["finished_at"], name: "index_solid_queue_batches_on_finished_at"
+  end
+
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
     t.string "concurrency_key", null: false
     t.datetime "created_at", null: false
@@ -805,6 +832,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_25_214522) do
   create_table "solid_queue_jobs", force: :cascade do |t|
     t.string "active_job_id"
     t.text "arguments"
+    t.bigint "batch_id"
     t.string "class_name", null: false
     t.string "concurrency_key"
     t.datetime "created_at", null: false
@@ -814,6 +842,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_25_214522) do
     t.datetime "scheduled_at"
     t.datetime "updated_at", null: false
     t.index ["active_job_id"], name: "index_solid_queue_jobs_on_active_job_id"
+    t.index ["batch_id"], name: "index_solid_queue_jobs_on_batch_id"
     t.index ["class_name"], name: "index_solid_queue_jobs_on_class_name"
     t.index ["finished_at"], name: "index_solid_queue_jobs_on_finished_at"
     t.index ["queue_name", "finished_at"], name: "index_solid_queue_jobs_for_filtering"
@@ -947,7 +976,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_25_214522) do
   add_foreign_key "accesses", "users", column: "discarded_by_id"
   add_foreign_key "accesses", "users", column: "undiscarded_by_id"
   add_foreign_key "accesses", "users", column: "updated_by_id"
-  add_foreign_key "assets", "users"
   add_foreign_key "assets", "users", column: "created_by_id"
   add_foreign_key "assets", "users", column: "discarded_by_id"
   add_foreign_key "assets", "users", column: "undiscarded_by_id"
@@ -1017,6 +1045,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_25_214522) do
   add_foreign_key "rails_pulse_operations", "rails_pulse_queries", column: "query_id"
   add_foreign_key "rails_pulse_operations", "rails_pulse_requests", column: "request_id"
   add_foreign_key "rails_pulse_requests", "rails_pulse_routes", column: "route_id"
+  add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
+  add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

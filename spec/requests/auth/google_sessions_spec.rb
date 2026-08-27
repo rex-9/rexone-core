@@ -46,12 +46,16 @@ RSpec.describe "Google authentication", type: :request do
       )
     end
 
-    it "rejects a missing or invalid Google token" do
+    it "rejects a missing or invalid Google token or network error" do
       post "/signin/google", params: {}
       expect(response).to have_http_status(:unauthorized)
 
-      allow(RestClient).to receive(:get).and_raise(RestClient::ExceptionWithResponse)
+      allow(RestClient::Request).to receive(:execute).and_raise(RestClient::ExceptionWithResponse)
       post "/signin/google", params: { token: "invalid" }
+      expect(response).to have_http_status(:unauthorized)
+
+      allow(RestClient::Request).to receive(:execute).and_raise(Errno::ENETUNREACH, "Network is unreachable")
+      post "/signin/google", params: { token: "network_fail" }
       expect(response).to have_http_status(:unauthorized)
     end
   end
@@ -138,6 +142,6 @@ RSpec.describe "Google authentication", type: :request do
 
   def stub_google_token(email:, name:, picture: nil)
     response = instance_double(RestClient::Response, body: { email: email, name: name, picture: picture }.to_json)
-    allow(RestClient).to receive(:get).and_return(response)
+    allow(RestClient::Request).to receive(:execute).and_return(response)
   end
 end
