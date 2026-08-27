@@ -307,7 +307,7 @@ class Auth::SessionsController < Devise::SessionsController
       provider: AuthConstants::Provider::GOOGLE,
       confirmed_at: user.confirmed_at || Time.current
     )
-   
+
 
     if user.save
       # Save google profile picture
