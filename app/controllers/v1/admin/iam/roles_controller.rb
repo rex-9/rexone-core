@@ -4,23 +4,13 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
   # GET /v1/admin/iam/roles
   def index
-    roles = ::Iam::Role.includes(:permissions, :users).order(created_at: :desc)
-
+    roles = ::Iam::Role.includes(:permissions).order(created_at: :desc)
+    pagy, records = pagy(:offset, roles, limit: params[:limit])
     render_json_response(
       status_code: 200,
-      message: iam_message(MessageService::Iam::ROLES_FETCHED),
-      data: ::Iam::RoleSerializer.new(roles).serializable_hash[:data]
-    )
-  end
-
-  # GET /v1/admin/iam/roles/permissions
-  def read_permissions
-    permissions = ::Iam::Permission.order(:resource, :action)
-
-    render_json_response(
-      status_code: 200,
-      message: iam_message(MessageService::Iam::PERMISSIONS_FETCHED),
-      data: ::Iam::PermissionSerializer.new(permissions).serializable_hash[:data]
+      message: admin_user_message(MessageService::Admin::User::USER_ROLES_RETRIEVED),
+      data: Iam::RoleSerializer.paginated(records, pagy),
+      pagy: pagy
     )
   end
 
@@ -122,5 +112,9 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
   def iam_message(key, **options)
     MessageService::Iam.t(key, **options)
+  end
+
+  def admin_user_message(key, **options)
+    MessageService::Admin::User.t(key, **options)
   end
 end

@@ -1,6 +1,22 @@
 require "rails_helper"
 
 RSpec.describe PaymentService::Stripe do
+  describe "#create_checkout_session" do
+    it "does not create a Stripe Checkout session for a free product" do
+      service = described_class.new
+      user = create(:user)
+      product = create(:payment_product, price_unit_amount: 0, cycle: nil)
+
+      allow(Stripe::Checkout::Session).to receive(:create)
+
+      expect do
+        service.create_checkout_session(user_id: user.id, product_id: product.id)
+      end.to raise_error(PaymentService::Error, "Free products do not use Stripe checkout")
+
+      expect(Stripe::Checkout::Session).not_to have_received(:create)
+    end
+  end
+
   describe "#create_product" do
     it "creates Stripe records and persists the local premium product" do
       service = described_class.new

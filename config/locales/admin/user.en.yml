@@ -13,5 +13,6 @@ en:
       self_lifecycle_protected: "You cannot discard or permanently delete your own account."
       last_super_admin_protected: "The last super admin cannot be discarded or permanently deleted."
       user_roles_retrieved: "Roles retrieved successfully."
+      user_permissions_retrieved: "Permissions retrieved successfully."
       user_create_failed: "Failed to create user."
       user_update_failed: "Failed to update user."

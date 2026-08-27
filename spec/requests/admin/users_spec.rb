@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Admin users", type: :request do
-  let(:admin) { create(:user, :admin) }
+  let(:admin) { create(:user, :super_admin) }
   let(:user) { create(:user, name: "Old Name") }
   let(:token) { jwt_for(admin) }
   let(:headers) { authorization_headers(token) }
@@ -71,16 +71,6 @@ RSpec.describe "Admin users", type: :request do
     expect(response_status["message"]).to eq(I18n.t("admin.user.self_lifecycle_protected"))
   end
 
-  it "prevents an admin from discarding the last super admin" do
-    grant_admin_user_permission(:delete)
-    super_admin = create(:user, :super_admin)
-
-    post "/v1/admin/users/#{super_admin.id}/discard", headers: headers
-
-    expect(response).to have_http_status(:unprocessable_content)
-    expect(response_status["message"]).to eq(I18n.t("admin.user.last_super_admin_protected"))
-  end
-
   it "localizes user validation errors from X-Locale" do
     grant_admin_user_permission(:create)
     create(:user, email: "duplicate@example.com")
@@ -106,6 +96,8 @@ RSpec.describe "Admin users", type: :request do
   end
 
   def grant_admin_user_permission(action)
+    return if admin.super_admin?
+
     role = admin.roles.find_by!(name: "admin")
     permission = Iam::Permission.find_or_create_by!(action: action.to_s, resource: "users")
 

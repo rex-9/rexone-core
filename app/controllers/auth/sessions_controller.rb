@@ -243,11 +243,13 @@ class Auth::SessionsController < Devise::SessionsController
     user = User.with_discarded.find_or_initialize_by(email: challenge_data["email"])
     return if reject_discarded_account!(user)
 
+    sanitized_username = sanitize_email(challenge_data["email"])
+
     if user.persisted?
       # User exists but was unconfirmed - update credentials, provider, and confirm
       user.assign_attributes(
-        username: sanitized_username,
-        name: challenge_data["name"],
+        username: user.username.presence || sanitized_username,
+        name: challenge_data["name"].presence || user.name,
         password: password,
         password_confirmation: password,
         provider: AuthConstants::Provider::GOOGLE,
@@ -274,7 +276,7 @@ class Auth::SessionsController < Devise::SessionsController
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
 
-        NotificationService.welcome(
+        NotificationService::Center.welcome(
           user_id: user.id,
           name: user.name || user.username
         )
@@ -298,7 +300,6 @@ class Auth::SessionsController < Devise::SessionsController
     end
 
     # New user - create them
-    sanitized_username = sanitize_email(challenge_data["email"])
     user.assign_attributes(
       username: sanitized_username,
       name: challenge_data["name"],
@@ -311,24 +312,13 @@ class Auth::SessionsController < Devise::SessionsController
 
     if user.save
       # Save google profile picture
-      asset = Asset.new(
-        name: AssetConstants::AssetName.google_profile(user.id),
-        url: challenge_data["picture"],
-        type: AssetConstants::AssetType::AVATAR,
-        format: AssetConstants::AssetFormat::IMAGE,
-        source: AssetConstants::AssetSource::GOOGLE,
-        resource: user
-      )
-
-      unless asset.save
-        Rails.logger.warn(
-          "#{LOG_PREFIX} Failed to save Google profile picture " \
-          "for user #{user.id}: #{asset.errors.full_messages}"
-        )
-        asset.assign_attributes(
+      if challenge_data["picture"].present?
+        asset = Asset.new(
           name: AssetConstants::AssetName.google_profile(user.id),
           url: challenge_data["picture"],
+          type: AssetConstants::AssetType::AVATAR,
           format: AssetConstants::AssetFormat::IMAGE,
+          source: AssetConstants::AssetSource::GOOGLE,
           resource: user
         )
 

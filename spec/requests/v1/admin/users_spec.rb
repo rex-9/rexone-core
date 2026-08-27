@@ -1,15 +1,13 @@
 require "rails_helper"
 
 RSpec.describe "V1 Admin Users API", type: :request do
-  let(:admin) { create(:user) }
+  let(:admin) { create(:user, :super_admin) }
   let(:token) { jwt_for(admin) }
   let(:headers) { authorization_headers(token) }
 
   before do
     allow(CacheService).to receive(:read).and_return(token)
     allow(CacheService).to receive(:write)
-    grant_admin_role(admin)
-    grant_permissions(admin, "users", :read)
   end
 
   describe "GET /v1/admin/users" do
@@ -37,16 +35,6 @@ RSpec.describe "V1 Admin Users API", type: :request do
         name_match.id,
         email_match.id
       )
-    end
-
-    it "returns paginated roles for admin user forms" do
-      create_list(:role, 3)
-
-      get "/v1/admin/users/roles", params: { limit: 2 }, headers: headers
-
-      expect(response).to have_http_status(:ok)
-      expect(response_data.size).to eq(2)
-      expect(response_meta.dig("pagination", "limit")).to eq(2)
     end
 
     it "rejects non-admin users" do

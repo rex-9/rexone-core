@@ -4,6 +4,7 @@ class V1::Admin::UsersController < V1::ApplicationController
 
   before_action :set_active_user, only: %i[show update discard]
   before_action :set_user_including_discarded, only: :undiscard
+  before_action :super_admin_required!
 
   # GET /users?page=2&limit=25
   def index
@@ -11,24 +12,10 @@ class V1::Admin::UsersController < V1::ApplicationController
     Rails.logger.info("#{LOG_PREFIX} Query: #{users.to_sql}")
 
     pagy, records = pagy(:offset, users, limit: params[:limit])
-
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USERS_RETRIEVED),
       data: UserSerializer.paginated(records, pagy),
-      pagy: pagy
-    )
-  end
-
-  # GET /v1/admin/users/roles
-  def read_roles
-    roles = Iam::Role.includes(:permissions).order(:name)
-    pagy, records = pagy(:offset, roles, limit: params[:limit])
-
-    render_json_response(
-      status_code: 200,
-      message: admin_user_message(MessageService::Admin::User::USER_ROLES_RETRIEVED),
-      data: Iam::RoleSerializer.paginated(records, pagy),
       pagy: pagy
     )
   end
