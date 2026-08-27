@@ -242,14 +242,14 @@ class Auth::SessionsController < Devise::SessionsController
       if user.save
         if challenge_data["picture"].present?
           asset = user.assets.find_or_initialize_by(
-            category: AssetConstants::AssetCategory::PROFILE,
+            type: AssetConstants::AssetType::AVATAR,
             source: AssetConstants::AssetSource::GOOGLE
           )
           asset.assign_attributes(
             name: AssetConstants::AssetName.google_profile(user.id),
             url: challenge_data["picture"],
             format: AssetConstants::AssetFormat::IMAGE,
-            size: 0
+            resource: user
           )
           asset.save
         end
@@ -298,11 +298,10 @@ class Auth::SessionsController < Devise::SessionsController
       asset = Asset.new(
         name: AssetConstants::AssetName.google_profile(user.id),
         url: challenge_data["picture"],
-        category: AssetConstants::AssetCategory::PROFILE,
+        type: AssetConstants::AssetType::AVATAR,
         format: AssetConstants::AssetFormat::IMAGE,
-        size: 0,
         source: AssetConstants::AssetSource::GOOGLE,
-        user: user,
+        resource: user
       )
 
       unless asset.save

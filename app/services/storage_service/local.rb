@@ -11,9 +11,10 @@ module StorageService
     end
 
     def upload(file, options = {})
-      filename = options[:filename] || generate_filename(file)
+      filename = options[:storage_key] || options[:filename] || generate_filename(file)
       folder = options[:folder] || "uploads"
-      path = File.join(@storage_path, folder, filename)
+      storage_key = File.join(folder, filename)
+      path = File.join(@storage_path, storage_key)
 
       FileUtils.mkdir_p(File.dirname(path))
 
@@ -26,8 +27,8 @@ module StorageService
       end
 
       {
-        public_id: File.join(folder, filename),
-        url: "/storage/#{folder}/#{filename}",
+        storage_key: storage_key,
+        url: "/storage/#{storage_key}",
         bytes: File.size(path),
         format: File.extname(filename).delete("."),
         created_at: Time.now,
@@ -64,7 +65,7 @@ module StorageService
       FileUtils.mv(source_path, dest_path)
 
       {
-        public_id: destination,
+        storage_key: destination,
         url: "/storage/#{destination}"
       }
     rescue => e
@@ -80,7 +81,7 @@ module StorageService
       FileUtils.cp(source_path, dest_path)
 
       {
-        public_id: destination,
+        storage_key: destination,
         url: "/storage/#{destination}"
       }
     rescue => e
@@ -100,7 +101,7 @@ module StorageService
       files.map do |file|
         relative_path = file.gsub("#{@storage_path}/", "")
         {
-          public_id: relative_path,
+          storage_key: relative_path,
           url: "/storage/#{relative_path}",
           bytes: File.size(file),
           format: File.extname(file).delete("."),

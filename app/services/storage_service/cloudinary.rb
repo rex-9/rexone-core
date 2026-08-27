@@ -20,13 +20,13 @@ module StorageService
     end
 
     def upload(file, options = {})
-      public_id = options[:public_id] || generate_public_id(file)
+      storage_key = options[:storage_key] || generate_storage_key(file)
       folder = options[:folder] || "uploads"
 
       result = Cloudinary::Uploader.upload(
         file.is_a?(String) ? file : file.path,
         {
-          public_id: public_id,
+          public_id: storage_key,
           folder: folder,
           resource_type: options[:resource_type] || "auto",
           overwrite: options[:overwrite] || true,
@@ -38,7 +38,7 @@ module StorageService
       )
 
       {
-        public_id: result["public_id"],
+        storage_key: result["public_id"],
         url: result["secure_url"],
         bytes: result["bytes"],
         format: result["format"],
@@ -100,7 +100,7 @@ module StorageService
       )
 
       {
-        public_id: result["public_id"],
+        storage_key: result["public_id"],
         url: result["secure_url"],
         bytes: result["bytes"],
         format: result["format"],
@@ -131,7 +131,7 @@ module StorageService
 
       result["resources"].map do |resource|
         {
-          public_id: resource["public_id"],
+          storage_key: resource["public_id"],
           url: resource["secure_url"],
           bytes: resource["bytes"],
           format: resource["format"],
@@ -169,7 +169,7 @@ module StorageService
 
     private
 
-    def generate_public_id(file)
+    def generate_storage_key(file)
       basename = file.is_a?(String) ? File.basename(file, ".*") : File.basename(file.original_filename, ".*")
       "#{basename}_#{Time.now.to_i}"
     end
