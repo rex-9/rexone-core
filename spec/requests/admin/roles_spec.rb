@@ -10,18 +10,13 @@ RSpec.describe "Admin IAM roles", type: :request do
     allow(CacheService).to receive(:write)
   end
 
-  it "lists roles and permissions for super admins" do
+  it "lists roles for super admins" do
     create(:role, name: "notification_admin")
-    create(:permission, action: "create", resource: "notifications")
 
     get "/v1/admin/iam/roles", headers: headers
-    expect(response).to have_http_status(:ok)
-    expect(response_status["message"]).to eq(I18n.t("iam.roles.fetched"))
-    expect(response_data).not_to be_empty
 
-    get "/v1/admin/iam/roles/permissions", headers: headers
     expect(response).to have_http_status(:ok)
-    expect(response_status["message"]).to eq(I18n.t("iam.permissions.fetched"))
+    expect(response_status["message"]).to eq(I18n.t("admin.user.user_roles_retrieved"))
     expect(response_data).not_to be_empty
   end
 

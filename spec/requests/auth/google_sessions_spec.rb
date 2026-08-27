@@ -111,15 +111,21 @@ RSpec.describe "Google authentication", type: :request do
       expect(User.find_by!(email: "new.user@example.com").username).to eq("new_user_000042")
     end
 
-    it "signs in an account created while its challenge was outstanding" do
+    it "completes an existing account created during an outstanding challenge" do
       user = create(:user, email: "new.user@example.com")
       allow(CacheService).to receive(:read).and_return(challenge)
 
       expect do
         post "/signin/google/complete", params: { challenge_token: "challenge", password: "ignored-password" }
       end.not_to change(User, :count)
+
       expect(response).to have_http_status(:ok)
+      expect(user.reload).to be_confirmed
+      expect(user.provider).to eq("google")
       expect(response_data.dig("user", "id")).to eq(user.id)
+      expect(response_data["token"]).to be_present
+      expect(NotificationService::Center).to have_received(:welcome).with(user_id: user.id, name: "New Google User")
+      expect(CacheService).to have_received(:delete).with("google_signin:challenge:challenge")
     end
 
     it "rejects an account discarded while its challenge was outstanding" do

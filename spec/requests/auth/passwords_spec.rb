@@ -22,7 +22,7 @@ RSpec.describe "Password recovery", type: :request do
       expect(NotificationService::Center).not_to have_received(:password_reset_email)
     end
 
-    it "blocks reset instructions for a discarded account" do
+    it "rejects a discarded account without queuing a reset email" do
       user = create(:user)
       user.discard!
 

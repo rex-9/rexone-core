@@ -19,6 +19,7 @@ module PaymentService
       with_stripe_error("Create Checkout Session") do
         user = User.find(user_id)
         product = Payment::Product.find(product_id)
+         # raise PaymentService::Error, "Free products do not use Stripe checkout" if product.free?
 
         checkout_params = {
           customer: user.stripe_customer,

@@ -182,6 +182,10 @@ module Openapi
           description: "Permission UUIDs assigned to the role."
         }
       ),
+      permission_request: object(
+        action: { type: :string, enum: Iam::Permission::ACTIONS, example: "read" },
+        resource: { type: :string, enum: Iam::Permission::RESOURCES, example: "users" }
+      ),
       admin_user_request: object(
         required: [ :user ],
         user: object(
@@ -626,10 +630,6 @@ module Openapi
         post: operation(tags: "Admin / Users", summary: "Create an admin-managed user", success: 201,
                         body: ref(:admin_user_request), errors: [ 401, 403, 422 ])
       }
-      paths["/v1/admin/users/roles"] = {
-        get: operation(tags: "Admin / Users", summary: "List assignable roles for admin user forms",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
-      }
       paths["/v1/admin/users/discarded"] = {
         get: operation(tags: "Admin / Users", summary: "List discarded users in the recycle bin",
                        parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
@@ -652,8 +652,11 @@ module Openapi
         post: operation(tags: "Admin / IAM Roles", summary: "Create an admin-managed role", success: 201,
                         body: ref(:role_request), errors: [ 401, 403, 422 ])
       }
-      paths["/v1/admin/iam/roles/permissions"] = {
-        get: operation(tags: "Admin / IAM Roles", summary: "List permissions for admin role forms", errors: [ 401, 403 ])
+      paths["/v1/admin/iam/permissions"] = {
+        get: operation(tags: "Admin / IAM Permissions", summary: "List permissions for the admin client",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ]),
+        post: operation(tags: "Admin / IAM Permissions", summary: "Create an admin-managed permission", success: 201,
+                        body: ref(:permission_request), errors: [ 401, 403, 422 ])
       }
       paths["/v1/admin/iam/roles/{id}"] = {
         get: operation(tags: "Admin / IAM Roles", summary: "Get an admin-managed role",
@@ -663,6 +666,15 @@ module Openapi
                          errors: [ 401, 403, 404, 422 ]),
         delete: operation(tags: "Admin / IAM Roles", summary: "Delete an admin-managed role",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+      }
+      paths["/v1/admin/iam/permissions/{id}"] = {
+        get: operation(tags: "Admin / IAM Permissions", summary: "Get an admin-managed permission",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / IAM Permissions", summary: "Update an admin-managed permission",
+                         parameters: [ path_parameter(:id) ], body: ref(:permission_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / IAM Permissions", summary: "Delete an admin-managed permission",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
       }
       paths["/v1/admin/chat/rooms"] = {
         get: operation(tags: "Admin / Chat Rooms", summary: "List chat rooms for the admin client",
@@ -713,29 +725,14 @@ module Openapi
         post: operation(tags: "Admin / Payment Products", summary: "Restore a discarded Stripe-backed product",
                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
-      paths["/v1/iam/permissions"] = {
-        get: operation(tags: "IAM Permissions", summary: "List permissions", errors: [ 401, 403 ])
+      paths["/v1/iam/permissions/current"] = {
+        get: operation(tags: "IAM Permissions", summary: "List current user's permissions",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
       }
-      paths["/v1/iam/permissions/{id}"] = {
-        get: operation(tags: "IAM Permissions", summary: "Get a permission",
-                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
-        delete: operation(tags: "IAM Permissions", summary: "Permanently delete a discarded permission",
-                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+      paths["/v1/iam/roles/current"] = {
+        get: operation(tags: "IAM Roles", summary: "List current user's roles",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
       }
-      paths.merge!(standard_crud(path: "/v1/iam/roles", tag: "IAM Roles", schema: :role, writable: :role_request))
-
-      paths["/v1/iam/permissions/discarded"] = {
-        get: operation(tags: "IAM Permissions", summary: "List discarded permissions", errors: [ 401, 403 ])
-      }
-      paths["/v1/iam/permissions/undiscarded"] = {
-        get: operation(tags: "IAM Permissions", summary: "List active permissions", errors: [ 401, 403 ])
-      }
-      %w[discard undiscard].each do |action|
-        paths["/v1/iam/permissions/{id}/#{action}"] = {
-          post: operation(tags: "IAM Permissions", summary: "#{action.capitalize} a permission",
-                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
-        }
-      end
 
       paths["/v1/iam/users/{user_id}/roles"] = {
         get: operation(tags: "IAM User Roles", summary: "List a user's roles",

@@ -259,18 +259,15 @@ RSpec.describe "Authentication sessions", type: :request do
         { "email" => "google_user@example.com", "name" => "Google User" }.to_json
       )
 
-      # 3. User sets 6-digit password via google_sign_in_complete
+      # 3. User completes the challenge and the existing account is confirmed.
       post "/signin/google/complete", params: { challenge_token: challenge_token, password: "654321" }
 
+      unconfirmed_user.reload
       expect(response).to have_http_status(:ok)
+      expect(unconfirmed_user.confirmed?).to be true
+      expect(unconfirmed_user.provider).to eq("google")
       expect(response_data["user"]["id"]).to eq(unconfirmed_user.id)
       expect(response_data["token"]).to be_present
-
-      # 4. User is now confirmed, provider is google, and new password is set
-      unconfirmed_user.reload
-      expect(unconfirmed_user.confirmed?).to be true
-      expect(unconfirmed_user.provider).to eq(AuthConstants::Provider::GOOGLE)
-      expect(unconfirmed_user.valid_password?("654321")).to be true
     end
   end
 

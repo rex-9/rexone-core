@@ -2,6 +2,10 @@ module MessageService
   class Iam < Base
     PERMISSIONS_FETCHED = "iam.permissions.fetched"
     PERMISSION_FETCHED = "iam.permissions.fetched_one"
+    PERMISSION_CREATED = "iam.permissions.created"
+    PERMISSION_CREATE_FAILED = "iam.permissions.create_failed"
+    PERMISSION_UPDATED = "iam.permissions.updated"
+    PERMISSION_UPDATE_FAILED = "iam.permissions.update_failed"
     DISCARDED_PERMISSIONS_FETCHED = "iam.permissions.discarded_fetched"
     UNDISCARDED_PERMISSIONS_FETCHED = "iam.permissions.undiscarded_fetched"
     PERMISSION_DISCARDED = "iam.permissions.discarded"

@@ -137,7 +137,6 @@ Rails.application.routes.draw do
         # end
 
         collection do
-          get :read_roles, path: "roles"
           get :read_discarded, path: "discarded"
         end
 
@@ -148,11 +147,8 @@ Rails.application.routes.draw do
       end
 
       namespace :iam do
-        resources :roles, only: %i[index show create update destroy] do
-          collection do
-            get :read_permissions, path: "permissions"
-          end
-        end
+        resources :permissions, only: %i[index show create update destroy]
+        resources :roles, only: %i[index show create update destroy]
       end
 
       namespace :chat do
@@ -182,20 +178,18 @@ Rails.application.routes.draw do
     # ===== IAM =====
     namespace :iam do
       # API-only: no new/edit
-      resources :permissions, only: %i[index show create update destroy] do
+      resources :permissions, only: [] do 
         collection do
-          get :discarded
-          get :undiscarded
-        end
-
-        member do
-          post :discard
-          post :undiscard
-        end
+          get :read_current_permissions, path: "current"
+        end   
       end
 
-      resources :roles, only: %i[index show create update destroy]
-
+      resources :roles, only: [] do 
+        collection do
+          get :read_current_roles, path: "current"
+        end   
+      end
+      
       resources :users, only: [] do
         resources :roles,
           only: %i[index create destroy],

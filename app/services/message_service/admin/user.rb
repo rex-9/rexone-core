@@ -13,6 +13,7 @@ module MessageService
       SELF_LIFECYCLE_PROTECTED = "admin.user.self_lifecycle_protected"
       LAST_SUPER_ADMIN_PROTECTED = "admin.user.last_super_admin_protected"
       USER_ROLES_RETRIEVED = "admin.user.user_roles_retrieved"
+      USER_PERMISSIONS_RETRIEVED = "admin.user.user_permissions_retrieved"
       USER_CREATE_FAILED = "admin.user.user_create_failed"
       USER_UPDATE_FAILED = "admin.user.user_update_failed"
     end
