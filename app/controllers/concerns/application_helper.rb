@@ -49,9 +49,11 @@ module ApplicationHelper
     when 200 then :ok
     when 201 then :created
     when 401 then :unauthorized
+    when 403 then :forbidden
     when 429 then :too_many_requests
     when 404 then :not_found
     when 422 then :unprocessable_content
+    when 503 then :service_unavailable
     else status_code
     end
   end

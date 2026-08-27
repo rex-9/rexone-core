@@ -5,10 +5,8 @@ class Auth::PasswordsController < Devise::PasswordsController
   # POST /password/forgot
   def create
     email = params[:email].to_s.strip.downcase
-    user = User.with_discarded.find_by(email: email)
+     user = User.find_by(email: email)
     if user
-      return render_discarded_account if user.discarded?
-
       token = user.send_reset_password_instructions
       NotificationService::Center.password_reset_email(
         email: user.email,
@@ -57,14 +55,6 @@ class Auth::PasswordsController < Devise::PasswordsController
 
   def auth_message(key, **options)
     MessageService::Auth.t(key, **options)
-  end
-
-  def render_discarded_account
-    render_json_response(
-      status_code: 403,
-      message: auth_message(MessageService::Auth::ACCOUNT_DISCARDED),
-      error: auth_message(MessageService::Auth::ACCOUNT_DISCARDED)
-    )
   end
 
   def reset_password_params

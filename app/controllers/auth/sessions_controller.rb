@@ -243,7 +243,61 @@ class Auth::SessionsController < Devise::SessionsController
     user = User.with_discarded.find_or_initialize_by(email: challenge_data["email"])
     return if reject_discarded_account!(user)
 
-    created = user.new_record?
+    if user.persisted?
+      # User exists but was unconfirmed - update credentials, provider, and confirm
+      user.assign_attributes(
+        password: password,
+        password_confirmation: password,
+        provider: AuthConstants::Provider::GOOGLE,
+        confirmed_at: user.confirmed_at || Time.current
+      )
+      user.name = challenge_data["name"] if challenge_data["name"].present? && user.name.blank?
+
+      if user.save
+        if challenge_data["picture"].present?
+          asset = user.assets.find_or_initialize_by(
+            type: AssetConstants::AssetType::AVATAR,
+            source: AssetConstants::AssetSource::GOOGLE
+          )
+          asset.assign_attributes(
+            name: AssetConstants::AssetName.google_profile(user.id),
+            url: challenge_data["picture"],
+            format: AssetConstants::AssetFormat::IMAGE,
+            resource: user
+          )
+          asset.save
+        end
+
+        clear_google_challenge!(challenge_token)
+
+        token = AppConfig::JWT_TOKEN.call(user)
+        signup_active_session!(user: user, token: token)
+
+        NotificationService.welcome(
+          user_id: user.id,
+          name: user.name || user.username
+        )
+
+        render_json_response(
+          status_code: 200,
+          message: auth_message(MessageService::Auth::ACCOUNT_CREATED_AND_SIGNED_IN),
+          data: {
+            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+            token: token
+          }
+        )
+      else
+        render_json_response(
+          status_code: 422,
+          message: auth_message(MessageService::Auth::GOOGLE_AUTH_FAILED),
+          error: user.errors.full_messages.uniq.to_sentence
+        )
+      end
+      return
+    end
+
+    # New user - create them
+    sanitized_username = sanitize_email(challenge_data["email"])
     user.assign_attributes(
       password: password,
       password_confirmation: password,
@@ -254,10 +308,20 @@ class Auth::SessionsController < Devise::SessionsController
     user.name = challenge_data["name"] if challenge_data["name"].present? && user.name.blank?
 
     if user.save
-      if challenge_data["picture"].present?
-        asset = user.assets.find_or_initialize_by(
-          type: AssetConstants::AssetType::AVATAR,
-          source: AssetConstants::AssetSource::GOOGLE
+      # Save google profile picture
+      asset = Asset.new(
+        name: AssetConstants::AssetName.google_profile(user.id),
+        url: challenge_data["picture"],
+        type: AssetConstants::AssetType::AVATAR,
+        format: AssetConstants::AssetFormat::IMAGE,
+        source: AssetConstants::AssetSource::GOOGLE,
+        resource: user
+      )
+
+      unless asset.save
+        Rails.logger.warn(
+          "#{LOG_PREFIX} Failed to save Google profile picture " \
+          "for user #{user.id}: #{asset.errors.full_messages}"
         )
         asset.assign_attributes(
           name: AssetConstants::AssetName.google_profile(user.id),
