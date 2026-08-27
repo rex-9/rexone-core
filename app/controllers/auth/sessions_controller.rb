@@ -254,6 +254,26 @@ class Auth::SessionsController < Devise::SessionsController
     user.name = challenge_data["name"] if challenge_data["name"].present? && user.name.blank?
 
     if user.save
+      if challenge_data["picture"].present?
+        asset = user.assets.find_or_initialize_by(
+          type: AssetConstants::AssetType::AVATAR,
+          source: AssetConstants::AssetSource::GOOGLE
+        )
+        asset.assign_attributes(
+          name: AssetConstants::AssetName.google_profile(user.id),
+          url: challenge_data["picture"],
+          format: AssetConstants::AssetFormat::IMAGE,
+          resource: user
+        )
+
+        unless asset.save
+          Rails.logger.warn(
+            "#{LOG_PREFIX} Failed to save Google profile picture " \
+            "for user #{user.id}: #{asset.errors.full_messages}"
+          )
+        end
+      end
+
       clear_google_challenge!(challenge_token)
 
       token = AppConfig::JWT_TOKEN.call(user)

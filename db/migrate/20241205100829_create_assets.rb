@@ -1,16 +1,17 @@
-class CreateAssets < ActiveRecord::Migration[7.2]
+class CreateAssets < ActiveRecord::Migration[8.1]
   def change
     create_table :assets, id: :uuid do |t|
-      t.string :public_id                                               # ID for the file storage service
-      t.string :name, null: false                                       # File name (e.g., "google_profile_picture")
-      t.string :url, null: false                                        # URL to access the file (Cloudinary or other)
-      t.string :category, null: false                                   # Enum: "profile", "banner"
-      t.string :format, null: false                                     # "image", "video", "doc", etc.
-      t.bigint :size                                                    # File size in bytes
-      t.string :source, null: false, default: "upload"                  # "google", "upload", etc...
-      t.string :extension                                               # File extension (e.g., "jpg", "png")
-      t.references :record, polymorphic: true, type: :uuid, null: true  # Polymorphic reference (Merit, Wish, Thanks, etc.)
-      t.references :user, type: :uuid, foreign_key: true, null: true    # User who uploaded the file
+      t.string :storage_key                                             # Object key / identifier in object storage (Garage, S3, R2, Cloudinary)
+      t.string :name, null: false                                       # File name / identifier
+      t.string :url, null: false                                        # Public URL to access the file
+      t.string :type, null: false, default: "general"                   # "avatar", "cover", "card", "audio", "video", "attachment", "general"
+      t.string :format                                                  # "image", "audio", "video", "doc" (null if unclassified)
+      t.bigint :size_bytes                                              # File size in bytes
+      t.integer :duration_secs                                          # Duration in seconds (for audio / video)
+      t.string :source, null: false, default: "upload"                  # "google", "upload", etc.
+      t.string :extension                                               # File extension (e.g., "jpg", "mp3", "png")
+      t.string :resource_model                                          # Model name (e.g. "user", "course", "lesson", "teacher", "monastery", "message")
+      t.uuid :resource_id                                               # ID of the associated resource
 
       # ===== AUDIT =====
       t.references :created_by,
@@ -37,7 +38,9 @@ class CreateAssets < ActiveRecord::Migration[7.2]
     end
 
     add_index :assets, :url, unique: true
-    add_index :assets, :name, unique: true
+    add_index :assets, :name
+    add_index :assets, :type
+    add_index :assets, [ :resource_model, :resource_id ]
     add_index :assets, :discarded_at
   end
 end

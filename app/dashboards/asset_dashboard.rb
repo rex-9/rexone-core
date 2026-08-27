@@ -3,105 +3,78 @@ require "administrate/base_dashboard"
 class AssetDashboard < Administrate::BaseDashboard
   # Display Resource
   def display_resource(asset)
-    "#{asset.category} (#{asset.user})"
+    "#{asset.type} (#{asset.name})"
   end
 
-  # ATTRIBUTE_TYPES
-  # a hash that describes the type of each of the model's fields.
-  #
-  # Each different type represents an Administrate::Field object,
-  # which determines how the attribute is displayed
-  # on pages throughout the dashboard.
   ATTRIBUTE_TYPES = {
     id: Field::String,
-    category: Field::String,
+    type: Field::String,
+    format: Field::String,
+    extension: Field::String,
+    size_bytes: Field::Number,
+    duration_secs: Field::Number,
+    source: Field::String,
+    name: Field::String,
+    url: Field::String,
+    storage_key: Field::String,
+    resource_model: Field::String,
+    resource_id: Field::String,
+    resource: Field::Polymorphic,
     created_by_id: Field::String,
     creator: Field::BelongsTo,
+    updated_by_id: Field::String,
+    updater: Field::BelongsTo,
     discarded_at: Field::DateTime,
     discarded_by_id: Field::String,
     discarder: Field::BelongsTo,
-    extension: Field::String,
-    format: Field::String,
-    name: Field::String,
-    public_id: Field::String,
-    record: Field::Polymorphic,
-    size: Field::Number,
-    source: Field::String,
     undiscarded_at: Field::DateTime,
     undiscarded_by_id: Field::String,
     undiscarder: Field::BelongsTo,
-    updated_by_id: Field::String,
-    updater: Field::BelongsTo,
-    url: Field::String,
-    user: Field::BelongsTo,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
 
-  # COLLECTION_ATTRIBUTES
-  # an array of attributes that will be displayed on the model's index page.
-  #
-  # By default, it's limited to four items to reduce clutter on index pages.
-  # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
     id
-    category
-    extension
-    format
-  ].freeze
-
-  # SHOW_PAGE_ATTRIBUTES
-  # an array of attributes that will be displayed on the model's show page.
-  SHOW_PAGE_ATTRIBUTES = %i[
-    id
-    category
-    created_by_id
-    creator
-    discarded_at
-    discarded_by_id
-    discarder
-    extension
+    type
     format
     name
-    public_id
-    record
-    size
+    resource_model
+  ].freeze
+
+  SHOW_PAGE_ATTRIBUTES = %i[
+    id
+    type
+    format
+    extension
+    size_bytes
+    duration_secs
     source
-    undiscarded_at
-    undiscarded_by_id
-    undiscarder
-    updated_by_id
-    updater
+    name
     url
-    user
+    storage_key
+    resource_model
+    resource_id
+    creator
+    updater
+    discarded_at
+    undiscarded_at
     created_at
     updated_at
   ].freeze
 
-  # FORM_ATTRIBUTES
-  # an array of attributes that will be displayed
-  # on the model's form (`new` and `edit`) pages.
   FORM_ATTRIBUTES = %i[
-    category
-    created_by_id
-    creator
-    discarded_at
-    discarded_by_id
-    discarder
-    extension
+    type
     format
-    name
-    public_id
-    record
-    size
+    extension
+    size_bytes
+    duration_secs
     source
-    undiscarded_at
-    undiscarded_by_id
-    undiscarder
-    updated_by_id
-    updater
+    name
     url
-    user
+    storage_key
+    resource_model
+    resource_id
   ].freeze
 
   # COLLECTION_FILTERS

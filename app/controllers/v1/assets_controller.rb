@@ -40,14 +40,19 @@ class V1::AssetsController < V1::ApplicationController
       return
     end
 
-    # Generate public_id
-    public_id = "#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}_#{Time.now.to_i}"
+    asset_type = params[:type].presence || AssetConstants::AssetType::GENERAL
+    resource_model = params[:resource_model].presence
+    resource_id = params[:resource_id].presence
+    duration_secs = params[:duration_secs]
+
+    # Generate storage_key
+    storage_key = "#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}_#{Time.now.to_i}"
 
     # Upload to storage service
     result = StorageService::Client.upload(
       file,
-      public_id: public_id,
-      folder: params[:category] || "profile",
+      storage_key: storage_key,
+      folder: params[:folder] || asset_type,
       resource_type: determine_resource_type(file),
       metadata: {
         user_id: current_user.id.to_s,
@@ -56,17 +61,19 @@ class V1::AssetsController < V1::ApplicationController
     )
 
     # Find or create asset
-    asset = Asset.find_or_initialize_by(public_id: result[:public_id])
+    asset = Asset.find_or_initialize_by(storage_key: result[:storage_key])
     asset.assign_attributes(
-      name: result[:public_id],
+      name: result[:storage_key],
       url: result[:url],
-      category: params[:category] || "profile",
+      type: asset_type,
       format: determine_asset_format(file),
-      size: result[:bytes],
-      source: "upload",
-      user: current_user,
-      public_id: result[:public_id],
-      extension: result[:format] || File.extname(file.original_filename).delete(".")
+      size_bytes: result[:bytes],
+      duration_secs: duration_secs,
+      source: AssetConstants::AssetSource::UPLOAD,
+      resource_model: resource_model,
+      resource_id: resource_id,
+      storage_key: result[:storage_key],
+      extension: result[:format] || File.extname(file.original_filename).delete("."),
     )
 
     if asset.save
@@ -76,7 +83,7 @@ class V1::AssetsController < V1::ApplicationController
         data: {
           asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes],
           storage_details: {
-            public_id: result[:public_id],
+            storage_key: result[:storage_key],
             bytes: result[:bytes],
             format: result[:format]
           }
@@ -84,7 +91,7 @@ class V1::AssetsController < V1::ApplicationController
       )
     else
       StorageService::Client.delete_later(
-        result[:public_id],
+        result[:storage_key],
         resource_type: result[:resource_type]
       )
 
@@ -214,7 +221,7 @@ class V1::AssetsController < V1::ApplicationController
   end
 
   def asset_params
-    params.require(:asset).permit(:name, :url, :category, :format, :extension, :size, :source, :record_id, :record_type, :user_id, :public_id)
+    params.require(:asset).permit(:name, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :resource_model, :resource_id)
   end
 
   def determine_resource_type(file)
@@ -223,7 +230,7 @@ class V1::AssetsController < V1::ApplicationController
     case extension
     when "jpg", "jpeg", "png", "gif", "webp", "svg"
       "image"
-    when "mp4", "mov", "avi", "webm", "mkv"
+    when "mp4", "mov", "avi", "webm", "mkv", "mp3", "wav", "m4a", "aac", "ogg", "flac"
       "video"
     when "pdf", "doc", "docx", "txt", "rtf"
       "raw"
@@ -233,15 +240,19 @@ class V1::AssetsController < V1::ApplicationController
   end
 
   def determine_asset_format(file)
-    resource_type = determine_resource_type(file)
+    extension = File.extname(file.original_filename).delete(".").downcase
 
-    case resource_type
-    when "image", "video"
-      resource_type
-    when "raw"
-      "doc"
+    case extension
+    when "jpg", "jpeg", "png", "gif", "webp", "svg"
+      AssetConstants::AssetFormat::IMAGE
+    when "mp3", "wav", "m4a", "aac", "ogg", "flac"
+      AssetConstants::AssetFormat::AUDIO
+    when "mp4", "mov", "avi", "webm", "mkv"
+      AssetConstants::AssetFormat::VIDEO
+    when "pdf", "doc", "docx", "txt", "rtf"
+      AssetConstants::AssetFormat::DOC
     else
-      "unknown"
+      nil
     end
   end
 end

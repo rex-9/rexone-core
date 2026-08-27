@@ -2,9 +2,10 @@
 
 module AssetConstants
   module AssetFormat
-    IMAGE   = "image".freeze
-    VIDEO   = "video".freeze
-    DOC     = "doc".freeze
-    UNKNOWN = "unknown".freeze
+    IMAGE = "image".freeze
+    AUDIO = "audio".freeze
+    VIDEO = "video".freeze
+    DOC   = "doc".freeze
+    ALL   = [ IMAGE, AUDIO, VIDEO, DOC ].freeze
   end
 end
