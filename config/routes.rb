@@ -35,9 +35,10 @@ Rails.application.routes.draw do
   # Separate from the versioned application API.
   # Administrate is intended for Super Admin access.
   namespace :admin do
-    resources :assets, only: %i[index show new create edit update destroy]
     resources :users, only: %i[index show new create edit update destroy]
+    resources :assets, only: %i[index show new create edit update destroy]
     resources :accesses, only: %i[index show new create edit update destroy]
+    resources :feedbacks, only: %i[index show new create edit update destroy]
 
     namespace :iam do
       resources :permissions, only: %i[index show new create edit update destroy]
@@ -118,10 +119,10 @@ Rails.application.routes.draw do
 
     # ===== ADMIN API =====
     # React Admin Dashboard.
-    # Requires an admin role ("admin" or a role ending with "_admin") plus normal resource permissions.
+    # Requires admin role + normal resource permissions.
     namespace :admin do
       # API-only: no new/edit needed
-      resources :users, only: %i[index show create update] do
+      resources :users, only: %i[index show create update destroy] do
         # collection do
         #   get    :read_teaching_users, path: "teachers" # GET /v1/admin/users/teachers # V1::Admin::UsersController#read_teaching_users
         #   post   :create_users
@@ -173,7 +174,12 @@ Rails.application.routes.draw do
           get :read_templates, path: "templates"
         end
       end
+
+      resources :feedbacks, only: %i[index show update destroy]
     end
+
+    # ===== FEEDBACK =====
+    resources :feedbacks, only: %i[create index show]
 
     # ===== IAM =====
     namespace :iam do

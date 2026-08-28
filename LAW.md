@@ -60,11 +60,18 @@
   - **Delete**: `destroy_*` (or standard `destroy`) $\rightarrow$ maps to `"delete"` action
 
 ### 3.3 Role Hierarchy & Administration Access (`/v1/admin/`)
-- A user can only access `/v1/admin/` routes if their assigned role contains `"admin"` in its name.
-- Admin access is strictly governed by IAM permissions:
-  - `super_admin`: Full access across all administration resources.
-  - `admin`: Full access EXCEPT for `users` and `iam` (user administration, role/permission management).
-  - Custom roles: Access strictly granted based on their explicit IAM permissions.
+The RBAC system defines a strict three-tier hierarchy for administration:
+
+1. **`super_admin` (Full System Authority)**:
+   - Complete, unrestricted access across all resources, endpoints, users, and IAM governance.
+2. **`admin` (Standard Administrator)**:
+   - Full operational access across all domain resources (`feedbacks`, `payments`, `ai`, `assets`, `logs`, `notifications`).
+   - **Strict Restriction**: Restricted from managing `users` and `iam` (roles, permissions, role assignments).
+3. **Partial Admin (`*_admin` Suffix Naming Law)**:
+   - Designed for scoped administrative access where a user has the default `user` role plus one or more specific `*_admin` roles (e.g. `feedback_admin`, `payment_admin`, `ai_admin`, `content_admin`).
+   - **Creation Law**: When creating partial admin roles, always use the `_admin` suffix in the role name (e.g. `feedback_admin`).
+   - **Access Scope**: Scoped exclusively to the specific resources granted by that role's IAM permissions (e.g. `read_feedbacks` & `update_feedbacks`).
+   - In frontend clients (Web), partial admins only see the admin sidebar navigation items corresponding to the `read_<resource>` permissions of their assigned `*_admin` roles.
 
 ---
 

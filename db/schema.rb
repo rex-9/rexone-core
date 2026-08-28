@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_27_075325) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -116,6 +116,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_075325) do
     t.index ["updated_by_id"], name: "index_chat_rooms_on_updated_by_id"
     t.index ["user_id", "created_at"], name: "index_chat_rooms_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_chat_rooms_on_user_id"
+  end
+
+  create_table "feedbacks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.text "admin_notes"
+    t.string "app_version"
+    t.string "browser"
+    t.string "category", default: "general", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.string "device"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "os"
+    t.string "page"
+    t.string "platform", default: "web", null: false
+    t.string "priority", default: "normal", null: false
+    t.integer "rating"
+    t.string "status", default: "new", null: false
+    t.uuid "undiscarded_by_id"
+    t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.uuid "user_id"
+    t.index ["category"], name: "index_feedbacks_on_category"
+    t.index ["created_at"], name: "index_feedbacks_on_created_at"
+    t.index ["created_by_id"], name: "index_feedbacks_on_created_by_id"
+    t.index ["discarded_at"], name: "index_feedbacks_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_feedbacks_on_discarded_by_id"
+    t.index ["platform"], name: "index_feedbacks_on_platform"
+    t.index ["priority"], name: "index_feedbacks_on_priority"
+    t.index ["rating"], name: "index_feedbacks_on_rating"
+    t.index ["status"], name: "index_feedbacks_on_status"
+    t.index ["undiscarded_by_id"], name: "index_feedbacks_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_feedbacks_on_updated_by_id"
+    t.index ["user_id"], name: "index_feedbacks_on_user_id"
   end
 
   create_table "iam_permissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -990,6 +1026,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_075325) do
   add_foreign_key "chat_rooms", "users", column: "discarded_by_id"
   add_foreign_key "chat_rooms", "users", column: "undiscarded_by_id"
   add_foreign_key "chat_rooms", "users", column: "updated_by_id"
+  add_foreign_key "feedbacks", "users"
   add_foreign_key "iam_permissions", "users", column: "created_by_id"
   add_foreign_key "iam_permissions", "users", column: "discarded_by_id"
   add_foreign_key "iam_permissions", "users", column: "undiscarded_by_id"
