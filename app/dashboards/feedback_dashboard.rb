@@ -42,11 +42,11 @@ class FeedbackDashboard < Administrate::BaseDashboard
   # By default, it's limited to four items to reduce clutter on index pages.
   # Feel free to add, remove, or rearrange items.
   COLLECTION_ATTRIBUTES = %i[
-    user
+    rating
+    category
+    priority
     content
     admin_notes
-    rating
-    priority
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES
