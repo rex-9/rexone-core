@@ -1,6 +1,6 @@
 # app/controllers/auth/confirmations_controller.rb
 class Auth::ConfirmationsController < Devise::ConfirmationsController
-  include SessionPlatform
+  include PlatformSession
 
   # GET /confirmation?confirmation_token=abcdef
   def show
@@ -94,7 +94,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
 
 
   def signup_active_session!(user:, token:)
-    key = "active_session:user:#{user.id}:#{session_platform}"
+    key = "active_session:user:#{user.id}:#{platform_session}"
     CacheService.write(key, token, expires_in: AppConfig::SESSION_TIMEOUT)
   rescue => e
     Rails.logger.error("#{ApplicationController::AUTH_LOG_PREFIX} Failed to sign up active session: #{e.message}")

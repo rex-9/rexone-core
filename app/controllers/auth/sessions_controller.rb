@@ -1,6 +1,6 @@
 # app/controllers/auth/sessions_controller.rb
 class Auth::SessionsController < Devise::SessionsController
-  include SessionPlatform
+  include PlatformSession
 
   LOG_PREFIX = "[Auth]".freeze
 
@@ -482,7 +482,7 @@ class Auth::SessionsController < Devise::SessionsController
     )
   end
 
-  def session_key_for(user_id, platform = session_platform)
+  def session_key_for(user_id, platform = platform_session)
     "active_session:user:#{user_id}:#{platform}"
   end
 

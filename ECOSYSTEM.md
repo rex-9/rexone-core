@@ -8,7 +8,10 @@ A unified, production-grade architectural blueprint spanning **Rexone Core** (Ba
 
 Across all three repositories, the architecture adheres to one uncompromising doctrine:
 
+> [!IMPORTANT]
 > **"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."**
+>
+> 📜 **Constitutional Law**: For strict repository-specific engineering constraints and architectural rules, see **[LAW.md](LAW.md)**. All developers and agents must adhere to these rules without exception.
 
 The Rexone platform provides a unified, battle-tested foundation where **any modern digital product** can be rapidly developed on top of ready-made capabilities: Identity & IAM, Commerce & Subscriptions, Background Queues, Asset Management, Real-Time WebSockets, Queued AI, Push Notifications, Product Analytics, Client Telemetry, In-App Upgrades, and Multi-Language Localization.
 
@@ -90,6 +93,7 @@ All tables use **UUID** primary keys (`gen_random_uuid()`), utilize **Discard** 
 | **AI / Chat**        | `Chat::Room`, `Chat::Message`                                                                | Conversational rooms, messages with roles (`user`, `assistant`), `ai_status` (`queued`, `processing`, `completed`, `failed`), system prompts, temperature, max tokens, metadata.                                 |
 | **Media**            | `Asset`                                                                                      | Unified media metadata (`storage_key` for Garage/S3/Cloudinary/Local, format, size_bytes, duration_secs, type, polymorphic resource model/id). |
 | **Telemetry**        | `Log::Client`                                                                                | Frontend error ingest (stack traces, device, OS, browser, URL, severity, occurrences, local/session storage keys, cookies, resolution status).                                                                   |
+| **Feedback**         | `Feedback`                                                                                   | Intelligent in-place feedback (1-10 rating, auto-inferred category: `bug`/`feature_request`/`improvement`/`general`, priority: `low`/`normal`/`high`/`urgent`, status, automated device/route telemetry).       |
 
 ### ⚙️ Services & Background Jobs (Solid Queue / Waka)
 
@@ -103,7 +107,33 @@ Heavy or external provider operations sit behind clean service interfaces and ex
 
 ### 🛡️ Active Platform Session Control
 
-`ApplicationController` inspects the `X-Platform` header (`web` or `mobile`) and validates against `CacheService.read("active_session:user:#{user_id}:#{platform}")`. This permits simultaneous web and mobile logins for the same user while invalidating duplicate sessions on the same platform type when a new sign-in occurs.
+`ApplicationController` inspects the `X-Platform` header (`web`, `android`, or `ios`) and validates against `CacheService.read("active_session:user:#{user_id}:#{platform}")`. This permits simultaneous logins across up to 3 concurrent active sessions (1 Web, 1 Android, 1 iOS) for the same user while invalidating duplicate sessions on the same platform type when a new sign-in occurs.
+
+### 🌟 The Revolutionary Smart Auth System (Zero Decision Fatigue)
+Unlike legacy systems that force users through frustrating decision trees ("Do you want to log in or sign up?", "Select SSO vs Email", "Enter password vs request magic link"), Rexone's authentication engine eliminates decision fatigue entirely:
+- **Unified Single-Field Entry**: The user simply enters their email or username. The system dynamically queries the account state (`/peek`) to infer whether to proceed with registration, prompt for their 6-digit passcode, route through email verification, or apply rate-limited security cooldowns.
+- **Frictionless Google SSO & Challenge Flows**: Seamlessly links OAuth accounts and requests password setup only when necessary, smoothly converting unconfirmed dropped registrations without jarring interruptions.
+- **Tri-Platform Concurrent Isolation**: Supports 3 distinct active sessions simultaneously (Web, Android, iOS) without logging users out across devices.
+
+### 💡 The Intelligent Frictionless Feedback System
+Inspired by our smart auth philosophy, the feedback system removes bureaucratic dropdowns, category selectors, and page redirects:
+- **In-Place Non-Intrusive Submission**: Users can share thoughts, report bugs, or give a 1-10 feeling rating from ANY page via a lightweight modal or bottom sheet without losing their place or facing page reloads.
+- **Automated Context & Telemetry Capture**: The client SDKs automatically attach active route/screen name, platform, browser, OS, viewport dimensions, and app version.
+- **Server-Side Smart Classification**: The backend automatically classifies the submission into `bug`, `feature_request`, `improvement`, or `general`, and calculates urgency/priority (`low`, `normal`, `high`, `urgent`) for streamlined admin triage.
+
+### 🔐 RBAC Architecture & Administrative Hierarchy
+The ecosystem employs a clean, unified Role-Based Access Control (RBAC) model across backend and frontend clients:
+
+1. **`super_admin` (Full Authority)**:
+   - Complete system-wide access to all resources, endpoints, and IAM management.
+   - Web client renders **ALL** navigation items in the admin sidebar.
+2. **`admin` (Standard Administrator)**:
+   - Full operational access across domain resources (`feedbacks`, `payments`, `ai`, `assets`, `logs`, `notifications`).
+   - **Strict Restriction**: Restricted from managing `users` and `iam`. The Web admin sidebar dynamically hides User Management and IAM navigation items.
+3. **Partial Admin (`*_admin` Suffix Naming Law)**:
+   - For scoped roles (e.g. `feedback_admin`, `payment_admin`, `ai_admin`), developers MUST name the role with the `_admin` suffix.
+   - Partial admins possess the base `user` role plus their specific `*_admin` role.
+   - **Client-Side Sidebar Visibility Law**: The admin sidebar dynamically renders **ONLY** the specific navigation items corresponding to the `read_<resource>` permissions of their assigned `*_admin` role (e.g. a user with `feedback_admin` only sees the Feedback admin item).
 
 ---
 
@@ -186,6 +216,7 @@ All three pillars of the Rexone platform are fully aligned at **100% feature par
 | **Stripe: Checkout Session Handoff**                     |      ✅       |    ✅ (Redirect)     |       ✅ (WebView)       |
 | **Stripe: Subscriptions & Cancellation/Resumption**      |      ✅       |          ✅          |            ✅            |
 | **Stripe: Transaction History**                          |      ✅       |          ✅          |            ✅            |
+| **Intelligent Frictionless Feedback System (1-10)**      |      ✅       |          ✅          |            ✅            |
 | **AI: Conversational Rooms & Message History**           |      ✅       |          ✅          |            ✅            |
 | **AI: Queued Background Execution (DeepSeek)**           |      ✅       |          ✅          |            ✅            |
 | **AI: Real-Time WebSocket Completion Alerts**            |      ✅       |          ✅          |            ✅            |
@@ -204,8 +235,8 @@ All three pillars of the Rexone platform are fully aligned at **100% feature par
 - **Standard Request Headers**:
   ```http
   Authorization: Bearer <JWT_TOKEN>
-  X-Platform: web | mobile
-  X-Locale: en | my
+  X-Platform: web | android | ios
+  X-Locale: en | my | es
   Accept-Language: en | my
   Content-Type: application/json
   ```

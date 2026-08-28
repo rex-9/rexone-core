@@ -17,13 +17,16 @@ Built under a simple creed: **clear in thought, exact in structure, simple in us
 
 **API-first · Modular · Observable · Queue-aware · Built to grow**
 
-[Explore the foundation](#feature-map) · [Ecosystem Architecture](ECOSYSTEM.md) · [Run it locally](#getting-started) · [Open the dashboards](#operations-center) · [Meet the architecture](#architecture)
+[Explore the foundation](#feature-map) · [Ecosystem Architecture](ECOSYSTEM.md) · [Development Law](LAW.md) · [Run it locally](#getting-started) · [Open the dashboards](#operations-center) · [Meet the architecture](#architecture)
 
 </div>
 
 ---
 
-> 🏛️ **Unified Ecosystem**: For the complete cross-platform architecture, 100% feature parity matrix, and communication protocols between Core, Web, and Mobile, see **[ECOSYSTEM.md](ECOSYSTEM.md)**.
+> [!IMPORTANT]
+> **🏛️ Unified Ecosystem**: For the complete cross-platform architecture, feature parity matrix, and communication protocols between Core, Web, and Mobile, see **[ECOSYSTEM.md](ECOSYSTEM.md)**.
+>
+> **📜 Constitutional Law**: All development must strictly adhere to the architecture, service boundary, and API envelope laws in **[LAW.md](LAW.md)**. Zero exceptions.
 
 ## Why Rexone Core?
 
@@ -155,7 +158,10 @@ Authorization is modeled explicitly instead of being buried in controller condit
 - Users receive roles through `Iam::UserRole`.
 - Roles receive resource/action permissions through `Iam::RolePermission`.
 - Permissions cover operations such as `create`, `read`, `update`, and `delete`.
-- `admin` and `super_admin` roles support privileged product and operational workflows.
+- **Three-Tier Administrative Hierarchy**:
+  - `super_admin`: Full, unrestricted authority across all resources, endpoints, and IAM governance.
+  - `admin`: Full operational authority across domain resources (`feedbacks`, `payments`, `ai`, `assets`, `logs`), strictly restricted from managing `users` and `iam`.
+  - Partial admins (`*_admin` naming convention): Roles named with the `_admin` suffix (e.g. `feedback_admin`, `payment_admin`) granted to users with the base `user` role, granting scoped access strictly to their permitted resources.
 - New users receive the default user role automatically.
 
 This gives small products a sensible starting policy and growing products a clean path to granular authorization.

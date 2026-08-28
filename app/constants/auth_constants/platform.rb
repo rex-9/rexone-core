@@ -2,8 +2,9 @@
 
 module AuthConstants
   module Platform
-    WEB    = "web".freeze
-    MOBILE = "mobile".freeze
-    ALL    = [WEB, MOBILE].freeze
+    WEB     = "web".freeze
+    ANDROID = "android".freeze
+    IOS     = "ios".freeze
+    ALL     = [ WEB, ANDROID, IOS ].freeze
   end
 end
