@@ -20,6 +20,7 @@ module Iam
       notifications
       ai
       clients
+      feedbacks
     ].freeze
 
     ACTIONS = %w[read create update delete].freeze

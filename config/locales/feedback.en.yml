@@ -1,0 +1,7 @@
+en:
+  feedback:
+    created: "Thank you for your feedback!"
+    fetched: "Feedback retrieved successfully"
+    updated: "Feedback updated successfully"
+    destroyed: "Feedback deleted successfully"
+    not_found: "Feedback not found"

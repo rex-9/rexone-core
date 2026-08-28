@@ -81,7 +81,9 @@ user_permissions = [
   # Users - full CRUD
   { resource: "users", actions: [ "read", "create", "update", "delete" ] },
   # AI - full CRUD
-  { resource: "ai", actions: [ "read", "create", "update", "delete" ] }
+  { resource: "ai", actions: [ "read", "create", "update", "delete" ] },
+  # Feedbacks - create and read
+  { resource: "feedbacks", actions: [ "create", "read" ] }
 ]
 
 user_permissions.each do |entry|
