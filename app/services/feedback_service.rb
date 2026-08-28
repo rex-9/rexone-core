@@ -3,38 +3,39 @@
 class FeedbackService
   LOG_PREFIX = "[Feedback]".freeze
 
-  # Heuristic keyword matching for smart intent detection without user decision fatigue
-  BUG_KEYWORDS = %w[
-    bug error crash broken fail failing exception freeze frozen stuck glitch
-    not_working doesn't_work cannot can't 500 404 timeout blank
-  ].freeze
-
-  FEATURE_KEYWORDS = %w[
-    feature suggest suggestion request please_add wish would_love idea
-    could_you_add integration
-  ].freeze
-
-  IMPROVEMENT_KEYWORDS = %w[
-    improve improvement slow faster optimize design ux ui layout confusing
-    hard_to enhance better
-  ].freeze
-
-  URGENT_KEYWORDS = %w[
-    urgent critical blocker emergency immediately security hack leak
-    lost_money charged_twice cannot_login cannot_access
-  ].freeze
-
   class << self
+    def keywords_for(key)
+      I18n.available_locales.flat_map do |locale|
+        Array(I18n.t("feedback.triage.#{key}", locale: locale, default: []))
+      end.uniq.compact
+    end
+
+    def bug_keywords
+      keywords_for(:bug_keywords)
+    end
+
+    def feature_keywords
+      keywords_for(:feature_keywords)
+    end
+
+    def improvement_keywords
+      keywords_for(:improvement_keywords)
+    end
+
+    def urgent_keywords
+      keywords_for(:urgent_keywords)
+    end
+
     def infer_category(content)
       return FeedbackConstants::Category::GENERAL if content.blank?
 
-      normalized = content.to_s.downcase.gsub(/[\s-]+/, "_")
+      normalized = normalize_text(content)
 
-      if BUG_KEYWORDS.any? { |kw| normalized.include?(kw) }
+      if bug_keywords.any? { |kw| match_keyword?(normalized, kw) }
         FeedbackConstants::Category::BUG
-      elsif FEATURE_KEYWORDS.any? { |kw| normalized.include?(kw) }
+      elsif feature_keywords.any? { |kw| match_keyword?(normalized, kw) }
         FeedbackConstants::Category::FEATURE_REQUEST
-      elsif IMPROVEMENT_KEYWORDS.any? { |kw| normalized.include?(kw) }
+      elsif improvement_keywords.any? { |kw| match_keyword?(normalized, kw) }
         FeedbackConstants::Category::IMPROVEMENT
       else
         FeedbackConstants::Category::GENERAL
@@ -42,19 +43,19 @@ class FeedbackService
     end
 
     def infer_priority(content, rating)
-      normalized = content.to_s.downcase.gsub(/[\s-]+/, "_")
+      normalized = normalize_text(content)
 
       # Explicit urgency cues
-      return FeedbackConstants::Priority::URGENT if URGENT_KEYWORDS.any? { |kw| normalized.include?(kw) }
+      return FeedbackConstants::Priority::URGENT if urgent_keywords.any? { |kw| match_keyword?(normalized, kw) }
 
       # Critical sentiment cues: very low rating (1-2) with bug cues
-      if rating.present? && rating <= 2 && BUG_KEYWORDS.any? { |kw| normalized.include?(kw) }
+      if rating.present? && rating <= 2 && bug_keywords.any? { |kw| match_keyword?(normalized, kw) }
         return FeedbackConstants::Priority::HIGH
       end
 
-      if BUG_KEYWORDS.any? { |kw| normalized.include?(kw) }
+      if bug_keywords.any? { |kw| match_keyword?(normalized, kw) }
         FeedbackConstants::Priority::HIGH
-      elsif IMPROVEMENT_KEYWORDS.any? { |kw| normalized.include?(kw) }
+      elsif improvement_keywords.any? { |kw| match_keyword?(normalized, kw) }
         FeedbackConstants::Priority::NORMAL
       else
         FeedbackConstants::Priority::LOW
@@ -86,6 +87,17 @@ class FeedbackService
 
       feedback.save!
       feedback
+    end
+
+    private
+
+    def normalize_text(content)
+      content.to_s.downcase.gsub(/[\s-]+/, "_")
+    end
+
+    def match_keyword?(normalized_text, keyword)
+      kw = keyword.to_s.downcase.gsub(/[\s-]+/, "_")
+      normalized_text.include?(kw)
     end
   end
 end
