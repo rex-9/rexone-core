@@ -1,6 +1,6 @@
 # app/controllers/auth/sessions_controller.rb
 class Auth::SessionsController < Devise::SessionsController
-  include SessionPlatform
+  include PlatformSession
 
   LOG_PREFIX = "[Auth]".freeze
 

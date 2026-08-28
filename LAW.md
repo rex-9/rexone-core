@@ -23,6 +23,12 @@
   - `unit_price_amount` (integer cents / smallest currency unit) on `payment_products`.
 - Nulls are strictly preferred over "unknown" string fallbacks.
 
+### 1.4 Three Concurrent Platform Sessions (`web`, `android`, `ios`)
+- **Rule**: The platform taxonomy defines THREE isolated platform sessions: `AuthConstants::Platform::WEB` (`"web"`), `AuthConstants::Platform::ANDROID` (`"android"`), and `AuthConstants::Platform::IOS` (`"ios"`).
+- A single user account can hold up to **3 active sessions concurrently** (one on Web, one on Android, and one on iOS).
+- Logging in or replacing a session on Android will NOT revoke or invalidate an active session on iOS or Web, and vice versa. Each platform maintains its own isolated session key: `active_session:user:<user_id>:<platform>`.
+
+
 ---
 
 ## 🖼️ 2. Distributed Centralized Assets Law

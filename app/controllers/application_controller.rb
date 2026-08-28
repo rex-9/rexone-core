@@ -6,7 +6,7 @@ class ApplicationController < ActionController::API
   include Pagy::Method
   include Authorization
   include ApplicationHelper
-  include SessionPlatform
+  include PlatformSession
 
   around_action :switch_locale
   before_action :enforce_active_platform_session!, :set_current_auditor

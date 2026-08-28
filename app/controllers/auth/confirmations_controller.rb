@@ -1,6 +1,6 @@
 # app/controllers/auth/confirmations_controller.rb
 class Auth::ConfirmationsController < Devise::ConfirmationsController
-  include SessionPlatform
+  include PlatformSession
 
   # GET /confirmation?confirmation_token=abcdef
   def show
