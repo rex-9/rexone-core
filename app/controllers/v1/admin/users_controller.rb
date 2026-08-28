@@ -4,7 +4,14 @@ class V1::Admin::UsersController < V1::ApplicationController
 
   before_action :set_active_user, only: %i[show update discard]
   before_action :set_user_including_discarded, only: :undiscard
-  before_action :super_admin_required!
+  before_action :super_admin_required!, only: %i[
+    show
+    create
+    update
+    discard
+    undiscard
+    read_discarded
+  ]
 
   # GET /users?page=2&limit=25
   def index
