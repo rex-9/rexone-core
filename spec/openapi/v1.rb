@@ -613,13 +613,6 @@ module Openapi
             errors: [ 400, 500, 503 ]
           )
         },
-        "/v1/users" => {
-          get: operation(tags: "Users", summary: "List searchable users",
-                         parameters: [
-                           query_parameter(:limit, type: :integer, minimum: 1),
-                           query_parameter(:search, type: :string)
-                         ], errors: [ 401, 403 ])
-        },
         "/v1/users/current" => {
           get: operation(tags: "Users", summary: "Get the current user", errors: [ 401 ])
         },
