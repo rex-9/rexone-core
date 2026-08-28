@@ -158,7 +158,10 @@ Authorization is modeled explicitly instead of being buried in controller condit
 - Users receive roles through `Iam::UserRole`.
 - Roles receive resource/action permissions through `Iam::RolePermission`.
 - Permissions cover operations such as `create`, `read`, `update`, and `delete`.
-- `admin` and `super_admin` roles support privileged product and operational workflows.
+- **Three-Tier Administrative Hierarchy**:
+  - `super_admin`: Full, unrestricted authority across all resources, endpoints, and IAM governance.
+  - `admin`: Full operational authority across domain resources (`feedbacks`, `payments`, `ai`, `assets`, `logs`), strictly restricted from managing `users` and `iam`.
+  - Partial admins (`*_admin` naming convention): Roles named with the `_admin` suffix (e.g. `feedback_admin`, `payment_admin`) granted to users with the base `user` role, granting scoped access strictly to their permitted resources.
 - New users receive the default user role automatically.
 
 This gives small products a sensible starting policy and growing products a clean path to granular authorization.
