@@ -138,3 +138,13 @@
 
 - **100% Passing Tests**: Full RSpec suite (`bundle exec rspec`) must pass with 0 failures before any commit.
 - **OpenAPI / Swagger Sync**: OpenAPI definitions in `spec/openapi/` and generated docs (`swagger/v1/swagger.yaml`) must be updated and kept in sync with every API change.
+
+---
+
+## 📚 10. Documentation Synchronization Law
+
+- **Rule**: After EVERY feature creation, modification, or bugfix:
+  - **`README.md`** MUST be updated with newly added endpoints, dashboard routes, jobs, or configuration variables.
+  - **`ECOSYSTEM.md`** MUST be updated if changes affect cross-platform feature parity, shared contracts, WebSocket events, or communication protocols between Core, Web, and Mobile.
+  - **`LAW.md`** represents the non-negotiable constitutional framework; it should ONLY be modified when establishing, refining, or expanding fundamental architectural laws and engineering standards.
+
