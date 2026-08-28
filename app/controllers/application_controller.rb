@@ -68,6 +68,6 @@ class ApplicationController < ActionController::API
   end
 
   def session_key(user_id)
-    "active_session:user:#{user_id}:#{session_platform}"
+    "active_session:user:#{user_id}:#{platform_session}"
   end
 end

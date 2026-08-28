@@ -1,4 +1,4 @@
-# app/controllers/concerns/session_platform.rb
+# app/controllers/concerns/platform_session.rb
 
 # Shared concern for resolving the client platform (web/android/ios) from the
 # X-Platform header or query parameter. Defaults to 'web' if missing or invalid.
@@ -7,7 +7,7 @@ module PlatformSession
 
   private
 
-  def session_platform
+  def platform_session
     value = request.headers[AuthConstants::Headers::PLATFORM].presence ||
             params[:platform].presence ||
             AuthConstants::Platform::WEB

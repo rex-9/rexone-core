@@ -406,7 +406,7 @@ class Auth::SessionsController < Devise::SessionsController
 
 
 
-  def session_key_for(user_id, platform = session_platform)
+  def session_key_for(user_id, platform = platform_session)
     "active_session:user:#{user_id}:#{platform}"
   end
 
