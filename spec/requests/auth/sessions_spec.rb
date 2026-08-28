@@ -59,11 +59,21 @@ RSpec.describe "Authentication sessions", type: :request do
       expect(NotificationService::Center).to have_received(:sign_in_alert).with(user_id: user.id, name: user.name)
     end
 
-    it "signs in by username and isolates mobile sessions" do
-      post "/signin", params: { user: { signin_key: user.username, password: "password123" } }, headers: { "X-Platform" => "mobile" }
+    it "signs in by username and isolates android sessions" do
+      post "/signin", params: { user: { signin_key: user.username, password: "password123" } }, headers: { "X-Platform" => "android" }
       expect(response).to have_http_status(:ok)
       expect(CacheService).to have_received(:write).with(
-        "active_session:user:#{user.id}:mobile",
+        "active_session:user:#{user.id}:android",
+        anything,
+        expires_in: AppConfig::SESSION_TIMEOUT
+      )
+    end
+
+    it "signs in by username and isolates ios sessions" do
+      post "/signin", params: { user: { signin_key: user.username, password: "password123" } }, headers: { "X-Platform" => "ios" }
+      expect(response).to have_http_status(:ok)
+      expect(CacheService).to have_received(:write).with(
+        "active_session:user:#{user.id}:ios",
         anything,
         expires_in: AppConfig::SESSION_TIMEOUT
       )
