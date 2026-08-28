@@ -175,6 +175,8 @@ class Auth::SessionsController < Devise::SessionsController
       return if reject_discarded_account!(user)
 
       if user.confirmed?
+        save_google_profile_picture_if_missing(user, user_info["picture"])
+
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
         NotificationService::Center.sign_in_alert(
@@ -257,19 +259,7 @@ class Auth::SessionsController < Devise::SessionsController
       )
 
       if user.save
-        if challenge_data["picture"].present?
-          asset = user.assets.find_or_initialize_by(
-            type: AssetConstants::AssetType::AVATAR,
-            source: AssetConstants::AssetSource::GOOGLE
-          )
-          asset.assign_attributes(
-            name: AssetConstants::AssetName.google_profile(user.id),
-            url: challenge_data["picture"],
-            format: AssetConstants::AssetFormat::IMAGE,
-            resource: user
-          )
-          asset.save
-        end
+        save_google_profile_picture_if_missing(user, challenge_data["picture"])
 
         clear_google_challenge!(challenge_token)
 
@@ -310,25 +300,38 @@ class Auth::SessionsController < Devise::SessionsController
     )
 
 
-    if user.save
-      # Save google profile picture
-      if challenge_data["picture"].present?
-        asset = Asset.new(
-          name: AssetConstants::AssetName.google_profile(user.id),
-          url: challenge_data["picture"],
-          type: AssetConstants::AssetType::AVATAR,
-          format: AssetConstants::AssetFormat::IMAGE,
-          source: AssetConstants::AssetSource::GOOGLE,
-          resource: user
-        )
+    created_user = true
 
-        unless asset.save
-          Rails.logger.warn(
-            "#{LOG_PREFIX} Failed to save Google profile picture " \
-            "for user #{user.id}: #{asset.errors.full_messages}"
-          )
-        end
+    begin
+      user_saved = user.save
+    rescue ActiveRecord::RecordNotUnique
+      created_user = false
+      user = User.with_discarded.find_by(email: challenge_data["email"])
+
+      unless user
+        render_json_response(
+          status_code: 422,
+          message: auth_message(MessageService::Auth::GOOGLE_AUTH_FAILED),
+          error: auth_message(MessageService::Auth::GOOGLE_AUTH_FAILED)
+        )
+        return
       end
+
+      return if reject_discarded_account!(user)
+
+      user.assign_attributes(
+        username: user.username.presence || sanitized_username,
+        name: challenge_data["name"].presence || user.name,
+        password: password,
+        password_confirmation: password,
+        provider: AuthConstants::Provider::GOOGLE,
+        confirmed_at: user.confirmed_at || Time.current
+      )
+      user_saved = user.save
+    end
+
+    if user_saved
+      save_google_profile_picture_if_missing(user, challenge_data["picture"])
 
       clear_google_challenge!(challenge_token)
 
@@ -341,7 +344,7 @@ class Auth::SessionsController < Devise::SessionsController
       )
 
       render_json_response(
-        status_code: 201,
+        status_code: created_user ? 201 : 200,
         message: auth_message(MessageService::Auth::ACCOUNT_CREATED_AND_SIGNED_IN),
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes],
@@ -436,7 +439,48 @@ class Auth::SessionsController < Devise::SessionsController
     end
   end
 
+  def save_google_profile_picture_if_missing(user, picture_url)
+    return if picture_url.blank?
+    return if user.assets.uploaded.exists?(type: AssetConstants::AssetType::AVATAR)
 
+    storage_result = StorageService::Client.upload(
+      picture_url,
+      storage_key: AssetConstants::AssetName.google_profile(user.id),
+      folder: AssetConstants::AssetType::AVATAR,
+      resource_type: AssetConstants::AssetFormat::IMAGE,
+      metadata: {
+        user_id: user.id.to_s,
+        source: AssetConstants::AssetSource::GOOGLE
+      }
+    )
+
+    asset = user.assets.find_or_initialize_by(storage_key: storage_result[:storage_key])
+    asset.assign_attributes(
+      name: AssetConstants::AssetName.google_profile(user.id),
+      url: storage_result[:url],
+      type: AssetConstants::AssetType::AVATAR,
+      format: AssetConstants::AssetFormat::IMAGE,
+      extension: storage_result[:format],
+      size_bytes: storage_result[:bytes],
+      source: AssetConstants::AssetSource::UPLOAD,
+      resource: user
+    )
+
+    if asset.save
+      user.assets.reset
+      return
+    end
+
+    Rails.logger.warn(
+      "#{LOG_PREFIX} Failed to save Google profile picture " \
+      "for user #{user.id}: #{asset.errors.full_messages}"
+    )
+  rescue StorageService::Error => e
+    Rails.logger.warn(
+      "#{LOG_PREFIX} Failed to upload Google profile picture " \
+      "for user #{user.id}: #{e.message}"
+    )
+  end
 
   def session_key_for(user_id, platform = session_platform)
     "active_session:user:#{user_id}:#{platform}"

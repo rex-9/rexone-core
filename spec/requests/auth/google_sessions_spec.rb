@@ -6,6 +6,15 @@ RSpec.describe "Google authentication", type: :request do
     allow(NotificationService::Center).to receive(:welcome)
     allow(CacheService).to receive(:write)
     allow(CacheService).to receive(:delete)
+    allow(StorageService::Client).to receive(:upload) do |_file, options|
+      {
+        storage_key: "avatar/#{options[:storage_key]}",
+        url: "https://cdn.example.com/#{options[:storage_key]}.jpg",
+        bytes: 1234,
+        format: "jpg",
+        resource_type: "image"
+      }
+    end
   end
 
   describe "POST /signin/google" do
@@ -17,6 +26,34 @@ RSpec.describe "Google authentication", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response_data.dig("user", "id")).to eq(user.id)
       expect(NotificationService::Center).to have_received(:sign_in_alert)
+    end
+
+    it "uploads a Google avatar when the existing account only has a Google image URL" do
+      user = create(:user, :google_provider, email: "google@example.com")
+      create(
+        :asset,
+        source: AssetConstants::AssetSource::GOOGLE,
+        storage_key: nil,
+        resource_model: "user",
+        resource_id: user.id,
+        url: "https://lh3.googleusercontent.com/stale-avatar"
+      )
+      stub_google_token(email: user.email, name: user.name, picture: "https://example.com/avatar.jpg")
+
+      post "/signin/google", params: { token: "google-token" }
+
+      expect(response).to have_http_status(:ok)
+      expect(user.reload.get_profile_pic_url).to eq(
+        "https://cdn.example.com/#{AssetConstants::AssetName.google_profile(user.id)}.jpg"
+      )
+      expect(StorageService::Client).to have_received(:upload).with(
+        "https://example.com/avatar.jpg",
+        hash_including(
+          storage_key: AssetConstants::AssetName.google_profile(user.id),
+          folder: AssetConstants::AssetType::AVATAR,
+          resource_type: AssetConstants::AssetFormat::IMAGE
+        )
+      )
     end
 
     it "rejects a discarded account returned by Google" do
@@ -91,10 +128,18 @@ RSpec.describe "Google authentication", type: :request do
       expect(response).to have_http_status(:created)
       expect(user).to be_confirmed
       expect(user).to have_attributes(username: "new_user", provider: "google")
-      expect(user.assets.google.find_by(type: AssetConstants::AssetType::AVATAR)).to have_attributes(
+      expect(user.assets.uploaded.find_by(type: AssetConstants::AssetType::AVATAR)).to have_attributes(
         name: AssetConstants::AssetName.google_profile(user.id),
-        url: "https://example.com/avatar.jpg",
+        url: "https://cdn.example.com/#{AssetConstants::AssetName.google_profile(user.id)}.jpg",
         format: AssetConstants::AssetFormat::IMAGE
+      )
+      expect(StorageService::Client).to have_received(:upload).with(
+        "https://example.com/avatar.jpg",
+        hash_including(
+          storage_key: AssetConstants::AssetName.google_profile(user.id),
+          folder: AssetConstants::AssetType::AVATAR,
+          resource_type: AssetConstants::AssetFormat::IMAGE
+        )
       )
       expect(NotificationService::Center).to have_received(:welcome).with(user_id: user.id, name: user.name)
       expect(CacheService).to have_received(:delete).with("google_signin:challenge:challenge")
@@ -126,6 +171,30 @@ RSpec.describe "Google authentication", type: :request do
       expect(response_data["token"]).to be_present
       expect(NotificationService::Center).to have_received(:welcome).with(user_id: user.id, name: "New Google User")
       expect(CacheService).to have_received(:delete).with("google_signin:challenge:challenge")
+    end
+
+    it "completes with the existing account when duplicate challenge submits race" do
+      create(:role, name: "user")
+      user = build(:user, email: "new.user@example.com")
+      allow(CacheService).to receive(:read).and_return(challenge)
+      allow_any_instance_of(User).to receive(:save).and_wrap_original do |original, *args|
+        record = original.receiver
+
+        if !record.persisted? && record.email == "new.user@example.com"
+          user.save!
+          raise ActiveRecord::RecordNotUnique
+        end
+
+        original.call(*args)
+      end
+
+      expect do
+        post "/signin/google/complete", params: { challenge_token: "challenge", password: "password123" }
+      end.to change(User, :count).by(1)
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.dig("user", "id")).to eq(user.id)
+      expect(response_data["token"]).to be_present
     end
 
     it "rejects an account discarded while its challenge was outstanding" do
