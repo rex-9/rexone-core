@@ -16,9 +16,12 @@ module Authorization
   end
 
   def authorize_action!
-    admin_required! if admin_api_controller?
+    if admin_api_controller? && !current_user.admin?
+      admin_required!
+      return
+    end
 
-    return if current_user.can?(permission_action, controller_name)
+    return if current_user.can?(permission_action, controller_name, admin_scope: admin_api_controller?)
 
     render_json_response(
       status_code: 403,

@@ -78,7 +78,7 @@ module PushNotiService
     private
 
     def send_notification(payload)
-      return false if @disabled
+      return { "disabled" => true } if @disabled
 
       Rails.logger.info("#{LOG_PREFIX} Payload: #{payload.to_json}")
 

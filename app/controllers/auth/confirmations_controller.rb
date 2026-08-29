@@ -19,12 +19,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
     user = User.find_by("email = :signin_key OR username = :signin_key", signin_key: params[:signin_key])
     if user
       if !user.confirmed?
-        user.generate_confirmation_code
         user.send_confirmation_instructions
-        NotificationService::Center.confirmation_email(
-          email: user.email,
-          code: user.confirmation_code
-        )
 
         render_json_response(
           status_code: 200,

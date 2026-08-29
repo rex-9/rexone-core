@@ -28,6 +28,16 @@ RSpec.describe "Authentication registration", type: :request do
       expect(response_data.dig("user", "encrypted_password")).to be_nil
     end
 
+    it "dispatches a 6-digit confirmation code email upon signup" do
+      expect(NotificationService).to receive(:confirmation_email).with(
+        email: "new@example.com",
+        code: a_string_matching(/\A\d{6}\z/)
+      )
+
+      post "/signup", params: { user: valid_attributes }
+      expect(response).to have_http_status(:created)
+    end
+
     it "normalizes email whitespace and casing" do
       post "/signup", params: { user: valid_attributes.merge(email: "  NEW@EXAMPLE.COM ") }
       expect(User.last.email).to eq("new@example.com")

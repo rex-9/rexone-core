@@ -1,5 +1,6 @@
 # app/controllers/v1/admin/users_controller.rb
 class V1::Admin::UsersController < V1::ApplicationController
+  before_action :super_admin_required!
   LOG_PREFIX = "[Admin::Users]".freeze
 
   before_action :set_active_user, only: %i[show update discard]

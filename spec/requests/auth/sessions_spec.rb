@@ -118,7 +118,6 @@ RSpec.describe "Authentication sessions", type: :request do
 
     it "sends a fresh confirmation code instead of signing in an unconfirmed account" do
       unconfirmed = create(:user, :unconfirmed)
-      allow(unconfirmed).to receive(:send_confirmation_instructions)
       allow(User).to receive(:find_by).and_return(unconfirmed)
 
       post "/signin", params: { user: { signin_key: unconfirmed.email, password: "password123" } }
