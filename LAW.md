@@ -69,9 +69,12 @@ The RBAC system defines a strict three-tier hierarchy for administration:
    - **Strict Restriction**: Restricted from managing `users` and `iam` (roles, permissions, role assignments).
 3. **Partial Admin (`*_admin` Suffix Naming Law)**:
    - Designed for scoped administrative access where a user has the default `user` role plus one or more specific `*_admin` roles (e.g. `feedback_admin`, `payment_admin`, `ai_admin`, `content_admin`).
-   - **Creation Law**: When creating partial admin roles, always use the `_admin` suffix in the role name (e.g. `feedback_admin`).
-   - **Access Scope**: Scoped exclusively to the specific resources granted by that role's IAM permissions (e.g. `read_feedbacks` & `update_feedbacks`).
-   - In frontend clients (Web), partial admins only see the admin sidebar navigation items corresponding to the `read_<resource>` permissions of their assigned `*_admin` roles.
+   - **Creation Law**: When creating partial admin roles, always use the `_admin` suffix in the role name (e.g. `feedback_admin`). Any role whose name contains `admin` is treated as an admin role.
+   - **Access Scope & Permission Provenance**:
+     - **Admin Endpoints (`/v1/admin/*`)**: Can ONLY be accessed if the user holds an admin role containing `admin` in its name that explicitly grants the corresponding CRUD permission. Permissions from non-admin roles (such as the base `user` role) **cannot** be used to access `/v1/admin/*`.
+     - **Non-Admin Endpoints (`/v1/*`)**: A user with `read_<resource>` (or other CRUD actions) in an admin role can read both `/v1/<resource>` and `/v1/admin/<resource>`. A user with permissions only in a non-admin role can only access `/v1/<resource>`.
+   - In frontend clients (Web), partial admins dynamically only see the admin sidebar navigation items corresponding to the `read_<resource>` permissions of their assigned `*_admin` roles.
+   - **Single-Request IAM Introspection**: `GET /v1/users/current/iam` returns explicit `is_admin`, `is_super_admin`, `roles`, `admin_roles`, `non_admin_roles`, `permissions`, `admin_permissions`, and `non_admin_permissions` so frontend clients can immediately evaluate UI controls and sidebar items without secondary API calls.
 
 ---
 

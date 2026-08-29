@@ -24,8 +24,14 @@ class V1::UsersController < V1::ApplicationController
       message: user_message(MessageService::User::IAM_FETCHED),
       data: {
         user: UserSerializer.new(current_user).serializable_hash[:data][:attributes],
+        is_admin: current_user.admin?,
+        is_super_admin: current_user.super_admin?,
         roles: Iam::RoleSerializer.new(current_user.roles).serializable_hash[:data],
-        permissions: Iam::PermissionSerializer.new(current_user.permissions).serializable_hash[:data]
+        admin_roles: Iam::RoleSerializer.new(current_user.admin_roles).serializable_hash[:data],
+        non_admin_roles: Iam::RoleSerializer.new(current_user.non_admin_roles).serializable_hash[:data],
+        permissions: Iam::PermissionSerializer.new(current_user.permissions).serializable_hash[:data],
+        admin_permissions: Iam::PermissionSerializer.new(current_user.admin_permissions).serializable_hash[:data],
+        non_admin_permissions: Iam::PermissionSerializer.new(current_user.non_admin_permissions).serializable_hash[:data]
       }
     )
   end

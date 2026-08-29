@@ -55,8 +55,8 @@ Iam::Permission.all.each do |perm|
   Iam::RolePermission.create!(role: super_admin, permission: perm)
 end
 
-# Admin: ALL permissions EXCEPT role management
-Iam::Permission.where.not(resource: "roles").each do |perm|
+# Admin: ALL permissions EXCEPT User and IAM management
+Iam::Permission.where.not(resource: %w[users roles permissions user_roles role_permissions]).each do |perm|
   Iam::RolePermission.create!(role: admin, permission: perm)
 end
 

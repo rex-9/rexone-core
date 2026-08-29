@@ -1,6 +1,6 @@
 # app/controllers/v1/iam/roles_controller.rb:
 class V1::Iam::RolesController < V1::ApplicationController
-  before_action :super_admin_required!, except: [ :index ]
+  before_action :super_admin_required!
 
   # GET /iam/roles?page=1&limit=10
   def index

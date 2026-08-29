@@ -90,8 +90,25 @@ class User < ApplicationRecord
     roles.exists?(name: role_name.to_s)
   end
 
-  def has_permission?(action, resource)
-    roles.joins(:permissions).exists?(
+  def admin_roles
+    roles.where("iam_roles.name ILIKE '%admin%'")
+  end
+
+  def non_admin_roles
+    roles.where.not("iam_roles.name ILIKE '%admin%'")
+  end
+
+  def admin?
+    admin_roles.exists?
+  end
+
+  def super_admin?
+    has_role?("super_admin")
+  end
+
+  def has_permission?(action, resource, from_admin_role_only: false)
+    scoped_roles = from_admin_role_only ? admin_roles : roles
+    scoped_roles.joins(:permissions).exists?(
       iam_permissions: {
         action: action.to_s,
         resource: resource.to_s
@@ -99,26 +116,36 @@ class User < ApplicationRecord
     )
   end
 
-  def can?(action, resource)
+  def can?(action, resource, admin_scope: false)
     # Super admin can do anything
     return true if super_admin?
 
-    # Check specific permission
-    has_permission?(action, resource)
-  end
-
-  def admin?
-    has_role?("super_admin") || has_role?("admin")
-  end
-
-  def super_admin?
-    has_role?("super_admin")
+    # Check specific permission, enforcing admin role provenance when admin_scope is true
+    has_permission?(action, resource, from_admin_role_only: admin_scope)
   end
 
   def permissions
     # Get all permissions directly through roles
     Iam::Permission.joins(roles: :user_roles)
                    .where(iam_user_roles: { user_id: id })
+                   .distinct
+  end
+
+  def admin_permissions
+    if super_admin?
+      Iam::Permission.all
+    else
+      Iam::Permission.joins(roles: :user_roles)
+                     .where(iam_user_roles: { user_id: id })
+                     .where("iam_roles.name ILIKE '%admin%'")
+                     .distinct
+    end
+  end
+
+  def non_admin_permissions
+    Iam::Permission.joins(roles: :user_roles)
+                   .where(iam_user_roles: { user_id: id })
+                   .where.not("iam_roles.name ILIKE '%admin%'")
                    .distinct
   end
 

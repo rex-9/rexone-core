@@ -81,6 +81,49 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "RBAC and permission scoping" do
+    let(:user_role) { create(:role, name: "user") }
+    let(:feedback_admin_role) { create(:role, name: "feedback_admin") }
+    let(:user_admin_role) { create(:role, name: "user_admin") }
+    let(:read_users_perm) { create(:permission, action: "read", resource: "users") }
+    let(:read_feedbacks_perm) { create(:permission, action: "read", resource: "feedbacks") }
+
+    before do
+      user_role.permissions << read_users_perm
+      feedback_admin_role.permissions << read_feedbacks_perm
+      user_admin_role.permissions << read_users_perm
+    end
+
+    it "identifies admin roles by name containing admin" do
+      user = create(:user)
+      expect(user.admin?).to be(false)
+
+      user.roles << feedback_admin_role
+      expect(user.admin?).to be(true)
+      expect(user.admin_roles).to contain_exactly(feedback_admin_role)
+    end
+
+    it "allows non-admin permissions for non-admin scope but restricts admin scope to admin roles" do
+      user = create(:user)
+      user.roles << feedback_admin_role
+
+      # Non-admin scope: permissions from both user and feedback_admin roles work
+      expect(user.can?(:read, "users", admin_scope: false)).to be(true)
+      expect(user.can?(:read, "feedbacks", admin_scope: false)).to be(true)
+
+      # Admin scope: only permissions granted by admin roles work
+      expect(user.can?(:read, "feedbacks", admin_scope: true)).to be(true)
+      expect(user.can?(:read, "users", admin_scope: true)).to be(false) # read_users is only in 'user' role
+    end
+
+    it "allows admin scope when permission is in a dedicated admin role" do
+      user = create(:user)
+      user.roles << user_admin_role
+
+      expect(user.can?(:read, "users", admin_scope: true)).to be(true)
+    end
+  end
+
   describe "JWT revocation" do
     it "replaces its JTI and rejects the old token identifier" do
       user = create(:user)

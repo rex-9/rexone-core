@@ -10,8 +10,7 @@ RSpec.describe "V1 IAM User Roles API", type: :request do
   before do
     allow(CacheService).to receive(:read).and_return(token)
     allow(CacheService).to receive(:write)
-    grant_admin_role(admin)
-    grant_permissions(admin, "user_roles", :read, :create, :delete)
+    grant_super_admin_role(admin)
   end
 
   describe "GET /v1/iam/users/:user_id/roles" do

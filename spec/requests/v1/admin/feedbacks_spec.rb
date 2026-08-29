@@ -9,7 +9,7 @@ RSpec.describe "V1 Admin Feedbacks API", type: :request do
     allow(CacheService).to receive(:read).and_return(token)
     allow(CacheService).to receive(:write)
     grant_admin_role(admin)
-    grant_permissions(admin, "feedbacks", :read, :update, :delete)
+    grant_admin_permissions(admin, "feedbacks", :read, :update, :delete)
   end
 
   describe "GET /v1/admin/feedbacks" do
