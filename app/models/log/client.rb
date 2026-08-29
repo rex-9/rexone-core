@@ -4,23 +4,23 @@ class Log::Client < ApplicationRecord
 
   # ===== ENUMS =====
   enum :severity, {
-    debug: "debug",
-    info: "info",
-    warning: "warning",
-    error: "error",
-    critical: "critical"
+    debug: LogConstants::Severity::DEBUG,
+    info: LogConstants::Severity::INFO,
+    warning: LogConstants::Severity::WARNING,
+    error: LogConstants::Severity::ERROR,
+    critical: LogConstants::Severity::CRITICAL
   }, prefix: :client_severity
 
   enum :platform, {
-    web: "web",
-    ios: "ios",
-    android: "android"
+    web: LogConstants::Platform::WEB,
+    ios: LogConstants::Platform::IOS,
+    android: LogConstants::Platform::ANDROID
   }, prefix: :client_platform
 
   enum :environment, {
-    development: "development",
-    staging: "staging",
-    production: "production"
+    development: LogConstants::Environment::DEVELOPMENT,
+    staging: LogConstants::Environment::STAGING,
+    production: LogConstants::Environment::PRODUCTION
   }, prefix: :client_environment
 
   # ===== ASSOCIATIONS =====

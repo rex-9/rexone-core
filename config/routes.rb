@@ -113,7 +113,6 @@ Rails.application.routes.draw do
     end
 
     # ===== USERS =====
-    get "users/", to: "users#index"
     get "users/current", to: "users#read_current_user"
     get "users/current/iam", to: "users#read_current_iam"
 
@@ -169,8 +168,9 @@ Rails.application.routes.draw do
       end
     end
 
-    # ===== MEDIA =====
+    # ===== ASSETS / MEDIA =====
     post "media/upload", to: "assets#create_upload"
+    resources :assets, only: %i[index show create update destroy]
 
     # ===== PAYMENTS - CLIENT =====
     namespace :payment do

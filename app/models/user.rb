@@ -71,18 +71,8 @@ class User < ApplicationRecord
   end
 
   def stripe_customer
-    return stripe_customer_id if stripe_customer_id.present?
-
-    # Create Stripe customer if not exists
-    customer = Stripe::Customer.create(email: email, metadata: { user_id: id })
-    update(stripe_customer_id: customer.id)
-    customer.id
-  rescue Stripe::StripeError => e
-    Rails.logger.error(
-      "#{PaymentService::Stripe::STRIPE_LOG_PREFIX} " \
-      "Failed to create customer: #{e.message}"
-    )
-    nil
+    result = PaymentService::Client.create_customer(user: self)
+    result[:customer_id]
   end
 
   # IAM
@@ -103,7 +93,7 @@ class User < ApplicationRecord
   end
 
   def super_admin?
-    has_role?("super_admin")
+    has_role?(IamConstants::Role::SUPER_ADMIN)
   end
 
   def has_permission?(action, resource, from_admin_role_only: false)
@@ -120,7 +110,6 @@ class User < ApplicationRecord
     # Super admin can do anything
     return true if super_admin?
 
-    # Check specific permission, enforcing admin role provenance when admin_scope is true
     has_permission?(action, resource, from_admin_role_only: admin_scope)
   end
 
@@ -157,7 +146,7 @@ class User < ApplicationRecord
   private
 
   def assign_default_user_role
-    default_role = Iam::Role.find_by(name: "user")
+    default_role = Iam::Role.find_by(name: IamConstants::Role::USER)
     if default_role
       Iam::UserRole.find_or_create_by!(user: self, role: default_role)
     end

@@ -4,26 +4,8 @@ module Iam
     self.table_name = "iam_permissions"
 
     # ===== CONSTANTS =====
-    # These are CONTROLLER names, not model names
-    # Add new controllers here when they are created
-    RESOURCES = %w[
-      users
-      roles
-      user_roles
-      permissions
-      products
-      payments
-      subscriptions
-      transactions
-      access
-      assets
-      notifications
-      ai
-      clients
-      feedbacks
-    ].freeze
-
-    ACTIONS = %w[read create update delete].freeze
+    RESOURCES = IamConstants::Resource::ALL
+    ACTIONS = IamConstants::Action::ALL
 
     # ===== ENUMS =====
     enum :action, {

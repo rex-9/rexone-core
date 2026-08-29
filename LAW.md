@@ -117,9 +117,13 @@ The RBAC system defines a strict three-tier hierarchy for administration:
   - `StorageService::Client` $\rightarrow$ `StorageService::Cloudinary` / `StorageService::Local`
   - `PaymentService::Client` $\rightarrow$ `PaymentService::Stripe`
   - `AiService::Client` $\rightarrow$ `AiService::DeepSeek`
-  - `EmailService::Client` $\rightarrow` `EmailService::OneSignal`
+  - `EmailService::Client` $\rightarrow$ `EmailService::OneSignal`
   - `PushNotiService::Client` $\rightarrow$ `PushNotiService::OneSignal`
   - `SocketService::Client` $\rightarrow$ `SocketService::ActionCable`
+
+### 5.3 Mandatory Client Gateway & Base Contract Law
+- **Rule**: ALL domain calls from models, controllers, and jobs MUST route through `*Service::Client` (e.g. `PaymentService::Client.create_customer`, `PaymentService::Client.create_checkout_session`, `AiService::Client.chat`). Direct invocation of concrete provider classes (e.g. `PaymentService::Stripe.*`, `AiService::DeepSeek.*`) is strictly forbidden across the codebase.
+- **Rule**: Every concrete provider class MUST inherit from its domain `*Service::Base` (e.g. `PaymentService::Stripe < PaymentService::Base`) and implement all contract methods. `*Service::Client` MUST declare explicit class-level delegations to `:provider` for all base contract methods.
 
 ---
 
