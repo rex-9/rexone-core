@@ -63,7 +63,7 @@ class V1::AiController < V1::ApplicationController
 
   # GET /ai/history?page=1&limit=50
   def read_history
-    messages = @room.messages.chronological
+    messages = @room.messages.chronological.includes(:assets)
     pagy, records = pagy(:offset, messages, limit: params[:limit])
 
     render_json_response(

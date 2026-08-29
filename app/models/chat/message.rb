@@ -31,9 +31,13 @@ module Chat
                    :model,
                    prefix: :ai
 
-    store_accessor :metadata, :audio_url, :tts_status, :tts_error
+    store_accessor :metadata, :tts_status, :tts_error
 
     belongs_to :room, class_name: "Chat::Room"
+    has_many :assets,
+             -> { where("LOWER(resource_model) = 'chat_message'") },
+             foreign_key: :resource_id,
+             dependent: :nullify
 
     validates :role, presence: true, inclusion: { in: %w[user assistant] }
     validates :content, presence: true
@@ -56,6 +60,13 @@ module Chat
 
     def ai_processing?
       user? && ai_status.in?(AI_PROCESSING_STATUSES)
+    end
+
+    def tts_asset
+      assets.find_or_initialize_by(
+        type: AssetConstants::AssetType::AUDIO,
+        source: AssetConstants::AssetSource::UPLOAD
+      )
     end
   end
 end

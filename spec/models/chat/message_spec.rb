@@ -51,15 +51,30 @@ RSpec.describe Chat::Message, type: :model do
   it "declares TTS metadata fields" do
     message = build(
       :chat_message,
-      audio_url: "https://cdn.example.com/speech.mp3",
       tts_status: described_class::TTS_STATUSES[:completed],
       tts_error: nil
     )
 
     expect(message).to have_attributes(
-      audio_url: "https://cdn.example.com/speech.mp3",
       tts_status: "completed",
       tts_error: nil
     )
+  end
+
+  it "links TTS audio through polymorphic assets" do
+    message = create(:chat_message, role: "assistant", content: "Speak this")
+    asset = create(
+      :asset,
+      type: "audio",
+      format: "audio",
+      source: "upload",
+      url: "https://cdn.example.com/speech.mp3",
+      storage_key: "speech/tts/tts_of_message_#{message.id}",
+      resource_model: "chat_message",
+      resource_id: message.id
+    )
+
+    expect(message.assets).to contain_exactly(asset)
+    expect(message.tts_asset).to eq(asset)
   end
 end

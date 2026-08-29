@@ -10,6 +10,7 @@ module Openapi
     SECURITY = [ { bearerAuth: [] } ].freeze
     AI_STATUSES = Chat::Message::AI_STATUSES.values.freeze
     AI_ROLES = %w[user assistant].freeze
+    TTS_STATUSES = Chat::Message::TTS_STATUSES.values.freeze
     LOG_SEVERITIES = Log::Client.severities.keys.freeze
     LOG_PLATFORMS = Log::Client.platforms.keys.freeze
     LOG_ENVIRONMENTS = Log::Client.environments.keys.freeze
@@ -259,11 +260,18 @@ module Openapi
       asset_upload_request: object(
         required: [ :file ],
         file: { type: :string, format: :binary },
-        category: {
+        type: {
           type: :string,
-          default: "profile",
-          description: "Storage folder and persisted asset category. Free-form string; defaults to profile."
-        }
+          default: "general",
+          description: "Asset type: avatar, cover, card, audio, video, attachment, general."
+        },
+        resource_model: {
+          type: :string,
+          description: "Resource model name: user, course, lesson, monastery, teacher, message."
+        },
+        resource_id: UUID.merge(description: "UUID of the linked resource."),
+        duration_secs: { type: :integer, description: "Duration in seconds for audio / video files." },
+        size_bytes: { type: :integer, description: "Exact file size in bytes." }
       ),
       checkout_session_request: object(
         required: %i[product_id success_url cancel_url],
@@ -338,6 +346,28 @@ module Openapi
         ),
         data: ref(:speech_tts_queued_data)
       ),
+      speech_tts_ready_notification_data: object(
+        required: %i[type room_id message_id assets],
+        type: { type: :string, enum: [ NotificationConstants::NotificationType::TTS_READY ] },
+        room_id: UUID,
+        message_id: UUID,
+        assets: {
+          type: :array,
+          description: "Full Asset objects for this message. Play TTS via the audio item's url.",
+          items: ref(:asset)
+        }
+      ),
+      speech_tts_failed_notification_data: object(
+        required: %i[type room_id message_id],
+        type: { type: :string, enum: [ NotificationConstants::NotificationType::TTS_FAILED ] },
+        room_id: UUID,
+        message_id: UUID,
+        assets: {
+          type: :array,
+          description: "Empty when TTS fails before an asset is saved.",
+          items: ref(:asset)
+        }
+      ),
       speech_stt_file_request: object(
         required: [ :audio ],
         audio: { type: :string, format: :binary, description: "Audio file. Takes precedence over audio_url when both are sent." }
@@ -379,7 +409,9 @@ module Openapi
           additionalProperties: true,
           example: { prompt_tokens: 42, completion_tokens: 18, total_tokens: 60 }
         },
-        model: { type: :string, nullable: true, description: "Provider model identifier used for the response." }
+        model: { type: :string, nullable: true, description: "Provider model identifier used for the response." },
+        tts_status: { type: :string, enum: TTS_STATUSES, nullable: true, description: "Async TTS state for assistant messages." },
+        tts_error: { type: :string, nullable: true, description: "Last TTS failure message when tts_status is failed or retrying." }
       ),
       response: object(
         required: [ :status ],
@@ -513,6 +545,23 @@ module Openapi
         created_at: DATE_TIME,
         updated_at: DATE_TIME
       ),
+      asset: object(
+        required: %i[id name url type source],
+        id: UUID,
+        name: { type: :string },
+        url: { type: :string, format: :uri },
+        type: { type: :string, enum: AssetConstants::AssetType::ALL },
+        format: { type: :string, enum: AssetConstants::AssetFormat::ALL, nullable: true },
+        extension: { type: :string, nullable: true },
+        size_bytes: { type: :integer, nullable: true },
+        duration_secs: { type: :integer, nullable: true },
+        source: { type: :string, enum: [ AssetConstants::AssetSource::UPLOAD, AssetConstants::AssetSource::GOOGLE ] },
+        resource_model: { type: :string, nullable: true, description: "Polymorphic owner model, e.g. chat_message or user." },
+        resource_id: UUID.merge(nullable: true),
+        created_by_id: UUID.merge(nullable: true),
+        created_at: DATE_TIME,
+        updated_at: DATE_TIME
+      ),
       room: object(
         id: UUID,
         user_id: UUID,
@@ -533,6 +582,11 @@ module Openapi
         role: { type: :string, enum: AI_ROLES },
         content: { type: :string },
         metadata: ref(:ai_message_metadata),
+        assets: {
+          type: :array,
+          description: "Assets linked to this message. Empty until async TTS completes.",
+          items: ref(:asset)
+        },
         created_at: DATE_TIME,
         updated_at: DATE_TIME
       )
@@ -824,7 +878,7 @@ module Openapi
         post: operation(
           tags: "Speech",
           summary: "Synthesize speech from text (MP3) or queue TTS for a chat message",
-          description: "Send text for a sync MP3 response, or message_id to queue Azure TTS for that chat message and receive NotificationChannel tts_ready when done.",
+          description: "Send text for a sync MP3 response, or message_id to queue Azure TTS for that chat message. When queued TTS completes, NotificationChannel delivers tts_ready with data.assets (full Asset list); tts_failed sends assets: []. Chat history exposes the same assets on each message.",
           body: ref(:speech_tts_request),
           errors: [ 401, 404, 422, 500, 503 ]
         )

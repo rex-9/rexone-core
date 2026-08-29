@@ -57,7 +57,6 @@ class V1::SpeechController < V1::ApplicationController
 
     message.tts_status = Chat::Message::TTS_STATUSES[:queued]
     message.tts_error = nil
-    message.audio_url = nil
     message.save!
 
     job = Speech::ProcessTtsJob.perform_later(message.id)

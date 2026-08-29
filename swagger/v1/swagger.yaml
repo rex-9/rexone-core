@@ -376,11 +376,25 @@ components:
         file:
           type: string
           format: binary
-        category:
+        type:
           type: string
-          default: profile
-          description: Storage folder and persisted asset category. Free-form string;
-            defaults to profile.
+          default: general
+          description: 'Asset type: avatar, cover, card, audio, video, attachment,
+            general.'
+        resource_model:
+          type: string
+          description: 'Resource model name: user, course, lesson, monastery, teacher,
+            message.'
+        resource_id:
+          type: string
+          format: uuid
+          description: UUID of the linked resource.
+        duration_secs:
+          type: integer
+          description: Duration in seconds for audio / video files.
+        size_bytes:
+          type: integer
+          description: Exact file size in bytes.
       required:
       - file
     checkout_session_request:
@@ -490,12 +504,110 @@ components:
         text:
           type: string
           minLength: 1
+          description: Required for sync MP3 responses. Ignored when message_id is
+            present.
+        message_id:
+          type: string
+          format: uuid
+          description: Queue async TTS for a chat message owned by the current user.
+            Text comes from the message content.
         voice_name:
           type: string
-          description: Provider voice name. Omit to use the provider default. camelCase
-            voiceName is not accepted.
+          description: Provider voice name for sync TTS only. Omit to use the provider
+            default. camelCase voiceName is not accepted.
+      required: []
+    speech_tts_queued_data:
+      type: object
+      properties:
+        message_id:
+          type: string
+          format: uuid
+        room_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - queued
+          - processing
+          - retrying
+          - completed
+          - failed
+        job_id:
+          type: string
       required:
-      - text
+      - message_id
+      - room_id
+      - status
+      - job_id
+    speech_tts_queued_response:
+      type: object
+      properties:
+        status:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 200
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+          required:
+          - code
+          - success
+          - message
+        data:
+          "$ref": "#/components/schemas/speech_tts_queued_data"
+      required:
+      - status
+    speech_tts_ready_notification_data:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - tts_ready
+        room_id:
+          type: string
+          format: uuid
+        message_id:
+          type: string
+          format: uuid
+        assets:
+          type: array
+          description: Full Asset objects for this message. Play TTS via the audio
+            item's url.
+          items:
+            "$ref": "#/components/schemas/asset"
+      required:
+      - type
+      - room_id
+      - message_id
+      - assets
+    speech_tts_failed_notification_data:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - tts_failed
+        room_id:
+          type: string
+          format: uuid
+        message_id:
+          type: string
+          format: uuid
+        assets:
+          type: array
+          description: Empty when TTS fails before an asset is saved.
+          items:
+            "$ref": "#/components/schemas/asset"
+      required:
+      - type
+      - room_id
+      - message_id
     speech_stt_file_request:
       type: object
       properties:
@@ -587,6 +699,20 @@ components:
           type: string
           nullable: true
           description: Provider model identifier used for the response.
+        tts_status:
+          type: string
+          enum:
+          - queued
+          - processing
+          - retrying
+          - completed
+          - failed
+          nullable: true
+          description: Async TTS state for assistant messages.
+        tts_error:
+          type: string
+          nullable: true
+          description: Last TTS failure message when tts_status is failed or retrying.
       required: []
     response:
       type: object
@@ -955,6 +1081,75 @@ components:
           format: date-time
           nullable: true
       required: []
+    asset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        type:
+          type: string
+          enum:
+          - avatar
+          - cover
+          - card
+          - audio
+          - video
+          - attachment
+          - general
+        format:
+          type: string
+          enum:
+          - image
+          - audio
+          - video
+          - doc
+          nullable: true
+        extension:
+          type: string
+          nullable: true
+        size_bytes:
+          type: integer
+          nullable: true
+        duration_secs:
+          type: integer
+          nullable: true
+        source:
+          type: string
+          enum:
+          - upload
+          - google
+        resource_model:
+          type: string
+          nullable: true
+          description: Polymorphic owner model, e.g. chat_message or user.
+        resource_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_by_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - id
+      - name
+      - url
+      - type
+      - source
     room:
       type: object
       properties:
@@ -1003,6 +1198,11 @@ components:
           type: string
         metadata:
           "$ref": "#/components/schemas/ai_message_metadata"
+        assets:
+          type: array
+          description: Assets linked to this message. Empty until async TTS completes.
+          items:
+            "$ref": "#/components/schemas/asset"
         created_at:
           type: string
           format: date-time
@@ -4539,7 +4739,7 @@ paths:
     post:
       tags:
       - Speech
-      summary: Synthesize speech as an MP3 file from text
+      summary: Synthesize speech from text (MP3) or queue TTS for a chat message
       parameters:
       - name: X-Locale
         in: header
@@ -4563,14 +4763,23 @@ paths:
           default: web
       responses:
         '200':
-          description: MP3 audio
+          description: MP3 audio (sync) or queued JSON (async message_id)
           content:
             audio/mpeg:
               schema:
                 type: string
                 format: binary
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/speech_tts_queued_response"
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -4587,6 +4796,16 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      description: 'Send text for a sync MP3 response, or message_id to queue Azure
+        TTS for that chat message. When queued TTS completes, NotificationChannel
+        delivers tts_ready with data.assets (full Asset list); tts_failed sends assets:
+        []. Chat history exposes the same assets on each message.'
       security:
       - bearerAuth: []
       requestBody:

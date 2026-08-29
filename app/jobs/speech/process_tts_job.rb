@@ -29,12 +29,8 @@ class Speech::ProcessTtsJob < ApplicationJob
     raise SpeechService::Error, result[:error] if result[:error].present?
 
     upload = upload_audio!(message, result)
-    update_tts!(
-      message,
-      Chat::Message::TTS_STATUSES[:completed],
-      audio_url: upload[:url],
-      tts_error: nil
-    )
+    persist_asset!(message, upload)
+    update_tts!(message, Chat::Message::TTS_STATUSES[:completed], tts_error: nil)
     notify_completed(message)
   rescue SpeechService::Error, StorageService::Error => error
     update_tts!(message, Chat::Message::TTS_STATUSES[:retrying], tts_error: error.message) if message
@@ -47,6 +43,8 @@ class Speech::ProcessTtsJob < ApplicationJob
   private
 
   def upload_audio!(message, result)
+    storage_key = AssetConstants::AssetName.tts_for_message(message.id)
+
     Tempfile.create([ "tts-#{message.id}", ".mp3" ]) do |file|
       file.binmode
       file.write(result[:bytes])
@@ -54,12 +52,29 @@ class Speech::ProcessTtsJob < ApplicationJob
 
       StorageService::Client.upload(
         file,
-        public_id: "message_#{message.id}",
+        storage_key: storage_key,
         folder: SpeechConstants::Tts::STORAGE_FOLDER,
         resource_type: SpeechConstants::Tts::STORAGE_RESOURCE_TYPE,
         overwrite: true
       )
     end
+  end
+
+  def persist_asset!(message, upload)
+    asset = message.tts_asset
+    asset.assign_attributes(
+      name: AssetConstants::AssetName.tts_for_message(message.id),
+      url: upload[:url],
+      type: AssetConstants::AssetType::AUDIO,
+      format: AssetConstants::AssetFormat::AUDIO,
+      size_bytes: upload[:bytes],
+      source: AssetConstants::AssetSource::UPLOAD,
+      storage_key: upload[:storage_key],
+      extension: upload[:format].presence || "mp3",
+      resource: message
+    )
+    asset.save!
+    asset
   end
 
   def notify_completed(message)
@@ -72,7 +87,7 @@ class Speech::ProcessTtsJob < ApplicationJob
         type: NotificationConstants::NotificationType::TTS_READY,
         room_id: message.room_id,
         message_id: message.id,
-        audio_url: message.audio_url
+        assets: serialized_assets(message)
       },
       send_push: false,
       send_socket: true,
@@ -95,7 +110,8 @@ class Speech::ProcessTtsJob < ApplicationJob
       data: {
         type: NotificationConstants::NotificationType::TTS_FAILED,
         room_id: message.room_id,
-        message_id: message.id
+        message_id: message.id,
+        assets: []
       },
       send_push: false,
       send_socket: true,
@@ -112,11 +128,14 @@ class Speech::ProcessTtsJob < ApplicationJob
     )
   end
 
-  def update_tts!(message, status, audio_url: :unchanged, tts_error: :unchanged)
+  def update_tts!(message, status, tts_error: :unchanged)
     message.tts_status = status
-    message.audio_url = audio_url unless audio_url == :unchanged
     message.tts_error = tts_error unless tts_error == :unchanged
     message.save!
+  end
+
+  def serialized_assets(message)
+    AssetSerializer.new(message.assets.reload).serializable_hash[:data].map { |item| item[:attributes] }
   end
 
   def speech_message(key)

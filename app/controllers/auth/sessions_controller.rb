@@ -105,11 +105,12 @@ class Auth::SessionsController < Devise::SessionsController
       end
     else
       failure_data = limiter.record_failure
+      is_cooldown = (failure_data[:cooldown_remaining] || 0) > 0
 
       render_json_response(
-        status_code: failure_data[:cooldown_active] ? 429 : 401,
+        status_code: is_cooldown ? 429 : 401,
         message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
-        error: failure_data[:cooldown_active] ?
+        error: is_cooldown ?
           auth_message(MessageService::Auth::TOO_MANY_ATTEMPTS) :
           auth_message(MessageService::Auth::INVALID_CREDENTIALS),
         data: {
@@ -161,7 +162,7 @@ class Auth::SessionsController < Devise::SessionsController
 
     user = User.find_by(email: user_info["email"])
 
-    if user
+    if user && user.confirmed?
       token = AppConfig::JWT_TOKEN.call(user)
       signup_active_session!(user: user, token: token)
       NotificationService.sign_in_alert(
@@ -169,7 +170,7 @@ class Auth::SessionsController < Devise::SessionsController
         name: user.name || user.username
       )
 
-      # Existing user - just return user + token
+      # Existing confirmed user - just return user + token
       render_json_response(
         status_code: 200,
         message: auth_message(MessageService::Auth::SIGNED_IN),
@@ -181,12 +182,12 @@ class Auth::SessionsController < Devise::SessionsController
       return
     end
 
-    # New user - return challenge token
+    # New user or unconfirmed user - return challenge token
     challenge_token = SecureRandom.urlsafe_base64(32)
 
     challenge_payload = {
       email: user_info["email"],
-      name: user_info["name"],
+      name: user_info["name"] || user&.name,
       picture: user_info["picture"]
     }
 
@@ -194,7 +195,7 @@ class Auth::SessionsController < Devise::SessionsController
 
     render_json_response(
       status_code: 200,
-      message: auth_message(MessageService::Auth::SET_PASSCODE),
+      message: auth_message(MessageService::Auth::SET_PASSWORD),
       data: {
         password_required: true,
         challenge_token: challenge_token
@@ -211,7 +212,7 @@ class Auth::SessionsController < Devise::SessionsController
       render_json_response(
         status_code: 422,
         message: auth_message(MessageService::Auth::SIGN_IN_FAILED),
-        error: auth_message(MessageService::Auth::CHALLENGE_AND_PASSCODE_REQUIRED)
+        error: auth_message(MessageService::Auth::CHALLENGE_AND_PASSWORD_REQUIRED)
       )
       return
     end
@@ -229,19 +230,55 @@ class Auth::SessionsController < Devise::SessionsController
     user = User.find_or_initialize_by(email: challenge_data["email"])
 
     if user.persisted?
-      # User exists - just sign them in
-      clear_google_challenge!(challenge_token)
-      token = AppConfig::JWT_TOKEN.call(user)
-      signup_active_session!(user: user, token: token)
-
-      render_json_response(
-        status_code: 200,
-        message: auth_message(MessageService::Auth::SIGNED_IN),
-        data: {
-          user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-          token: token
-        }
+      # User exists but was unconfirmed - update credentials, provider, and confirm
+      user.assign_attributes(
+        password: password,
+        password_confirmation: password,
+        provider: AuthConstants::Provider::GOOGLE,
+        confirmed_at: user.confirmed_at || Time.current
       )
+      user.name = challenge_data["name"] if challenge_data["name"].present? && user.name.blank?
+
+      if user.save
+        if challenge_data["picture"].present?
+          asset = user.assets.find_or_initialize_by(
+            type: AssetConstants::AssetType::AVATAR,
+            source: AssetConstants::AssetSource::GOOGLE
+          )
+          asset.assign_attributes(
+            name: AssetConstants::AssetName.google_profile(user.id),
+            url: challenge_data["picture"],
+            format: AssetConstants::AssetFormat::IMAGE,
+            resource: user
+          )
+          asset.save
+        end
+
+        clear_google_challenge!(challenge_token)
+
+        token = AppConfig::JWT_TOKEN.call(user)
+        signup_active_session!(user: user, token: token)
+
+        NotificationService.welcome(
+          user_id: user.id,
+          name: user.name || user.username
+        )
+
+        render_json_response(
+          status_code: 200,
+          message: auth_message(MessageService::Auth::ACCOUNT_CREATED_AND_SIGNED_IN),
+          data: {
+            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+            token: token
+          }
+        )
+      else
+        render_json_response(
+          status_code: 422,
+          message: auth_message(MessageService::Auth::GOOGLE_AUTH_FAILED),
+          error: user.errors.full_messages.uniq.to_sentence
+        )
+      end
       return
     end
 
@@ -259,13 +296,12 @@ class Auth::SessionsController < Devise::SessionsController
     if user.save
       # Save google profile picture
       asset = Asset.new(
-        name: "profile_google_of_user_#{user.id}",
+        name: AssetConstants::AssetName.google_profile(user.id),
         url: challenge_data["picture"],
-        category: AssetConstants::AssetCategory::PROFILE,
+        type: AssetConstants::AssetType::AVATAR,
         format: AssetConstants::AssetFormat::IMAGE,
-        size: 0,
         source: AssetConstants::AssetSource::GOOGLE,
-        user: user,
+        resource: user
       )
 
       unless asset.save

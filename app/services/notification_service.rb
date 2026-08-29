@@ -236,7 +236,7 @@ class NotificationService
           template_data: {
             token: token,
             email: email,
-            reset_url: "#{AppConfig::CLIENT_BASE_URL}/passcode/reset?reset_password_token=#{token}"
+            reset_url: "#{AppConfig::CLIENT_BASE_URL}#{AuthConstants::ClientRoutes::PASSWORD_RESET}?reset_password_token=#{token}"
           }
         }
       end

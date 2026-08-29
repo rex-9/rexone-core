@@ -63,7 +63,7 @@ RSpec.describe "Password recovery", type: :request do
   describe "GET /password/edit" do
     it "redirects the browser to the client reset screen" do
       get "/password/edit", params: { reset_password_token: "raw-token" }
-      expect(response).to redirect_to("#{AppConfig::CLIENT_BASE_URL}/passcode/reset?reset_password_token=raw-token")
+      expect(response).to redirect_to("#{AppConfig::CLIENT_BASE_URL}/password/reset?reset_password_token=raw-token")
     end
   end
 end
