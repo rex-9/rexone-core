@@ -86,13 +86,7 @@ class Auth::SessionsController < Devise::SessionsController
           }
         )
       else
-        user.generate_confirmation_code
         user.send_confirmation_instructions
-
-        NotificationService.confirmation_email(
-          email: user.email,
-          code: user.confirmation_code
-        )
 
         render_json_response(
           status_code: 200,

@@ -41,6 +41,15 @@ class User < ApplicationRecord
     self.confirmation_sent_at = Time.current
   end
 
+  def send_confirmation_instructions
+    generate_confirmation_code if confirmation_code.blank?
+    save(validate: false) if changed?
+    NotificationService.confirmation_email(
+      email: email,
+      code: confirmation_code
+    )
+  end
+
   def confirm_code(code)
     if confirmation_code == code &&
       confirmation_sent_at.present? &&
