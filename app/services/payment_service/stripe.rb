@@ -14,6 +14,21 @@ module PaymentService
       @webhook_secret = AppConfig::STRIPE_WEBHOOK_SECRET
     end
 
+    # ===== CUSTOMER =====
+    def create_customer(user_id: nil, user: nil)
+      with_stripe_error("Create Customer") do
+        user ||= User.find(user_id)
+        return { customer_id: user.stripe_customer_id } if user.stripe_customer_id.present?
+
+        customer = Stripe::Customer.create(
+          email: user.email,
+          metadata: { user_id: user.id }
+        )
+        user.update!(stripe_customer_id: customer.id)
+        { customer_id: customer.id }
+      end
+    end
+
     # ===== SESSION =====
     def create_checkout_session(user_id:, product_id:, success_url: nil, cancel_url: nil)
       with_stripe_error("Create Checkout Session") do
@@ -692,66 +707,5 @@ module PaymentService
         ended_at: subscription.ended_at || Time.current
       )
     end
-
-    # def handle_refund(charge)
-    #   transaction = Payment::Transaction.find_by(stripe_payment_intent_id: charge.payment_intent)
-    #   return unless transaction
-
-    #   transaction.update(
-    #     status: ::StripeStatus::REFUNDED,
-    #     refunded_at: Time.at(charge.created)
-    #   )
-
-    #   # Revoke access if fully refunded
-    #   if charge.refunded
-    #     AccessService.revoke(
-    #       user_id: transaction.user_id,
-    #       product_id: transaction.product_id
-    #     )
-
-    #     # Send refund confirmation email
-    #     user = transaction.user
-    #     product = transaction.product
-    #     send_refund_confirmation_email(user, product, transaction)
-    #   end
-    # end
-
-    # ===== EMAIL NOTIFICATIONS =====
-
-    # Template Example on Onesignal dashboard
-    #     <h1>Welcome aboard, {{user_name}}! 🎉</h1>
-    # <p>Your subscription to <strong>{{product_name}}</strong> has been confirmed and is now active.</p>
-    # <table style="border-collapse: collapse; width: 100%; max-width: 400px; margin: 20px 0;">
-    #   <tr>
-    #     <td style="padding: 8px 0;"><strong>Start Date:</strong></td>
-    #     <td style="padding: 8px 0;">{{start_date}}</td>
-    #   </tr>
-    #   <tr>
-    #     <td style="padding: 8px 0;"><strong>Next Billing:</strong></td>
-    #     <td style="padding: 8px 0;">{{next_billing}}</td>
-    #   </tr>
-    #   <tr>
-    #     <td style="padding: 8px 0;"><strong>Plan:</strong></td>
-    #     <td style="padding: 8px 0;">{{period}}</td>
-    #   </tr>
-    # </table>
-    # <p>You now have full access. Log in to get started!</p>
-    # <p>Thank you for your trust! 🙏</p>
-    # <p><strong>Rex9</strong></p>
-
-    # def send_refund_confirmation_email(user, product, transaction)
-    #   EmailService::Client.send_template(
-    #     to: user.email,
-    #     template_id: "payment_refund_confirmation",
-    #     template_data: {
-    #       user_name: user.name || user.username,
-    #       product_name: product.name,
-    #       amount: product.display_price,
-    #       refunded_on: transaction.refunded_at.strftime("%B %d, %Y")
-    #     }
-    #   )
-    # rescue => e
-    #   Rails.logger.error("[Email] Failed to send refund confirmation: #{e.message}")
-    # end
   end
 end

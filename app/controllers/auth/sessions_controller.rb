@@ -124,7 +124,13 @@ class Auth::SessionsController < Devise::SessionsController
 
   # POST /signin/token
   def token_sign_in
-    user = User.with_discarded.find_by(jti: params[:token])
+    user = begin
+      Warden::JWTAuth::UserDecoder.new.call(params[:token], :user, nil)
+    rescue StandardError => e
+      Rails.logger.warn("#{LOG_PREFIX} Token sign in decode failed: #{e.message}")
+      nil
+    end
+
     if user
       return if reject_discarded_account!(user)
 
@@ -451,7 +457,7 @@ class Auth::SessionsController < Devise::SessionsController
     asset = user.assets.find_or_initialize_by(storage_key: storage_result[:storage_key])
     asset.assign_attributes(
       name: AssetConstants::AssetName.google_profile(user.id),
-      url: storage_result[:url],
+      url: picture_url,
       type: AssetConstants::AssetType::AVATAR,
       format: AssetConstants::AssetFormat::IMAGE,
       extension: storage_result[:format],
@@ -526,28 +532,4 @@ class Auth::SessionsController < Devise::SessionsController
   rescue => e
     Rails.logger.error("#{LOG_PREFIX} Failed to clear Google challenge: #{e.message}")
   end
-
-  # before_action :configure_sign_in_params, only: [:create]
-
-  # GET /resource/sign_in
-  # def new
-  #   super
-  # end
-
-  # POST /resource/sign_in
-  # def create
-  #   super
-  # end
-
-  # DELETE /resource/sign_out
-  # def destroy
-  #   super
-  # end
-
-  # protected
-
-  # If you have extra params to permit, append them to the sanitizer.
-  # def configure_sign_in_params
-  #   devise_parameter_sanitizer.permit(:sign_in, keys: [:attribute])
-  # end
 end

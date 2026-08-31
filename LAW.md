@@ -78,11 +78,32 @@ The RBAC system defines a strict three-tier hierarchy for administration:
 
 ---
 
-## 🏛️ 4. Controller & API Envelope Law
+## 🏛️ 4. Architecture & Controller Law (Strict MCS Pattern)
 
-### 4.1 Pure HTTP Gateway (Zero Business Logic in Controllers)
-- **Rule**: Controllers strictly parse HTTP inputs, enforce authentication/authorization, permit specific parameters, delegate execution to `app/services/`, and render standardized JSON envelopes.
-- **Rule**: NEVER use loose fallback parameter hashes (e.g. `params[:type] || params[:category]`). Only explicitly permitted parameters are allowed.
+### 4.1 Business Logic (Server-Business Logic) Authority
+- **Server-Business Logic as Single Source of Truth**: ALL primary application business logic (or **server-business logic**)—including data validations, authorization rules, access grants, pricing calculations, lifecycle state machines, rate limiting, transaction integrity, solid queues, and third-party orchestration—lives **exclusively in `rexone-core`**.
+- **Zero Server-Business Logic Duplication in Clients**: Client applications (`rexone-web`, `rexone_mobile`) MUST NEVER replicate, re-calculate, or duplicate server-business logic. Client applications handle strictly **client-business logic** (frontend state management, device orchestration, and UI presentation).
+
+### 4.2 Strict 3-Tier MCS Separation of Concerns
+```
+Model Layer (app/models/)
+       │  (ActiveRecord entities, relationships, validations, scopes, DB constraints)
+Controller Layer (app/controllers/)
+       ↓  (Pure HTTP gateways: parses params, evaluates auth/IAM, invokes services)
+Service Layer (app/services/)
+       ↓  (Encapsulates all server-business logic, external SDKs, third-party gateways)
+```
+
+- **Models (`app/models/`)**:
+  - Encapsulate data integrity, ActiveRecord associations, scopes, and database constraints.
+  - Zero external HTTP or provider SDK calls in models.
+- **Controllers (`app/controllers/`)**:
+  - **Pure HTTP Gateway (Zero Server-Business Logic in Controllers)**:
+    - Controllers strictly parse HTTP inputs, enforce authentication/authorization, permit specific parameters, delegate execution to `app/services/`, and render standardized JSON envelopes.
+    - NEVER use loose fallback parameter hashes (e.g. `params[:type] || params[:category]`). Only explicitly permitted parameters are allowed.
+- **Services (`app/services/`)**:
+  - Shared domain services stored under root `app/services/` (e.g. `notification_service.rb`, `access_service.rb`, `google_auth_service.rb`) and nested domain namespaces (`payment_service/`, `ai_service/`, `storage_service/`, `push_noti_service/`, `socket_service/`, `email_service/`).
+  - Services are used by any necessary controller or background job.
 
 ### 4.2 Mandatory Standardized JSON:API Envelope
 - All responses must use `render_json_response`:
@@ -117,9 +138,13 @@ The RBAC system defines a strict three-tier hierarchy for administration:
   - `StorageService::Client` $\rightarrow$ `StorageService::Cloudinary` / `StorageService::Local`
   - `PaymentService::Client` $\rightarrow$ `PaymentService::Stripe`
   - `AiService::Client` $\rightarrow$ `AiService::DeepSeek`
-  - `EmailService::Client` $\rightarrow` `EmailService::OneSignal`
+  - `EmailService::Client` $\rightarrow$ `EmailService::OneSignal`
   - `PushNotiService::Client` $\rightarrow$ `PushNotiService::OneSignal`
   - `SocketService::Client` $\rightarrow$ `SocketService::ActionCable`
+
+### 5.3 Mandatory Client Gateway & Base Contract Law
+- **Rule**: ALL domain calls from models, controllers, and jobs MUST route through `*Service::Client` (e.g. `PaymentService::Client.create_customer`, `PaymentService::Client.create_checkout_session`, `AiService::Client.chat`). Direct invocation of concrete provider classes (e.g. `PaymentService::Stripe.*`, `AiService::DeepSeek.*`) is strictly forbidden across the codebase.
+- **Rule**: Every concrete provider class MUST inherit from its domain `*Service::Base` (e.g. `PaymentService::Stripe < PaymentService::Base`) and implement all contract methods. `*Service::Client` MUST declare explicit class-level delegations to `:provider` for all base contract methods.
 
 ---
 

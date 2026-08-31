@@ -12,21 +12,21 @@ class Payment::Transaction < ApplicationRecord
   # ===== ENUMS =====
   # Stripe Payment Intent statuses (sync with Stripe)
   enum :status, {
-    canceled: "canceled",                               # Canceled by user or system
-    processing: "processing",                           # Currently being processed
-    requires_action: "requires_action",                 # Requires additional action (3DS)
-    requires_capture: "requires_capture",               # Confirmed and requires capture
-    requires_confirmation: "requires_confirmation",     # Requires confirmation
-    requires_payment_method: "requires_payment_method", # Requires a payment method
-    succeeded: "succeeded"                              # Payment successful
+    canceled: PaymentConstants::TransactionStatus::CANCELED,
+    processing: PaymentConstants::TransactionStatus::PROCESSING,
+    requires_action: PaymentConstants::TransactionStatus::REQUIRES_ACTION,
+    requires_capture: PaymentConstants::TransactionStatus::REQUIRES_CAPTURE,
+    requires_confirmation: PaymentConstants::TransactionStatus::REQUIRES_CONFIRMATION,
+    requires_payment_method: PaymentConstants::TransactionStatus::REQUIRES_PAYMENT_METHOD,
+    succeeded: PaymentConstants::TransactionStatus::SUCCEEDED
   }
 
   enum :payment_method_type, {
-    card: "card",
-    google_pay: "google_pay",
-    apple_pay: "apple_pay",
-    bank_transfer: "bank_transfer",
-    other: "other"
+    card: PaymentConstants::PaymentMethodType::CARD,
+    google_pay: PaymentConstants::PaymentMethodType::GOOGLE_PAY,
+    apple_pay: PaymentConstants::PaymentMethodType::APPLE_PAY,
+    bank_transfer: PaymentConstants::PaymentMethodType::BANK_TRANSFER,
+    other: PaymentConstants::PaymentMethodType::OTHER
   }, prefix: true
 
   # ===== VALIDATIONS =====
@@ -34,15 +34,15 @@ class Payment::Transaction < ApplicationRecord
   validates :price_unit_amount, numericality: { greater_than: 0 }
 
   # ===== SCOPES =====
-  scope :successful, -> { where(status: "succeeded") }
-  scope :pending, -> { where(status: %w[processing requires_action requires_confirmation requires_payment_method]) }
-  scope :failed, -> { where(status: %w[canceled]) }
+  scope :successful, -> { where(status: PaymentConstants::TransactionStatus::SUCCEEDED) }
+  scope :pending, -> { where(status: [PaymentConstants::TransactionStatus::PROCESSING, PaymentConstants::TransactionStatus::REQUIRES_ACTION, PaymentConstants::TransactionStatus::REQUIRES_CONFIRMATION, PaymentConstants::TransactionStatus::REQUIRES_PAYMENT_METHOD]) }
+  scope :failed, -> { where(status: [PaymentConstants::TransactionStatus::CANCELED]) }
   scope :recent, -> { order(created_at: :desc).limit(10) }
   scope :by_user, ->(user_id) { where(user_id: user_id) }
 
   # ===== INSTANCE METHODS =====
   def succeeded?
-    status == "succeeded"
+    status == PaymentConstants::TransactionStatus::SUCCEEDED
   end
 
   def paid?

@@ -133,14 +133,15 @@ RSpec.describe "Authentication sessions", type: :request do
   end
 
   describe "POST /signin/token" do
-    it "exchanges a valid JTI for a JWT" do
+    it "exchanges a valid JWT token for a session JWT" do
       user = create(:user)
-      post "/signin/token", params: { token: user.jti }
+      token = jwt_for(user)
+      post "/signin/token", params: { token: token }
       expect(response).to have_http_status(:ok)
       expect(response_data["token"]).to be_present
     end
 
-    it "rejects an invalid JTI" do
+    it "rejects an invalid token" do
       post "/signin/token", params: { token: "invalid" }
       expect(response).to have_http_status(:unauthorized)
     end

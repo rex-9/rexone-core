@@ -1,6 +1,10 @@
 # app/services/payment_service/base.rb
 module PaymentService
   class Base
+    def create_customer(user_id: nil, user: nil)
+      raise NotImplementedError, "#{self.class} must implement #create_customer"
+    end
+
     def create_checkout_session(user_id:, product_id:, success_url: nil, cancel_url: nil)
       raise NotImplementedError, "#{self.class} must implement #create_checkout_session"
     end
