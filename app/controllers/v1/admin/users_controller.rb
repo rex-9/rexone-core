@@ -53,6 +53,11 @@ class V1::Admin::UsersController < V1::ApplicationController
   # POST /v1/admin/users
   def create
     user = User.new(user_params)
+    if user.password.blank?
+      temp_passcode = SecureRandom.random_number(10**6).to_s.rjust(6, "0")
+      user.password = temp_passcode
+      user.password_confirmation = temp_passcode
+    end
 
     if user.save
       assign_roles(user) if role_ids_param_provided?
@@ -158,9 +163,7 @@ class V1::Admin::UsersController < V1::ApplicationController
     params.require(:user).permit(
       :username,
       :name,
-      :email,
-      :password,
-      :password_confirmation
+      :email
     )
   end
 
