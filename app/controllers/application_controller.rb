@@ -6,7 +6,7 @@ class ApplicationController < ActionController::API
   include Pagy::Method
   include Authorization
   include ApplicationHelper
-  include SessionPlatform
+  include PlatformSession
 
   around_action :switch_locale
   before_action :enforce_active_platform_session!, :set_current_auditor
@@ -68,6 +68,6 @@ class ApplicationController < ActionController::API
   end
 
   def session_key(user_id)
-    "active_session:user:#{user_id}:#{session_platform}"
+    "active_session:user:#{user_id}:#{platform_session}"
   end
 end

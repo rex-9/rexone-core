@@ -2,7 +2,8 @@
 module PaymentService
   class Client
     class << self
-      delegate :create_checkout_session,
+      delegate :create_customer,
+               :create_checkout_session,
                :get_session,
                :cancel_subscription,
                :resume_subscription,

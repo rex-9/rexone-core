@@ -12,9 +12,15 @@ module Iam
     validates :name, presence: true, uniqueness: true
 
     scope :system, -> { where(system: true) }
+    scope :admin_roles, -> { where("name ILIKE '%admin%'") }
+    scope :non_admin_roles, -> { where.not("name ILIKE '%admin%'") }
+
+    def admin?
+      name.to_s.downcase.include?("admin")
+    end
 
     def has_permission?(action, resource)
-      permissions.exists?(action: action, resource: resource)
+      permissions.exists?(action: action.to_s, resource: resource.to_s)
     end
 
     def can?(action, resource)

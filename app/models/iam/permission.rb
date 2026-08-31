@@ -24,6 +24,8 @@ module Iam
     ].freeze
 
     ACTIONS = %w[read create update delete].freeze
+    RESOURCES = IamConstants::Resource::ALL
+    ACTIONS = IamConstants::Action::ALL
 
     # ===== ENUMS =====
     enum :action, {

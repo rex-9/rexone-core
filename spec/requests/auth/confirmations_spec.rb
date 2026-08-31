@@ -17,7 +17,7 @@ RSpec.describe "Email confirmation", type: :request do
       end
 
       expect(user.reload.confirmation_code).to match(/\A\d{6}\z/)
-      expect(NotificationService).to have_received(:confirmation_email).twice
+      expect(NotificationService).to have_received(:confirmation_email).exactly(3).times
     end
 
     it "rejects an already confirmed account" do

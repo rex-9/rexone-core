@@ -8,9 +8,16 @@ module EmailService
     def initialize
       @app_id = AppConfig::ONE_SIGNAL_APP_ID
       @api_key = AppConfig::ONE_SIGNAL_API_KEY
+
+      if @app_id.blank? || @api_key.blank?
+        Rails.logger.info("#{LOG_PREFIX} not configured - email delivery disabled")
+        @disabled = true
+      end
     end
 
     def send_email(to:, subject:, body:, from: nil, reply_to: nil)
+      return { "disabled" => true } if @disabled
+
       payload = {
         app_id: @app_id,
         email_subject: subject,

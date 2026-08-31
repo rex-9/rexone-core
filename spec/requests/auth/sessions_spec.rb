@@ -48,11 +48,21 @@ RSpec.describe "Authentication sessions", type: :request do
       expect(NotificationService).to have_received(:sign_in_alert).with(user_id: user.id, name: user.name)
     end
 
-    it "signs in by username and isolates mobile sessions" do
-      post "/signin", params: { user: { signin_key: user.username, password: "password123" } }, headers: { "X-Platform" => "mobile" }
+    it "signs in by username and isolates android sessions" do
+      post "/signin", params: { user: { signin_key: user.username, password: "password123" } }, headers: { "X-Platform" => "android" }
       expect(response).to have_http_status(:ok)
       expect(CacheService).to have_received(:write).with(
-        "active_session:user:#{user.id}:mobile",
+        "active_session:user:#{user.id}:android",
+        anything,
+        expires_in: AppConfig::SESSION_TIMEOUT
+      )
+    end
+
+    it "signs in by username and isolates ios sessions" do
+      post "/signin", params: { user: { signin_key: user.username, password: "password123" } }, headers: { "X-Platform" => "ios" }
+      expect(response).to have_http_status(:ok)
+      expect(CacheService).to have_received(:write).with(
+        "active_session:user:#{user.id}:ios",
         anything,
         expires_in: AppConfig::SESSION_TIMEOUT
       )
@@ -85,14 +95,13 @@ RSpec.describe "Authentication sessions", type: :request do
 
     it "sends a fresh confirmation code instead of signing in an unconfirmed account" do
       unconfirmed = create(:user, :unconfirmed)
-      allow(unconfirmed).to receive(:send_confirmation_instructions)
       allow(User).to receive(:find_by).and_return(unconfirmed)
 
       post "/signin", params: { user: { signin_key: unconfirmed.email, password: "password123" } }
 
       expect(response).to have_http_status(:ok)
       expect(response_data).to eq("otp_sent" => true)
-      expect(NotificationService).to have_received(:confirmation_email).with(
+      expect(NotificationService).to have_received(:confirmation_email).twice.with(
         email: unconfirmed.email,
         code: match(/\A\d{6}\z/)
       )
@@ -101,14 +110,15 @@ RSpec.describe "Authentication sessions", type: :request do
   end
 
   describe "POST /signin/token" do
-    it "exchanges a valid JTI for a JWT" do
+    it "exchanges a valid JWT token for a session JWT" do
       user = create(:user)
-      post "/signin/token", params: { token: user.jti }
+      token = jwt_for(user)
+      post "/signin/token", params: { token: token }
       expect(response).to have_http_status(:ok)
       expect(response_data["token"]).to be_present
     end
 
-    it "rejects an invalid JTI" do
+    it "rejects an invalid token" do
       post "/signin/token", params: { token: "invalid" }
       expect(response).to have_http_status(:unauthorized)
     end

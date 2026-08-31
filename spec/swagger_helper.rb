@@ -25,9 +25,9 @@ RSpec.configure do |config|
           Production API foundation for authentication, IAM, payments, access,
           media, notifications, client observability, and AI conversations.
 
-          Authenticated endpoints use a bearer JWT. Send `X-Platform` as `web`
-          or `mobile` to select the active session, and `X-Locale` as `en` or
-          `my` to select translated response messages.
+          Authenticated endpoints use a bearer JWT. Send `X-Platform` as `web`,
+          `android`, or `ios` to select the active session, and `X-Locale` as
+          `en`, `my`, or `es` to select translated response messages.
         DESCRIPTION
       },
       tags: [

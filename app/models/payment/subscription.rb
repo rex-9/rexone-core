@@ -10,27 +10,27 @@ class Payment::Subscription < ApplicationRecord
 
   # ===== ENUMS =====
   enum :status, {
-    incomplete: "incomplete",       # Checkout started but not completed
-    active: "active",               # Active and billing
-    past_due: "past_due",           # Payment failed, grace period
-    canceled: "canceled",           # Subscription has actually ended
-    incomplete_expired: "incomplete_expired",  # the first invoice is not paid within 23 hours
-    unpaid: "unpaid",               # Payment failed and no retry
-    trialing: "trialing",           # In a trial period
-    paused: "paused"                # Paused after trial with no pay
+    incomplete: PaymentConstants::SubscriptionStatus::INCOMPLETE,
+    active: PaymentConstants::SubscriptionStatus::ACTIVE,
+    past_due: PaymentConstants::SubscriptionStatus::PAST_DUE,
+    canceled: PaymentConstants::SubscriptionStatus::CANCELED,
+    incomplete_expired: PaymentConstants::SubscriptionStatus::INCOMPLETE_EXPIRED,
+    unpaid: PaymentConstants::SubscriptionStatus::UNPAID,
+    trialing: PaymentConstants::SubscriptionStatus::TRIALING,
+    paused: PaymentConstants::SubscriptionStatus::PAUSED
   }
 
   enum :cycle, {
-    monthly: "month",
-    yearly: "year"
+    monthly: PaymentConstants::BillingCycle::MONTH,
+    yearly: PaymentConstants::BillingCycle::YEAR
   }, prefix: true
 
   enum :payment_method_type, {
-    card: "card",
-    google_pay: "google_pay",
-    apple_pay: "apple_pay",
-    bank_transfer: "bank_transfer",
-    other: "other"
+    card: PaymentConstants::PaymentMethodType::CARD,
+    google_pay: PaymentConstants::PaymentMethodType::GOOGLE_PAY,
+    apple_pay: PaymentConstants::PaymentMethodType::APPLE_PAY,
+    bank_transfer: PaymentConstants::PaymentMethodType::BANK_TRANSFER,
+    other: PaymentConstants::PaymentMethodType::OTHER
   }, prefix: true
 
   # ===== VALIDATIONS =====
@@ -38,11 +38,11 @@ class Payment::Subscription < ApplicationRecord
   validates :status, presence: true
 
   # ===== SCOPES =====
-  scope :active, -> { where(status: "active") }
-  scope :canceled, -> { where(status: "canceled") }
-  scope :past_due, -> { where(status: "past_due") }
-  scope :trialing, -> { where(status: "trialing") }
-  scope :paused, -> { where(status: "paused") }
+  scope :active, -> { where(status: PaymentConstants::SubscriptionStatus::ACTIVE) }
+  scope :canceled, -> { where(status: PaymentConstants::SubscriptionStatus::CANCELED) }
+  scope :past_due, -> { where(status: PaymentConstants::SubscriptionStatus::PAST_DUE) }
+  scope :trialing, -> { where(status: PaymentConstants::SubscriptionStatus::TRIALING) }
+  scope :paused, -> { where(status: PaymentConstants::SubscriptionStatus::PAUSED) }
   scope :expiring_soon, -> { active.where("current_period_end < ?", 7.days.from_now) }
 
   # ===== INSTANCE METHODS =====

@@ -35,9 +35,10 @@ Rails.application.routes.draw do
   # Separate from the versioned application API.
   # Administrate is intended for Super Admin access.
   namespace :admin do
-    resources :assets, only: %i[index show new create edit update destroy]
     resources :users, only: %i[index show new create edit update destroy]
+    resources :assets, only: %i[index show new create edit update destroy]
     resources :accesses, only: %i[index show new create edit update destroy]
+    resources :feedbacks, only: %i[index show new create edit update destroy]
 
     namespace :iam do
       resources :permissions, only: %i[index show new create edit update destroy]
@@ -112,7 +113,6 @@ Rails.application.routes.draw do
     end
 
     # ===== USERS =====
-    get "users/", to: "users#index"
     get "users/current", to: "users#read_current_user"
     get "users/current/iam", to: "users#read_current_iam"
 
@@ -138,7 +138,11 @@ Rails.application.routes.draw do
       end
 
       resources :notifications, only: :create
+      resources :feedbacks, only: %i[index show update destroy]
     end
+
+    # ===== FEEDBACK =====
+    resources :feedbacks, only: %i[create index show]
 
     # ===== IAM =====
     namespace :iam do
@@ -164,8 +168,9 @@ Rails.application.routes.draw do
       end
     end
 
-    # ===== MEDIA =====
+    # ===== ASSETS / MEDIA =====
     post "media/upload", to: "assets#create_upload"
+    resources :assets, only: %i[index show create update destroy]
 
     # ===== PAYMENTS - CLIENT =====
     namespace :payment do

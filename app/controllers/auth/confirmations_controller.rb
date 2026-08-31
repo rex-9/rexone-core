@@ -1,6 +1,6 @@
 # app/controllers/auth/confirmations_controller.rb
 class Auth::ConfirmationsController < Devise::ConfirmationsController
-  include SessionPlatform
+  include PlatformSession
 
   # GET /confirmation?confirmation_token=abcdef
   def show
@@ -19,12 +19,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
     user = User.find_by("email = :signin_key OR username = :signin_key", signin_key: params[:signin_key])
     if user
       if !user.confirmed?
-        user.generate_confirmation_code
         user.send_confirmation_instructions
-        NotificationService.confirmation_email(
-          email: user.email,
-          code: user.confirmation_code
-        )
 
         render_json_response(
           status_code: 200,
@@ -65,7 +60,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
           status_code: 200,
           message: auth_message(MessageService::Auth::EMAIL_CONFIRMED),
           data: {
-            user: resource,
+            user: UserSerializer.new(resource).serializable_hash[:data][:attributes],
             token: token
           }
         )
@@ -94,7 +89,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
 
 
   def signup_active_session!(user:, token:)
-    key = "active_session:user:#{user.id}:#{session_platform}"
+    key = "active_session:user:#{user.id}:#{platform_session}"
     CacheService.write(key, token, expires_in: AppConfig::SESSION_TIMEOUT)
   rescue => e
     Rails.logger.error("#{ApplicationController::AUTH_LOG_PREFIX} Failed to sign up active session: #{e.message}")

@@ -1,6 +1,6 @@
 # app/controllers/auth/sessions_controller.rb
 class Auth::SessionsController < Devise::SessionsController
-  include SessionPlatform
+  include PlatformSession
 
   LOG_PREFIX = "[Auth]".freeze
 
@@ -86,13 +86,7 @@ class Auth::SessionsController < Devise::SessionsController
           }
         )
       else
-        user.generate_confirmation_code
         user.send_confirmation_instructions
-
-        NotificationService.confirmation_email(
-          email: user.email,
-          code: user.confirmation_code
-        )
 
         render_json_response(
           status_code: 200,
@@ -123,7 +117,13 @@ class Auth::SessionsController < Devise::SessionsController
 
   # POST /signin/token
   def token_sign_in
-    user = User.find_by(jti: params[:token])
+    user = begin
+      Warden::JWTAuth::UserDecoder.new.call(params[:token], :user, nil)
+    rescue StandardError => e
+      Rails.logger.warn("#{LOG_PREFIX} Token sign in decode failed: #{e.message}")
+      nil
+    end
+
     if user
       sign_in(user)
       token = AppConfig::JWT_TOKEN.call(user)
@@ -406,7 +406,7 @@ class Auth::SessionsController < Devise::SessionsController
 
 
 
-  def session_key_for(user_id, platform = session_platform)
+  def session_key_for(user_id, platform = platform_session)
     "active_session:user:#{user_id}:#{platform}"
   end
 
@@ -456,28 +456,4 @@ class Auth::SessionsController < Devise::SessionsController
   rescue => e
     Rails.logger.error("#{LOG_PREFIX} Failed to clear Google challenge: #{e.message}")
   end
-
-  # before_action :configure_sign_in_params, only: [:create]
-
-  # GET /resource/sign_in
-  # def new
-  #   super
-  # end
-
-  # POST /resource/sign_in
-  # def create
-  #   super
-  # end
-
-  # DELETE /resource/sign_out
-  # def destroy
-  #   super
-  # end
-
-  # protected
-
-  # If you have extra params to permit, append them to the sanitizer.
-  # def configure_sign_in_params
-  #   devise_parameter_sanitizer.permit(:sign_in, keys: [:attribute])
-  # end
 end
