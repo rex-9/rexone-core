@@ -31,10 +31,11 @@ module IamConstants
     AI            = "ai".freeze
     CLIENTS       = "clients".freeze
     FEEDBACKS     = "feedbacks".freeze
+    ANALYTICS     = "analytics".freeze
     ALL           = [
       USERS, ROLES, USER_ROLES, PERMISSIONS, PRODUCTS, PAYMENTS,
       SUBSCRIPTIONS, TRANSACTIONS, ACCESS, ASSETS, NOTIFICATIONS,
-      AI, CLIENTS, FEEDBACKS
+      AI, CLIENTS, FEEDBACKS, ANALYTICS
     ].freeze
   end
 end

@@ -175,6 +175,8 @@ Rails.application.routes.draw do
       end
 
       resources :feedbacks, only: %i[index show update destroy]
+
+      get "analytics/overview", to: "analytics#read_overview"
     end
 
     # ===== FEEDBACK =====
