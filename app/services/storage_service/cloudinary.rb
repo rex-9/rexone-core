@@ -2,6 +2,7 @@
 
 require "cloudinary"
 require "cloudinary/uploader"
+require_relative "error"
 
 module StorageService
   class Cloudinary < Base
@@ -50,7 +51,7 @@ module StorageService
       }
     rescue ::CloudinaryException => e
       Rails.logger.error("#{LOG_PREFIX} Upload Error: #{e.message}")
-      raise UploadError, e.message
+      raise StorageService::UploadError, e.message
     end
 
     def delete(identifier, options = {})
@@ -65,7 +66,7 @@ module StorageService
       true
     rescue ::CloudinaryException => e
       Rails.logger.error("#{LOG_PREFIX} Delete Error: #{e.message}")
-      raise DeleteError, e.message
+      raise StorageService::DeleteError, e.message
     end
 
     def url(identifier, options = {})

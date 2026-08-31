@@ -5,6 +5,13 @@ my:
     current_not_found: "လက်ရှိအသုံးပြုသူကို ရှာမတွေ့ပါ။"
     iam_fetched: "အသုံးပြုသူ IAM အချက်အလက်ကို ရယူပြီးပါပြီ"
   activerecord:
+    attributes:
+      user:
+        email: "အီးမေးလ်"
+        username: "အသုံးပြုသူအမည်"
+        name: "အမည်"
+        password: "လျှို့ဝှက်နံပါတ်"
+        password_confirmation: "လျှို့ဝှက်နံပါတ် အတည်ပြုချက်"
     errors:
       models:
         user:
@@ -13,3 +20,13 @@ my:
               invalid_format: "အင်္ဂလိပ်စာလုံးအသေး၊ နံပါတ်နှင့် underscore တို့သာ ပါဝင်နိုင်ပါသည်"
             confirmation_code:
               invalid_or_expired: "မမှန်ကန်ပါ သို့မဟုတ် သက်တမ်းကုန်သွားပါပြီ"
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: "ဖြည့်ရန် လိုအပ်ပါသည်"
+      taken: "အသုံးပြုပြီးသား ဖြစ်ပါသည်"
+      too_short: "အနည်းဆုံး စာလုံး %{count} လုံး ရှိရမည်"
+      too_long: "အများဆုံး စာလုံး %{count} လုံးသာ ရှိရမည်"
+      wrong_length: "စာလုံး %{count} လုံး ဖြစ်ရမည်"
+      invalid: "မမှန်ကန်ပါ"
+      confirmation: "မကိုက်ညီပါ"

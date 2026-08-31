@@ -1,6 +1,7 @@
 class Payment::ProductSerializer < ApplicationSerializer
   attributes :id, :name, :description, :price_unit_amount, :currency, :cycle,
-             :stripe_product_id, :stripe_price_id, :active, :created_at, :updated_at
+             :stripe_product_id, :stripe_price_id, :active, :created_at, :updated_at,
+             :discarded_at, :undiscarded_at
 
   attribute :price do |product|
     product.display_price
@@ -12,5 +13,9 @@ class Payment::ProductSerializer < ApplicationSerializer
 
   attribute :recurring do |product|
     product.recurring?
+  end
+
+  attribute :free do |product|
+    product.free?
   end
 end

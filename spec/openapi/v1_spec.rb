@@ -8,7 +8,7 @@ RSpec.describe "OpenAPI V1 document" do
   it "documents every intentional public API operation" do
     operation_count = document[:paths].sum { |_path, methods| methods.size }
 
-    expect(operation_count).to eq(66)
+    expect(operation_count).to eq(88)
     expect(document[:paths]).to include(
       "/signup",
       "/v1/payment/session",
@@ -74,8 +74,8 @@ RSpec.describe "OpenAPI V1 document" do
     audience_variants = notification.dig(:audience, :oneOf)
 
     expect(audience_variants.map { |variant| variant.dig(:properties, :type, :enum) })
-      .to contain_exactly([ "roles" ], [ "all" ])
-    expect(notification.dig(:channels, :items, :enum)).to eq(NotificationService::CHANNELS)
+      .to contain_exactly([ "users" ], [ "roles" ], [ "all" ])
+    expect(notification.dig(:channels, :items, :enum)).to eq(NotificationService::Center::CHANNELS)
 
     metadata = document.dig(:components, :schemas, :ai_message_metadata, :properties)
     expect(metadata.keys).to contain_exactly(

@@ -1,16 +1,31 @@
 en:
   notification:
+    templates:
+      general_announcement:
+        title: "Announcement"
+        body: "We have an important announcement for you."
+      maintenance_notice:
+        title: "Scheduled maintenance"
+        body: "Rexone will be temporarily unavailable during scheduled maintenance."
+      feature_update:
+        title: "New feature available"
+        body: "A new Rexone feature is now available."
     queued: "Notification delivery queued."
+    recipients_fetched: "Notification recipients fetched."
+    templates_fetched: "Notification templates fetched."
     queue_failed: "Notification delivery could not be queued."
     invalid_request: "Invalid notification request."
     title_required: "Title is required."
     message_required: "Message is required."
     channel_required: "Select at least one delivery channel."
     invalid_channel: "Channels must be one or more of: %{channels}."
-    invalid_audience: "Audience type must be roles or all."
+    invalid_audience: "Choose recipients by selected users, selected roles, or everyone."
+    user_ids_required: "Select at least one user."
     role_ids_required: "Select at least one role."
     invalid_data: "Notification data must be an object."
     no_recipients: "No matching recipients were found."
+    event_required: "Select a notification event."
+    invalid_event: "The selected event is not available for admin notifications."
     default_title: "Notification"
     default_body: "You have a new notification."
     template_not_found: "Template not found"

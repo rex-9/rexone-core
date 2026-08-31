@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe NotificationService do
+RSpec.describe NotificationService::Center do
   before { ActiveJob::Base.queue_adapter.enqueued_jobs.clear }
 
   it "enqueues only explicitly requested channels" do
@@ -58,6 +58,38 @@ RSpec.describe NotificationService do
     product = create(:payment_product)
     transaction = create(:payment_transaction, user: user, product: product, paid_at: Time.current)
     described_class.payment_success(user, product, transaction)
+    expect(Notification::DeliverJob).to have_been_enqueued.exactly(:thrice)
+  end
+
+  it "fans subscription created out to socket, push, and template email" do
+    user = create(:user)
+    product = create(:payment_product)
+    subscription = create(:payment_subscription, user: user, product: product)
+    described_class.subscription_created(user, product, subscription)
+    expect(Notification::DeliverJob).to have_been_enqueued.exactly(:thrice)
+  end
+
+  it "fans subscription canceled out to socket, push, and template email" do
+    user = create(:user)
+    product = create(:payment_product)
+    subscription = create(:payment_subscription, user: user, product: product, canceled_at: Time.current)
+    described_class.subscription_canceled(user, product, subscription)
+    expect(Notification::DeliverJob).to have_been_enqueued.exactly(:thrice)
+  end
+
+  it "fans subscription resumed out to socket, push, and template email" do
+    user = create(:user)
+    product = create(:payment_product)
+    subscription = create(:payment_subscription, user: user, product: product)
+    described_class.subscription_resumed(user, product, subscription)
+    expect(Notification::DeliverJob).to have_been_enqueued.exactly(:thrice)
+  end
+
+  it "fans payment failed out to socket, push, and template email" do
+    user = create(:user)
+    product = create(:payment_product)
+    subscription = create(:payment_subscription, user: user, product: product)
+    described_class.payment_failed(user, product, subscription)
     expect(Notification::DeliverJob).to have_been_enqueued.exactly(:thrice)
   end
 end

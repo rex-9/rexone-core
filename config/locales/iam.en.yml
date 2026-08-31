@@ -3,6 +3,10 @@ en:
     permissions:
       fetched: "Permissions fetched"
       fetched_one: "Permission fetched"
+      created: "Permission created"
+      create_failed: "Failed to create permission"
+      updated: "Permission updated"
+      update_failed: "Failed to update permission"
       discarded_fetched: "Discarded permissions fetched"
       undiscarded_fetched: "Undiscarded permissions fetched"
       discarded: "Permission moved to recycle bin"

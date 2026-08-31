@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Password recovery", type: :request do
-  before { allow(NotificationService).to receive(:password_reset_email) }
+  before { allow(NotificationService::Center).to receive(:password_reset_email) }
 
   describe "POST /password/forgot" do
     it "creates a reset token and queues it for the account email" do
@@ -10,7 +10,7 @@ RSpec.describe "Password recovery", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(user.reload.reset_password_token).to be_present
-      expect(NotificationService).to have_received(:password_reset_email).with(
+      expect(NotificationService::Center).to have_received(:password_reset_email).with(
         email: user.email,
         token: be_present
       )
@@ -19,7 +19,19 @@ RSpec.describe "Password recovery", type: :request do
     it "returns not found for an unknown email" do
       post "/password/forgot", params: { email: "missing@example.com" }
       expect(response).to have_http_status(:not_found)
-      expect(NotificationService).not_to have_received(:password_reset_email)
+      expect(NotificationService::Center).not_to have_received(:password_reset_email)
+    end
+
+    it "rejects a discarded account without queuing a reset email" do
+      user = create(:user)
+      user.discard!
+
+      post "/password/forgot", params: { email: user.email }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["message"]).to eq(I18n.t("auth.account_discarded"))
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
+      expect(NotificationService::Center).not_to have_received(:password_reset_email)
     end
   end
 

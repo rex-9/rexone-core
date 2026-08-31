@@ -1,5 +1,7 @@
 # app/controllers/v1/users_controller.rb
 class V1::UsersController < V1::ApplicationController
+  LOG_PREFIX = "[Users]".freeze
+
   # GET /users/current
   def read_current_user
     if current_user

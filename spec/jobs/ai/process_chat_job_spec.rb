@@ -19,7 +19,7 @@ RSpec.describe Ai::ProcessChatJob, type: :job do
   end
 
   before do
-    allow(NotificationService).to receive(:notify)
+    allow(NotificationService::Center).to receive(:notify)
   end
 
   it "persists the response, completes the request, and broadcasts readiness" do
@@ -41,7 +41,7 @@ RSpec.describe Ai::ProcessChatJob, type: :job do
       temperature: 0.4,
       max_tokens: 500
     )
-    expect(NotificationService).to have_received(:notify).with(
+    expect(NotificationService::Center).to have_received(:notify).with(
       hash_including(user_id: room.user_id, data: hash_including(type: "ai_response_ready"), send_socket: true)
     )
   end
@@ -90,7 +90,7 @@ RSpec.describe Ai::ProcessChatJob, type: :job do
     expect { described_class.perform_now(user_message.id) }.to raise_error(RuntimeError, "broken")
     expect(user_message.reload.metadata).to include("status" => "failed", "error" => "broken")
     expect(room).not_to be_processing
-    expect(NotificationService).to have_received(:notify).with(
+    expect(NotificationService::Center).to have_received(:notify).with(
       hash_including(data: hash_including(type: "ai_response_failed"), send_socket: true)
     )
   end

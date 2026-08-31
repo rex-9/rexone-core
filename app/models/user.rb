@@ -44,7 +44,7 @@ class User < ApplicationRecord
   def send_confirmation_instructions
     generate_confirmation_code if confirmation_code.blank?
     save(validate: false) if changed?
-    NotificationService.confirmation_email(
+    NotificationService::Center.confirmation_email(
       email: email,
       code: confirmation_code
     )
