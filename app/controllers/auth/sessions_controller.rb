@@ -131,6 +131,11 @@ class Auth::SessionsController < Devise::SessionsController
       nil
     end
 
+    if user.nil?
+      discarded_user = User.with_discarded.discarded.find_by(jti: params[:token])
+      return if reject_discarded_account!(discarded_user)
+    end
+
     if user
       return if reject_discarded_account!(user)
 

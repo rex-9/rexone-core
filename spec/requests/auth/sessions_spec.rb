@@ -119,6 +119,8 @@ RSpec.describe "Authentication sessions", type: :request do
     it "sends a fresh confirmation code instead of signing in an unconfirmed account" do
       unconfirmed = create(:user, :unconfirmed)
       allow(User).to receive(:find_by).and_return(unconfirmed)
+      RSpec::Mocks.space.proxy_for(NotificationService::Center).reset
+      allow(NotificationService::Center).to receive(:confirmation_email)
 
       post "/signin", params: { user: { signin_key: unconfirmed.email, password: "password123" } }
 
