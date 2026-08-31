@@ -21,6 +21,26 @@ RSpec.describe PaymentService::Stripe do
         )
       )
     end
+
+    it "creates a subscription-mode Checkout session for a recurring product" do
+      service = described_class.new
+      user = create(:user, stripe_customer_id: "cus_sub")
+      product = create(:payment_product, price_unit_amount: 2_000, cycle: "month")
+      session = instance_double("Stripe::Checkout::Session", url: "https://checkout.stripe.test/sub", id: "cs_sub")
+      
+      allow(Stripe::Checkout::Session).to receive(:create).and_return(session)
+      
+      result = service.create_checkout_session(user_id: user.id, product_id: product.id)
+      
+      expect(result).to eq(checkout_url: "https://checkout.stripe.test/sub", session_id: "cs_sub")
+      expect(Stripe::Checkout::Session).to have_received(:create).with(
+        hash_including(
+          customer: "cus_sub",
+          mode: PaymentConstants::StripeMode::SUBSCRIPTION,
+          subscription_data: hash_including(metadata: hash_including(user_id: user.id, product_id: product.id))
+        )
+      )
+    end
   end
 
   describe "#create_product" do
@@ -428,6 +448,52 @@ RSpec.describe PaymentService::Stripe do
       expect(product.price_unit_amount).to eq(0)
       expect(product.cycle).to be_nil
       expect(product.period_label).to eq("One-time purchase")
+    end
+  end
+
+  describe "#discard_product" do
+    it "deactivates Stripe records and discards the local product" do
+      service = described_class.new
+      product = create(:payment_product, stripe_product_id: "prod_active", stripe_price_id: "price_active")
+      
+      allow(Stripe::Product).to receive(:update)
+      allow(Stripe::Price).to receive(:update)
+      
+      result = service.discard_product(product.id)
+      discarded_product = result[:data]
+      
+      expect(discarded_product).to be_discarded
+      expect(discarded_product.active).to be(false)
+      expect(Stripe::Product).to have_received(:update).with("prod_active", active: false)
+      expect(Stripe::Price).to have_received(:update).with("price_active", active: false)
+    end
+  end
+
+  describe "#create_customer" do
+    it "creates a Stripe customer and persists the customer ID" do
+      service = described_class.new
+      user = create(:user, stripe_customer_id: nil)
+      customer = instance_double("Stripe::Customer", id: "cus_new")
+      
+      allow(Stripe::Customer).to receive(:create).and_return(customer)
+      
+      result = service.create_customer(user: user)
+      
+      expect(result).to eq(customer_id: "cus_new")
+      expect(user.reload.stripe_customer_id).to eq("cus_new")
+      expect(Stripe::Customer).to have_received(:create).with(hash_including(email: user.email))
+    end
+    
+    it "returns the existing customer ID without calling Stripe" do
+      service = described_class.new
+      user = create(:user, stripe_customer_id: "cus_existing")
+      
+      allow(Stripe::Customer).to receive(:create)
+      
+      result = service.create_customer(user: user)
+      
+      expect(result).to eq(customer_id: "cus_existing")
+      expect(Stripe::Customer).not_to have_received(:create)
     end
   end
 end

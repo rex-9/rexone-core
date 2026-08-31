@@ -76,4 +76,23 @@ RSpec.describe "Admin IAM permissions", type: :request do
 
     expect(response).to have_http_status(:forbidden)
   end
+
+  it "returns all permissions without pagination when limit is off" do
+    ["users", "roles", "notifications"].each do |res|
+      create(:permission, action: "read", resource: res)
+    end
+    
+    get "/v1/admin/iam/permissions", params: { limit: "all" }, headers: headers
+    
+    expect(response).to have_http_status(:ok)
+    expect(response_data.size).to be >= 3
+    # When pagy is nil, there should be no pagination metadata
+    expect(response_meta.dig("pagination")).to be_nil
+  end
+
+  it "returns 404 for a non-existent permission" do
+    get "/v1/admin/iam/permissions/#{SecureRandom.uuid}", headers: headers
+    
+    expect(response).to have_http_status(:not_found)
+  end
 end

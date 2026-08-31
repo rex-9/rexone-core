@@ -67,4 +67,29 @@ RSpec.describe "Admin IAM roles", type: :request do
 
     expect(response).to have_http_status(:forbidden)
   end
+
+  describe "GET /v1/admin/iam/roles/:id" do
+    let(:role) { create(:role, name: "test_role", description: "Test role desc") }
+
+    it "shows a role" do
+      get "/v1/admin/iam/roles/#{role.id}", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include("name" => role.name, "description" => role.description)
+    end
+
+    it "returns 404 for non-existent role" do
+      get "/v1/admin/iam/roles/nonexistent-uuid", headers: headers
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe "POST /v1/admin/iam/roles duplicate" do
+    it "returns 422 for duplicate name" do
+      create(:role, name: "existing_role")
+      post "/v1/admin/iam/roles",
+           params: { name: "existing_role", description: "Dupe" },
+           headers: headers
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
 end

@@ -63,6 +63,36 @@ RSpec.describe "Admin chat", type: :request do
     expect(response_status["message"]).to eq(I18n.t("admin.chat.room_deleted"))
   end
 
+  describe "GET /v1/admin/chat/rooms/:id" do
+    it "shows a chat room" do
+      grant_admin_chat_permission(:read, "rooms")
+      get "/v1/admin/chat/rooms/#{room.id}", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include("id" => room.id, "title" => "Support chat")
+    end
+
+    it "returns 404 for non-existent room" do
+      grant_admin_chat_permission(:read, "rooms")
+      get "/v1/admin/chat/rooms/nonexistent-uuid", headers: headers
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe "GET /v1/admin/chat/messages/:id" do
+    it "shows a chat message" do
+      grant_admin_chat_permission(:read, "messages")
+      get "/v1/admin/chat/messages/#{message.id}", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include("id" => message.id, "content" => "Hello")
+    end
+
+    it "returns 404 for non-existent message" do
+      grant_admin_chat_permission(:read, "messages")
+      get "/v1/admin/chat/messages/nonexistent-uuid", headers: headers
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   def grant_admin_chat_permission(action, resource)
     grant_super_admin_role(admin)
   end

@@ -118,7 +118,7 @@ Rails.application.routes.draw do
 
     # ===== ADMIN API =====
     # React Admin Dashboard.
-    # Requires admin role + normal resource permissions.
+    # Requires admin role (with `_admin` suffix) + resource permissions.
     namespace :admin do
       # API-only: no new/edit needed
       resources :users, only: %i[index show create update destroy] do

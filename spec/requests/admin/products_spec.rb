@@ -151,6 +151,37 @@ RSpec.describe "Admin payment products", type: :request do
     expect(response).to have_http_status(:forbidden)
   end
 
+  describe "GET /v1/admin/payment/products/:id" do
+    let(:product) { create(:payment_product, name: "Starter") }
+
+    it "shows a product" do
+      grant_admin_product_permission(:read)
+      get "/v1/admin/payment/products/#{product.id}", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include("name" => "Starter")
+    end
+
+    it "returns 404 for non-existent product" do
+      grant_admin_product_permission(:read)
+      get "/v1/admin/payment/products/nonexistent-uuid", headers: headers
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe "POST /v1/admin/payment/products error" do
+    it "returns 422 when service error occurs" do
+      grant_admin_product_permission(:create)
+      allow(PaymentService::Client).to receive(:create_product).and_return(error: "Stripe error")
+
+      post "/v1/admin/payment/products",
+           params: { product: valid_product_params },
+           headers: headers,
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
   def valid_product_params
     {
       name: "Premium",

@@ -98,6 +98,18 @@ RSpec.describe "Admin notification broadcasts", type: :request do
     )
   end
 
+  it "rejects dispatch when all targeted users are unconfirmed" do
+    grant_admin_notification_permission
+    unconfirmed = create(:user, :unconfirmed)
+    
+    post "/v1/admin/notifications",
+         params: valid_params.merge(audience: { type: "users", user_ids: [unconfirmed.id] }),
+         headers: headers
+    
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(Notification::DispatchJob).not_to have_been_enqueued
+  end
+
   it "localizes success messages from X-Locale" do
     grant_admin_notification_permission
 
