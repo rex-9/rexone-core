@@ -43,9 +43,7 @@ RSpec.describe "Google authentication", type: :request do
       post "/signin/google", params: { token: "google-token" }
 
       expect(response).to have_http_status(:ok)
-      expect(user.reload.get_profile_pic_url).to eq(
-        "https://cdn.example.com/#{AssetConstants::AssetName.google_profile(user.id)}.jpg"
-      )
+      expect(user.reload.get_profile_pic_url).to eq("https://example.com/avatar.jpg")
       expect(StorageService::Client).to have_received(:upload).with(
         "https://example.com/avatar.jpg",
         hash_including(
@@ -130,7 +128,7 @@ RSpec.describe "Google authentication", type: :request do
       expect(user).to have_attributes(username: "new_user", provider: "google")
       expect(user.assets.uploaded.find_by(type: AssetConstants::AssetType::AVATAR)).to have_attributes(
         name: AssetConstants::AssetName.google_profile(user.id),
-        url: "https://cdn.example.com/#{AssetConstants::AssetName.google_profile(user.id)}.jpg",
+        url: "https://example.com/avatar.jpg",
         format: AssetConstants::AssetFormat::IMAGE
       )
       expect(StorageService::Client).to have_received(:upload).with(

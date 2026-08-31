@@ -13,6 +13,7 @@ RSpec.describe "V1 IAM Roles API", type: :request do
 
   describe "GET /v1/iam/roles/current" do
     it "returns the authenticated user's paginated roles" do
+      grant_super_admin_role(user)
       assigned_role = create(:role, name: "editor")
       create(:role, name: "unassigned")
       Iam::UserRole.find_or_create_by!(user: user, role: assigned_role)

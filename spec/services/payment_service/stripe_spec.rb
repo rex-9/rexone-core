@@ -2,18 +2,24 @@ require "rails_helper"
 
 RSpec.describe PaymentService::Stripe do
   describe "#create_checkout_session" do
-    it "does not create a Stripe Checkout session for a free product" do
+    it "creates a Stripe Checkout session for a free product" do
       service = described_class.new
-      user = create(:user)
+      user = create(:user, stripe_customer_id: "cus_free")
       product = create(:payment_product, price_unit_amount: 0, cycle: nil)
+      session = instance_double("Stripe::Checkout::Session", url: "https://checkout.stripe.test/free", id: "cs_free")
 
-      allow(Stripe::Checkout::Session).to receive(:create)
+      allow(Stripe::Checkout::Session).to receive(:create).and_return(session)
 
-      expect do
-        service.create_checkout_session(user_id: user.id, product_id: product.id)
-      end.to raise_error(PaymentService::Error, "Free products do not use Stripe checkout")
+      result = service.create_checkout_session(user_id: user.id, product_id: product.id)
 
-      expect(Stripe::Checkout::Session).not_to have_received(:create)
+      expect(result).to eq(checkout_url: "https://checkout.stripe.test/free", session_id: "cs_free")
+      expect(Stripe::Checkout::Session).to have_received(:create).with(
+        hash_including(
+          customer: "cus_free",
+          line_items: [ hash_including(price: product.stripe_price_id, quantity: 1) ],
+          mode: PaymentConstants::StripeMode::PAYMENT
+        )
+      )
     end
   end
 

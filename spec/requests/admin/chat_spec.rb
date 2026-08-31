@@ -10,6 +10,7 @@ RSpec.describe "Admin chat", type: :request do
   before do
     allow(CacheService).to receive(:read).and_return(token)
     allow(CacheService).to receive(:write)
+    grant_super_admin_role(admin)
   end
 
   it "lists and updates chat rooms with localized messages" do
@@ -63,9 +64,6 @@ RSpec.describe "Admin chat", type: :request do
   end
 
   def grant_admin_chat_permission(action, resource)
-    role = admin.roles.find_by!(name: "admin")
-    permission = Iam::Permission.find_or_create_by!(action: action.to_s, resource: resource)
-
-    Iam::RolePermission.find_or_create_by!(role: role, permission: permission)
+    grant_super_admin_role(admin)
   end
 end

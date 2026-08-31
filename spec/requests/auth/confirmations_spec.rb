@@ -10,6 +10,8 @@ RSpec.describe "Email confirmation", type: :request do
   describe "POST /confirmation/send_code" do
     it "regenerates and delivers a code by email or username" do
       user = create(:user, :unconfirmed)
+      RSpec::Mocks.space.proxy_for(NotificationService::Center).reset
+      allow(NotificationService::Center).to receive(:confirmation_email)
 
       [ user.email, user.username ].each do |signin_key|
         post "/confirmation/send_code", params: { signin_key: signin_key }
