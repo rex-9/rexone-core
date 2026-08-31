@@ -21,19 +21,19 @@ class Speech::ProcessTtsJob < ApplicationJob
 
   def perform(message_id)
     message = Chat::Message.find(message_id)
-    return if message.tts_status == Chat::Message::TTS_STATUSES[:completed]
+    return if message.tts_status == Chat::Message::STATUSES[:completed]
 
-    update_tts!(message, Chat::Message::TTS_STATUSES[:processing])
+    update_tts!(message, Chat::Message::STATUSES[:processing])
 
     result = SpeechService::Client.text_to_speech(text: message.content)
     raise SpeechService::Error, result[:error] if result[:error].present?
 
     upload = upload_audio!(message, result)
     persist_asset!(message, upload)
-    update_tts!(message, Chat::Message::TTS_STATUSES[:completed], tts_error: nil)
+    update_tts!(message, Chat::Message::STATUSES[:completed], tts_error: nil)
     notify_completed(message)
   rescue SpeechService::Error, StorageService::Error => error
-    update_tts!(message, Chat::Message::TTS_STATUSES[:retrying], tts_error: error.message) if message
+    update_tts!(message, Chat::Message::STATUSES[:retrying], tts_error: error.message) if message
     raise
   rescue StandardError => error
     mark_as_failed!(message_id, error)
@@ -98,9 +98,9 @@ class Speech::ProcessTtsJob < ApplicationJob
   def mark_as_failed!(message_id, error)
     message = Chat::Message.find_by(id: message_id)
     return unless message
-    return if message.tts_status == Chat::Message::TTS_STATUSES[:completed]
+    return if message.tts_status == Chat::Message::STATUSES[:completed]
 
-    update_tts!(message, Chat::Message::TTS_STATUSES[:failed], tts_error: error.message)
+    update_tts!(message, Chat::Message::STATUSES[:failed], tts_error: error.message)
 
     copy = speech_message(MessageService::Speech::TTS_FAILED)
     NotificationService.notify(

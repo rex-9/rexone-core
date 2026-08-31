@@ -29,12 +29,13 @@ module IamConstants
     ASSETS        = "assets".freeze
     NOTIFICATIONS = "notifications".freeze
     AI            = "ai".freeze
+    SPEECH        = "speech".freeze
     CLIENTS       = "clients".freeze
     FEEDBACKS     = "feedbacks".freeze
     ALL           = [
       USERS, ROLES, USER_ROLES, PERMISSIONS, PRODUCTS, PAYMENTS,
       SUBSCRIPTIONS, TRANSACTIONS, ACCESS, ASSETS, NOTIFICATIONS,
-      AI, CLIENTS, FEEDBACKS
+      AI, SPEECH, CLIENTS, FEEDBACKS
     ].freeze
   end
 end

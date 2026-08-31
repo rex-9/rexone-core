@@ -8,8 +8,8 @@ info:
     media, notifications, client observability, and AI conversations.
 
     Authenticated endpoints use a bearer JWT. Send `X-Platform` as `web`,
-    `android`, or `ios` to select the active session, and `X-Locale` as `en`,
-    `my`, or `es` to select translated response messages.
+    `android`, or `ios` to select the active session, and `X-Locale` as
+    `en`, `my`, or `es` to select translated response messages.
 tags:
 - name: Authentication
   description: Account registration, confirmation, sessions, and password recovery.

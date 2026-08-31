@@ -8,9 +8,8 @@ module Openapi
     UUID = { type: :string, format: :uuid }.freeze
     DATE_TIME = { type: :string, format: "date-time", nullable: true }.freeze
     SECURITY = [ { bearerAuth: [] } ].freeze
-    AI_STATUSES = Chat::Message::AI_STATUSES.values.freeze
-    AI_ROLES = %w[user assistant].freeze
-    TTS_STATUSES = Chat::Message::TTS_STATUSES.values.freeze
+    STATUSES = Chat::Message::STATUSES.values.freeze
+    AI_ROLES = [ AiConstants::ChatRole::USER, AiConstants::ChatRole::ASSISTANT ].freeze
     LOG_SEVERITIES = Log::Client.severities.keys.freeze
     LOG_PLATFORMS = Log::Client.platforms.keys.freeze
     LOG_ENVIRONMENTS = Log::Client.environments.keys.freeze
@@ -333,7 +332,7 @@ module Openapi
         required: %i[message_id room_id status job_id],
         message_id: UUID,
         room_id: UUID,
-        status: { type: :string, enum: Chat::Message::TTS_STATUSES.values },
+        status: { type: :string, enum: Chat::Message::STATUSES.values },
         job_id: { type: :string }
       ),
       speech_tts_queued_response: object(
@@ -396,7 +395,7 @@ module Openapi
         data: ref(:speech_stt_data)
       ),
       ai_message_metadata: object(
-        status: { type: :string, enum: AI_STATUSES, description: "Processing state; set on queued user messages." },
+        status: { type: :string, enum: STATUSES, description: "Processing state; set on queued user messages." },
         system_prompt: { type: :string, nullable: true },
         temperature: { type: :number, format: :float, nullable: true },
         max_tokens: { type: :integer, nullable: true },
@@ -410,7 +409,7 @@ module Openapi
           example: { prompt_tokens: 42, completion_tokens: 18, total_tokens: 60 }
         },
         model: { type: :string, nullable: true, description: "Provider model identifier used for the response." },
-        tts_status: { type: :string, enum: TTS_STATUSES, nullable: true, description: "Async TTS state for assistant messages." },
+        tts_status: { type: :string, enum: STATUSES, nullable: true, description: "Async TTS state for assistant messages." },
         tts_error: { type: :string, nullable: true, description: "Last TTS failure message when tts_status is failed or retrying." }
       ),
       response: object(

@@ -106,12 +106,13 @@ flowchart LR
     Services --> OneSignal[OneSignal]
     Services --> Cloudinary[Cloudinary]
     Services --> DeepSeek[DeepSeek]
+    Services --> Speech[Nova · Azure Speech]
 
     Jobs --> Services
     API --> Observability[Pulse · RED · client logs]
 ```
 
-Provider-facing code lives behind focused clients such as `PaymentService::Client`, `StorageService::Client`, `AiService::Client`, and the notification delivery services.
+Provider-facing code lives behind focused clients such as `PaymentService::Client`, `StorageService::Client`, `AiService::Client`, `SpeechService::Client`, and the notification delivery services.
 
 Swapping or extending a provider does not require spreading vendor logic across controllers.
 
@@ -226,6 +227,22 @@ The DeepSeek-backed AI layer provides:
 The user can leave the chat, browse elsewhere, close the browser, or shut down the device without interrupting generation. The completed assistant message is committed to conversation history before notification delivery begins, so it is already waiting when the user returns—even if no live socket was present to receive the alert.
 
 The AI layer remains isolated behind its provider boundary so product-specific workflows can evolve without coupling the rest of the application to a single model provider.
+
+### Speech capabilities
+
+The unified speech infrastructure provides both synchronous utilities and real-time streaming audio capabilities:
+
+- **Text-to-Speech (TTS)**:
+  - Synchronous binary audio streaming (`POST /v1/speech/tts`) returning raw MP3 data without base64 wrapper overhead.
+  - Asynchronous background TTS synthesis for chat messages (`POST /v1/speech/tts` with `message_id`).
+  - Durable background processing via `Speech::ProcessTtsJob` on the dedicated `:ai` queue with retry logic and per-message concurrency limits.
+  - Automated Cloudinary audio storage and polymorphic `Asset` attachment to chat messages.
+  - Real-time `tts_ready` and `tts_failed` completion alerts broadcast over ActionCable (`NotificationChannel`).
+- **Speech-to-Text (STT)**:
+  - Synchronous transcription (`POST /v1/speech/stt`) accepting either multipart audio file uploads or remote `audio_url` references.
+  - Real-time live audio transcription over WebSocket via `SpeechLiveChannel`, streaming PCM audio chunks directly to Azure Speech live recognition sessions.
+- **Provider Architecture**:
+  - `SpeechService::Client` exposes the generic domain interface while isolating provider specifics behind `NovaSpeech` (batch REST STT/TTS) and `AzureSpeech` (SSML REST TTS & live WebSocket STT).
 
 ### Data & API design
 
@@ -408,6 +425,7 @@ The API is broader than a starter CRUD demo. Its main route families are:
 | Media            | `/v1/media/upload`                                                       |
 | Notifications    | `/v1/admin/notifications`                                                |
 | AI               | `/v1/ai/*`                                                               |
+| Speech           | `/v1/speech/*`, `SpeechLiveChannel` (WS)                                 |
 | Client telemetry | `/v1/log/clients`                                                        |
 
 Use `/api-docs` for the interactive OpenAPI view and [`config/routes.rb`](config/routes.rb) for the authoritative route map.

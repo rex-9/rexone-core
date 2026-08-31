@@ -99,7 +99,7 @@ All tables use **UUID** primary keys (`gen_random_uuid()`), utilize **Discard** 
 
 Heavy or external provider operations sit behind clean service interfaces and execute in dedicated background queues (`config/queue.yml`):
 
-- **AI Queue (`ai`)**: `Ai::ProcessChatJob` communicates with DeepSeek (`AiService::Client`), runs asynchronously with room-level concurrency locks, commits assistant messages to Postgres, and alerts the user over WebSocket (`NotificationChannel`).
+- **AI & Speech Queue (`ai`)**: `Ai::ProcessChatJob` communicates with DeepSeek (`AiService::Client`) for chat completion. `Speech::ProcessTtsJob` communicates with Azure/Nova (`SpeechService::Client`) to synthesize audio for chat messages, saves MP3 assets via `StorageService::Client`, and alerts the user over WebSocket (`NotificationChannel`).
 - **Payments Queue (`payments`)**: `Payment::ProcessWebhookJob` asynchronously fulfills Stripe webhooks (checkout completed, invoice paid, subscription updated/deleted) with idempotency.
 - **Notifications Queue (`notifications`)**: `NotificationService` fans out work to `Notification::DeliverJob` for Action Cable broadcasts, OneSignal push notifications, and OneSignal transactional emails.
 - **Storage Queue (`storage`)**: `Storage::DeleteJob` handles remote deletion asynchronously after DB commits.
@@ -224,6 +224,9 @@ All three pillars of the Rexone platform are fully aligned at **100% feature par
 | **AI: Conversational Rooms & Message History**           |      ✅       |          ✅          |            ✅            |
 | **AI: Queued Background Execution (DeepSeek)**           |      ✅       |          ✅          |            ✅            |
 | **AI: Real-Time WebSocket Completion Alerts**            |      ✅       |          ✅          |            ✅            |
+| **Speech: Text-to-Speech (Sync & Async Binary Streaming)**|      ✅       |          ✅          |            ✅            |
+| **Speech: Speech-to-Text (Sync Upload / URL)**           |      ✅       |          ✅          |            ✅            |
+| **Speech: Live Audio STT Streaming (WebSocket)**         |      ✅       |          ✅          |            ✅            |
 | **Push Notifications (OneSignal)**                       |      ✅       |         N/A          |            ✅            |
 | **Product Analytics (Firebase)**                         |      N/A      |         N/A          |            ✅            |
 | **In-App Version Upgrader**                              |      N/A      |         N/A          |            ✅            |

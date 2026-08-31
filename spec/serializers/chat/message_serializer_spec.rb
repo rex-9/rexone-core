@@ -10,7 +10,7 @@ RSpec.describe Chat::MessageSerializer do
       :chat_message,
       role: "assistant",
       content: "Hello",
-      tts_status: Chat::Message::TTS_STATUSES[:queued],
+      tts_status: Chat::Message::STATUSES[:queued],
       tts_error: nil
     )
 

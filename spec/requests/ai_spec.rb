@@ -79,7 +79,7 @@ RSpec.describe "Queued AI chat", type: :request do
     )
     assistant_message.update!(
       metadata: assistant_message.metadata.merge(
-        "tts_status" => Chat::Message::TTS_STATUSES[:completed]
+        "tts_status" => Chat::Message::STATUSES[:completed]
       )
     )
 

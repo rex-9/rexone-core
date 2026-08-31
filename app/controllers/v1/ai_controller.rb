@@ -32,7 +32,7 @@ class V1::AiController < V1::ApplicationController
       user_message = @room.messages.create!(
         role: AiConstants::ChatRole::USER,
         content: message,
-        ai_status: Chat::Message::AI_STATUSES[:queued],
+        ai_status: Chat::Message::STATUSES[:queued],
         ai_system_prompt: params[:system_prompt].presence,
         ai_temperature: params[:temperature]&.to_f || 0.7,
         ai_max_tokens: params[:max_tokens]&.to_i || 2000

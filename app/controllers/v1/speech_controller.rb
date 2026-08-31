@@ -55,11 +55,7 @@ class V1::SpeechController < V1::ApplicationController
       return
     end
 
-    message.tts_status = Chat::Message::TTS_STATUSES[:queued]
-    message.tts_error = nil
-    message.save!
-
-    job = Speech::ProcessTtsJob.perform_later(message.id)
+    result = SpeechService::Client.enqueue_message_tts(message)
 
     render_json_response(
       status_code: 200,
@@ -67,8 +63,8 @@ class V1::SpeechController < V1::ApplicationController
       data: {
         message_id: message.id,
         room_id: message.room_id,
-        status: Chat::Message::TTS_STATUSES[:queued],
-        job_id: job.job_id
+        status: Chat::Message::STATUSES[:queued],
+        job_id: result[:job_id]
       }
     )
   rescue SolidQueue::Job::EnqueueError, ActiveJob::EnqueueError => error

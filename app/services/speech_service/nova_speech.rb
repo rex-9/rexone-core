@@ -63,12 +63,13 @@ module SpeechService
 
     def request_http(path, parse_json: true)
       uri = URI.parse("#{@base_url}#{path}")
-      http = Net::HTTP.new(uri.host, uri.port)
+      http = Net::HTTP.new(uri.host || "localhost", uri.port || 80)
       http.use_ssl = uri.scheme == "https"
       http.open_timeout = OPEN_TIMEOUT_SECONDS
       http.read_timeout = READ_TIMEOUT_SECONDS
 
-      request = Net::HTTP::Post.new(uri.request_uri)
+      request_path = uri.respond_to?(:request_uri) ? uri.request_uri : (uri.path.presence || path)
+      request = Net::HTTP::Post.new(request_path)
       yield request
       response = http.request(request)
 

@@ -91,7 +91,7 @@ RSpec.describe "OpenAPI V1 document" do
       :tts_status,
       :tts_error
     )
-    expect(metadata.dig(:status, :enum)).to eq(Chat::Message::AI_STATUSES.values)
-    expect(metadata.dig(:tts_status, :enum)).to eq(Chat::Message::TTS_STATUSES.values)
+    expect(metadata.dig(:status, :enum)).to eq(Chat::Message::STATUSES.values)
+    expect(metadata.dig(:tts_status, :enum)).to eq(Chat::Message::STATUSES.values)
   end
 end
