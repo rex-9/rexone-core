@@ -185,18 +185,18 @@ Rails.application.routes.draw do
     # ===== IAM =====
     namespace :iam do
       # API-only: no new/edit
-      resources :permissions, only: [] do 
+      resources :permissions, only: [] do
         collection do
           get :read_current_permissions, path: "current"
-        end   
+        end
       end
 
-      resources :roles, only: [] do 
+      resources :roles, only: [] do
         collection do
           get :read_current_roles, path: "current"
-        end   
+        end
       end
-      
+
       resources :users, only: [] do
         resources :roles,
           only: %i[index create destroy],
@@ -229,11 +229,13 @@ Rails.application.routes.draw do
       get "session/:session_id", to: "payments#read_status"
     end
 
-    # ===== ACCESS =====
-    get "access", to: "access#index"
-    get "access/active", to: "access#read_active"
-    get "access/check", to: "access#read_check"
-    delete "access/:id", to: "access#destroy"
+    # ===== ACCESSES =====
+    resources :accesses, only: %i[index destroy] do
+      collection do
+        get :active, action: :read_active
+        get :check, action: :read_check
+      end
+    end
 
     # ===== AI =====
     post "ai/chat", to: "ai#create_chat"

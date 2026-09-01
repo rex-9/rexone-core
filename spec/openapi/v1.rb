@@ -500,7 +500,7 @@ module Openapi
         status: { type: :string },
         granted_at: DATE_TIME,
         expires_at: DATE_TIME,
-        days_remaining: { type: :integer, nullable: true },
+        remaining_days: { type: :integer, nullable: true },
         active: { type: :boolean },
         created_at: DATE_TIME,
         updated_at: DATE_TIME
@@ -854,18 +854,18 @@ module Openapi
                        errors: [ 401, 404 ])
       }
 
-      paths["/v1/access"] = {
-        get: operation(tags: "Access", summary: "List the current user's product access", errors: [ 401 ])
+      paths["/v1/accesses"] = {
+        get: operation(tags: "Accesses", summary: "List the current user's product access", errors: [ 401 ])
       }
-      paths["/v1/access/active"] = {
-        get: operation(tags: "Access", summary: "List active product access", errors: [ 401 ])
+      paths["/v1/accesses/active"] = {
+        get: operation(tags: "Accesses", summary: "List active product access", errors: [ 401 ])
       }
-      paths["/v1/access/check"] = {
-        get: operation(tags: "Access", summary: "Check access to a product",
+      paths["/v1/accesses/check"] = {
+        get: operation(tags: "Accesses", summary: "Check access to a product",
                        parameters: [ query_parameter(:product_id, required: true, format: :uuid) ], errors: [ 401 ])
       }
-      paths["/v1/access/{id}"] = {
-        delete: operation(tags: "Access", summary: "Revoke owned product access",
+      paths["/v1/accesses/{id}"] = {
+        delete: operation(tags: "Accesses", summary: "Revoke owned product access",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
       }
 

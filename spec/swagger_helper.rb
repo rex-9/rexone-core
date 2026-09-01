@@ -27,7 +27,7 @@ RSpec.configure do |config|
 
           Authenticated endpoints use a bearer JWT. Send `X-Platform` as `web`,
           `android`, or `ios` to select the active session, and `X-Locale` as
-          `en`, `my`, or `es` to select translated response messages.
+          `en`, or `my` to select translated response messages.
         DESCRIPTION
       },
       tags: [
@@ -45,7 +45,7 @@ RSpec.configure do |config|
         { name: 'IAM Roles', description: 'Role definitions and their permission assignments.' },
         { name: 'IAM User Roles', description: 'Admin-managed role assignments for users.' },
         { name: 'Payments', description: 'Products, checkout sessions, subscriptions, and transactions.' },
-        { name: 'Access', description: 'Product-access inspection and revocation.' },
+        { name: 'Accesses', description: 'Product-access inspection and revocation.' },
         { name: 'Media', description: 'Synchronous multipart asset upload.' },
         { name: 'AI', description: 'Durable queued chat plus synchronous text utilities.' },
         { name: 'Client Logs', description: 'Client error ingestion and authorized operational review.' },

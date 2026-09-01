@@ -29,7 +29,10 @@ class Payment::Product < ApplicationRecord
   validates :stripe_product_id, presence: true, uniqueness: true
   validates :stripe_price_id, presence: true, uniqueness: true
   validates :currency, presence: true
+  validate :prevent_free_to_premium_transition, on: :update
+  validate :free_product_must_be_one_time
 
+  before_validation :normalize_free_product
   # ===== SCOPES =====
   scope :active, -> { where(active: true) }
   scope :one_time, -> { where(cycle: nil) }
@@ -77,6 +80,24 @@ class Payment::Product < ApplicationRecord
   end
 
   private
+
+  def normalize_free_product
+    self.cycle = nil if free?
+  end
+
+  def free_product_must_be_one_time
+    if free? && cycle.present?
+      errors.add(:cycle, "Free products must be one-time and cannot have a recurring billing cycle")
+    end
+  end
+
+  def prevent_free_to_premium_transition
+    return unless price_unit_amount_changed?
+
+    if price_unit_amount_was.to_i.zero? && price_unit_amount.to_i.positive?
+      errors.add(:price_unit_amount, "Free products cannot be converted to premium products")
+    end
+  end
 
   def deactivate
     self.active = false

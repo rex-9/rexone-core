@@ -1,7 +1,7 @@
 # app/serializers/access_serializer.rb
 
 class AccessSerializer < ApplicationSerializer
-  attributes :id, :status, :granted_at, :expires_at, :created_at, :updated_at
+  attributes :id, :status, :granted_at, :expires_at, :revoked_at, :created_at, :updated_at
 
   attribute :product_id do |access|
     access.product_id
@@ -11,8 +11,8 @@ class AccessSerializer < ApplicationSerializer
     access.product&.name
   end
 
-  attribute :days_remaining do |access|
-    access.days_remaining
+  attribute :remaining_days do |access|
+    access.remaining_days
   end
 
   attribute :active do |access|

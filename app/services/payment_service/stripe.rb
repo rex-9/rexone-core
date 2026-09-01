@@ -153,6 +153,11 @@ module PaymentService
       with_stripe_error("Update Product") do
         product = Payment::Product.with_discarded.find(product_id)
         attributes = product_update_attributes(product, attributes)
+
+        if product.free? && attributes[:price_unit_amount].to_i.positive?
+          return { error: "Free products cannot be converted to premium products" }
+        end
+
         previous_stripe_product_attributes = {
           name: product.name,
           description: product.description,
@@ -526,6 +531,14 @@ module PaymentService
       record = Payment::Product.with_discarded.find_or_initialize_by(
         stripe_product_id: price.product
       )
+
+      if record.persisted? && record.free? && price.unit_amount.to_i.positive?
+        Rails.logger.warn(
+          "#{STRIPE_LOG_PREFIX} Ignored price sync: Free product #{record.id} cannot be converted to premium via Stripe price #{price.id}"
+        )
+        return
+      end
+
       inactive_in_stripe = !stripe_product&.active || !price.active
 
       record.assign_attributes(

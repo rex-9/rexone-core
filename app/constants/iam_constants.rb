@@ -6,6 +6,13 @@ module IamConstants
     ADMIN       = "admin".freeze
     USER        = "user".freeze
     ALL         = [ SUPER_ADMIN, ADMIN, USER ].freeze
+
+    RESTRICTED_FOR_ADMIN = [
+      "users",
+      "roles",
+      "permissions",
+      "user_roles"
+    ].freeze
   end
 
   module Action
@@ -25,7 +32,7 @@ module IamConstants
     PAYMENTS      = "payments".freeze
     SUBSCRIPTIONS = "subscriptions".freeze
     TRANSACTIONS  = "transactions".freeze
-    ACCESS        = "access".freeze
+    ACCESSES      = "accesses".freeze
     ASSETS        = "assets".freeze
     NOTIFICATIONS = "notifications".freeze
     AI            = "ai".freeze
@@ -34,8 +41,23 @@ module IamConstants
     ANALYTICS     = "analytics".freeze
     ALL           = [
       USERS, ROLES, USER_ROLES, PERMISSIONS, PRODUCTS, PAYMENTS,
-      SUBSCRIPTIONS, TRANSACTIONS, ACCESS, ASSETS, NOTIFICATIONS,
+      SUBSCRIPTIONS, TRANSACTIONS, ACCESSES, ASSETS, NOTIFICATIONS,
       AI, CLIENTS, FEEDBACKS, ANALYTICS
+    ].freeze
+  end
+
+  module DefaultPermissions
+    USER = [
+      { resource: Resource::CLIENTS, actions: [ Action::CREATE ] },
+      { resource: Resource::PRODUCTS, actions: [ Action::READ ] },
+      { resource: Resource::PAYMENTS, actions: [ Action::CREATE ] },
+      { resource: Resource::SUBSCRIPTIONS, actions: [ Action::READ, Action::CREATE ] },
+      { resource: Resource::TRANSACTIONS, actions: [ Action::READ ] },
+      { resource: Resource::ACCESSES, actions: [ Action::READ ] },
+      { resource: Resource::ASSETS, actions: Action::ALL },
+      { resource: Resource::USERS, actions: Action::ALL },
+      { resource: Resource::AI, actions: Action::ALL },
+      { resource: Resource::FEEDBACKS, actions: [ Action::CREATE, Action::READ ] }
     ].freeze
   end
 end

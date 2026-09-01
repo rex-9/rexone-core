@@ -19,6 +19,8 @@ module MessageService
     SUBSCRIPTION_FETCHED = "payment.subscriptions.fetched_one"
     ALREADY_SUBSCRIBED = "payment.checkout.already_subscribed"
     ACTIVE_SUBSCRIPTION_EXISTS = "payment.checkout.active_subscription_exists"
+    ACTIVE_ACCESS_EXISTS = "payment.checkout.active_access_exists"
+    FREE_ACCESS_GRANTED = "payment.checkout.free_access_granted"
     CHECKOUT_CREATE_FAILED = "payment.checkout.create_failed"
     CHECKOUT_CREATED = "payment.checkout.created"
     SESSION_NOT_FOUND = "payment.checkout.session_not_found"

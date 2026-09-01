@@ -58,4 +58,23 @@ RSpec.describe Payment::Product, type: :model do
     expect(described_class.one_time).to contain_exactly(one_time)
     expect(described_class.active).to contain_exactly(recurring, one_time)
   end
+
+  it "prevents converting a free product to a premium product" do
+    free_product = create(:payment_product, price_unit_amount: 0)
+
+    free_product.price_unit_amount = 2500
+    expect(free_product).not_to be_valid
+    expect(free_product.errors[:price_unit_amount]).to include("Free products cannot be converted to premium products")
+  end
+
+  it "allows converting a premium product to a free product, but locks it from becoming premium again" do
+    premium_product = create(:payment_product, price_unit_amount: 2500)
+
+    premium_product.update!(price_unit_amount: 0, cycle: nil)
+    expect(premium_product.reload).to be_free
+
+    premium_product.price_unit_amount = 1500
+    expect(premium_product).not_to be_valid
+    expect(premium_product.errors[:price_unit_amount]).to include("Free products cannot be converted to premium products")
+  end
 end

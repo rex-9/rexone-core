@@ -1,7 +1,8 @@
+# db/seeds.rb
+
 # ===== IAM PERMISSIONS =====
 puts "🌱 Seeding IAM permissions..."
 
-# Clear existing data in the correct order
 puts "🗑️  Clearing existing IAM data..."
 Iam::RolePermission.delete_all
 Iam::UserRole.delete_all
@@ -10,9 +11,7 @@ Iam::Permission.delete_all
 
 puts "✅ IAM data cleared"
 
-# Seed all permissions
 puts "🌱 Creating all permissions..."
-
 Iam::Permission::RESOURCES.each do |resource|
   Iam::Permission::ACTIONS.each do |action|
     Iam::Permission.find_or_create_by!(action: action, resource: resource) do |perm|
@@ -27,21 +26,20 @@ puts "✅ #{Iam::Permission.count} permissions created"
 puts "🌱 Seeding IAM roles..."
 
 super_admin = Iam::Role.create!(
-  name: "super_admin",
-  description: "Full system access",
+  name: IamConstants::Role::SUPER_ADMIN,
+  description: SeedConstants::RoleDescriptions::SUPER_ADMIN,
   system: true
 )
 
 admin = Iam::Role.create!(
-  name: "admin",
-  description: "Admin with limited role management",
+  name: IamConstants::Role::ADMIN,
+  description: SeedConstants::RoleDescriptions::ADMIN,
   system: true
 )
 
-# Default user role - assigned to all new users
 default_user = Iam::Role.create!(
-  name: "user",
-  description: "Default user role for all registered users",
+  name: IamConstants::Role::USER,
+  description: SeedConstants::RoleDescriptions::USER,
   system: true
 )
 
@@ -51,42 +49,19 @@ puts "✅ #{Iam::Role.count} roles created"
 puts "🌱 Assigning permissions to roles..."
 
 # Super Admin: ALL permissions
-Iam::Permission.all.each do |perm|
+Iam::Permission.find_each do |perm|
   Iam::RolePermission.create!(role: super_admin, permission: perm)
 end
 
 # Admin: ALL permissions EXCEPT User and IAM management
-Iam::Permission.where.not(resource: %w[users roles permissions user_roles role_permissions]).each do |perm|
+Iam::Permission.where.not(resource: IamConstants::Role::RESTRICTED_FOR_ADMIN).find_each do |perm|
   Iam::RolePermission.create!(role: admin, permission: perm)
 end
 
 # Default User Role Permissions
 puts "🌱 Assigning permissions to default user role..."
 
-user_permissions = [
-  # Logs - create only
-  { resource: "clients", actions: [ "create" ] },
-  # Products - read only
-  { resource: "products", actions: [ "read" ] },
-  # Payments - create only
-  { resource: "payments", actions: [ "create" ] },
-  # Subscriptions - read only
-  { resource: "subscriptions", actions: [ "read", "create" ] },
-  # Transactions - read only
-  { resource: "transactions", actions: [ "read" ] },
-  # Accesses - read only
-  { resource: "accesses", actions: [ "read" ] },
-  # Assets - full CRUD
-  { resource: "assets", actions: [ "read", "create", "update", "delete" ] },
-  # Users - full CRUD
-  { resource: "users", actions: [ "read", "create", "update", "delete" ] },
-  # AI - full CRUD
-  { resource: "ai", actions: [ "read", "create", "update", "delete" ] },
-  # Feedbacks - create and read
-  { resource: "feedbacks", actions: [ "create", "read" ] }
-]
-
-user_permissions.each do |entry|
+IamConstants::DefaultPermissions::USER.each do |entry|
   entry[:actions].each do |action|
     perm = Iam::Permission.find_by(resource: entry[:resource], action: action)
     if perm
@@ -102,12 +77,13 @@ puts "✅ #{Iam::RolePermission.count} role-permission assignments created"
 # ===== DEFAULT ADMIN USERS =====
 puts "🌱 Creating default admin users..."
 
-super_admin_user = User.find_or_initialize_by(email: "super@admin.com")
+super_admin_account = SeedConstants::Accounts::SUPER_ADMIN
+super_admin_user = User.find_or_initialize_by(email: super_admin_account[:email])
 super_admin_user.assign_attributes(
-  username: "superadmin",
-  name: "Super Admin User",
-  password: "111111",
-  password_confirmation: "111111",
+  username: super_admin_account[:username],
+  name: super_admin_account[:name],
+  password: super_admin_account[:password],
+  password_confirmation: super_admin_account[:password_confirmation],
   confirmed_at: Time.current
 )
 super_admin_user.save!
@@ -117,14 +93,15 @@ Iam::UserRole.find_or_create_by!(
   role: super_admin
 )
 
-puts "✅ Super Admin user ready: super@admin.com / 111111"
+puts "✅ Super Admin user ready: #{super_admin_account[:email]} / #{super_admin_account[:password]}"
 
-admin_user = User.find_or_initialize_by(email: "just@admin.com")
+admin_account = SeedConstants::Accounts::ADMIN
+admin_user = User.find_or_initialize_by(email: admin_account[:email])
 admin_user.assign_attributes(
-  username: "justadmin",
-  name: "Just Admin User",
-  password: "123456",
-  password_confirmation: "123456",
+  username: admin_account[:username],
+  name: admin_account[:name],
+  password: admin_account[:password],
+  password_confirmation: admin_account[:password_confirmation],
   confirmed_at: Time.current
 )
 admin_user.save!
@@ -134,12 +111,12 @@ Iam::UserRole.find_or_create_by!(
   role: admin
 )
 
-puts "✅ Admin user ready: just@admin.com / 123456"
+puts "✅ Admin user ready: #{admin_account[:email]} / #{admin_account[:password]}"
 
 # ===== AUTO-ASSIGN USER ROLE TO ALL EXISTING USERS =====
 puts "🌱 Assigning default user role to all users without roles..."
 
-User.all.each do |user|
+User.find_each do |user|
   if user.user_roles.empty?
     Iam::UserRole.create!(user: user, role: default_user)
   end
