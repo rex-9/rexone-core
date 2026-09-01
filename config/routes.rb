@@ -239,5 +239,9 @@ Rails.application.routes.draw do
     post "ai/summarize", to: "ai#create_summarize"
     post "ai/translate", to: "ai#create_translate"
     post "ai/analyze", to: "ai#create_analyze"
+
+    # ===== SPEECH =====
+    post "speech/tts", to: "speech#create_tts"
+    post "speech/stt", to: "speech#create_stt"
   end
 end

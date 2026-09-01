@@ -8,11 +8,13 @@ RSpec.describe "OpenAPI V1 document" do
   it "documents every intentional public API operation" do
     operation_count = document[:paths].sum { |_path, methods| methods.size }
 
-    expect(operation_count).to eq(106)
+    expect(operation_count).to eq(108)
     expect(document[:paths]).to include(
       "/signup",
       "/v1/payment/session",
       "/v1/ai/chat",
+      "/v1/speech/tts",
+      "/v1/speech/stt",
       "/v1/admin/accesses",
       "/v1/admin/feedbacks",
       "/v1/admin/analytics/overview",
@@ -91,8 +93,11 @@ RSpec.describe "OpenAPI V1 document" do
       :assistant_message_id,
       :error,
       :usage,
-      :model
+      :model,
+      :tts_status,
+      :tts_error
     )
-    expect(metadata.dig(:status, :enum)).to eq(Chat::Message::AI_STATUSES.values)
+    expect(metadata.dig(:status, :enum)).to eq(Chat::Message::STATUSES.values)
+    expect(metadata.dig(:tts_status, :enum)).to eq(Chat::Message::STATUSES.values)
   end
 end

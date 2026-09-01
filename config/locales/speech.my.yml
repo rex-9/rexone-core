@@ -1,0 +1,18 @@
+my:
+  speech:
+    text_required: "စာသား လိုအပ်ပါသည်"
+    text_parameter_missing: "စာသားအချက်အလက် မပါရှိပါ"
+    audio_required: "အသံဖိုင် သို့မဟုတ် audio_url လိုအပ်ပါသည်"
+    audio_parameter_missing: "အသံဖိုင် သို့မဟုတ် audio_url အချက်အလက် မပါရှိပါ"
+    message_required: "မက်ဆေ့ချ် လိုအပ်ပါသည်"
+    message_parameter_missing: "message_id အချက်အလက် မပါရှိပါ"
+    message_not_found: "မက်ဆေ့ချ်ကို ရှာမတွေ့ပါ"
+    generated: "အသံထွက်ကို ထုတ်ပေးပြီးပါပြီ"
+    transcribed: "စာသားပြောင်းခြင်း ပြီးပါပြီ"
+    tts_queued: "အသံထွက် ထုတ်လုပ်ရန် စီစဉ်ပြီးပါပြီ"
+    tts_ready: "အသံထွက် အဆင်သင့်ဖြစ်ပါပြီ"
+    tts_failed: "အသံထွက် ထုတ်လုပ်ခြင်း မအောင်မြင်ပါ"
+    queue_failed: "အသံထွက်ကို တန်းစီ၍ မရပါ။ ထပ်မံကြိုးစားပါ။"
+    service_error: "အသံဝန်ဆောင်မှု အမှားဖြစ်ပွားပါသည်"
+    provider_error: "အသံဝန်ဆောင်မှုကို ယာယီအသုံးမပြုနိုင်သေးပါ"
+    live_not_configured: "တိုက်ရိုက်စာသားပြောင်းခြင်းကို စီစဉ်မထားပါ"

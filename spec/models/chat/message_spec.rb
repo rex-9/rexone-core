@@ -36,7 +36,7 @@ RSpec.describe Chat::Message, type: :model do
   it "declares the supported AI metadata fields" do
     message = build(
       :chat_message,
-      ai_status: described_class::AI_STATUSES[:queued],
+      ai_status: described_class::STATUSES[:queued],
       ai_temperature: 0.4,
       ai_max_tokens: 500
     )
@@ -46,5 +46,35 @@ RSpec.describe Chat::Message, type: :model do
       ai_temperature: 0.4,
       ai_max_tokens: 500
     )
+  end
+
+  it "declares TTS metadata fields" do
+    message = build(
+      :chat_message,
+      tts_status: described_class::STATUSES[:completed],
+      tts_error: nil
+    )
+
+    expect(message).to have_attributes(
+      tts_status: "completed",
+      tts_error: nil
+    )
+  end
+
+  it "links TTS audio through polymorphic assets" do
+    message = create(:chat_message, role: "assistant", content: "Speak this")
+    asset = create(
+      :asset,
+      type: "audio",
+      format: "audio",
+      source: "upload",
+      url: "https://cdn.example.com/speech.mp3",
+      storage_key: "speech/tts/tts_of_message_#{message.id}",
+      resource_model: "chat_message",
+      resource_id: message.id
+    )
+
+    expect(message.assets).to contain_exactly(asset)
+    expect(message.tts_asset).to eq(asset)
   end
 end

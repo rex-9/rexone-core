@@ -19,9 +19,9 @@ class Ai::ProcessChatJob < ApplicationJob
 
   def perform(message_id)
     user_message = Chat::Message.find(message_id)
-    return if user_message.ai_status == Chat::Message::AI_STATUSES[:completed]
+    return if user_message.ai_status == Chat::Message::STATUSES[:completed]
 
-    update_status!(user_message, Chat::Message::AI_STATUSES[:processing])
+    update_status!(user_message, Chat::Message::STATUSES[:processing])
 
     result = AiService::Client.chat(
       messages: conversation_for(user_message),
@@ -38,7 +38,7 @@ class Ai::ProcessChatJob < ApplicationJob
     notify_completed(user_message, assistant_message)
 
   rescue AiService::Error => error
-    update_status!(user_message, Chat::Message::AI_STATUSES[:retrying], error: error.message) if user_message.present?
+    update_status!(user_message, Chat::Message::STATUSES[:retrying], error: error.message) if user_message.present?
     raise
   rescue StandardError => error
     mark_as_failed!(message_id, error)
@@ -65,7 +65,7 @@ class Ai::ProcessChatJob < ApplicationJob
 
     Chat::Message.transaction do
       user_message.lock!
-      return if user_message.ai_status == Chat::Message::AI_STATUSES[:completed]
+      return if user_message.ai_status == Chat::Message::STATUSES[:completed]
 
       assistant_message = user_message.room.messages.create!(
         role: AiConstants::ChatRole::ASSISTANT,
@@ -76,7 +76,7 @@ class Ai::ProcessChatJob < ApplicationJob
 
       update_status!(
         user_message,
-        Chat::Message::AI_STATUSES[:completed],
+        Chat::Message::STATUSES[:completed],
         assistant_message_id: assistant_message.id,
         error: nil
       )
@@ -111,9 +111,9 @@ class Ai::ProcessChatJob < ApplicationJob
   def mark_as_failed!(message_id, error)
     user_message = Chat::Message.find_by(id: message_id)
     return unless user_message
-    return if user_message.ai_status == Chat::Message::AI_STATUSES[:completed]
+    return if user_message.ai_status == Chat::Message::STATUSES[:completed]
 
-    update_status!(user_message, Chat::Message::AI_STATUSES[:failed], error: error.message)
+    update_status!(user_message, Chat::Message::STATUSES[:failed], error: error.message)
 
     room = user_message.room
     message = ai_message(MessageService::Ai::RESPONSE_FAILED)

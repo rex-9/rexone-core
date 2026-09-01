@@ -8,8 +8,8 @@ module Openapi
     UUID = { type: :string, format: :uuid }.freeze
     DATE_TIME = { type: :string, format: "date-time", nullable: true }.freeze
     SECURITY = [ { bearerAuth: [] } ].freeze
-    AI_STATUSES = Chat::Message::AI_STATUSES.values.freeze
-    AI_ROLES = %w[user assistant].freeze
+    STATUSES = Chat::Message::STATUSES.values.freeze
+    AI_ROLES = [ AiConstants::ChatRole::USER, AiConstants::ChatRole::ASSISTANT ].freeze
     LOG_SEVERITIES = Log::Client.severities.keys.freeze
     LOG_PLATFORMS = Log::Client.platforms.keys.freeze
     LOG_ENVIRONMENTS = Log::Client.environments.keys.freeze
@@ -34,13 +34,16 @@ module Openapi
     end
 
     def operation(tags:, summary:, description: nil, success: 200, body: nil, parameters: [],
-                  security: SECURITY, errors: [ 401, 422 ])
+                  security: SECURITY, errors: [ 401, 422 ], success_schema: nil)
       operation = {
         tags: Array(tags),
         summary: summary,
         parameters: parameters,
         responses: {
-          success.to_s => response(success == 201 ? "Created" : "Successful response")
+          success.to_s => response(
+            success == 201 ? "Created" : "Successful response",
+            success_schema || ref(:response)
+          )
         }
       }
       operation[:description] = description if description
@@ -235,11 +238,39 @@ module Openapi
       admin_access_request: object(
         required: [ :access ],
         access: object(
-          required: %i[user_id product_id],
-          user_id: UUID.merge(description: "User UUID to grant entitlement to."),
-          product_id: UUID.merge(description: "Product UUID to grant entitlement for."),
-          days: { type: :integer, minimum: 1, nullable: true, example: 30 },
-          expires_at: { type: :string, format: :date_time, nullable: true }
+          code: {
+            type: :string,
+            nullable: true,
+            example: "A1b2C3d4E5",
+            description: "10-character unique product code (preferred), or product_id."
+          },
+          product_id: UUID.merge(nullable: true, description: "Product UUID (alternative to code)."),
+          emails: {
+            type: :array,
+            nullable: true,
+            items: { type: :string, format: :email },
+            description: "List of recipient user emails to grant entitlement to."
+          },
+          usernames: {
+            type: :array,
+            nullable: true,
+            items: { type: :string },
+            description: "List of recipient usernames to grant entitlement to."
+          },
+          user_id: UUID.merge(nullable: true, description: "Single recipient user UUID (alternative to emails/usernames)."),
+          days: {
+            type: :integer,
+            minimum: 1,
+            nullable: true,
+            example: 30,
+            description: "Entitlement duration in days. Pass null or omit for lifetime access."
+          },
+          expires_at: {
+            type: :string,
+            format: :date_time,
+            nullable: true,
+            description: "Explicit expiration timestamp. Calculated from days if omitted."
+          }
         )
       ),
       admin_access_update_request: object(
@@ -255,14 +286,16 @@ module Openapi
         feedback: object(
           required: [ :content ],
           content: { type: :string, example: "The checkout flow is very smooth!" },
-          rating: { type: :integer, minimum: 1, maximum: 5, nullable: true, example: 5 },
+          rating: { type: :integer, minimum: 1, maximum: 10, nullable: true, example: 10 },
           category: { type: :string, nullable: true, example: "general" },
+          priority: { type: :string, nullable: true, example: "normal" },
           platform: { type: :string, nullable: true, example: "web" },
           app_version: { type: :string, nullable: true, example: "1.0.0" },
-          os: { type: :string, nullable: true },
-          device: { type: :string, nullable: true },
-          browser: { type: :string, nullable: true },
-          page: { type: :string, nullable: true }
+          os: { type: :string, nullable: true, example: "mac" },
+          device: { type: :string, nullable: true, example: "MacBookPro" },
+          browser: { type: :string, nullable: true, example: "Chrome" },
+          page: { type: :string, nullable: true, example: "/home" },
+          metadata: { type: :object, nullable: true, additionalProperties: true }
         )
       ),
       admin_feedback_update_request: object(
@@ -426,8 +459,90 @@ module Openapi
         text: { type: :string, minLength: 1 },
         type: { type: :string, enum: %w[sentiment entities keywords], default: "sentiment" }
       ),
+      speech_tts_request: object(
+        text: {
+          type: :string,
+          minLength: 1,
+          description: "Required for sync MP3 responses. Ignored when message_id is present."
+        },
+        message_id: {
+          type: :string,
+          format: :uuid,
+          description: "Queue async TTS for a chat message owned by the current user. Text comes from the message content."
+        },
+        voice_name: {
+          type: :string,
+          description: "Provider voice name for sync TTS only. Omit to use the provider default. camelCase voiceName is not accepted."
+        }
+      ),
+      speech_tts_queued_data: object(
+        required: %i[message_id room_id status job_id],
+        message_id: UUID,
+        room_id: UUID,
+        status: { type: :string, enum: Chat::Message::STATUSES.values },
+        job_id: { type: :string }
+      ),
+      speech_tts_queued_response: object(
+        required: [ :status ],
+        status: object(
+          required: %i[code success message],
+          code: { type: :integer, example: 200 },
+          success: { type: :boolean, example: true },
+          message: { type: :string }
+        ),
+        data: ref(:speech_tts_queued_data)
+      ),
+      speech_tts_ready_notification_data: object(
+        required: %i[type room_id message_id assets],
+        type: { type: :string, enum: [ NotificationConstants::NotificationType::TTS_READY ] },
+        room_id: UUID,
+        message_id: UUID,
+        assets: {
+          type: :array,
+          description: "Full Asset objects for this message. Play TTS via the audio item's url.",
+          items: ref(:asset)
+        }
+      ),
+      speech_tts_failed_notification_data: object(
+        required: %i[type room_id message_id],
+        type: { type: :string, enum: [ NotificationConstants::NotificationType::TTS_FAILED ] },
+        room_id: UUID,
+        message_id: UUID,
+        assets: {
+          type: :array,
+          description: "Empty when TTS fails before an asset is saved.",
+          items: ref(:asset)
+        }
+      ),
+      speech_stt_file_request: object(
+        required: [ :audio ],
+        audio: { type: :string, format: :binary, description: "Audio file. Takes precedence over audio_url when both are sent." }
+      ),
+      speech_stt_url_request: object(
+        required: [ :audio_url ],
+        audio_url: {
+          type: :string,
+          format: :uri,
+          minLength: 1,
+          description: "Used when no audio file is uploaded. camelCase audioUrl is not accepted."
+        }
+      ),
+      speech_stt_data: object(
+        required: [ :text ],
+        text: { type: :string }
+      ),
+      speech_stt_response: object(
+        required: [ :status ],
+        status: object(
+          required: %i[code success message],
+          code: { type: :integer, example: 200 },
+          success: { type: :boolean, example: true },
+          message: { type: :string }
+        ),
+        data: ref(:speech_stt_data)
+      ),
       ai_message_metadata: object(
-        status: { type: :string, enum: AI_STATUSES, description: "Processing state; set on queued user messages." },
+        status: { type: :string, enum: STATUSES, description: "Processing state; set on queued user messages." },
         system_prompt: { type: :string, nullable: true },
         temperature: { type: :number, format: :float, nullable: true },
         max_tokens: { type: :integer, nullable: true },
@@ -440,7 +555,9 @@ module Openapi
           additionalProperties: true,
           example: { prompt_tokens: 42, completion_tokens: 18, total_tokens: 60 }
         },
-        model: { type: :string, nullable: true, description: "Provider model identifier used for the response." }
+        model: { type: :string, nullable: true, description: "Provider model identifier used for the response." },
+        tts_status: { type: :string, enum: STATUSES, nullable: true, description: "Async TTS state for assistant messages." },
+        tts_error: { type: :string, nullable: true, description: "Last TTS failure message when tts_status is failed or retrying." }
       ),
       response: object(
         required: [ :status ],
@@ -575,6 +692,23 @@ module Openapi
         created_at: DATE_TIME,
         updated_at: DATE_TIME
       ),
+      asset: object(
+        required: %i[id name url type source],
+        id: UUID,
+        name: { type: :string },
+        url: { type: :string, format: :uri },
+        type: { type: :string, enum: AssetConstants::AssetType::ALL },
+        format: { type: :string, enum: AssetConstants::AssetFormat::ALL, nullable: true },
+        extension: { type: :string, nullable: true },
+        size_bytes: { type: :integer, nullable: true },
+        duration_secs: { type: :integer, nullable: true },
+        source: { type: :string, enum: [ AssetConstants::AssetSource::UPLOAD, AssetConstants::AssetSource::GOOGLE ] },
+        resource_model: { type: :string, nullable: true, description: "Polymorphic owner model, e.g. chat_message or user." },
+        resource_id: UUID.merge(nullable: true),
+        created_by_id: UUID.merge(nullable: true),
+        created_at: DATE_TIME,
+        updated_at: DATE_TIME
+      ),
       room: object(
         id: UUID,
         user_id: UUID,
@@ -595,6 +729,11 @@ module Openapi
         role: { type: :string, enum: AI_ROLES },
         content: { type: :string },
         metadata: ref(:ai_message_metadata),
+        assets: {
+          type: :array,
+          description: "Assets linked to this message. Empty until async TTS completes.",
+          items: ref(:asset)
+        },
         created_at: DATE_TIME,
         updated_at: DATE_TIME
       )
@@ -905,6 +1044,14 @@ module Openapi
           errors: [ 401, 403 ]
         )
       }
+      paths["/v1/admin/analytics/overview"] = {
+        get: operation(tags: "Admin / Analytics", summary: "Get admin analytics overview KPIs, time-series data, and breakdowns",
+                       parameters: [
+                         query_parameter(:period, type: :string),
+                         query_parameter(:start_date, type: :string),
+                         query_parameter(:end_date, type: :string)
+                       ], errors: [ 401, 403 ])
+      }
 
       paths["/v1/payment/products"] = {
         get: operation(tags: "Payments", summary: "List active payment products", errors: [ 401 ])
@@ -965,11 +1112,6 @@ module Openapi
       paths["/v1/accesses/{id}"] = {
         delete: operation(tags: "Accesses", summary: "Revoke owned product access",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
-      }
-
-      paths["/v1/admin/analytics/overview"] = {
-        get: operation(tags: "Admin / Analytics", summary: "Get aggregated system overview metrics and time-series",
-                       parameters: [ query_parameter(:range, type: :string, default: "30d") ], errors: [ 401, 403 ])
       }
 
       feedback_filters = %i[status category priority search].map { |name| query_parameter(name) }
@@ -1047,6 +1189,43 @@ module Openapi
                           errors: [ 401, 422, 500 ])
         }
       end
+
+      paths["/v1/speech/tts"] = {
+        post: operation(
+          tags: "Speech",
+          summary: "Synthesize speech from text (MP3) or queue TTS for a chat message",
+          description: "Send text for a sync MP3 response, or message_id to queue Azure TTS for that chat message. When queued TTS completes, NotificationChannel delivers tts_ready with data.assets (full Asset list); tts_failed sends assets: []. Chat history exposes the same assets on each message.",
+          body: ref(:speech_tts_request),
+          errors: [ 401, 404, 422, 500, 503 ]
+        )
+      }
+      paths["/v1/speech/tts"][:post][:responses]["200"] = {
+        description: "MP3 audio (sync) or queued JSON (async message_id)",
+        content: {
+          "audio/mpeg" => {
+            schema: { type: :string, format: :binary }
+          },
+          JSON_CONTENT => {
+            schema: ref(:speech_tts_queued_response)
+          }
+        }
+      }
+
+      paths["/v1/speech/stt"] = {
+        post: operation(
+          tags: "Speech",
+          summary: "Transcribe speech from an audio file or audio URL",
+          success_schema: ref(:speech_stt_response),
+          errors: [ 401, 422, 500 ]
+        )
+      }
+      paths["/v1/speech/stt"][:post][:requestBody] = {
+        required: true,
+        content: {
+          "multipart/form-data" => { schema: ref(:speech_stt_file_request) },
+          JSON_CONTENT => { schema: ref(:speech_stt_url_request) }
+        }
+      }
 
       paths.each_value do |methods|
         methods.each_value do |definition|

@@ -62,6 +62,40 @@ RSpec.describe "Queued AI chat", type: :request do
     message = response_data.first
     expect(message.dig("attributes", "room_id")).to eq(room.id)
     expect(message.dig("attributes", "metadata", "status")).to eq("retrying")
+    expect(message.dig("attributes", "assets")).to eq([])
+  end
+
+  it "returns TTS assets on room history messages" do
+    assistant_message = create(:chat_message, room: room, role: "assistant", content: "Hello there")
+    create(
+      :asset,
+      type: "audio",
+      format: "audio",
+      source: "upload",
+      url: "https://cdn.example.com/speech.mp3",
+      storage_key: "speech/tts/tts_of_message_#{assistant_message.id}",
+      resource_model: "chat_message",
+      resource_id: assistant_message.id
+    )
+    assistant_message.update!(
+      metadata: assistant_message.metadata.merge(
+        "tts_status" => Chat::Message::STATUSES[:completed]
+      )
+    )
+
+    get "/v1/ai/history", params: { room_id: room.id }, headers: headers
+
+    expect(response).to have_http_status(:ok)
+    message = response_data.find { |item| item.dig("attributes", "id") == assistant_message.id }
+    expect(message.dig("attributes", "metadata", "tts_status")).to eq("completed")
+    expect(message.dig("attributes", "assets")).to contain_exactly(
+      hash_including(
+        "url" => "https://cdn.example.com/speech.mp3",
+        "type" => "audio",
+        "resource_model" => "chat_message",
+        "resource_id" => assistant_message.id
+      )
+    )
   end
 
   it "protects processing rooms from clearing or deletion" do

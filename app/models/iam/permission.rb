@@ -3,9 +3,8 @@ module Iam
   class Permission < ApplicationRecord
     self.table_name = "iam_permissions"
 
-    # ===== CONSTANTS =====
     RESOURCES = IamConstants::Resource::ALL
-    ACTIONS = IamConstants::Action::ALL
+    ACTIONS   = IamConstants::Action::ALL
 
     # ===== ENUMS =====
     enum :action, {

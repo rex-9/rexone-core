@@ -1,0 +1,5 @@
+<% if field.data %>
+  <time class="admin-local-time" datetime="<%= field.data.iso8601 %>" title="<%= field.data.iso8601 %> UTC">
+    <%= field.datetime %>
+  </time>
+<% end %>

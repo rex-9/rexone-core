@@ -39,3 +39,7 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Local Cursor agent guidance for this repo only — do not push.
+/.cursor/skills/
+/.cursor/instruction.md
+

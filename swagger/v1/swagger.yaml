@@ -25,14 +25,20 @@ tags:
       permission.
   - name: Admin / Accesses
     description: Admin entitlement and access management.
+  - name: Admin / IAM Permissions
+    description: Admin IAM permission operations.
+  - name: Admin / IAM Roles
+    description: Admin IAM role operations.
+  - name: Admin / Chat Rooms
+    description: Admin chat room operations.
+  - name: Admin / Chat Messages
+    description: Admin chat message operations.
   - name: Admin / Payment Products
-    description: Admin product management.
+    description: Admin payment product operations.
   - name: Admin / Feedbacks
-    description: Admin feedback management and triage.
-  - name: Admin / Chat
-    description: Admin chat moderation.
+    description: Admin feedback review and triage.
   - name: Admin / Analytics
-    description: Admin business and operations analytics overview.
+    description: Admin analytics overview metrics and KPIs.
   - name: IAM Permissions
     description: Super-admin permission management.
   - name: IAM Roles
@@ -51,6 +57,8 @@ tags:
     description: Synchronous multipart asset upload.
   - name: AI
     description: Durable queued chat plus synchronous text utilities.
+  - name: Speech
+    description: Text-to-speech synthesis and speech-to-text transcription.
   - name: Client Logs
     description: Client error ingestion and authorized operational review.
   - name: Webhooks
@@ -242,6 +250,7 @@ components:
             - assets
             - notifications
             - ai
+            - speech
             - clients
             - feedbacks
             - analytics
@@ -366,36 +375,48 @@ components:
           properties:
             code:
               type: string
+              nullable: true
               example: A1b2C3d4E5
-              description: 10-character unique product code.
+              description: 10-character unique product code (preferred), or product_id.
             product_id:
               type: string
               format: uuid
-              description: Product UUID to grant entitlement for.
+              nullable: true
+              description: Product UUID (alternative to code).
             emails:
               type: array
+              nullable: true
               items:
                 type: string
                 format: email
-              description: Array of user emails to grant entitlement to.
+              description: List of recipient user emails to grant entitlement to.
             usernames:
               type: array
+              nullable: true
               items:
                 type: string
-              description: Array of usernames to grant entitlement to.
+              description: List of recipient usernames to grant entitlement to.
             user_id:
               type: string
               format: uuid
-              description: User UUID to grant entitlement to.
+              nullable: true
+              description: Single recipient user UUID (alternative to emails/usernames).
             days:
               type: integer
               minimum: 1
               nullable: true
               example: 30
+              description:
+                Entitlement duration in days. Pass null or omit for lifetime
+                access.
             expires_at:
               type: string
               format: date_time
               nullable: true
+              description:
+                Explicit expiration timestamp. Calculated from days if
+                omitted.
+          required: []
       required:
         - access
     admin_access_update_request:
@@ -435,13 +456,17 @@ components:
             rating:
               type: integer
               minimum: 1
-              maximum: 5
+              maximum: 10
               nullable: true
-              example: 5
+              example: 10
             category:
               type: string
               nullable: true
               example: general
+            priority:
+              type: string
+              nullable: true
+              example: normal
             platform:
               type: string
               nullable: true
@@ -453,15 +478,23 @@ components:
             os:
               type: string
               nullable: true
+              example: mac
             device:
               type: string
               nullable: true
+              example: MacBookPro
             browser:
               type: string
               nullable: true
+              example: Chrome
             page:
               type: string
               nullable: true
+              example: "/home"
+            metadata:
+              type: object
+              nullable: true
+              additionalProperties: true
           required:
             - content
       required:
@@ -868,6 +901,170 @@ components:
           default: sentiment
       required:
         - text
+    speech_tts_request:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          description:
+            Required for sync MP3 responses. Ignored when message_id is
+            present.
+        message_id:
+          type: string
+          format: uuid
+          description:
+            Queue async TTS for a chat message owned by the current user.
+            Text comes from the message content.
+        voice_name:
+          type: string
+          description:
+            Provider voice name for sync TTS only. Omit to use the provider
+            default. camelCase voiceName is not accepted.
+      required: []
+    speech_tts_queued_data:
+      type: object
+      properties:
+        message_id:
+          type: string
+          format: uuid
+        room_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - queued
+            - processing
+            - retrying
+            - completed
+            - failed
+        job_id:
+          type: string
+      required:
+        - message_id
+        - room_id
+        - status
+        - job_id
+    speech_tts_queued_response:
+      type: object
+      properties:
+        status:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 200
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+          required:
+            - code
+            - success
+            - message
+        data:
+          "$ref": "#/components/schemas/speech_tts_queued_data"
+      required:
+        - status
+    speech_tts_ready_notification_data:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - tts_ready
+        room_id:
+          type: string
+          format: uuid
+        message_id:
+          type: string
+          format: uuid
+        assets:
+          type: array
+          description:
+            Full Asset objects for this message. Play TTS via the audio
+            item's url.
+          items:
+            "$ref": "#/components/schemas/asset"
+      required:
+        - type
+        - room_id
+        - message_id
+        - assets
+    speech_tts_failed_notification_data:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - tts_failed
+        room_id:
+          type: string
+          format: uuid
+        message_id:
+          type: string
+          format: uuid
+        assets:
+          type: array
+          description: Empty when TTS fails before an asset is saved.
+          items:
+            "$ref": "#/components/schemas/asset"
+      required:
+        - type
+        - room_id
+        - message_id
+    speech_stt_file_request:
+      type: object
+      properties:
+        audio:
+          type: string
+          format: binary
+          description: Audio file. Takes precedence over audio_url when both are sent.
+      required:
+        - audio
+    speech_stt_url_request:
+      type: object
+      properties:
+        audio_url:
+          type: string
+          format: uri
+          minLength: 1
+          description:
+            Used when no audio file is uploaded. camelCase audioUrl is
+            not accepted.
+      required:
+        - audio_url
+    speech_stt_data:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+    speech_stt_response:
+      type: object
+      properties:
+        status:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 200
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+          required:
+            - code
+            - success
+            - message
+        data:
+          "$ref": "#/components/schemas/speech_stt_data"
+      required:
+        - status
     ai_message_metadata:
       type: object
       properties:
@@ -910,6 +1107,20 @@ components:
           type: string
           nullable: true
           description: Provider model identifier used for the response.
+        tts_status:
+          type: string
+          enum:
+            - queued
+            - processing
+            - retrying
+            - completed
+            - failed
+          nullable: true
+          description: Async TTS state for assistant messages.
+        tts_error:
+          type: string
+          nullable: true
+          description: Last TTS failure message when tts_status is failed or retrying.
       required: []
     response:
       type: object
@@ -1096,10 +1307,6 @@ components:
         id:
           type: string
           format: uuid
-        code:
-          type: string
-          example: A1b2C3d4E5
-          description: 10-character unique product code.
         name:
           type: string
         description:
@@ -1284,6 +1491,75 @@ components:
           format: date-time
           nullable: true
       required: []
+    asset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        type:
+          type: string
+          enum:
+            - avatar
+            - cover
+            - card
+            - audio
+            - video
+            - attachment
+            - general
+        format:
+          type: string
+          enum:
+            - image
+            - audio
+            - video
+            - doc
+          nullable: true
+        extension:
+          type: string
+          nullable: true
+        size_bytes:
+          type: integer
+          nullable: true
+        duration_secs:
+          type: integer
+          nullable: true
+        source:
+          type: string
+          enum:
+            - upload
+            - google
+        resource_model:
+          type: string
+          nullable: true
+          description: Polymorphic owner model, e.g. chat_message or user.
+        resource_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_by_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - name
+        - url
+        - type
+        - source
     room:
       type: object
       properties:
@@ -1333,6 +1609,11 @@ components:
           type: string
         metadata:
           "$ref": "#/components/schemas/ai_message_metadata"
+        assets:
+          type: array
+          description: Assets linked to this message. Empty until async TTS completes.
+          items:
+            "$ref": "#/components/schemas/asset"
         created_at:
           type: string
           format: date-time
@@ -3953,7 +4234,8 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/admin_product_request"
-    delete:
+  "/v1/admin/payment/products/{id}/discard":
+    post:
       tags:
         - Admin / Payment Products
       summary: Discard a Stripe-backed product
@@ -4973,7 +5255,7 @@ paths:
       security:
         - bearerAuth: []
   "/v1/log/clients/{id}/resolve":
-    patch:
+    put:
       tags:
         - Client Logs
       summary: Mark a client error as resolved
@@ -5033,7 +5315,7 @@ paths:
       security:
         - bearerAuth: []
   "/v1/log/clients/{id}/unresolve":
-    patch:
+    put:
       tags:
         - Client Logs
       summary: Mark a client error as unresolved
@@ -5275,6 +5557,69 @@ paths:
       description:
         Returns both selectable broadcast events and unavailable transactional
         events for display.
+      security:
+        - bearerAuth: []
+  "/v1/admin/analytics/overview":
+    get:
+      tags:
+        - Admin / Analytics
+      summary: Get admin analytics overview KPIs, time-series data, and breakdowns
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: end_date
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
       security:
         - bearerAuth: []
   "/v1/payment/products":
@@ -6086,60 +6431,6 @@ paths:
                 "$ref": "#/components/schemas/error_response"
         "404":
           description: Not Found
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-        - bearerAuth: []
-  "/v1/admin/analytics/overview":
-    get:
-      tags:
-        - Admin / Analytics
-      summary: Get aggregated system overview metrics and time-series
-      parameters:
-        - name: X-Locale
-          in: header
-          required: false
-          description:
-            Response language. Accepts en or my; Accept-Language is also
-            supported.
-          schema:
-            type: string
-            enum:
-              - en
-              - my
-        - name: X-Platform
-          in: header
-          required: false
-          description: Active-session namespace.
-          schema:
-            type: string
-            enum:
-              - web
-              - mobile
-            default: web
-        - name: range
-          in: query
-          required: false
-          schema:
-            type: string
-            default: 30d
-      responses:
-        "200":
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        "403":
-          description: Forbidden
           content:
             application/json:
               schema:
@@ -7431,6 +7722,150 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/ai_analyze_request"
+  "/v1/speech/tts":
+    post:
+      tags:
+        - Speech
+      summary: Synthesize speech from text (MP3) or queue TTS for a chat message
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+      responses:
+        "200":
+          description: MP3 audio (sync) or queued JSON (async message_id)
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/speech_tts_queued_response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "422":
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      description:
+        "Send text for a sync MP3 response, or message_id to queue Azure
+        TTS for that chat message. When queued TTS completes, NotificationChannel
+        delivers tts_ready with data.assets (full Asset list); tts_failed sends assets:
+        []. Chat history exposes the same assets on each message."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/speech_tts_request"
+  "/v1/speech/stt":
+    post:
+      tags:
+        - Speech
+      summary: Transcribe speech from an audio file or audio URL
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/speech_stt_response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "422":
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              "$ref": "#/components/schemas/speech_stt_file_request"
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/speech_stt_url_request"
 servers:
   - url: "/"
     description: Current API server

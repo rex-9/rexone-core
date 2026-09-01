@@ -27,6 +27,15 @@ module AppConfig
   DEEPSEEK_BASE_URL=ENV.fetch("DEEPSEEK_BASE_URL")
   DEEPSEEK_MODEL=ENV.fetch("DEEPSEEK_MODEL")
 
+  # Speech
+  SPEECH_SERVICE_BASE_URL = ENV.fetch("SPEECH_SERVICE_BASE_URL", "")
+  SPEECH_TTS_ENDPOINT_PATH = ENV.fetch("SPEECH_TTS_ENDPOINT_PATH", "/ssml-to-speech")
+  SPEECH_STT_ENDPOINT_PATH = ENV.fetch("SPEECH_STT_ENDPOINT_PATH", "/speech-to-text")
+  AZURE_SPEECH_KEY = ENV.fetch("AZURE_SPEECH_KEY", "")
+  AZURE_SPEECH_REGION = ENV.fetch("AZURE_SPEECH_REGION", "southeastasia")
+  AZURE_SPEECH_LANGUAGE = ENV.fetch("AZURE_SPEECH_LANGUAGE", "en-US")
+  AZURE_SPEECH_VOICE = ENV.fetch("AZURE_SPEECH_VOICE", "en-US-AvaNeural")
+
   # Session & token timeouts
   SESSION_TIMEOUT = ENV.fetch("SESSION_TIMEOUT") { 1.week }.to_i.seconds # 7-day maximum login, Cache Active Platform Session Lifespan
   JWT_EXPIRATION = ENV.fetch("JWT_EXPIRATION") { 1.week }.to_i.seconds #  7-day inactivity timeout, JWT Token Expiration Lifespan

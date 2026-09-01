@@ -36,13 +36,15 @@ module IamConstants
     ASSETS        = "assets".freeze
     NOTIFICATIONS = "notifications".freeze
     AI            = "ai".freeze
+    SPEECH        = "speech".freeze
     CLIENTS       = "clients".freeze
     FEEDBACKS     = "feedbacks".freeze
     ANALYTICS     = "analytics".freeze
     ALL           = [
       USERS, ROLES, USER_ROLES, PERMISSIONS, PRODUCTS, PAYMENTS,
       SUBSCRIPTIONS, TRANSACTIONS, ACCESSES, ASSETS, NOTIFICATIONS,
-      AI, CLIENTS, FEEDBACKS, ANALYTICS
+      AI, SPEECH, CLIENTS, FEEDBACKS, ANALYTICS
+
     ].freeze
   end
 
@@ -57,6 +59,7 @@ module IamConstants
       { resource: Resource::ASSETS, actions: Action::ALL },
       { resource: Resource::USERS, actions: Action::ALL },
       { resource: Resource::AI, actions: Action::ALL },
+      { resource: Resource::SPEECH, actions: Action::ALL },
       { resource: Resource::FEEDBACKS, actions: [ Action::CREATE, Action::READ ] }
     ].freeze
   end

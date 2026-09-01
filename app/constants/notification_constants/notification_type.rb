@@ -9,6 +9,8 @@ module NotificationConstants
     SUBSCRIPTION_RESUMED  = "subscription_resumed".freeze
     AI_RESPONSE_READY     = "ai_response_ready".freeze
     AI_RESPONSE_FAILED    = "ai_response_failed".freeze
+    TTS_READY             = "tts_ready".freeze
+    TTS_FAILED            = "tts_failed".freeze
     WELCOME               = "welcome".freeze
     SIGN_IN_ALERT         = "sign_in_alert".freeze
     NOTIFICATION          = "notification".freeze
