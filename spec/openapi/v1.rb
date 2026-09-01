@@ -238,11 +238,39 @@ module Openapi
       admin_access_request: object(
         required: [ :access ],
         access: object(
-          required: %i[user_id product_id],
-          user_id: UUID.merge(description: "User UUID to grant entitlement to."),
-          product_id: UUID.merge(description: "Product UUID to grant entitlement for."),
-          days: { type: :integer, minimum: 1, nullable: true, example: 30 },
-          expires_at: { type: :string, format: :date_time, nullable: true }
+          code: {
+            type: :string,
+            nullable: true,
+            example: "A1b2C3d4E5",
+            description: "10-character unique product code (preferred), or product_id."
+          },
+          product_id: UUID.merge(nullable: true, description: "Product UUID (alternative to code)."),
+          emails: {
+            type: :array,
+            nullable: true,
+            items: { type: :string, format: :email },
+            description: "List of recipient user emails to grant entitlement to."
+          },
+          usernames: {
+            type: :array,
+            nullable: true,
+            items: { type: :string },
+            description: "List of recipient usernames to grant entitlement to."
+          },
+          user_id: UUID.merge(nullable: true, description: "Single recipient user UUID (alternative to emails/usernames)."),
+          days: {
+            type: :integer,
+            minimum: 1,
+            nullable: true,
+            example: 30,
+            description: "Entitlement duration in days. Pass null or omit for lifetime access."
+          },
+          expires_at: {
+            type: :string,
+            format: :date_time,
+            nullable: true,
+            description: "Explicit expiration timestamp. Calculated from days if omitted."
+          }
         )
       ),
       admin_access_update_request: object(
@@ -1084,11 +1112,6 @@ module Openapi
       paths["/v1/accesses/{id}"] = {
         delete: operation(tags: "Accesses", summary: "Revoke owned product access",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
-      }
-
-      paths["/v1/admin/analytics/overview"] = {
-        get: operation(tags: "Admin / Analytics", summary: "Get aggregated system overview metrics and time-series",
-                       parameters: [ query_parameter(:range, type: :string, default: "30d") ], errors: [ 401, 403 ])
       }
 
       feedback_filters = %i[status category priority search].map { |name| query_parameter(name) }

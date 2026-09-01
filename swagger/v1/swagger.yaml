@@ -373,26 +373,50 @@ components:
         access:
           type: object
           properties:
-            user_id:
+            code:
               type: string
-              format: uuid
-              description: User UUID to grant entitlement to.
+              nullable: true
+              example: A1b2C3d4E5
+              description: 10-character unique product code (preferred), or product_id.
             product_id:
               type: string
               format: uuid
-              description: Product UUID to grant entitlement for.
+              nullable: true
+              description: Product UUID (alternative to code).
+            emails:
+              type: array
+              nullable: true
+              items:
+                type: string
+                format: email
+              description: List of recipient user emails to grant entitlement to.
+            usernames:
+              type: array
+              nullable: true
+              items:
+                type: string
+              description: List of recipient usernames to grant entitlement to.
+            user_id:
+              type: string
+              format: uuid
+              nullable: true
+              description: Single recipient user UUID (alternative to emails/usernames).
             days:
               type: integer
               minimum: 1
               nullable: true
               example: 30
+              description:
+                Entitlement duration in days. Pass null or omit for lifetime
+                access.
             expires_at:
               type: string
               format: date_time
               nullable: true
-          required:
-            - user_id
-            - product_id
+              description:
+                Explicit expiration timestamp. Calculated from days if
+                omitted.
+          required: []
       required:
         - access
     admin_access_update_request:
@@ -5539,7 +5563,7 @@ paths:
     get:
       tags:
         - Admin / Analytics
-      summary: Get aggregated system overview metrics and time-series
+      summary: Get admin analytics overview KPIs, time-series data, and breakdowns
       parameters:
         - name: X-Locale
           in: header
@@ -5562,12 +5586,21 @@ paths:
               - web
               - mobile
             default: web
-        - name: range
+        - name: period
           in: query
           required: false
           schema:
             type: string
-            default: 30d
+        - name: start_date
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: end_date
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: Successful response
