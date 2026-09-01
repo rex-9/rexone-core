@@ -65,7 +65,7 @@ class V1::Admin::FeedbacksController < V1::ApplicationController
   # DELETE /v1/admin/feedbacks/:id
   def destroy
     feedback = Feedback.find(params[:id])
-    feedback.discard
+    feedback.destroy!
 
     render_json_response(
       status_code: 200,

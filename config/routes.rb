@@ -106,8 +106,8 @@ Rails.application.routes.draw do
     namespace :log do
       resources :clients, only: [ :create, :index, :show, :destroy ] do
         member do
-          patch :update_resolve, path: "resolve"
-          patch :update_unresolve, path: "unresolve"
+          put :update_resolve, path: "resolve"
+          put :update_unresolve, path: "unresolve"
         end
       end
     end
@@ -121,21 +121,7 @@ Rails.application.routes.draw do
     # Requires admin role (with `_admin` suffix) + resource permissions.
     namespace :admin do
       # API-only: no new/edit needed
-      resources :users, only: %i[index show create update destroy] do
-        # collection do
-        #   get    :read_teaching_users, path: "teachers" # GET /v1/admin/users/teachers # V1::Admin::UsersController#read_teaching_users
-        #   post   :create_users
-        #   put    :update_users
-        #   delete :delete_users
-        # end
-
-        # member do
-        #   get :read_user_iam, path: "iam" # GET /v1/admin/users/:id/iam # V1::Admin::UsersController#read_user_iam
-        #   post :create_user
-        #   post :update_user
-        #   post :delete_user
-        # end
-
+      resources :users, only: %i[index show create update] do
         collection do
           get :read_discarded, path: "discarded"
         end
@@ -157,12 +143,13 @@ Rails.application.routes.draw do
       end
 
       namespace :payment do
-        resources :products, only: %i[index show create update destroy] do
+        resources :products, only: %i[index show create update] do
           collection do
             get :read_discarded, path: "discarded"
           end
 
           member do
+            post :discard
             post :undiscard
           end
         end
@@ -173,6 +160,8 @@ Rails.application.routes.draw do
           get :read_templates, path: "templates"
         end
       end
+
+      resources :accesses, only: %i[index show create update destroy]
 
       resources :feedbacks, only: %i[index show update destroy]
 

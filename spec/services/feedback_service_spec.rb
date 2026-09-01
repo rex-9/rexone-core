@@ -44,7 +44,12 @@ RSpec.describe FeedbackService, type: :service do
   end
 
   describe ".infer_priority" do
-    it "infers urgent priority for critical cues in English and Myanmar" do
+    it "infers critical priority for security, hack, and exploit cues" do
+      expect(described_class.infer_priority("Critical security exploit found, user data leak", nil)).to eq(FeedbackConstants::Priority::CRITICAL)
+      expect(described_class.infer_priority("အကောင့် ခိုး ခံရပြီး လုံခြုံရေး ပေါက်ကြား နေပါတယ်", nil)).to eq(FeedbackConstants::Priority::CRITICAL)
+    end
+
+    it "infers urgent priority for billing and access emergency cues in English and Myanmar" do
       expect(described_class.infer_priority("Emergency! I lost_money and was charged_twice", nil)).to eq(FeedbackConstants::Priority::URGENT)
       expect(described_class.infer_priority("အရေးပေါ် ပိုက်ဆံဖြတ် သွားပါတယ်", nil)).to eq(FeedbackConstants::Priority::URGENT)
     end
@@ -52,6 +57,14 @@ RSpec.describe FeedbackService, type: :service do
     it "infers high priority for bugs with low ratings" do
       expect(described_class.infer_priority("App is broken", 1)).to eq(FeedbackConstants::Priority::HIGH)
       expect(described_class.infer_priority("သုံးမရတော့ဘူး", 2)).to eq(FeedbackConstants::Priority::HIGH)
+    end
+
+    it "infers medium priority for improvements" do
+      expect(described_class.infer_priority("Please optimize the slow design layout", nil)).to eq(FeedbackConstants::Priority::MEDIUM)
+    end
+
+    it "infers low priority for general feedback" do
+      expect(described_class.infer_priority("Loving the app, great work!", nil)).to eq(FeedbackConstants::Priority::LOW)
     end
   end
 end

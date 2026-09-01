@@ -34,7 +34,6 @@ module PaymentService
       with_stripe_error("Create Checkout Session") do
         user = User.find(user_id)
         product = Payment::Product.find(product_id)
-         # raise PaymentService::Error, "Free products do not use Stripe checkout" if product.free?
 
         checkout_params = {
           customer: user.stripe_customer,
@@ -349,7 +348,7 @@ module PaymentService
     end
 
     def product_attributes(stripe_product, stripe_price, attributes)
-      {
+      attrs = {
         stripe_product_id: stripe_product.id,
         stripe_price_id: stripe_price.id,
         name: attributes.fetch(:name),
@@ -359,6 +358,8 @@ module PaymentService
         cycle: attributes[:cycle],
         active: attributes.fetch(:active, true)
       }
+      attrs[:code] = attributes[:code] if attributes[:code].present?
+      attrs
     end
 
     def discard_stripe_records(stripe_product_id, stripe_price_id)

@@ -23,15 +23,21 @@ class Payment::Product < ApplicationRecord
   enum :cycle, { monthly: "month", yearly: "year" }, prefix: true
   enum :currency, { usd: "usd" }, prefix: true
 
+  # ===== READONLY & IMMUTABLE ATTRIBUTES =====
+  attr_readonly :code
+
   # ===== VALIDATIONS =====
+  validates :code, presence: true, uniqueness: { case_sensitive: true }, format: { with: /\A[A-Za-z0-9]{10}\z/, message: "must be 10 alphanumeric characters" }
   validates :name, presence: true
   validates :price_unit_amount, numericality: { greater_than_or_equal_to: 0 }
   validates :stripe_product_id, presence: true, uniqueness: true
   validates :stripe_price_id, presence: true, uniqueness: true
   validates :currency, presence: true
+  validate :prevent_code_update, on: :update
   validate :prevent_free_to_premium_transition, on: :update
   validate :free_product_must_be_one_time
 
+  before_validation :generate_unique_code, on: :create
   before_validation :normalize_free_product
   # ===== SCOPES =====
   scope :active, -> { where(active: true) }
@@ -80,6 +86,24 @@ class Payment::Product < ApplicationRecord
   end
 
   private
+
+  def generate_unique_code
+    return if code.present?
+
+    loop do
+      generated = SecureRandom.alphanumeric(10)
+      unless self.class.exists?(code: generated)
+        self.code = generated
+        break
+      end
+    end
+  end
+
+  def prevent_code_update
+    if code_changed? && persisted?
+      errors.add(:code, "cannot be modified once created")
+    end
+  end
 
   def normalize_free_product
     self.cycle = nil if free?

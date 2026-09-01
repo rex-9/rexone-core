@@ -19,11 +19,12 @@ module FeedbackConstants
   end
 
   module Priority
-    LOW     = "low".freeze
-    NORMAL  = "normal".freeze
-    HIGH    = "high".freeze
-    URGENT  = "urgent".freeze
-    ALL     = [ LOW, NORMAL, HIGH, URGENT ].freeze
+    LOW      = "low".freeze
+    MEDIUM   = "medium".freeze
+    HIGH     = "high".freeze
+    URGENT   = "urgent".freeze
+    CRITICAL = "critical".freeze
+    ALL      = [ LOW, MEDIUM, HIGH, URGENT, CRITICAL ].freeze
   end
 
   module Rating

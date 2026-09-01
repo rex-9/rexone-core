@@ -77,4 +77,39 @@ RSpec.describe Payment::Product, type: :model do
     expect(premium_product).not_to be_valid
     expect(premium_product.errors[:price_unit_amount]).to include("Free products cannot be converted to premium products")
   end
+
+  describe "code generation and validation" do
+    it "auto-generates a 10-character alphanumeric code on create" do
+      product = create(:payment_product, code: nil)
+      expect(product.code).to be_present
+      expect(product.code.length).to eq(10)
+      expect(product.code).to match(/\A[A-Za-z0-9]{10}\z/)
+    end
+
+    it "preserves a custom valid 10-character alphanumeric code" do
+      custom_code = "Abc123XyZ9"
+      product = create(:payment_product, code: custom_code)
+      expect(product.code).to eq(custom_code)
+    end
+
+    it "validates that code is 10 alphanumeric characters" do
+      expect(build(:payment_product, code: "short")).not_to be_valid
+      expect(build(:payment_product, code: "too_long_code_123")).not_to be_valid
+      expect(build(:payment_product, code: "abc123-xyz")).not_to be_valid
+    end
+
+    it "enforces case-sensitive uniqueness of code" do
+      product = create(:payment_product, code: "Abc123XyZ9")
+      duplicate = build(:payment_product, code: "Abc123XyZ9")
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors.of_kind?(:code, :taken)).to be(true)
+    end
+
+    it "prevents updating code on an existing product" do
+      product = create(:payment_product, code: "Initial123")
+      expect {
+        product.code = "Updated456"
+      }.to raise_error(ActiveRecord::ReadonlyAttributeError)
+    end
+  end
 end

@@ -3,7 +3,7 @@ FactoryBot.define do
     content { "Great platform! Really loving the fast response times." }
     rating { 9 }
     category { FeedbackConstants::Category::GENERAL }
-    priority { FeedbackConstants::Priority::NORMAL }
+    priority { FeedbackConstants::Priority::MEDIUM }
     status { FeedbackConstants::Status::NEW }
     platform { AuthConstants::Platform::WEB }
     page { "/home" }

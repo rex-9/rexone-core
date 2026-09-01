@@ -7,8 +7,28 @@ class AccessSerializer < ApplicationSerializer
     access.product_id
   end
 
+  attribute :product_code do |access|
+    access.product&.code
+  end
+
   attribute :product_name do |access|
     access.product&.name
+  end
+
+  attribute :user_id do |access|
+    access.user_id
+  end
+
+  attribute :user_email do |access|
+    access.user&.email
+  end
+
+  attribute :username do |access|
+    access.user&.username
+  end
+
+  attribute :user_name do |access|
+    access.user&.name
   end
 
   attribute :remaining_days do |access|

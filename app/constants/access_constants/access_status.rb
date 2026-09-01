@@ -5,5 +5,6 @@ module AccessConstants
     ACTIVE  = "active".freeze
     EXPIRED = "expired".freeze
     REVOKED = "revoked".freeze
+    ALL     = [ ACTIVE, EXPIRED, REVOKED ].freeze
   end
 end

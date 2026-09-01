@@ -118,13 +118,13 @@ RSpec.describe "Admin payment products", type: :request do
     expect(PaymentService::Client).to have_received(:update_product).with(product.id, hash_including(name: "Updated"))
   end
 
-  it "discards a Stripe-backed product instead of hard deleting it" do
+  it "discards a Stripe-backed product" do
     grant_admin_product_permission(:delete)
     product = create(:payment_product)
 
     allow(PaymentService::Client).to receive(:discard_product).and_return(data: product)
 
-    delete "/v1/admin/payment/products/#{product.id}", headers: headers
+    post "/v1/admin/payment/products/#{product.id}/discard", headers: headers
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("payment.products.discarded"))

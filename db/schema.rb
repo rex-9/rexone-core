@@ -284,6 +284,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
 
   create_table "payment_products", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.string "code", null: false
     t.datetime "created_at", null: false
     t.uuid "created_by_id"
     t.string "currency", null: false
@@ -299,6 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
     t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
     t.uuid "updated_by_id"
+    t.index ["code"], name: "index_payment_products_on_code", unique: true
     t.index ["created_by_id"], name: "index_payment_products_on_created_by_id"
     t.index ["discarded_at"], name: "index_payment_products_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_payment_products_on_discarded_by_id"

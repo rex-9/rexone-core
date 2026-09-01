@@ -33,6 +33,17 @@ RSpec.describe "V1 Admin Feedbacks API", type: :request do
       expect(response_data.size).to eq(1)
       expect(response_data.first.dig("attributes", "category")).to eq("bug")
     end
+
+    it "filters feedbacks by priority" do
+      create(:feedback, priority: FeedbackConstants::Priority::CRITICAL)
+      create(:feedback, priority: FeedbackConstants::Priority::LOW)
+
+      get "/v1/admin/feedbacks", params: { priority: "critical" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.size).to eq(1)
+      expect(response_data.first.dig("attributes", "priority")).to eq("critical")
+    end
   end
 
   describe "GET /v1/admin/feedbacks/:id" do
@@ -64,13 +75,13 @@ RSpec.describe "V1 Admin Feedbacks API", type: :request do
   end
 
   describe "DELETE /v1/admin/feedbacks/:id" do
-    it "soft-deletes the feedback" do
+    it "permanently destroys the feedback" do
       feedback = create(:feedback)
 
       delete "/v1/admin/feedbacks/#{feedback.id}", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(feedback.reload.discarded_at).to be_present
+      expect { feedback.reload }.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
 end

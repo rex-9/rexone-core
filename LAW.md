@@ -86,6 +86,14 @@ The RBAC system defines a strict three-tier hierarchy for administration:
    - In frontend clients (Web), partial admins dynamically only see the admin sidebar navigation items corresponding to the `read_<resource>` permissions of their assigned `*_admin` roles.
    - **Single-Request IAM Introspection**: `GET /v1/users/current/iam` returns explicit `is_admin`, `is_super_admin`, `roles`, `admin_roles`, `non_admin_roles`, `permissions`, `admin_permissions`, and `non_admin_permissions` so frontend clients can immediately evaluate UI controls and sidebar items without secondary API calls.
 
+### 3.4 Rails Internal Dashboards vs. Client Admin Portal Boundary
+
+- **Rails Internal Dashboards (`/admin`, `/red`, `/solid_queue`, `/pulse`)**:
+  - Reserved **strictly for Super Admins** (`super_admin`) for low-level system infrastructure, raw database inspection, job worker health, cache inspect, and server profiling.
+- **Client Admin Portal (`/v1/admin/*` and Web `/admin/*`)**:
+  - The primary business, operational, and customer support portal for all authorized staff and sub-admins (`super_admin`, `admin`, and `*_admin` roles).
+  - Business operations (user accounts, IAM role delegations, product catalogs, customer entitlements/accesses, support feedbacks, client error telemetry, notifications, chat moderation) MUST be completely manageable via `/v1/admin/*` so sub-admins never require raw database, console, or infrastructure dashboard access.
+
 ---
 
 ## 🏛️ 4. Architecture & Controller Law (Strict MCS Pattern)
@@ -168,7 +176,13 @@ Service Layer (app/services/)
 ## 🗄️ 6. Models, Database & Migrations Law
 
 - **UUID Primary Keys**: All tables use `id: :uuid, default: -> { "gen_random_uuid()" }`.
-- **Soft Deletion**: Entities supporting recovery use the `Discard` gem (`discarded_at`).
+- **Soft Deletion & Lifecycle Hierarchy**:
+  - `discard` (Soft Delete): Stamps `discarded_at` timestamp. Invoked from the active view to move a record to the Recycle Bin.
+  - `undiscard` (Restore in UI): Clears `discarded_at` to `nil`. In code, all method names, controller actions, routes, and services MUST strictly use `undiscard` (e.g. `put/post :undiscard`, `def undiscard`). "Restore" exists solely as the user-facing translated string literal.
+  - `destroy` (Hard Delete): Permanently purges and deletes the record. Strictly restricted to the Recycle Bin for destroyable resources (e.g. chat messages, chat rooms).
+  - **Non-Destroyable Resources**: Users, Products, Roles, and Permissions are strictly soft-deleted (`discard`) and restored (`undiscard`). They cannot be destroyed.
+- **HTTP Methods & Routing Law**:
+  - `PATCH` method is forbidden. Record updates use `PUT`. State transitions and lifecycle actions use `PUT` or `POST`.
 - **Audit Trails**: Models with audit requirements include `Audited` concern (`created_by_id`, `updated_by_id`, `discarded_by_id`).
 - **Timestamps**: All tables include `created_at` and `updated_at`.
 
