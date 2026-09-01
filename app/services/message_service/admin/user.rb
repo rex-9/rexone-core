@@ -7,7 +7,6 @@ module MessageService
       USER_UPDATED = "admin.user.user_updated"
       USER_DISCARDED = "admin.user.user_discarded"
       USER_RESTORED = "admin.user.user_restored"
-      USER_DELETED = "admin.user.user_deleted"
       DISCARDED_USERS_RETRIEVED = "admin.user.discarded_users_retrieved"
       USER_NOT_DISCARDED = "admin.user.user_not_discarded"
       SELF_LIFECYCLE_PROTECTED = "admin.user.self_lifecycle_protected"

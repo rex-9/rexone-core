@@ -58,4 +58,58 @@ RSpec.describe Payment::Product, type: :model do
     expect(described_class.one_time).to contain_exactly(one_time)
     expect(described_class.active).to contain_exactly(recurring, one_time)
   end
+
+  it "prevents converting a free product to a premium product" do
+    free_product = create(:payment_product, price_unit_amount: 0)
+
+    free_product.price_unit_amount = 2500
+    expect(free_product).not_to be_valid
+    expect(free_product.errors[:price_unit_amount]).to include("Free products cannot be converted to premium products")
+  end
+
+  it "allows converting a premium product to a free product, but locks it from becoming premium again" do
+    premium_product = create(:payment_product, price_unit_amount: 2500)
+
+    premium_product.update!(price_unit_amount: 0, cycle: nil)
+    expect(premium_product.reload).to be_free
+
+    premium_product.price_unit_amount = 1500
+    expect(premium_product).not_to be_valid
+    expect(premium_product.errors[:price_unit_amount]).to include("Free products cannot be converted to premium products")
+  end
+
+  describe "code generation and validation" do
+    it "auto-generates a 10-character alphanumeric code on create" do
+      product = create(:payment_product, code: nil)
+      expect(product.code).to be_present
+      expect(product.code.length).to eq(10)
+      expect(product.code).to match(/\A[A-Za-z0-9]{10}\z/)
+    end
+
+    it "preserves a custom valid 10-character alphanumeric code" do
+      custom_code = "Abc123XyZ9"
+      product = create(:payment_product, code: custom_code)
+      expect(product.code).to eq(custom_code)
+    end
+
+    it "validates that code is 10 alphanumeric characters" do
+      expect(build(:payment_product, code: "short")).not_to be_valid
+      expect(build(:payment_product, code: "too_long_code_123")).not_to be_valid
+      expect(build(:payment_product, code: "abc123-xyz")).not_to be_valid
+    end
+
+    it "enforces case-sensitive uniqueness of code" do
+      product = create(:payment_product, code: "Abc123XyZ9")
+      duplicate = build(:payment_product, code: "Abc123XyZ9")
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors.of_kind?(:code, :taken)).to be(true)
+    end
+
+    it "prevents updating code on an existing product" do
+      product = create(:payment_product, code: "Initial123")
+      expect {
+        product.code = "Updated456"
+      }.to raise_error(ActiveRecord::ReadonlyAttributeError)
+    end
+  end
 end

@@ -79,11 +79,11 @@ RSpec.describe "V1 Log Clients API", type: :request do
     end
   end
 
-  describe "PATCH /v1/log/clients/:id/resolve" do
+  describe "PUT /v1/log/clients/:id/resolve" do
     let(:log) { create(:log_client) }
 
     it "marks the log as resolved" do
-      patch "/v1/log/clients/#{log.id}/resolve", headers: headers
+      put "/v1/log/clients/#{log.id}/resolve", headers: headers
 
       expect(response).to have_http_status(:ok)
       expect(log.reload.resolved?).to be true
@@ -91,11 +91,11 @@ RSpec.describe "V1 Log Clients API", type: :request do
     end
   end
 
-  describe "PATCH /v1/log/clients/:id/unresolve" do
+  describe "PUT /v1/log/clients/:id/unresolve" do
     let(:log) { create(:log_client, resolved_at: Time.current, resolved_by: user) }
 
     it "unresolves the log" do
-      patch "/v1/log/clients/#{log.id}/unresolve", headers: headers
+      put "/v1/log/clients/#{log.id}/unresolve", headers: headers
 
       expect(response).to have_http_status(:ok)
       expect(log.reload.resolved?).to be false

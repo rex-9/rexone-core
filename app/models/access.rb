@@ -37,7 +37,7 @@ class Access < ApplicationRecord
     update(status: AccessConstants::AccessStatus::EXPIRED, expired_at: Time.current)
   end
 
-  def days_remaining
+  def remaining_days
     return nil if expires_at.nil?
     ((expires_at - Time.current) / 1.day).ceil
   end

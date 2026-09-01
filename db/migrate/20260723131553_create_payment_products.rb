@@ -1,6 +1,7 @@
 class CreatePaymentProducts < ActiveRecord::Migration[8.1]
   def change
     create_table :payment_products, id: :uuid do |t|
+      t.string :code, null: false
       t.string :name, null: false
       t.text :description
 
@@ -37,6 +38,7 @@ class CreatePaymentProducts < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
+    add_index :payment_products, :code, unique: true
     add_index :payment_products, :stripe_product_id, unique: true
     add_index :payment_products, :stripe_price_id, unique: true
     add_index :payment_products, :discarded_at

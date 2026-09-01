@@ -1,6 +1,6 @@
-# app/controllers/v1/access_controller.rb:
-class V1::AccessController < V1::ApplicationController
-  # GET /access?page=1&limit=10
+# app/controllers/v1/accesses_controller.rb
+class V1::AccessesController < V1::ApplicationController
+  # GET /accesses?page=1&limit=10
   def index
     accesses = AccessService.get_user_access(current_user.id)
     pagy, records = pagy(:offset, accesses, limit: params[:limit])
@@ -13,7 +13,7 @@ class V1::AccessController < V1::ApplicationController
     )
   end
 
-  # GET /access/active?page=1&limit=10
+  # GET /accesses/active?page=1&limit=10
   def read_active
     accesses = AccessService.get_active_access(current_user.id)
     pagy, records = pagy(:offset, accesses, limit: params[:limit])
@@ -26,7 +26,7 @@ class V1::AccessController < V1::ApplicationController
     )
   end
 
-  # GET /access/check
+  # GET /accesses/check
   def read_check
     product_id = params[:product_id]
     has_access = AccessService.has_access?(
@@ -44,7 +44,7 @@ class V1::AccessController < V1::ApplicationController
     )
   end
 
-  # DELETE /access/:id
+  # DELETE /accesses/:id
   def destroy
     access = Access.find(params[:id])
 

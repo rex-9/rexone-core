@@ -19,6 +19,8 @@ en:
     checkout:
       already_subscribed: "Already subscribed"
       active_subscription_exists: "You already have an active subscription to this product. You can cancel it first."
+      active_access_exists: "You already have active access to this product."
+      free_access_granted: "Free access granted successfully."
       create_failed: "Failed to create checkout session"
       created: "Checkout Session created"
       session_not_found: "Session not found"

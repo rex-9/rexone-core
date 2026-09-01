@@ -22,6 +22,10 @@ class FeedbackService
       keywords_for(:improvement_keywords)
     end
 
+    def critical_keywords
+      keywords_for(:critical_keywords)
+    end
+
     def urgent_keywords
       keywords_for(:urgent_keywords)
     end
@@ -45,10 +49,17 @@ class FeedbackService
     def infer_priority(content, rating)
       normalized = normalize_text(content)
 
-      # Explicit urgency cues
-      return FeedbackConstants::Priority::URGENT if urgent_keywords.any? { |kw| match_keyword?(normalized, kw) }
+      # 1. Critical cues: security, hack, data leaks, fatal
+      if critical_keywords.any? { |kw| match_keyword?(normalized, kw) }
+        return FeedbackConstants::Priority::CRITICAL
+      end
 
-      # Critical sentiment cues: very low rating (1-2) with bug cues
+      # 2. Urgent cues: emergency, lost money, charged twice, cannot login
+      if urgent_keywords.any? { |kw| match_keyword?(normalized, kw) }
+        return FeedbackConstants::Priority::URGENT
+      end
+
+      # 3. Critical sentiment cues: very low rating (1-2) with bug cues
       if rating.present? && rating <= 2 && bug_keywords.any? { |kw| match_keyword?(normalized, kw) }
         return FeedbackConstants::Priority::HIGH
       end
@@ -56,7 +67,7 @@ class FeedbackService
       if bug_keywords.any? { |kw| match_keyword?(normalized, kw) }
         FeedbackConstants::Priority::HIGH
       elsif improvement_keywords.any? { |kw| match_keyword?(normalized, kw) }
-        FeedbackConstants::Priority::NORMAL
+        FeedbackConstants::Priority::MEDIUM
       else
         FeedbackConstants::Priority::LOW
       end

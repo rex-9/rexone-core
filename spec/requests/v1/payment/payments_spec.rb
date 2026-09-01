@@ -48,6 +48,33 @@ RSpec.describe "V1 Payments API", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "grants access directly for free products without creating a Stripe checkout session" do
+      free_product = create(:payment_product, price_unit_amount: 0, cycle: nil)
+      expect(PaymentService::Client).not_to receive(:create_checkout_session)
+
+      post "/v1/payment/session",
+           params: { product_id: free_product.id },
+           headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include(
+        "free_access_granted" => true,
+        "product_id" => free_product.id
+      )
+      expect(AccessService.has_access?(user_id: user.id, product_id: free_product.id)).to be(true)
+    end
+
+    it "rejects free product checkout when active access already exists" do
+      free_product = create(:payment_product, price_unit_amount: 0, cycle: nil)
+      AccessService.grant(user_id: user.id, product_id: free_product.id)
+
+      post "/v1/payment/session",
+           params: { product_id: free_product.id },
+           headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
   end
 
   describe "GET /v1/payment/session/:session_id" do

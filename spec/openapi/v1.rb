@@ -235,34 +235,81 @@ module Openapi
           active: { type: :boolean, default: true }
         )
       ),
-      user_role_request: object(
-        required: [ :role_id ],
-        role_id: UUID.merge(description: "Role UUID to assign to the path user.")
+      admin_access_request: object(
+        required: [ :access ],
+        access: object(
+          required: %i[user_id product_id],
+          user_id: UUID.merge(description: "User UUID to grant entitlement to."),
+          product_id: UUID.merge(description: "Product UUID to grant entitlement for."),
+          days: { type: :integer, minimum: 1, nullable: true, example: 30 },
+          expires_at: { type: :string, format: :date_time, nullable: true }
+        )
+      ),
+      admin_access_update_request: object(
+        required: [ :access ],
+        access: object(
+          days: { type: :integer, minimum: 1, nullable: true, example: 30 },
+          expires_at: { type: :string, format: :date_time, nullable: true },
+          status: { type: :string, nullable: true, enum: AccessConstants::AccessStatus::ALL }
+        )
       ),
       feedback_request: object(
         required: [ :feedback ],
         feedback: object(
           required: [ :content ],
-          content: { type: :string, minLength: 1, example: "Great platform!" },
-          rating: { type: :integer, minimum: 1, maximum: 5, example: 5 },
-          category: { type: :string, example: "general" },
-          priority: { type: :string, example: "normal" },
-          app_version: { type: :string, example: "1.0.0" },
-          os: { type: :string, example: "mac" },
-          device: { type: :string, example: "MacBookPro" },
-          browser: { type: :string, example: "Chrome" },
-          page: { type: :string, example: "/home" },
-          metadata: { type: :object, additionalProperties: true }
+          content: { type: :string, example: "The checkout flow is very smooth!" },
+          rating: { type: :integer, minimum: 1, maximum: 10, nullable: true, example: 10 },
+          category: { type: :string, nullable: true, example: "general" },
+          priority: { type: :string, nullable: true, example: "normal" },
+          platform: { type: :string, nullable: true, example: "web" },
+          app_version: { type: :string, nullable: true, example: "1.0.0" },
+          os: { type: :string, nullable: true, example: "mac" },
+          device: { type: :string, nullable: true, example: "MacBookPro" },
+          browser: { type: :string, nullable: true, example: "Chrome" },
+          page: { type: :string, nullable: true, example: "/home" },
+          metadata: { type: :object, nullable: true, additionalProperties: true }
         )
       ),
-      admin_feedback_request: object(
+      admin_feedback_update_request: object(
         required: [ :feedback ],
         feedback: object(
-          status: { type: :string, example: "reviewed" },
-          category: { type: :string, example: "feature_request" },
-          priority: { type: :string, example: "high" },
-          admin_notes: { type: :string, example: "Followed up with user" }
+          status: { type: :string, nullable: true, example: "resolved" },
+          category: { type: :string, nullable: true },
+          priority: { type: :string, nullable: true },
+          admin_notes: { type: :string, nullable: true }
         )
+      ),
+      asset_request: object(
+        required: [ :asset ],
+        asset: object(
+          storage_key: { type: :string, nullable: true },
+          type: { type: :string, nullable: true },
+          format: { type: :string, nullable: true },
+          source: { type: :string, nullable: true },
+          resource_model: { type: :string, nullable: true },
+          resource_id: UUID.merge(nullable: true),
+          size_bytes: { type: :integer, nullable: true },
+          duration_secs: { type: :integer, nullable: true },
+          extension: { type: :string, nullable: true }
+        )
+      ),
+      asset_update_request: object(
+        required: [ :asset ],
+        asset: object(
+          storage_key: { type: :string, nullable: true },
+          type: { type: :string, nullable: true },
+          format: { type: :string, nullable: true },
+          source: { type: :string, nullable: true },
+          resource_model: { type: :string, nullable: true },
+          resource_id: UUID.merge(nullable: true),
+          size_bytes: { type: :integer, nullable: true },
+          duration_secs: { type: :integer, nullable: true },
+          extension: { type: :string, nullable: true }
+        )
+      ),
+      user_role_request: object(
+        required: [ :role_id ],
+        role_id: UUID.merge(description: "Role UUID to assign to the path user.")
       ),
       client_log_context: {
         type: :object,
@@ -612,7 +659,7 @@ module Openapi
         status: { type: :string },
         granted_at: DATE_TIME,
         expires_at: DATE_TIME,
-        days_remaining: { type: :integer, nullable: true },
+        remaining_days: { type: :integer, nullable: true },
         active: { type: :boolean },
         created_at: DATE_TIME,
         updated_at: DATE_TIME
@@ -851,13 +898,41 @@ module Openapi
                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
         patch: operation(tags: "Admin / Payment Products", summary: "Update a Stripe-backed product",
                          parameters: [ path_parameter(:id) ], body: ref(:admin_product_request),
-                         errors: [ 401, 403, 404, 422 ]),
-        delete: operation(tags: "Admin / Payment Products", summary: "Discard a Stripe-backed product",
-                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+                         errors: [ 401, 403, 404, 422 ])
+      }
+      paths["/v1/admin/payment/products/{id}/discard"] = {
+        post: operation(tags: "Admin / Payment Products", summary: "Discard a Stripe-backed product",
+                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
       paths["/v1/admin/payment/products/{id}/undiscard"] = {
         post: operation(tags: "Admin / Payment Products", summary: "Restore a discarded Stripe-backed product",
                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+      }
+      paths["/v1/admin/accesses"] = {
+        get: operation(
+          tags: "Admin / Accesses", summary: "List and filter user entitlements",
+          parameters: [
+            query_parameter(:limit, type: :integer, minimum: 1),
+            query_parameter(:status, enum: AccessConstants::AccessStatus::ALL + [ "expiring_soon" ]),
+            query_parameter(:product_id, type: :string),
+            query_parameter(:user_id, type: :string),
+            query_parameter(:search, type: :string)
+          ],
+          errors: [ 401, 403 ]
+        ),
+        post: operation(
+          tags: "Admin / Accesses", summary: "Grant an entitlement to a user",
+          body: ref(:admin_access_request), success: 201, errors: [ 401, 403, 404, 422 ]
+        )
+      }
+      paths["/v1/admin/accesses/{id}"] = {
+        get: operation(tags: "Admin / Accesses", summary: "Get entitlement details",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / Accesses", summary: "Extend or update entitlement",
+                         parameters: [ path_parameter(:id) ], body: ref(:admin_access_update_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / Accesses", summary: "Revoke an entitlement",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
       }
       paths["/v1/iam/permissions/current"] = {
         get: operation(tags: "IAM Permissions", summary: "List current user's permissions",
@@ -901,8 +976,8 @@ module Openapi
       }
       %w[resolve unresolve].each do |action|
         paths["/v1/log/clients/{id}/#{action}"] = {
-          patch: operation(tags: "Client Logs", summary: "Mark a client error as #{action}d",
-                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+          put: operation(tags: "Client Logs", summary: "Mark a client error as #{action}d",
+                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
         }
       end
 
@@ -948,36 +1023,6 @@ module Openapi
                          query_parameter(:start_date, type: :string),
                          query_parameter(:end_date, type: :string)
                        ], errors: [ 401, 403 ])
-      }
-      paths["/v1/feedbacks"] = {
-        post: operation(tags: "Feedback", summary: "Submit feedback", success: 201,
-                        security: nil, body: ref(:feedback_request), errors: [ 422 ]),
-        get: operation(tags: "Feedback", summary: "List current user's submitted feedbacks",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401 ])
-      }
-      paths["/v1/feedbacks/{id}"] = {
-        get: operation(tags: "Feedback", summary: "Get a submitted feedback",
-                       parameters: [ path_parameter(:id) ], errors: [ 401, 404 ])
-      }
-      paths["/v1/admin/feedbacks"] = {
-        get: operation(tags: "Admin / Feedback", summary: "List feedbacks for the admin client",
-                       parameters: [
-                         query_parameter(:status, type: :string),
-                         query_parameter(:category, type: :string),
-                         query_parameter(:priority, type: :string),
-                         query_parameter(:platform, type: :string),
-                         query_parameter(:user_id, type: :string, format: :uuid),
-                         query_parameter(:limit, type: :integer, minimum: 1)
-                       ], errors: [ 401, 403 ])
-      }
-      paths["/v1/admin/feedbacks/{id}"] = {
-        get: operation(tags: "Admin / Feedback", summary: "Get an admin-managed feedback",
-                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
-        patch: operation(tags: "Admin / Feedback", summary: "Update an admin-managed feedback",
-                         parameters: [ path_parameter(:id) ], body: ref(:admin_feedback_request),
-                         errors: [ 401, 403, 404, 422 ]),
-        delete: operation(tags: "Admin / Feedback", summary: "Discard a feedback",
-                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
       }
 
       paths["/v1/payment/products"] = {
@@ -1026,18 +1071,62 @@ module Openapi
                        errors: [ 401, 404 ])
       }
 
-      paths["/v1/access"] = {
-        get: operation(tags: "Access", summary: "List the current user's product access", errors: [ 401 ])
+      paths["/v1/accesses"] = {
+        get: operation(tags: "Accesses", summary: "List the current user's product access", errors: [ 401 ])
       }
-      paths["/v1/access/active"] = {
-        get: operation(tags: "Access", summary: "List active product access", errors: [ 401 ])
+      paths["/v1/accesses/active"] = {
+        get: operation(tags: "Accesses", summary: "List active product access", errors: [ 401 ])
       }
-      paths["/v1/access/check"] = {
-        get: operation(tags: "Access", summary: "Check access to a product",
+      paths["/v1/accesses/check"] = {
+        get: operation(tags: "Accesses", summary: "Check access to a product",
                        parameters: [ query_parameter(:product_id, required: true, format: :uuid) ], errors: [ 401 ])
       }
-      paths["/v1/access/{id}"] = {
-        delete: operation(tags: "Access", summary: "Revoke owned product access",
+      paths["/v1/accesses/{id}"] = {
+        delete: operation(tags: "Accesses", summary: "Revoke owned product access",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+
+      paths["/v1/admin/analytics/overview"] = {
+        get: operation(tags: "Admin / Analytics", summary: "Get aggregated system overview metrics and time-series",
+                       parameters: [ query_parameter(:range, type: :string, default: "30d") ], errors: [ 401, 403 ])
+      }
+
+      feedback_filters = %i[status category priority search].map { |name| query_parameter(name) }
+      paths["/v1/admin/feedbacks"] = {
+        get: operation(tags: "Admin / Feedbacks", summary: "List and filter user feedbacks for admins",
+                       parameters: feedback_filters + [ query_parameter(:page, type: :integer), query_parameter(:limit, type: :integer) ],
+                       errors: [ 401, 403 ])
+      }
+      paths["/v1/admin/feedbacks/{id}"] = {
+        get: operation(tags: "Admin / Feedbacks", summary: "Get feedback details",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / Feedbacks", summary: "Update feedback status and admin notes",
+                         parameters: [ path_parameter(:id) ], body: ref(:admin_feedback_update_request), errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / Feedbacks", summary: "Delete or discard feedback",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+
+      paths["/v1/feedbacks"] = {
+        get: operation(tags: "Feedbacks", summary: "List the current user's submitted feedbacks", errors: [ 401 ]),
+        post: operation(tags: "Feedbacks", summary: "Submit feedback", success: 201,
+                        body: ref(:feedback_request), errors: [ 401, 422 ])
+      }
+      paths["/v1/feedbacks/{id}"] = {
+        get: operation(tags: "Feedbacks", summary: "Get owned feedback details",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+
+      paths["/v1/assets"] = {
+        get: operation(tags: "Assets", summary: "List stored assets", errors: [ 401, 403 ]),
+        post: operation(tags: "Assets", summary: "Create an asset record", success: 201,
+                        body: ref(:asset_request), errors: [ 401, 403, 422 ])
+      }
+      paths["/v1/assets/{id}"] = {
+        get: operation(tags: "Assets", summary: "Get asset record",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Assets", summary: "Update asset record",
+                         parameters: [ path_parameter(:id) ], body: ref(:asset_update_request), errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Assets", summary: "Delete asset record",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
       }
 

@@ -1,5 +1,5 @@
 class V1::Admin::Payment::ProductsController < V1::ApplicationController
-  before_action :set_active_product, only: %i[show update destroy]
+  before_action :set_active_product, only: %i[show update discard]
   before_action :set_product_including_discarded, only: :undiscard
 
   # GET /v1/admin/payment/products
@@ -65,8 +65,8 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
     render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, error.record.errors.full_messages.to_sentence)
   end
 
-  # DELETE /v1/admin/payment/products/:id (discard; route retained for API compatibility)
-  def destroy
+  # POST /v1/admin/payment/products/:id/discard
+  def discard
     result = PaymentService::Client.discard_product(@product.id)
     return render_service_error(MessageService::Payment::PRODUCT_DISCARD_FAILED, result[:error]) if result[:error]
 
@@ -100,7 +100,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   def product_params
     values = params.require(:product)
-                   .permit(:name, :description, :price_unit_amount, :currency, :cycle, :active)
+                   .permit(:code, :name, :description, :price_unit_amount, :currency, :cycle, :active)
                    .to_h
                    .symbolize_keys
 

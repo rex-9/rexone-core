@@ -27,7 +27,7 @@ RSpec.configure do |config|
 
           Authenticated endpoints use a bearer JWT. Send `X-Platform` as `web`,
           `android`, or `ios` to select the active session, and `X-Locale` as
-          `en`, `my`, or `es` to select translated response messages.
+          `en`, or `my` to select translated response messages.
         DESCRIPTION
       },
       tags: [
@@ -41,19 +41,21 @@ RSpec.configure do |config|
           name: 'Admin / Notifications',
           description: 'Admin notification dispatch. Requires the admin role and create_notifications permission.'
         },
+        { name: 'Admin / Accesses', description: 'Admin entitlement and access management.' },
         { name: 'Admin / IAM Permissions', description: 'Admin IAM permission operations.' },
         { name: 'Admin / IAM Roles', description: 'Admin IAM role operations.' },
         { name: 'Admin / Chat Rooms', description: 'Admin chat room operations.' },
         { name: 'Admin / Chat Messages', description: 'Admin chat message operations.' },
         { name: 'Admin / Payment Products', description: 'Admin payment product operations.' },
-        { name: 'Admin / Feedback', description: 'Admin feedback review and triage.' },
+        { name: 'Admin / Feedbacks', description: 'Admin feedback review and triage.' },
         { name: 'Admin / Analytics', description: 'Admin analytics overview metrics and KPIs.' },
-        { name: 'Feedback', description: 'User feedback submission and history.' },
         { name: 'IAM Permissions', description: 'Super-admin permission management.' },
         { name: 'IAM Roles', description: 'Role definitions and their permission assignments.' },
         { name: 'IAM User Roles', description: 'Admin-managed role assignments for users.' },
         { name: 'Payments', description: 'Products, checkout sessions, subscriptions, and transactions.' },
-        { name: 'Access', description: 'Product-access inspection and revocation.' },
+        { name: 'Accesses', description: 'Product-access inspection and revocation.' },
+        { name: 'Feedbacks', description: 'User feedback submission and inspection.' },
+        { name: 'Assets', description: 'Asset records and management.' },
         { name: 'Media', description: 'Synchronous multipart asset upload.' },
         { name: 'AI', description: 'Durable queued chat plus synchronous text utilities.' },
         { name: 'Speech', description: 'Text-to-speech synthesis and speech-to-text transcription.' },

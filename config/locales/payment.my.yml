@@ -19,6 +19,8 @@ my:
     checkout:
       already_subscribed: "စာရင်းသွင်းထားပြီးဖြစ်ပါသည်"
       active_subscription_exists: "ဤထုတ်ကုန်အတွက် လက်ရှိစာရင်းသွင်းမှု ရှိပြီးဖြစ်ပါသည်။ ဦးစွာ ပယ်ဖျက်နိုင်ပါသည်။"
+      active_access_exists: "ဤထုတ်ကုန်အတွက် လက်ရှိအသုံးပြုခွင့် ရှိပြီးဖြစ်ပါသည်။"
+      free_access_granted: "အခမဲ့အသုံးပြုခွင့်ကို အောင်မြင်စွာ ပေးအပ်ပြီးပါပြီ။"
       create_failed: "Checkout session ဖန်တီး၍ မရပါ"
       created: "Checkout session ဖန်တီးပြီးပါပြီ"
       session_not_found: "Session ကို ရှာမတွေ့ပါ"

@@ -30,10 +30,10 @@ RSpec.describe Access, type: :model do
   it "formats finite and permanent access" do
     travel_to(Time.zone.parse("2026-01-01 12:00:00")) do
       access = build(:access, expires_at: 2.1.days.from_now)
-      expect(access.days_remaining).to eq(3)
+      expect(access.remaining_days).to eq(3)
       expect(access.display_expiry).to eq("Jan 03, 2026")
       access.expires_at = nil
-      expect(access.days_remaining).to be_nil
+      expect(access.remaining_days).to be_nil
       expect(access.display_expiry).to eq("Never")
     end
   end

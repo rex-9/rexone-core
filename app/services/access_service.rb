@@ -70,5 +70,55 @@ class AccessService
            .where(user_id: user_id, status: AccessConstants::AccessStatus::ACTIVE)
            .where("expires_at IS NULL OR expires_at > ?", Time.current)
     end
+
+    def list_for_admin(status: nil, product_id: nil, user_id: nil, search: nil)
+      scope = Access.includes(:user, :product).order(created_at: :desc)
+      scope = scope.where(user_id: user_id) if user_id.present?
+      scope = scope.where(product_id: product_id) if product_id.present?
+
+      case status
+      when AccessConstants::AccessStatus::ACTIVE
+        scope = scope.where(status: AccessConstants::AccessStatus::ACTIVE)
+                     .where("expires_at IS NULL OR expires_at > ?", Time.current)
+      when AccessConstants::AccessStatus::EXPIRED
+        scope = scope.where("status = ? OR (expires_at IS NOT NULL AND expires_at <= ?)",
+                            AccessConstants::AccessStatus::EXPIRED, Time.current)
+      when AccessConstants::AccessStatus::REVOKED
+        scope = scope.where(status: AccessConstants::AccessStatus::REVOKED)
+      when "expiring_soon"
+        scope = scope.where(status: AccessConstants::AccessStatus::ACTIVE)
+                     .where("expires_at IS NOT NULL AND expires_at > ? AND expires_at <= ?",
+                            Time.current, 7.days.from_now)
+      end
+
+      if search.present?
+        sanitized = "%#{ActiveRecord::Base.sanitize_sql_like(search.strip)}%"
+        scope = scope.joins(:user).where("users.email ILIKE :q OR users.name ILIKE :q OR users.username ILIKE :q", q: sanitized)
+      end
+
+      scope
+    end
+
+    def extend_access(access:, days: nil, expires_at: nil)
+      resolved_expires_at = if expires_at.present?
+        expires_at
+      elsif days.present?
+        base_time = [ access.expires_at || Time.current, Time.current ].max
+        base_time + days.to_i.days
+      else
+        access.expires_at
+      end
+
+      access.with_lock do
+        access.update!(
+          expires_at: resolved_expires_at,
+          status: AccessConstants::AccessStatus::ACTIVE,
+          revoked_at: nil,
+          expired_at: nil
+        )
+      end
+
+      access
+    end
   end
 end

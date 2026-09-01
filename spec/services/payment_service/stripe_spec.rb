@@ -255,7 +255,7 @@ RSpec.describe PaymentService::Stripe do
       expect(Stripe::Price).to have_received(:update).with("price_paid", active: false)
     end
 
-    it "creates a paid replacement price when converting a free product to paid" do
+    it "rejects converting a free product to paid" do
       service = described_class.new
       product = create(
         :payment_product,
@@ -264,23 +264,16 @@ RSpec.describe PaymentService::Stripe do
         price_unit_amount: 0,
         cycle: nil
       )
-      stripe_price = instance_double("Stripe::Price", id: "price_new")
 
       allow(Stripe::Product).to receive(:update)
-      allow(Stripe::Price).to receive(:create).and_return(stripe_price)
+      allow(Stripe::Price).to receive(:create)
       allow(Stripe::Price).to receive(:update)
 
       result = service.update_product(product.id, price_unit_amount: 2_000, currency: "usd", cycle: "month")
-      updated_product = result[:data]
 
-      expect(updated_product).not_to be_free
-      expect(product.reload).not_to be_free
-      expect(updated_product.stripe_product_id).to eq("prod_free")
-      expect(updated_product.stripe_price_id).to eq("price_new")
-      expect(Stripe::Price).to have_received(:create).with(
-        hash_including(product: "prod_free", unit_amount: 2_000, currency: "usd", recurring: { interval: "month" })
-      )
-      expect(Stripe::Price).to have_received(:update).with("price_free", active: false)
+      expect(result[:error]).to eq("Free products cannot be converted to premium products")
+      expect(product.reload).to be_free
+      expect(Stripe::Price).not_to have_received(:create)
     end
 
     it "restores Stripe price state when database product update fails after price replacement" do
