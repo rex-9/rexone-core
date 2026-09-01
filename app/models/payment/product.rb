@@ -25,7 +25,7 @@ class Payment::Product < ApplicationRecord
 
   # ===== VALIDATIONS =====
   validates :name, presence: true
-  validates :price_unit_amount, numericality: { greater_than: 0 }
+  validates :price_unit_amount, numericality: { greater_than_or_equal_to: 0 }
   validates :stripe_product_id, presence: true, uniqueness: true
   validates :stripe_price_id, presence: true, uniqueness: true
   validates :currency, presence: true
@@ -35,12 +35,24 @@ class Payment::Product < ApplicationRecord
   scope :one_time, -> { where(cycle: nil) }
   scope :recurring, -> { where.not(cycle: nil) }
 
+  before_discard :deactivate
+
   # ===== INSTANCE METHODS =====
   def recurring?
     cycle.present?
   end
 
+  def free?
+    price_unit_amount.to_i.zero?
+  end
+
+  def premium?
+    !free?
+  end
+
   def display_price
+    return "Free" if free?
+
     format("%s %.2f", currency.upcase, price_unit_amount / 100.0)
   end
 
@@ -62,5 +74,11 @@ class Payment::Product < ApplicationRecord
   def period_label
     return "One-time purchase" unless recurring?
     cycle.humanize.downcase
+  end
+
+  private
+
+  def deactivate
+    self.active = false
   end
 end

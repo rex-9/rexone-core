@@ -1,7 +1,10 @@
 require "rails_helper"
 
 RSpec.describe "Authentication registration", type: :request do
-  before { create(:role, name: "user") }
+  before do
+    create(:role, name: "user")
+    allow(NotificationService::Center).to receive(:confirmation_email)
+  end
 
   let(:valid_attributes) do
     {
@@ -29,7 +32,7 @@ RSpec.describe "Authentication registration", type: :request do
     end
 
     it "dispatches a 6-digit confirmation code email upon signup" do
-      expect(NotificationService).to receive(:confirmation_email).with(
+      expect(NotificationService::Center).to receive(:confirmation_email).with(
         email: "new@example.com",
         code: a_string_matching(/\A\d{6}\z/)
       )

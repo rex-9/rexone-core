@@ -21,6 +21,22 @@ tags:
 - name: Admin / Notifications
   description: Admin notification dispatch. Requires the admin role and create_notifications
     permission.
+- name: Admin / IAM Permissions
+  description: Admin IAM permission operations.
+- name: Admin / IAM Roles
+  description: Admin IAM role operations.
+- name: Admin / Chat Rooms
+  description: Admin chat room operations.
+- name: Admin / Chat Messages
+  description: Admin chat message operations.
+- name: Admin / Payment Products
+  description: Admin payment product operations.
+- name: Admin / Feedback
+  description: Admin feedback review and triage.
+- name: Admin / Analytics
+  description: Admin analytics overview metrics and KPIs.
+- name: Feedback
+  description: User feedback submission and history.
 - name: IAM Permissions
   description: Super-admin permission management.
 - name: IAM Roles
@@ -202,6 +218,148 @@ components:
           description: Permission UUIDs assigned to the role.
       required:
       - name
+    permission_request:
+      type: object
+      properties:
+        action:
+          type: string
+          enum:
+          - read
+          - create
+          - update
+          - delete
+          example: read
+        resource:
+          type: string
+          enum:
+          - users
+          - roles
+          - user_roles
+          - permissions
+          - products
+          - payments
+          - subscriptions
+          - transactions
+          - access
+          - assets
+          - notifications
+          - ai
+          - speech
+          - clients
+          - feedbacks
+          - analytics
+          example: users
+      required: []
+    admin_user_request:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            username:
+              type: string
+              pattern: "^[a-z0-9_]+$"
+              example: admin_created
+            name:
+              type: string
+              maxLength: 50
+              example: Admin Created
+            email:
+              type: string
+              format: email
+              example: admin-created@example.com
+            password:
+              type: string
+              format: password
+              minLength: 6
+              writeOnly: true
+            password_confirmation:
+              type: string
+              format: password
+              minLength: 6
+              writeOnly: true
+            role_ids:
+              type: array
+              uniqueItems: true
+              items:
+                type: string
+                format: uuid
+          required: []
+      required:
+      - user
+    admin_chat_room_request:
+      type: object
+      properties:
+        room:
+          type: object
+          properties:
+            title:
+              type: string
+              minLength: 1
+              example: Support chat
+          required:
+          - title
+      required:
+      - room
+    admin_chat_message_request:
+      type: object
+      properties:
+        message:
+          type: object
+          properties:
+            role:
+              type: string
+              enum:
+              - user
+              - assistant
+            content:
+              type: string
+              minLength: 1
+              example: Updated message content
+          required: []
+      required:
+      - message
+    admin_product_request:
+      type: object
+      properties:
+        product:
+          type: object
+          properties:
+            name:
+              type: string
+              minLength: 1
+              example: Premium Access
+            description:
+              type: string
+              nullable: true
+              example: Unlocks premium features.
+            price_unit_amount:
+              type: integer
+              minimum: 0
+              description: Amount in the smallest currency unit, for example cents.
+                Use 0 for a free product.
+            currency:
+              type: string
+              enum:
+              - usd
+              example: usd
+            cycle:
+              type: string
+              nullable: true
+              enum:
+              - month
+              - year
+              -
+              description: Use null for one-time products.
+            active:
+              type: boolean
+              default: true
+          required:
+          - name
+          - price_unit_amount
+          - currency
+      required:
+      - product
     user_role_request:
       type: object
       properties:
@@ -211,6 +369,70 @@ components:
           description: Role UUID to assign to the path user.
       required:
       - role_id
+    feedback_request:
+      type: object
+      properties:
+        feedback:
+          type: object
+          properties:
+            content:
+              type: string
+              minLength: 1
+              example: Great platform!
+            rating:
+              type: integer
+              minimum: 1
+              maximum: 5
+              example: 5
+            category:
+              type: string
+              example: general
+            priority:
+              type: string
+              example: normal
+            app_version:
+              type: string
+              example: 1.0.0
+            os:
+              type: string
+              example: mac
+            device:
+              type: string
+              example: MacBookPro
+            browser:
+              type: string
+              example: Chrome
+            page:
+              type: string
+              example: "/home"
+            metadata:
+              type: object
+              additionalProperties: true
+          required:
+          - content
+      required:
+      - feedback
+    admin_feedback_request:
+      type: object
+      properties:
+        feedback:
+          type: object
+          properties:
+            status:
+              type: string
+              example: reviewed
+            category:
+              type: string
+              example: feature_request
+            priority:
+              type: string
+              example: high
+            admin_notes:
+              type: string
+              example: Followed up with user
+          required: []
+      required:
+      - feedback
     client_log_context:
       type: object
       description: Free-form, JSON-safe diagnostic context supplied by the client.
@@ -302,24 +524,37 @@ components:
           - message
       required:
       - log
-    notification_data:
-      type: object
-      description: Optional JSON object delivered unchanged to socket and push clients.
-        There are no reserved or required keys for admin-created notifications. Clients
-        should agree on their own stable keys; a conventional `type` string may be
-        used as an event discriminator. Values must be JSON-safe.
-      additionalProperties: true
-      example:
-        type: campaign_announcement
-        campaign_id: summer-2026
-        path: "/offers"
     notification_request:
       type: object
       properties:
+        event:
+          type: string
+          enum:
+          - general_announcement
+          - maintenance_notice
+          - feature_update
+          description: Admin-enabled event whose server-side template supplies the
+            title and message.
         audience:
           description: Use exactly one audience shape. Role matches use OR semantics
             and each user is notified once.
           oneOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - users
+              user_ids:
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  type: string
+                  format: uuid
+            required:
+            - type
+            - user_ids
           - type: object
             properties:
               type:
@@ -355,21 +590,10 @@ components:
             - push
             - email
           description: 'One or more delivery channels: socket, push, or email.'
-        title:
-          type: string
-          minLength: 1
-          example: A new chapter awaits
-        message:
-          type: string
-          minLength: 1
-          example: Return to the app to see what is new.
-        data:
-          "$ref": "#/components/schemas/notification_data"
       required:
+      - event
       - audience
       - channels
-      - title
-      - message
     asset_upload_request:
       type: object
       properties:
@@ -918,6 +1142,8 @@ components:
           type: string
         recurring:
           type: boolean
+        free:
+          type: boolean
         active:
           type: boolean
         stripe_product_id:
@@ -1393,6 +1619,12 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
         '429':
           description: Too Many Requests
           content:
@@ -1485,6 +1717,12 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
       requestBody:
         required: true
         content:
@@ -1530,6 +1768,12 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
       requestBody:
         required: true
         content:
@@ -1571,6 +1815,12 @@ paths:
                 "$ref": "#/components/schemas/response"
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1988,6 +2238,11 @@ paths:
         schema:
           type: integer
           minimum: 1
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
       responses:
         '200':
           description: Successful response
@@ -2003,223 +2258,6 @@ paths:
                 "$ref": "#/components/schemas/error_response"
         '403':
           description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-  "/v1/iam/permissions":
-    get:
-      tags:
-      - IAM Permissions
-      summary: List permissions
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-  "/v1/iam/permissions/{id}":
-    get:
-      tags:
-      - IAM Permissions
-      summary: Get a permission
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-    delete:
-      tags:
-      - IAM Permissions
-      summary: Permanently delete a discarded permission
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '422':
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-  "/v1/iam/roles":
-    get:
-      tags:
-      - IAM Roles
-      summary: List iam roles
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '422':
-          description: Unprocessable Content
           content:
             application/json:
               schema:
@@ -2228,8 +2266,8 @@ paths:
       - bearerAuth: []
     post:
       tags:
-      - IAM Roles
-      summary: Create iam role
+      - Admin / Users
+      summary: Create an admin-managed user
       parameters:
       - name: X-Locale
         in: header
@@ -2283,12 +2321,65 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/role_request"
-  "/v1/iam/roles/{id}":
+              "$ref": "#/components/schemas/admin_user_request"
+  "/v1/admin/users/discarded":
     get:
       tags:
-      - IAM Roles
-      summary: Get iam role
+      - Admin / Users
+      summary: List discarded users in the recycle bin
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/users/{id}":
+    get:
+      tags:
+      - Admin / Users
+      summary: Get an admin-managed user
       parameters:
       - name: X-Locale
         in: header
@@ -2345,8 +2436,483 @@ paths:
       - bearerAuth: []
     patch:
       tags:
-      - IAM Roles
-      summary: Update iam role
+      - Admin / Users
+      summary: Update an admin-managed user
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/admin_user_request"
+  "/v1/admin/users/{id}/discard":
+    post:
+      tags:
+      - Admin / Users
+      summary: Discard an admin-managed user
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/users/{id}/undiscard":
+    post:
+      tags:
+      - Admin / Users
+      summary: Undiscard an admin-managed user
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/iam/roles":
+    get:
+      tags:
+      - Admin / IAM Roles
+      summary: List roles for the admin client
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Admin / IAM Roles
+      summary: Create an admin-managed role
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/role_request"
+  "/v1/admin/iam/permissions":
+    get:
+      tags:
+      - Admin / IAM Permissions
+      summary: List permissions for the admin client
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Admin / IAM Permissions
+      summary: Create an admin-managed permission
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/permission_request"
+  "/v1/admin/iam/roles/{id}":
+    get:
+      tags:
+      - Admin / IAM Roles
+      summary: Get an admin-managed role
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Admin / IAM Roles
+      summary: Update an admin-managed role
       parameters:
       - name: X-Locale
         in: header
@@ -2415,8 +2981,1215 @@ paths:
               "$ref": "#/components/schemas/role_request"
     delete:
       tags:
+      - Admin / IAM Roles
+      summary: Delete an admin-managed role
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/iam/permissions/{id}":
+    get:
+      tags:
+      - Admin / IAM Permissions
+      summary: Get an admin-managed permission
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Admin / IAM Permissions
+      summary: Update an admin-managed permission
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/permission_request"
+    delete:
+      tags:
+      - Admin / IAM Permissions
+      summary: Delete an admin-managed permission
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/chat/rooms":
+    get:
+      tags:
+      - Admin / Chat Rooms
+      summary: List chat rooms for the admin client
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/chat/rooms/{id}":
+    get:
+      tags:
+      - Admin / Chat Rooms
+      summary: Get an admin chat room
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Admin / Chat Rooms
+      summary: Update an admin chat room
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/admin_chat_room_request"
+    delete:
+      tags:
+      - Admin / Chat Rooms
+      summary: Delete an admin chat room
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/chat/messages":
+    get:
+      tags:
+      - Admin / Chat Messages
+      summary: List chat messages for the admin client
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/chat/messages/{id}":
+    get:
+      tags:
+      - Admin / Chat Messages
+      summary: Get an admin chat message
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Admin / Chat Messages
+      summary: Update an admin chat message
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/admin_chat_message_request"
+    delete:
+      tags:
+      - Admin / Chat Messages
+      summary: Delete an admin chat message
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/payment/products":
+    get:
+      tags:
+      - Admin / Payment Products
+      summary: List Stripe-backed products for the admin client
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Admin / Payment Products
+      summary: Create a Stripe-backed product
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/admin_product_request"
+  "/v1/admin/payment/products/discarded":
+    get:
+      tags:
+      - Admin / Payment Products
+      summary: List discarded Stripe-backed products for the recycle bin
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/payment/products/{id}":
+    get:
+      tags:
+      - Admin / Payment Products
+      summary: Get a Stripe-backed product
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Admin / Payment Products
+      summary: Update a Stripe-backed product
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/admin_product_request"
+    delete:
+      tags:
+      - Admin / Payment Products
+      summary: Discard a Stripe-backed product
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/payment/products/{id}/undiscard":
+    post:
+      tags:
+      - Admin / Payment Products
+      summary: Restore a discarded Stripe-backed product
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/iam/permissions/current":
+    get:
+      tags:
+      - IAM Permissions
+      summary: List current user's permissions
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/iam/roles/current":
+    get:
+      tags:
       - IAM Roles
-      summary: Delete iam role
+      summary: List current user's roles
       parameters:
       - name: X-Locale
         in: header
@@ -2438,12 +4211,12 @@ paths:
           - web
           - mobile
           default: web
-      - name: id
-        in: path
-        required: true
+      - name: limit
+        in: query
+        required: false
         schema:
-          type: string
-          format: uuid
+          type: integer
+          minimum: 1
       responses:
         '200':
           description: Successful response
@@ -2459,236 +4232,6 @@ paths:
                 "$ref": "#/components/schemas/error_response"
         '403':
           description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-  "/v1/iam/permissions/discarded":
-    get:
-      tags:
-      - IAM Permissions
-      summary: List discarded permissions
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-  "/v1/iam/permissions/undiscarded":
-    get:
-      tags:
-      - IAM Permissions
-      summary: List active permissions
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-  "/v1/iam/permissions/{id}/discard":
-    post:
-      tags:
-      - IAM Permissions
-      summary: Discard a permission
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '422':
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-  "/v1/iam/permissions/{id}/undiscard":
-    post:
-      tags:
-      - IAM Permissions
-      summary: Undiscard a permission
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '422':
-          description: Unprocessable Content
           content:
             application/json:
               schema:
@@ -3315,7 +4858,8 @@ paths:
     post:
       tags:
       - Admin / Notifications
-      summary: Queue an admin notification for selected roles or all users
+      summary: Queue an admin notification for selected users, selected roles, or
+        all users
       parameters:
       - name: X-Locale
         in: header
@@ -3369,10 +4913,10 @@ paths:
               schema:
                 "$ref": "#/components/schemas/error_response"
       description: Requires an authenticated user with the admin role and create_notifications
-        permission. Only confirmed, active users are eligible. A roles audience matches
-        users holding any supplied role and de-duplicates users who hold multiple
-        matching roles. The request queues fan-out and returns before channel delivery
-        completes.
+        permission. Only confirmed, active users are eligible. A users audience targets
+        explicit users. A roles audience matches users holding any supplied role and
+        de-duplicates users who hold multiple matching roles. The request queues fan-out
+        and returns before channel delivery completes.
       security:
       - bearerAuth: []
       requestBody:
@@ -3381,6 +4925,527 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/notification_request"
+  "/v1/admin/notifications/templates":
+    get:
+      tags:
+      - Admin / Notifications
+      summary: List notification events and their admin availability
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      description: Returns both selectable broadcast events and unavailable transactional
+        events for display.
+      security:
+      - bearerAuth: []
+  "/v1/admin/analytics/overview":
+    get:
+      tags:
+      - Admin / Analytics
+      summary: Get admin analytics overview KPIs, time-series data, and breakdowns
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: period
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: start_date
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: end_date
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/feedbacks":
+    post:
+      tags:
+      - Feedback
+      summary: Submit feedback
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/feedback_request"
+    get:
+      tags:
+      - Feedback
+      summary: List current user's submitted feedbacks
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/feedbacks/{id}":
+    get:
+      tags:
+      - Feedback
+      summary: Get a submitted feedback
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/feedbacks":
+    get:
+      tags:
+      - Admin / Feedback
+      summary: List feedbacks for the admin client
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: category
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: priority
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: platform
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: user_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+  "/v1/admin/feedbacks/{id}":
+    get:
+      tags:
+      - Admin / Feedback
+      summary: Get an admin-managed feedback
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Admin / Feedback
+      summary: Update an admin-managed feedback
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/admin_feedback_request"
+    delete:
+      tags:
+      - Admin / Feedback
+      summary: Discard a feedback
+      parameters:
+      - name: X-Locale
+        in: header
+        required: false
+        description: Response language. Accepts en or my; Accept-Language is also
+          supported.
+        schema:
+          type: string
+          enum:
+          - en
+          - my
+      - name: X-Platform
+        in: header
+        required: false
+        description: Active-session namespace.
+        schema:
+          type: string
+          enum:
+          - web
+          - mobile
+          default: web
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+      - bearerAuth: []
   "/v1/payment/products":
     get:
       tags:

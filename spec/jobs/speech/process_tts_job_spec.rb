@@ -6,7 +6,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
   let(:storage_key) { "speech/tts/#{AssetConstants::AssetName.tts_for_message(message.id)}" }
 
   before do
-    allow(NotificationService).to receive(:notify)
+    allow(NotificationService::Center).to receive(:notify)
   end
 
   it "synthesizes, uploads, persists an audio Asset, and notifies readiness" do
@@ -52,7 +52,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
         overwrite: true
       )
     )
-    expect(NotificationService).to have_received(:notify).with(
+    expect(NotificationService::Center).to have_received(:notify).with(
       hash_including(
         user_id: room.user_id,
         send_socket: true,
@@ -132,7 +132,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
     expect { described_class.perform_now(message.id) }.to raise_error(RuntimeError, "broken")
     expect(message.reload.tts_status).to eq("failed")
     expect(message.tts_error).to eq("broken")
-    expect(NotificationService).to have_received(:notify).with(
+    expect(NotificationService::Center).to have_received(:notify).with(
       hash_including(
         data: hash_including(type: "tts_failed", assets: []),
         send_socket: true

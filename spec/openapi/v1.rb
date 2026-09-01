@@ -185,9 +185,84 @@ module Openapi
           description: "Permission UUIDs assigned to the role."
         }
       ),
+      permission_request: object(
+        action: { type: :string, enum: Iam::Permission::ACTIONS, example: "read" },
+        resource: { type: :string, enum: Iam::Permission::RESOURCES, example: "users" }
+      ),
+      admin_user_request: object(
+        required: [ :user ],
+        user: object(
+          username: { type: :string, pattern: "^[a-z0-9_]+$", example: "admin_created" },
+          name: { type: :string, maxLength: 50, example: "Admin Created" },
+          email: { type: :string, format: :email, example: "admin-created@example.com" },
+          password: { type: :string, format: :password, minLength: 6, writeOnly: true },
+          password_confirmation: { type: :string, format: :password, minLength: 6, writeOnly: true },
+          role_ids: { type: :array, uniqueItems: true, items: UUID }
+        )
+      ),
+      admin_chat_room_request: object(
+        required: [ :room ],
+        room: object(
+          required: [ :title ],
+          title: { type: :string, minLength: 1, example: "Support chat" }
+        )
+      ),
+      admin_chat_message_request: object(
+        required: [ :message ],
+        message: object(
+          role: { type: :string, enum: AI_ROLES },
+          content: { type: :string, minLength: 1, example: "Updated message content" }
+        )
+      ),
+      admin_product_request: object(
+        required: [ :product ],
+        product: object(
+          required: %i[name price_unit_amount currency],
+          name: { type: :string, minLength: 1, example: "Premium Access" },
+          description: { type: :string, nullable: true, example: "Unlocks premium features." },
+          price_unit_amount: {
+            type: :integer,
+            minimum: 0,
+            description: "Amount in the smallest currency unit, for example cents. Use 0 for a free product."
+          },
+          currency: { type: :string, enum: Payment::Product.currencies.values, example: "usd" },
+          cycle: {
+            type: :string,
+            nullable: true,
+            enum: Payment::Product.cycles.values + [ nil ],
+            description: "Use null for one-time products."
+          },
+          active: { type: :boolean, default: true }
+        )
+      ),
       user_role_request: object(
         required: [ :role_id ],
         role_id: UUID.merge(description: "Role UUID to assign to the path user.")
+      ),
+      feedback_request: object(
+        required: [ :feedback ],
+        feedback: object(
+          required: [ :content ],
+          content: { type: :string, minLength: 1, example: "Great platform!" },
+          rating: { type: :integer, minimum: 1, maximum: 5, example: 5 },
+          category: { type: :string, example: "general" },
+          priority: { type: :string, example: "normal" },
+          app_version: { type: :string, example: "1.0.0" },
+          os: { type: :string, example: "mac" },
+          device: { type: :string, example: "MacBookPro" },
+          browser: { type: :string, example: "Chrome" },
+          page: { type: :string, example: "/home" },
+          metadata: { type: :object, additionalProperties: true }
+        )
+      ),
+      admin_feedback_request: object(
+        required: [ :feedback ],
+        feedback: object(
+          status: { type: :string, example: "reviewed" },
+          category: { type: :string, example: "feature_request" },
+          priority: { type: :string, example: "high" },
+          admin_notes: { type: :string, example: "Followed up with user" }
+        )
       ),
       client_log_context: {
         type: :object,
@@ -222,21 +297,21 @@ module Openapi
           }
         )
       ),
-      notification_data: {
-        type: :object,
-        description: <<~DESCRIPTION.squish,
-          Optional JSON object delivered unchanged to socket and push clients. There are no reserved or required keys for
-          admin-created notifications. Clients should agree on their own stable keys; a conventional `type` string may be
-          used as an event discriminator. Values must be JSON-safe.
-        DESCRIPTION
-        additionalProperties: true,
-        example: { type: "campaign_announcement", campaign_id: "summer-2026", path: "/offers" }
-      },
       notification_request: object(
-        required: %i[audience channels title message],
+        required: %i[event audience channels],
+        event: {
+          type: :string,
+          enum: NotificationService::Templates.events,
+          description: "Admin-enabled event whose server-side template supplies the title and message."
+        },
         audience: {
           description: "Use exactly one audience shape. Role matches use OR semantics and each user is notified once.",
           oneOf: [
+            object(
+              required: %i[type user_ids],
+              type: { type: :string, enum: [ "users" ] },
+              user_ids: { type: :array, minItems: 1, uniqueItems: true, items: UUID }
+            ),
             object(
               required: %i[type role_ids],
               type: { type: :string, enum: [ "roles" ] },
@@ -249,12 +324,9 @@ module Openapi
           type: :array,
           minItems: 1,
           uniqueItems: true,
-          items: { type: :string, enum: NotificationService::CHANNELS },
+          items: { type: :string, enum: NotificationService::Center::CHANNELS },
           description: "One or more delivery channels: socket, push, or email."
-        },
-        title: { type: :string, minLength: 1, example: "A new chapter awaits" },
-        message: { type: :string, minLength: 1, example: "Return to the app to see what is new." },
-        data: ref(:notification_data)
+        }
       ),
       asset_upload_request: object(
         required: [ :file ],
@@ -485,6 +557,7 @@ module Openapi
         cycle: { type: :string },
         period_label: { type: :string },
         recurring: { type: :boolean },
+        free: { type: :boolean },
         active: { type: :boolean },
         stripe_product_id: { type: :string },
         stripe_price_id: { type: :string },
@@ -620,24 +693,24 @@ module Openapi
         },
         "/signin" => {
           post: operation(tags: "Authentication", summary: "Sign in with email or username",
-                          security: nil, body: ref(:signin_request), errors: [ 401, 429 ])
+                          security: nil, body: ref(:signin_request), errors: [ 401, 403, 429 ])
         },
         "/signout" => {
           delete: operation(tags: "Authentication", summary: "Sign out the active platform session", errors: [ 401 ])
         },
         "/signin/token" => {
           post: operation(tags: "Authentication", summary: "Exchange a one-time account token for a JWT",
-                          security: nil, body: ref(:token_signin_request), errors: [ 401 ])
+                          security: nil, body: ref(:token_signin_request), errors: [ 401, 403 ])
         },
         "/signin/google" => {
           post: operation(tags: "Authentication", summary: "Start Google sign-in",
-                          security: nil, body: ref(:google_signin_request), errors: [ 401 ])
+                          security: nil, body: ref(:google_signin_request), errors: [ 401, 403 ])
         },
         "/signin/google/complete" => {
           post: operation(
             tags: "Authentication", summary: "Complete Google registration with a passcode", security: nil,
             body: ref(:google_registration_request),
-            errors: [ 401, 422 ]
+            errors: [ 401, 403, 422 ]
           )
         },
         "/confirmation" => {
@@ -684,31 +757,116 @@ module Openapi
 
       paths["/v1/admin/users"] = {
         get: operation(tags: "Admin / Users", summary: "List users for the admin client",
+                       parameters: [
+                         query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:search, type: :string)
+                       ], errors: [ 401, 403 ]),
+        post: operation(tags: "Admin / Users", summary: "Create an admin-managed user", success: 201,
+                        body: ref(:admin_user_request), errors: [ 401, 403, 422 ])
+      }
+      paths["/v1/admin/users/discarded"] = {
+        get: operation(tags: "Admin / Users", summary: "List discarded users in the recycle bin",
                        parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
       }
-      paths["/v1/iam/permissions"] = {
-        get: operation(tags: "IAM Permissions", summary: "List permissions", errors: [ 401, 403 ])
-      }
-      paths["/v1/iam/permissions/{id}"] = {
-        get: operation(tags: "IAM Permissions", summary: "Get a permission",
+      paths["/v1/admin/users/{id}"] = {
+        get: operation(tags: "Admin / Users", summary: "Get an admin-managed user",
                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
-        delete: operation(tags: "IAM Permissions", summary: "Permanently delete a discarded permission",
-                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
-      }
-      paths.merge!(standard_crud(path: "/v1/iam/roles", tag: "IAM Roles", schema: :role, writable: :role_request))
-
-      paths["/v1/iam/permissions/discarded"] = {
-        get: operation(tags: "IAM Permissions", summary: "List discarded permissions", errors: [ 401, 403 ])
-      }
-      paths["/v1/iam/permissions/undiscarded"] = {
-        get: operation(tags: "IAM Permissions", summary: "List active permissions", errors: [ 401, 403 ])
+        patch: operation(tags: "Admin / Users", summary: "Update an admin-managed user",
+                         parameters: [ path_parameter(:id) ], body: ref(:admin_user_request),
+                         errors: [ 401, 403, 404, 422 ])
       }
       %w[discard undiscard].each do |action|
-        paths["/v1/iam/permissions/{id}/#{action}"] = {
-          post: operation(tags: "IAM Permissions", summary: "#{action.capitalize} a permission",
+        paths["/v1/admin/users/{id}/#{action}"] = {
+          post: operation(tags: "Admin / Users", summary: "#{action.capitalize} an admin-managed user",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
         }
       end
+      paths["/v1/admin/iam/roles"] = {
+        get: operation(tags: "Admin / IAM Roles", summary: "List roles for the admin client", errors: [ 401, 403 ]),
+        post: operation(tags: "Admin / IAM Roles", summary: "Create an admin-managed role", success: 201,
+                        body: ref(:role_request), errors: [ 401, 403, 422 ])
+      }
+      paths["/v1/admin/iam/permissions"] = {
+        get: operation(tags: "Admin / IAM Permissions", summary: "List permissions for the admin client",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ]),
+        post: operation(tags: "Admin / IAM Permissions", summary: "Create an admin-managed permission", success: 201,
+                        body: ref(:permission_request), errors: [ 401, 403, 422 ])
+      }
+      paths["/v1/admin/iam/roles/{id}"] = {
+        get: operation(tags: "Admin / IAM Roles", summary: "Get an admin-managed role",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / IAM Roles", summary: "Update an admin-managed role",
+                         parameters: [ path_parameter(:id) ], body: ref(:role_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / IAM Roles", summary: "Delete an admin-managed role",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+      }
+      paths["/v1/admin/iam/permissions/{id}"] = {
+        get: operation(tags: "Admin / IAM Permissions", summary: "Get an admin-managed permission",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / IAM Permissions", summary: "Update an admin-managed permission",
+                         parameters: [ path_parameter(:id) ], body: ref(:permission_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / IAM Permissions", summary: "Delete an admin-managed permission",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+      paths["/v1/admin/chat/rooms"] = {
+        get: operation(tags: "Admin / Chat Rooms", summary: "List chat rooms for the admin client",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+      }
+      paths["/v1/admin/chat/rooms/{id}"] = {
+        get: operation(tags: "Admin / Chat Rooms", summary: "Get an admin chat room",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / Chat Rooms", summary: "Update an admin chat room",
+                         parameters: [ path_parameter(:id) ], body: ref(:admin_chat_room_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / Chat Rooms", summary: "Delete an admin chat room",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+      paths["/v1/admin/chat/messages"] = {
+        get: operation(tags: "Admin / Chat Messages", summary: "List chat messages for the admin client",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+      }
+      paths["/v1/admin/chat/messages/{id}"] = {
+        get: operation(tags: "Admin / Chat Messages", summary: "Get an admin chat message",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / Chat Messages", summary: "Update an admin chat message",
+                         parameters: [ path_parameter(:id) ], body: ref(:admin_chat_message_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / Chat Messages", summary: "Delete an admin chat message",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+      paths["/v1/admin/payment/products"] = {
+        get: operation(tags: "Admin / Payment Products", summary: "List Stripe-backed products for the admin client",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ]),
+        post: operation(tags: "Admin / Payment Products", summary: "Create a Stripe-backed product", success: 201,
+                        body: ref(:admin_product_request), errors: [ 401, 403, 422 ])
+      }
+      paths["/v1/admin/payment/products/discarded"] = {
+        get: operation(tags: "Admin / Payment Products", summary: "List discarded Stripe-backed products for the recycle bin",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+      }
+      paths["/v1/admin/payment/products/{id}"] = {
+        get: operation(tags: "Admin / Payment Products", summary: "Get a Stripe-backed product",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / Payment Products", summary: "Update a Stripe-backed product",
+                         parameters: [ path_parameter(:id) ], body: ref(:admin_product_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / Payment Products", summary: "Discard a Stripe-backed product",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+      }
+      paths["/v1/admin/payment/products/{id}/undiscard"] = {
+        post: operation(tags: "Admin / Payment Products", summary: "Restore a discarded Stripe-backed product",
+                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+      }
+      paths["/v1/iam/permissions/current"] = {
+        get: operation(tags: "IAM Permissions", summary: "List current user's permissions",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+      }
+      paths["/v1/iam/roles/current"] = {
+        get: operation(tags: "IAM Roles", summary: "List current user's roles",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+      }
 
       paths["/v1/iam/users/{user_id}/roles"] = {
         get: operation(tags: "IAM User Roles", summary: "List a user's roles",
@@ -763,16 +921,63 @@ module Openapi
       paths["/v1/admin/notifications"] = {
         post: operation(
           tags: "Admin / Notifications",
-          summary: "Queue an admin notification for selected roles or all users",
+          summary: "Queue an admin notification for selected users, selected roles, or all users",
           description: <<~DESCRIPTION.squish,
             Requires an authenticated user with the admin role and create_notifications permission. Only confirmed,
-            active users are eligible. A roles audience matches users holding any supplied role and de-duplicates users
-            who hold multiple matching roles. The request queues fan-out and returns before channel delivery completes.
+            active users are eligible. A users audience targets explicit users. A roles audience matches users holding
+            any supplied role and de-duplicates users who hold multiple matching roles. The request queues fan-out and
+            returns before channel delivery completes.
           DESCRIPTION
           success: 202,
           body: ref(:notification_request),
           errors: [ 401, 403, 422, 503 ]
         )
+      }
+      paths["/v1/admin/notifications/templates"] = {
+        get: operation(
+          tags: "Admin / Notifications",
+          summary: "List notification events and their admin availability",
+          description: "Returns both selectable broadcast events and unavailable transactional events for display.",
+          errors: [ 401, 403 ]
+        )
+      }
+      paths["/v1/admin/analytics/overview"] = {
+        get: operation(tags: "Admin / Analytics", summary: "Get admin analytics overview KPIs, time-series data, and breakdowns",
+                       parameters: [
+                         query_parameter(:period, type: :string),
+                         query_parameter(:start_date, type: :string),
+                         query_parameter(:end_date, type: :string)
+                       ], errors: [ 401, 403 ])
+      }
+      paths["/v1/feedbacks"] = {
+        post: operation(tags: "Feedback", summary: "Submit feedback", success: 201,
+                        security: nil, body: ref(:feedback_request), errors: [ 422 ]),
+        get: operation(tags: "Feedback", summary: "List current user's submitted feedbacks",
+                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401 ])
+      }
+      paths["/v1/feedbacks/{id}"] = {
+        get: operation(tags: "Feedback", summary: "Get a submitted feedback",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 404 ])
+      }
+      paths["/v1/admin/feedbacks"] = {
+        get: operation(tags: "Admin / Feedback", summary: "List feedbacks for the admin client",
+                       parameters: [
+                         query_parameter(:status, type: :string),
+                         query_parameter(:category, type: :string),
+                         query_parameter(:priority, type: :string),
+                         query_parameter(:platform, type: :string),
+                         query_parameter(:user_id, type: :string, format: :uuid),
+                         query_parameter(:limit, type: :integer, minimum: 1)
+                       ], errors: [ 401, 403 ])
+      }
+      paths["/v1/admin/feedbacks/{id}"] = {
+        get: operation(tags: "Admin / Feedback", summary: "Get an admin-managed feedback",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / Feedback", summary: "Update an admin-managed feedback",
+                         parameters: [ path_parameter(:id) ], body: ref(:admin_feedback_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / Feedback", summary: "Discard a feedback",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
       }
 
       paths["/v1/payment/products"] = {

@@ -1,0 +1,13 @@
+my:
+  admin:
+    chat:
+      rooms_retrieved: "ချတ်ခန်းများကို ရယူပြီးပါပြီ။"
+      room_retrieved: "ချတ်ခန်းကို ရယူပြီးပါပြီ။"
+      room_updated: "ချတ်ခန်းကို ပြင်ဆင်ပြီးပါပြီ။"
+      room_update_failed: "ချတ်ခန်းကို ပြင်ဆင်၍ မရပါ။"
+      room_deleted: "ချတ်ခန်းကို ဖျက်ပြီးပါပြီ။"
+      messages_retrieved: "ချတ်စာများကို ရယူပြီးပါပြီ။"
+      message_retrieved: "ချတ်စာကို ရယူပြီးပါပြီ။"
+      message_updated: "ချတ်စာကို ပြင်ဆင်ပြီးပါပြီ။"
+      message_update_failed: "ချတ်စာကို ပြင်ဆင်၍ မရပါ။"
+      message_deleted: "ချတ်စာကို ဖျက်ပြီးပါပြီ။"

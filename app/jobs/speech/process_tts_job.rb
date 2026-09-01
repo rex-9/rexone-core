@@ -79,7 +79,7 @@ class Speech::ProcessTtsJob < ApplicationJob
 
   def notify_completed(message)
     copy = speech_message(MessageService::Speech::TTS_READY)
-    NotificationService.notify(
+    NotificationService::Center.notify(
       user_id: message.room.user_id,
       title: copy,
       message: copy,
@@ -103,7 +103,7 @@ class Speech::ProcessTtsJob < ApplicationJob
     update_tts!(message, Chat::Message::STATUSES[:failed], tts_error: error.message)
 
     copy = speech_message(MessageService::Speech::TTS_FAILED)
-    NotificationService.notify(
+    NotificationService::Center.notify(
       user_id: message.room.user_id,
       title: copy,
       message: copy,

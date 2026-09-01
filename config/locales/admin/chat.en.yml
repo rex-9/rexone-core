@@ -1,0 +1,13 @@
+en:
+  admin:
+    chat:
+      rooms_retrieved: "Chat rooms retrieved successfully."
+      room_retrieved: "Chat room retrieved successfully."
+      room_updated: "Chat room updated successfully."
+      room_update_failed: "Failed to update chat room."
+      room_deleted: "Chat room deleted successfully."
+      messages_retrieved: "Chat messages retrieved successfully."
+      message_retrieved: "Chat message retrieved successfully."
+      message_updated: "Chat message updated successfully."
+      message_update_failed: "Failed to update chat message."
+      message_deleted: "Chat message deleted successfully."

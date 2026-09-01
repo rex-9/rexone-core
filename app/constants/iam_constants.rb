@@ -32,10 +32,11 @@ module IamConstants
     SPEECH        = "speech".freeze
     CLIENTS       = "clients".freeze
     FEEDBACKS     = "feedbacks".freeze
+    ANALYTICS     = "analytics".freeze
     ALL           = [
       USERS, ROLES, USER_ROLES, PERMISSIONS, PRODUCTS, PAYMENTS,
       SUBSCRIPTIONS, TRANSACTIONS, ACCESS, ASSETS, NOTIFICATIONS,
-      AI, SPEECH, CLIENTS, FEEDBACKS
+      AI, SPEECH, CLIENTS, FEEDBACKS, ANALYTICS
     ].freeze
   end
 end

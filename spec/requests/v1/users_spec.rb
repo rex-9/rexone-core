@@ -19,6 +19,16 @@ RSpec.describe "V1 Users API", type: :request do
       expect(response_data.dig("user", "email")).to eq("alice@example.com")
       expect(response_data.dig("user", "name")).to eq("Alice")
     end
+
+    it "requires read users permission" do
+      user.user_roles.destroy_all
+
+      get "/v1/users/current", headers: headers
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["error"]).to include("read")
+      expect(response_status["error"]).to include("users")
+    end
   end
 
   describe "GET /v1/users/current/iam" do
@@ -46,6 +56,16 @@ RSpec.describe "V1 Users API", type: :request do
       expect(response_data["is_super_admin"]).to be(false)
       expect(response_data["admin_roles"].map { |r| r.dig("attributes", "name") }).to include("feedback_admin")
       expect(response_data["admin_permissions"].map { |p| p.dig("attributes", "name") }).to include("read_feedbacks")
+    end
+
+    it "requires read users permission" do
+      user.user_roles.destroy_all
+
+      get "/v1/users/current/iam", headers: headers
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["error"]).to include("read")
+      expect(response_status["error"]).to include("users")
     end
   end
 end

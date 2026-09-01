@@ -66,21 +66,21 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 ## Feature map
 
-| Foundation     | What is ready                                                                   | Details                                                |
-| -------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions          | [Authentication & security](#authentication--security) |
-| Authorization  | Roles, permissions, user-role and role-permission assignments                   | [IAM & access control](#iam--access-control)           |
-| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants           | [Payments & entitlements](#payments--entitlements)     |
-| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup | [Background processing](#background-processing)        |
-| Notifications  | Socket, push, and email coordination through OneSignal and Action Cable         | [Notifications & real time](#notifications--real-time) |
-| Media          | Cloudinary/local providers, uploads, URLs, metadata, queued deletion            | [Storage & assets](#storage--assets)                   |
-| AI             | Durable queued chat, persisted history, completion alerts, and language tools   | [AI capabilities](#ai-capabilities)                    |
-| Localization   | Request-scoped English and Myanmar responses with modular domain translations   | [Localization](#localization)                          |
-| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization  | [Data & API design](#data--api-design)                 |
-| Operations     | Performance, errors, client logs, queues, cache, cable, health checks           | [Observability](#observability)                        |
-| Administration | Administrate plus a growing versioned admin API                                 | [Administration](#administration)                      |
-| Delivery       | Docker images, separate API/worker processes, health checks, graceful shutdown  | [Deployment](#deployment)                              |
-| Quality        | RSpec, factories, security scanning, dependency auditing, linting               | [Quality toolchain](#quality-toolchain)                |
+| Foundation     | What is ready                                                                                   | Details                                                |
+| -------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                          | [Authentication & security](#authentication--security) |
+| Authorization  | Roles, permissions, user-role and role-permission assignments                                   | [IAM & access control](#iam--access-control)           |
+| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                           | [Payments & entitlements](#payments--entitlements)     |
+| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                 | [Background processing](#background-processing)        |
+| Notifications  | Socket, push, and email coordination through OneSignal and Action Cable                         | [Notifications & real time](#notifications--real-time) |
+| Media          | Cloudinary/local providers, uploads, URLs, metadata, queued deletion                            | [Storage & assets](#storage--assets)                   |
+| AI             | Durable queued chat, persisted history, completion alerts, and language tools                   | [AI capabilities](#ai-capabilities)                    |
+| Localization   | Request-scoped English and Myanmar responses with modular domain translations                   | [Localization](#localization)                          |
+| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                  | [Data & API design](#data--api-design)                 |
+| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                           | [Observability](#observability)                        |
+| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, and notifications | [Administration](#administration)                      |
+| Delivery       | Docker images, separate API/worker processes, health checks, graceful shutdown                  | [Deployment](#deployment)                              |
+| Quality        | RSpec, factories, security scanning, dependency auditing, linting                               | [Quality toolchain](#quality-toolchain)                |
 
 ## Architecture
 
@@ -288,7 +288,13 @@ The server-rendered Administrate workspace manages users, assets, access grants,
 
 Admin authentication uses application users over HTTP Basic and requires an `admin` or `super_admin` role.
 
-A separate `/v1/admin` namespace supports the web admin client and can grow independently from the server-rendered dashboard.
+A separate `/v1/admin` namespace supports the web admin client, exposing versioned endpoints for:
+
+- **User management**: CRUD, search, discard/undiscard, role assignment, self-lifecycle protection, and last-super-admin guard.
+- **IAM management**: Role management with permission matrix and permission CRUD with auto-generated names.
+- **Chat moderation**: Chat rooms and messages CRUD operations.
+- **Product management**: Stripe synchronized products with discard/undiscard operations.
+- **Notifications**: Broadcast dispatch with template catalog, multi-channel dispatch, and audience targeting (by roles, users, or all).
 
 ### Quality toolchain
 

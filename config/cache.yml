@@ -4,7 +4,7 @@ default:
   &default # Maximum size of the cache (in bytes) – set to a reasonable limit
   store_options:
     namespace: <%= Rails.env %>
-    max_size: 100.megabytes
+    max_size: <%= 100.megabytes %>
     # How long to keep entries (TTL) – you can override per environment
     expires_in: 1.hour
     # Cap age of oldest cache entry to fulfill retention policies
@@ -17,16 +17,16 @@ development:
   <<: *default
   store_options:
     # In development, you may want a smaller cache to save space
-    max_size: 10.megabytes
+    max_size: <%= 10.megabytes %>
 
 test:
   <<: *default
   store_options:
-    max_size: 1.megabyte
+    max_size: <%= 1.megabyte %>
     expires_in: 1.minute
 
 production:
   <<: *default
   store_options:
-    max_size: 500.megabytes # Adjust based on your server’s available RAM/disk
+    max_size: <%= 500.megabytes %> # Adjust based on your server’s available RAM/disk
     expires_in: 1.hour # Global default, can be overridden in code

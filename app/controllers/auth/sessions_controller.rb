@@ -21,7 +21,9 @@ class Auth::SessionsController < Devise::SessionsController
       return
     end
 
-    user = User.find_by(email: email)
+    user = User.with_discarded.find_by(email: email)
+
+    return if reject_discarded_account!(user)
 
     render_json_response(
       status_code: 200,
@@ -37,7 +39,10 @@ class Auth::SessionsController < Devise::SessionsController
   def create
     signin_key = params.dig(:user, :signin_key).to_s.strip
     password = params.dig(:user, :password)
-    user = User.find_by("email = :signin_key OR username = :signin_key", signin_key: signin_key)
+    user = User.with_discarded.find_by(
+      "email = :signin_key OR username = :signin_key",
+      signin_key: signin_key
+    )
 
     if user.nil?
       render_json_response(
@@ -47,6 +52,8 @@ class Auth::SessionsController < Devise::SessionsController
       )
       return
     end
+
+    return if reject_discarded_account!(user)
 
     limiter = PasswordService.new(user.id)
     unless limiter.allowed?
@@ -72,7 +79,7 @@ class Auth::SessionsController < Devise::SessionsController
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
 
-        NotificationService.sign_in_alert(
+        NotificationService::Center.sign_in_alert(
           user_id: user.id,
           name: user.name || user.username
         )
@@ -124,7 +131,14 @@ class Auth::SessionsController < Devise::SessionsController
       nil
     end
 
+    if user.nil?
+      discarded_user = User.with_discarded.discarded.find_by(jti: params[:token])
+      return if reject_discarded_account!(discarded_user)
+    end
+
     if user
+      return if reject_discarded_account!(user)
+
       sign_in(user)
       token = AppConfig::JWT_TOKEN.call(user)
       signup_active_session!(user: user, token: token)
@@ -160,26 +174,32 @@ class Auth::SessionsController < Devise::SessionsController
       return
     end
 
-    user = User.find_by(email: user_info["email"])
+    user = User.with_discarded.find_by(email: user_info["email"])
 
-    if user && user.confirmed?
-      token = AppConfig::JWT_TOKEN.call(user)
-      signup_active_session!(user: user, token: token)
-      NotificationService.sign_in_alert(
-        user_id: user.id,
-        name: user.name || user.username
-      )
+    if user
+      return if reject_discarded_account!(user)
 
-      # Existing confirmed user - just return user + token
-      render_json_response(
-        status_code: 200,
-        message: auth_message(MessageService::Auth::SIGNED_IN),
-        data: {
-          user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-          token: token
-        }
-      )
-      return
+      if user.confirmed?
+        save_google_profile_picture_if_missing(user, user_info["picture"])
+
+        token = AppConfig::JWT_TOKEN.call(user)
+        signup_active_session!(user: user, token: token)
+        NotificationService::Center.sign_in_alert(
+          user_id: user.id,
+          name: user.name || user.username
+        )
+
+        # Existing confirmed user - just return user + token
+        render_json_response(
+          status_code: 200,
+          message: auth_message(MessageService::Auth::SIGNED_IN),
+          data: {
+            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+            token: token
+          }
+        )
+        return
+      end
     end
 
     # New user or unconfirmed user - return challenge token
@@ -227,39 +247,31 @@ class Auth::SessionsController < Devise::SessionsController
       return
     end
 
-    user = User.find_or_initialize_by(email: challenge_data["email"])
+    user = User.with_discarded.find_or_initialize_by(email: challenge_data["email"])
+    return if reject_discarded_account!(user)
+
+    sanitized_username = sanitize_email(challenge_data["email"])
 
     if user.persisted?
       # User exists but was unconfirmed - update credentials, provider, and confirm
       user.assign_attributes(
+        username: user.username.presence || sanitized_username,
+        name: challenge_data["name"].presence || user.name,
         password: password,
         password_confirmation: password,
         provider: AuthConstants::Provider::GOOGLE,
         confirmed_at: user.confirmed_at || Time.current
       )
-      user.name = challenge_data["name"] if challenge_data["name"].present? && user.name.blank?
 
       if user.save
-        if challenge_data["picture"].present?
-          asset = user.assets.find_or_initialize_by(
-            type: AssetConstants::AssetType::AVATAR,
-            source: AssetConstants::AssetSource::GOOGLE
-          )
-          asset.assign_attributes(
-            name: AssetConstants::AssetName.google_profile(user.id),
-            url: challenge_data["picture"],
-            format: AssetConstants::AssetFormat::IMAGE,
-            resource: user
-          )
-          asset.save
-        end
+        save_google_profile_picture_if_missing(user, challenge_data["picture"])
 
         clear_google_challenge!(challenge_token)
 
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
 
-        NotificationService.welcome(
+        NotificationService::Center.welcome(
           user_id: user.id,
           name: user.name || user.username
         )
@@ -283,46 +295,61 @@ class Auth::SessionsController < Devise::SessionsController
     end
 
     # New user - create them
-    sanitized_username = sanitize_email(challenge_data["email"])
     user.assign_attributes(
       username: sanitized_username,
       name: challenge_data["name"],
       password: password,
       password_confirmation: password,
       provider: AuthConstants::Provider::GOOGLE,
-      confirmed_at: Time.current
+      confirmed_at: user.confirmed_at || Time.current
     )
 
-    if user.save
-      # Save google profile picture
-      asset = Asset.new(
-        name: AssetConstants::AssetName.google_profile(user.id),
-        url: challenge_data["picture"],
-        type: AssetConstants::AssetType::AVATAR,
-        format: AssetConstants::AssetFormat::IMAGE,
-        source: AssetConstants::AssetSource::GOOGLE,
-        resource: user
-      )
 
-      unless asset.save
-        Rails.logger.warn(
-          "#{LOG_PREFIX} Failed to save Google profile picture " \
-          "for user #{user.id}: #{asset.errors.full_messages}"
+    created_user = true
+
+    begin
+      user_saved = user.save
+    rescue ActiveRecord::RecordNotUnique
+      created_user = false
+      user = User.with_discarded.find_by(email: challenge_data["email"])
+
+      unless user
+        render_json_response(
+          status_code: 422,
+          message: auth_message(MessageService::Auth::GOOGLE_AUTH_FAILED),
+          error: auth_message(MessageService::Auth::GOOGLE_AUTH_FAILED)
         )
+        return
       end
+
+      return if reject_discarded_account!(user)
+
+      user.assign_attributes(
+        username: user.username.presence || sanitized_username,
+        name: challenge_data["name"].presence || user.name,
+        password: password,
+        password_confirmation: password,
+        provider: AuthConstants::Provider::GOOGLE,
+        confirmed_at: user.confirmed_at || Time.current
+      )
+      user_saved = user.save
+    end
+
+    if user_saved
+      save_google_profile_picture_if_missing(user, challenge_data["picture"])
 
       clear_google_challenge!(challenge_token)
 
       token = AppConfig::JWT_TOKEN.call(user)
       signup_active_session!(user: user, token: token)
 
-      NotificationService.welcome(
+      NotificationService::Center.welcome(
         user_id: user.id,
         name: user.name || user.username
       )
 
       render_json_response(
-        status_code: 201,
+        status_code: created_user ? 201 : 200,
         message: auth_message(MessageService::Auth::ACCOUNT_CREATED_AND_SIGNED_IN),
         data: {
           user: UserSerializer.new(user).serializable_hash[:data][:attributes],
@@ -339,6 +366,8 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def respond_with(resource, _opts = {})
+    return if resource.persisted? && reject_discarded_account!(resource)
+
     if resource.persisted?
       token = AppConfig::JWT_TOKEN.call(resource)
       signup_active_session!(user: resource, token: token)
@@ -393,6 +422,17 @@ class Auth::SessionsController < Devise::SessionsController
     MessageService::Auth.t(key, **options)
   end
 
+  def reject_discarded_account!(user)
+    return false unless user&.discarded?
+
+    render_json_response(
+      status_code: 403,
+      message: auth_message(MessageService::Auth::ACCOUNT_DISCARDED),
+      error: auth_message(MessageService::Auth::ACCOUNT_DISCARDED)
+    )
+    true
+  end
+
   # Helper method to sanitize email addresses from Google sign-in
   def sanitize_email(email)
     local_part = email.split("@").first.downcase
@@ -404,7 +444,48 @@ class Auth::SessionsController < Devise::SessionsController
     end
   end
 
+  def save_google_profile_picture_if_missing(user, picture_url)
+    return if picture_url.blank?
+    return if user.assets.uploaded.exists?(type: AssetConstants::AssetType::AVATAR)
 
+    storage_result = StorageService::Client.upload(
+      picture_url,
+      storage_key: AssetConstants::AssetName.google_profile(user.id),
+      folder: AssetConstants::AssetType::AVATAR,
+      resource_type: AssetConstants::AssetFormat::IMAGE,
+      metadata: {
+        user_id: user.id.to_s,
+        source: AssetConstants::AssetSource::GOOGLE
+      }
+    )
+
+    asset = user.assets.find_or_initialize_by(storage_key: storage_result[:storage_key])
+    asset.assign_attributes(
+      name: AssetConstants::AssetName.google_profile(user.id),
+      url: picture_url,
+      type: AssetConstants::AssetType::AVATAR,
+      format: AssetConstants::AssetFormat::IMAGE,
+      extension: storage_result[:format],
+      size_bytes: storage_result[:bytes],
+      source: AssetConstants::AssetSource::UPLOAD,
+      resource: user
+    )
+
+    if asset.save
+      user.assets.reset
+      return
+    end
+
+    Rails.logger.warn(
+      "#{LOG_PREFIX} Failed to save Google profile picture " \
+      "for user #{user.id}: #{asset.errors.full_messages}"
+    )
+  rescue StorageService::Error => e
+    Rails.logger.warn(
+      "#{LOG_PREFIX} Failed to upload Google profile picture " \
+      "for user #{user.id}: #{e.message}"
+    )
+  end
 
   def session_key_for(user_id, platform = platform_session)
     "active_session:user:#{user_id}:#{platform}"

@@ -2,8 +2,8 @@ require "rails_helper"
 
 RSpec.describe "Authentication sessions", type: :request do
   before do
-    allow(NotificationService).to receive(:sign_in_alert)
-    allow(NotificationService).to receive(:confirmation_email)
+    allow(NotificationService::Center).to receive(:sign_in_alert)
+    allow(NotificationService::Center).to receive(:confirmation_email)
     allow(CacheService).to receive(:write)
     allow(CacheService).to receive(:delete)
   end
@@ -26,6 +26,17 @@ RSpec.describe "Authentication sessions", type: :request do
       get "/peek", params: { email: "missing@example.com" }
       expect(response_data).to eq("user_exists" => false, "confirmed" => false)
     end
+
+    it "blocks a discarded account before the passcode step" do
+      user = create(:user, email: "discarded@example.com")
+      user.discard!
+
+      get "/peek", params: { email: user.email }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["message"]).to eq(I18n.t("auth.account_discarded"))
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
+    end
   end
 
   describe "POST /signin" do
@@ -45,7 +56,7 @@ RSpec.describe "Authentication sessions", type: :request do
         response_data["token"],
         expires_in: AppConfig::SESSION_TIMEOUT
       )
-      expect(NotificationService).to have_received(:sign_in_alert).with(user_id: user.id, name: user.name)
+      expect(NotificationService::Center).to have_received(:sign_in_alert).with(user_id: user.id, name: user.name)
     end
 
     it "signs in by username and isolates android sessions" do
@@ -73,6 +84,18 @@ RSpec.describe "Authentication sessions", type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
 
+    it "rejects a discarded account before checking its password" do
+      user.discard!
+
+      post "/signin", params: { user: { signin_key: user.email, password: "password123" } }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["message"]).to eq(I18n.t("auth.account_discarded"))
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
+      expect(limiter).not_to have_received(:allowed?)
+      expect(CacheService).not_to have_received(:write)
+    end
+
     it "returns remaining attempts after a wrong password" do
       allow(limiter).to receive(:record_failure).and_return(
         remaining_attempts: 2, cooldown_remaining: 0, cooldown_active: false
@@ -96,12 +119,14 @@ RSpec.describe "Authentication sessions", type: :request do
     it "sends a fresh confirmation code instead of signing in an unconfirmed account" do
       unconfirmed = create(:user, :unconfirmed)
       allow(User).to receive(:find_by).and_return(unconfirmed)
+      RSpec::Mocks.space.proxy_for(NotificationService::Center).reset
+      allow(NotificationService::Center).to receive(:confirmation_email)
 
       post "/signin", params: { user: { signin_key: unconfirmed.email, password: "password123" } }
 
       expect(response).to have_http_status(:ok)
       expect(response_data).to eq("otp_sent" => true)
-      expect(NotificationService).to have_received(:confirmation_email).twice.with(
+      expect(NotificationService::Center).to have_received(:confirmation_email).with(
         email: unconfirmed.email,
         code: match(/\A\d{6}\z/)
       )
@@ -122,6 +147,18 @@ RSpec.describe "Authentication sessions", type: :request do
       post "/signin/token", params: { token: "invalid" }
       expect(response).to have_http_status(:unauthorized)
     end
+
+    it "rejects a discarded account JTI" do
+      user = create(:user)
+      user.discard!
+
+      post "/signin/token", params: { token: user.jti }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["message"]).to eq(I18n.t("auth.account_discarded"))
+      expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
+      expect(CacheService).not_to have_received(:write)
+    end
   end
 
   describe "active session enforcement and sign-out" do
@@ -136,6 +173,27 @@ RSpec.describe "Authentication sessions", type: :request do
       expect(CacheService).to have_received(:write).with(
         "active_session:user:#{user.id}:web", token, expires_in: AppConfig::SESSION_TIMEOUT
       )
+    end
+
+    it "allows current IAM lookup after signing in with an assigned users role" do
+      user = create(:user, email: "role-user@example.com")
+      role = create(:role, name: "current_user_reader")
+      permission = create(:permission, name: "read_users", action: "read", resource: "users")
+      create(:role_permission, role: role, permission: permission)
+      create(:user_role, user: user, role: role)
+      post "/signin", params: { user: { signin_key: user.email, password: "password123" } }
+      token = response_data["token"]
+
+      expect(response).to have_http_status(:ok)
+      expect(token).to be_present
+
+      allow(CacheService).to receive(:read).and_return(token)
+
+      get "/v1/users/current/iam", headers: authorization_headers(token)
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.dig("user", "role_names")).to include("current_user_reader")
+      expect(response_data.dig("user", "permissions", "users")).to include("read")
     end
 
     it "rejects a missing or replaced active session" do
@@ -213,18 +271,15 @@ RSpec.describe "Authentication sessions", type: :request do
         { "email" => "google_user@example.com", "name" => "Google User" }.to_json
       )
 
-      # 3. User sets 6-digit password via google_sign_in_complete
+      # 3. User completes the challenge and the existing account is confirmed.
       post "/signin/google/complete", params: { challenge_token: challenge_token, password: "654321" }
 
+      unconfirmed_user.reload
       expect(response).to have_http_status(:ok)
+      expect(unconfirmed_user.confirmed?).to be true
+      expect(unconfirmed_user.provider).to eq("google")
       expect(response_data["user"]["id"]).to eq(unconfirmed_user.id)
       expect(response_data["token"]).to be_present
-
-      # 4. User is now confirmed, provider is google, and new password is set
-      unconfirmed_user.reload
-      expect(unconfirmed_user.confirmed?).to be true
-      expect(unconfirmed_user.provider).to eq(AuthConstants::Provider::GOOGLE)
-      expect(unconfirmed_user.valid_password?("654321")).to be true
     end
   end
 

@@ -25,7 +25,7 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
-gem "async", "~> 2.44"
+gem "async", "~> 2.45"
 
 # ============================================================
 # Performance / Deployment
@@ -58,7 +58,7 @@ gem "sassc-rails", "~> 2.1"
 gem "csv", "~> 3.3"
 
 gem "rails_pulse", "~> 0.3.3"
-gem "rails_error_dashboard", "~> 0.9.1" # Alternatives: rails_error_dashboard, faultline, https://github.com/dkam/splat
+gem "rails_error_dashboard", "~> 0.11.1" # Alternatives: rails_error_dashboard, faultline, https://github.com/dkam/splat
 gem "solid_web_ui", "~> 0.4.0" # Alternatives: mission_control-jobs, solid_observer, solid_queue_monitor
 
 # ============================================================
@@ -92,7 +92,7 @@ gem "rack-attack", "~> 6.8"
 # ============================================================
 
 gem "cloudinary", "~> 2.4"
-gem "stripe", "~> 19.5"
+gem "stripe", "~> 19.6"
 gem "websocket-client-simple", "~> 0.9"
 
 # ============================================================

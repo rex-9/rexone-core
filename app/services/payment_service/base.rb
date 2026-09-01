@@ -21,6 +21,22 @@ module PaymentService
       raise NotImplementedError, "#{self.class} must implement #resume_subscription"
     end
 
+    def create_product(attributes)
+      raise NotImplementedError, "#{self.class} must implement #create_product"
+    end
+
+    def update_product(product_id, attributes)
+      raise NotImplementedError, "#{self.class} must implement #update_product"
+    end
+
+    def discard_product(product_id)
+      raise NotImplementedError, "#{self.class} must implement #discard_product"
+    end
+
+    def undiscard_product(product_id)
+      raise NotImplementedError, "#{self.class} must implement #undiscard_product"
+    end
+
     def supported_webhook_event?(event_type)
       raise NotImplementedError, "#{self.class} must implement #supported_webhook_event?"
     end

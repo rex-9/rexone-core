@@ -1,5 +1,7 @@
 > [!IMPORTANT]
+>
 > ### 🏛️ The Foundation Creed
+>
 > **"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."**
 >
 > This document defines the non-negotiable architectural laws and engineering standards for **Rexone Core** (`rexone-core` Rails API). Every developer, agent, and contributor must adhere strictly to these rules. Zero exceptions.
@@ -9,14 +11,17 @@
 ## 🗂️ 1. Constants & Enums Law
 
 ### 1.1 Zero Loose String Literals or Magic Numbers
+
 - **Rule**: Every status string, provider, platform, role, channel, audience type, asset type/format, and notification type MUST be a frozen string constant in `app/constants/`.
 - Never use raw strings like `"active"`, `"canceled"`, `"web"`, `"mobile"`, `"user"`, `"google"` across controllers, models, services, jobs, serializers, or mailers.
 
 ### 1.2 Provider-Agnostic Storage Naming (`storage_key`)
+
 - **Rule**: The universal storage identifier across all database columns, models, controllers, serializers, and `StorageService` implementations is `storage_key`.
 - `public_id` is strictly isolated inside `StorageService::Cloudinary` as an internal provider argument and MUST NEVER leak into controllers, models, migrations, or serializers.
 
 ### 1.3 Explicit Base Units
+
 - **Rule**: All unit-sensitive columns and variables must include explicit units in their names to avoid ambiguity:
   - `duration_secs` (integer seconds) on `assets`, `courses`, `lessons`, `sits`.
   - `size_bytes` (bigint bytes) on `assets`.
@@ -24,16 +29,17 @@
 - Nulls are strictly preferred over "unknown" string fallbacks.
 
 ### 1.4 Three Concurrent Platform Sessions (`web`, `android`, `ios`)
+
 - **Rule**: The platform taxonomy defines THREE isolated platform sessions: `AuthConstants::Platform::WEB` (`"web"`), `AuthConstants::Platform::ANDROID` (`"android"`), and `AuthConstants::Platform::IOS` (`"ios"`).
 - A single user account can hold up to **3 active sessions concurrently** (one on Web, one on Android, and one on iOS).
 - Logging in or replacing a session on Android will NOT revoke or invalidate an active session on iOS or Web, and vice versa. Each platform maintains its own isolated session key: `active_session:user:<user_id>:<platform>`.
-
 
 ---
 
 ## 🖼️ 2. Distributed Centralized Assets Law
 
 ### 2.1 Zero URL Columns on Domain Tables
+
 - **Rule**: NEVER add `avatar_url`, `image_url`, `video_url`, or specific media URL columns into the `users` table or any domain resource tables (`products`, `courses`, etc.).
 - ALL media is managed through the distributed centralized `assets` table:
   - Polymorphic link: `resource_model` (e.g. `"user"`) and `resource_id` (UUID).
@@ -41,6 +47,7 @@
 - Setting polymorphic resources (e.g., `asset.resource = user`) automatically populates `resource_model = "user"` (`record.class.model_name.singular`) and `resource_id = user.id`.
 
 ### 2.2 Dynamic User Avatar Resolution
+
 - The `User` model resolves avatars via `User#get_profile_pic_url`, querying `assets.where(type: AssetConstants::AssetType::AVATAR).order(Arel.sql("CASE WHEN source = 'upload' THEN 1 ELSE 2 END"), created_at: :desc).first&.url`.
 
 ---
@@ -48,10 +55,12 @@
 ## 🔐 3. Authentication, Authorization & RBAC Law
 
 ### 3.1 Authentication Boundary (`Auth::*` vs `V1::*`)
+
 - **`Auth::*` Namespace**: Authentication only (Sign In, Sign Up, Passcode, SSO, Confirmations, Password Reset). No IAM authorization required.
 - **`V1::*` Namespace**: All endpoints are protected by `authenticate_user!` and strictly authorized via IAM permissions.
 
 ### 3.2 Strict CRUD-Prefixed Controller Action Naming
+
 - Authorization evaluates the **Resource** (controller name) and **Action** (`create`, `read`, `update`, `delete`).
 - Custom controller actions MUST follow standardized CRUD prefixes or authorization resolution will fail:
   - **Create**: `create_*` (or standard `create`) $\rightarrow$ maps to `"create"` action
@@ -60,6 +69,7 @@
   - **Delete**: `destroy_*` (or standard `destroy`) $\rightarrow$ maps to `"delete"` action
 
 ### 3.3 Role Hierarchy & Administration Access (`/v1/admin/`)
+
 The RBAC system defines a strict three-tier hierarchy for administration:
 
 1. **`super_admin` (Full System Authority)**:
@@ -81,10 +91,12 @@ The RBAC system defines a strict three-tier hierarchy for administration:
 ## 🏛️ 4. Architecture & Controller Law (Strict MCS Pattern)
 
 ### 4.1 Business Logic (Server-Business Logic) Authority
+
 - **Server-Business Logic as Single Source of Truth**: ALL primary application business logic (or **server-business logic**)—including data validations, authorization rules, access grants, pricing calculations, lifecycle state machines, rate limiting, transaction integrity, solid queues, and third-party orchestration—lives **exclusively in `rexone-core`**.
 - **Zero Server-Business Logic Duplication in Clients**: Client applications (`rexone-web`, `rexone_mobile`) MUST NEVER replicate, re-calculate, or duplicate server-business logic. Client applications handle strictly **client-business logic** (frontend state management, device orchestration, and UI presentation).
 
 ### 4.2 Strict 3-Tier MCS Separation of Concerns
+
 ```
 Model Layer (app/models/)
        │  (ActiveRecord entities, relationships, validations, scopes, DB constraints)
@@ -106,6 +118,7 @@ Service Layer (app/services/)
   - Services are used by any necessary controller or background job.
 
 ### 4.2 Mandatory Standardized JSON:API Envelope
+
 - All responses must use `render_json_response`:
   ```json
   {
@@ -123,6 +136,7 @@ Service Layer (app/services/)
   ```
 
 ### 4.3 Mandatory Pagination on ALL Collection Endpoints
+
 - **Rule**: ALL list/index endpoints MUST use `Pagy` offset pagination (`pagy(:offset, collection, limit: params[:limit])`).
 - Never return unbounded database arrays or unpaginated collections.
 
@@ -131,9 +145,11 @@ Service Layer (app/services/)
 ## ⚙️ 5. Service Layer & Third-Party Boundary Law
 
 ### 5.1 All Business Workflows in `app/services/`
+
 - Every domain workflow (AI chat processing, stripe checkout/webhooks, email delivery, media upload, IAM verification) lives in a dedicated service under `app/services/`.
 
 ### 5.2 Provider Isolation
+
 - Third-party SDK integrations (Stripe, DeepSeek, Cloudinary, OneSignal) MUST be encapsulated behind generic service client boundaries:
   - `StorageService::Client` $\rightarrow$ `StorageService::Cloudinary` / `StorageService::Local`
   - `PaymentService::Client` $\rightarrow$ `PaymentService::Stripe`
@@ -143,6 +159,7 @@ Service Layer (app/services/)
   - `SocketService::Client` $\rightarrow$ `SocketService::ActionCable`
 
 ### 5.3 Mandatory Client Gateway & Base Contract Law
+
 - **Rule**: ALL domain calls from models, controllers, and jobs MUST route through `*Service::Client` (e.g. `PaymentService::Client.create_customer`, `PaymentService::Client.create_checkout_session`, `AiService::Client.chat`). Direct invocation of concrete provider classes (e.g. `PaymentService::Stripe.*`, `AiService::DeepSeek.*`) is strictly forbidden across the codebase.
 - **Rule**: Every concrete provider class MUST inherit from its domain `*Service::Base` (e.g. `PaymentService::Stripe < PaymentService::Base`) and implement all contract methods. `*Service::Client` MUST declare explicit class-level delegations to `:provider` for all base contract methods.
 
@@ -182,10 +199,22 @@ Service Layer (app/services/)
 
 ---
 
-## 📚 10. Documentation Synchronization Law
+## ⏰ 10. UTC Transport & Client-Side Local Timezone Law
+
+- **Rule**: The backend operates strictly in UTC:
+  - The database stores all timestamps in UTC.
+  - The API receives all timestamp filters (`start_date`, `end_date`) exclusively as UTC ISO 8601 strings.
+  - The API outputs all timestamps, time-series points, and records in UTC.
+  - The backend NEVER accepts client timezones (`time_zone` params or headers) and NEVER performs per-client timezone shifting.
+- **Rule**: Frontends (Web and Mobile) are solely responsible for:
+  - Converting user local time ranges into UTC ISO 8601 strings before sending them to the API.
+  - Converting incoming UTC timestamps into the user's local browser or mobile device timezone for presentation.
+
+---
+
+## 📚 11. Documentation Synchronization Law
 
 - **Rule**: After EVERY feature creation, modification, or bugfix:
   - **`README.md`** MUST be updated with newly added endpoints, dashboard routes, jobs, or configuration variables.
   - **`ECOSYSTEM.md`** MUST be updated if changes affect cross-platform feature parity, shared contracts, WebSocket events, or communication protocols between Core, Web, and Mobile.
   - **`LAW.md`** represents the non-negotiable constitutional framework; it should ONLY be modified when establishing, refining, or expanding fundamental architectural laws and engineering standards.
-

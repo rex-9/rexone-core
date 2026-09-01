@@ -118,7 +118,7 @@ Rails.application.routes.draw do
 
     # ===== ADMIN API =====
     # React Admin Dashboard.
-    # Requires admin role + normal resource permissions.
+    # Requires admin role (with `_admin` suffix) + resource permissions.
     namespace :admin do
       # API-only: no new/edit needed
       resources :users, only: %i[index show create update destroy] do
@@ -135,22 +135,9 @@ Rails.application.routes.draw do
         #   post :update_user
         #   post :delete_user
         # end
-      end
 
-      resources :notifications, only: :create
-      resources :feedbacks, only: %i[index show update destroy]
-    end
-
-    # ===== FEEDBACK =====
-    resources :feedbacks, only: %i[create index show]
-
-    # ===== IAM =====
-    namespace :iam do
-      # API-only: no new/edit
-      resources :permissions, only: %i[index show create update destroy] do
         collection do
-          get :discarded
-          get :undiscarded
+          get :read_discarded, path: "discarded"
         end
 
         member do
@@ -159,8 +146,57 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :roles, only: %i[index show create update destroy]
+      namespace :iam do
+        resources :permissions, only: %i[index show create update destroy]
+        resources :roles, only: %i[index show create update destroy]
+      end
 
+      namespace :chat do
+        resources :rooms, only: %i[index show update destroy]
+        resources :messages, only: %i[index show update destroy]
+      end
+
+      namespace :payment do
+        resources :products, only: %i[index show create update destroy] do
+          collection do
+            get :read_discarded, path: "discarded"
+          end
+
+          member do
+            post :undiscard
+          end
+        end
+      end
+
+      resources :notifications, only: %i[create] do
+        collection do
+          get :read_templates, path: "templates"
+        end
+      end
+
+      resources :feedbacks, only: %i[index show update destroy]
+
+      get "analytics/overview", to: "analytics#read_overview"
+    end
+
+    # ===== FEEDBACK =====
+    resources :feedbacks, only: %i[create index show]
+
+    # ===== IAM =====
+    namespace :iam do
+      # API-only: no new/edit
+      resources :permissions, only: [] do 
+        collection do
+          get :read_current_permissions, path: "current"
+        end   
+      end
+
+      resources :roles, only: [] do 
+        collection do
+          get :read_current_roles, path: "current"
+        end   
+      end
+      
       resources :users, only: [] do
         resources :roles,
           only: %i[index create destroy],
