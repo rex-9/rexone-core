@@ -8,20 +8,10 @@ module AnalyticsService
       end
     end
 
-    PERIOD_TODAY       = "today"
-    PERIOD_YESTERDAY   = "yesterday"
-    PERIOD_7D          = "7d"
-    PERIOD_30D         = "30d"
-    PERIOD_THIS_MONTH  = "this_month"
-    PERIOD_LAST_MONTH  = "last_month"
-    PERIOD_THIS_YEAR   = "this_year"
-    PERIOD_LAST_YEAR   = "last_year"
-    PERIOD_CUSTOM      = "custom"
-
     attr_reader :period, :start_date, :end_date, :time_range, :prev_time_range, :grain
 
-    def initialize(period: PERIOD_30D, start_date: nil, end_date: nil)
-      @period     = period.to_s.presence || PERIOD_30D
+    def initialize(period: AnalyticsConstants::Period::THIRTY_DAYS, start_date: nil, end_date: nil)
+      @period     = period.to_s.presence || AnalyticsConstants::Period::THIRTY_DAYS
       @start_date = start_date
       @end_date   = end_date
       resolve_time_ranges!
@@ -51,47 +41,47 @@ module AnalyticsService
         duration = @time_range.end - @time_range.begin
         @prev_time_range = (@time_range.begin - duration)..@time_range.begin
         days_count = ((@time_range.end - @time_range.begin) / 1.day).round
-        @grain = days_count > 90 ? :monthly : (days_count <= 2 ? :hourly : :daily)
+        @grain = days_count > 90 ? AnalyticsConstants::Grain::MONTHLY : (days_count <= 2 ? AnalyticsConstants::Grain::HOURLY : AnalyticsConstants::Grain::DAILY)
         return
       end
 
       case period
-      when PERIOD_TODAY
+      when AnalyticsConstants::Period::TODAY
         @time_range = now.beginning_of_day..now.end_of_day
         @prev_time_range = 1.day.ago(now).beginning_of_day..1.day.ago(now).end_of_day
-        @grain = :hourly
-      when PERIOD_YESTERDAY
+        @grain = AnalyticsConstants::Grain::HOURLY
+      when AnalyticsConstants::Period::YESTERDAY
         yesterday = 1.day.ago(now)
         @time_range = yesterday.beginning_of_day..yesterday.end_of_day
         @prev_time_range = 2.days.ago(now).beginning_of_day..2.days.ago(now).end_of_day
-        @grain = :hourly
-      when PERIOD_7D
+        @grain = AnalyticsConstants::Grain::HOURLY
+      when AnalyticsConstants::Period::SEVEN_DAYS
         @time_range = 6.days.ago(now).beginning_of_day..now.end_of_day
         @prev_time_range = 13.days.ago(now).beginning_of_day..7.days.ago(now).end_of_day
-        @grain = :daily
-      when PERIOD_THIS_MONTH
+        @grain = AnalyticsConstants::Grain::DAILY
+      when AnalyticsConstants::Period::THIS_MONTH
         @time_range = now.beginning_of_month..now.end_of_month
         @prev_time_range = 1.month.ago(now).beginning_of_month..1.month.ago(now).end_of_month
-        @grain = :daily
-      when PERIOD_LAST_MONTH
+        @grain = AnalyticsConstants::Grain::DAILY
+      when AnalyticsConstants::Period::LAST_MONTH
         last_m = 1.month.ago(now)
         @time_range = last_m.beginning_of_month..last_m.end_of_month
         @prev_time_range = 2.months.ago(now).beginning_of_month..2.months.ago(now).end_of_month
-        @grain = :daily
-      when PERIOD_THIS_YEAR
+        @grain = AnalyticsConstants::Grain::DAILY
+      when AnalyticsConstants::Period::THIS_YEAR
         @time_range = now.beginning_of_year..now.end_of_year
         @prev_time_range = 1.year.ago(now).beginning_of_year..1.year.ago(now).end_of_year
-        @grain = :monthly
-      when PERIOD_LAST_YEAR
+        @grain = AnalyticsConstants::Grain::MONTHLY
+      when AnalyticsConstants::Period::LAST_YEAR
         last_y = 1.year.ago(now)
         @time_range = last_y.beginning_of_year..last_y.end_of_year
         @prev_time_range = 2.years.ago(now).beginning_of_year..2.years.ago(now).end_of_year
-        @grain = :monthly
+        @grain = AnalyticsConstants::Grain::MONTHLY
       else # default 30d
-        @period = PERIOD_30D
+        @period = AnalyticsConstants::Period::THIRTY_DAYS
         @time_range = 29.days.ago(now).beginning_of_day..now.end_of_day
         @prev_time_range = 59.days.ago(now).beginning_of_day..30.days.ago(now).end_of_day
-        @grain = :daily
+        @grain = AnalyticsConstants::Grain::DAILY
       end
     end
 
@@ -103,6 +93,13 @@ module AnalyticsService
       fallback
     end
 
+    ACTIVE_SUB_STATUSES = [
+      PaymentConstants::SubscriptionStatus::ACTIVE,
+      PaymentConstants::SubscriptionStatus::TRIALING
+    ].freeze
+
+    SUCCEEDED_TX_STATUS = PaymentConstants::TransactionStatus::SUCCEEDED
+
     def build_kpis
       # Users
       total_users = User.kept.count
@@ -110,23 +107,32 @@ module AnalyticsService
       new_users_prev = User.kept.where(created_at: prev_time_range).count
 
       # Revenue (in major currency units, dividing cents by 100)
-      total_revenue_cents = Payment::Transaction.kept.where(status: "succeeded").sum(:price_unit_amount)
-      period_revenue_cents = Payment::Transaction.kept.where(status: "succeeded", created_at: time_range).sum(:price_unit_amount)
-      prev_revenue_cents = Payment::Transaction.kept.where(status: "succeeded", created_at: prev_time_range).sum(:price_unit_amount)
+      # Combined: One-time succeeded transactions + Active/Trialing subscriptions
+      tx_total_cents  = Payment::Transaction.kept.where(status: SUCCEEDED_TX_STATUS).sum(:price_unit_amount)
+      sub_total_cents = Payment::Subscription.kept.joins(:product).where(status: ACTIVE_SUB_STATUSES).sum("payment_products.price_unit_amount")
+      total_revenue_cents = tx_total_cents + sub_total_cents
+
+      tx_period_cents  = Payment::Transaction.kept.where(status: SUCCEEDED_TX_STATUS, created_at: time_range).sum(:price_unit_amount)
+      sub_period_cents = Payment::Subscription.kept.joins(:product).where(status: ACTIVE_SUB_STATUSES, payment_subscriptions: { created_at: time_range }).sum("payment_products.price_unit_amount")
+      period_revenue_cents = tx_period_cents + sub_period_cents
+
+      tx_prev_cents  = Payment::Transaction.kept.where(status: SUCCEEDED_TX_STATUS, created_at: prev_time_range).sum(:price_unit_amount)
+      sub_prev_cents = Payment::Subscription.kept.joins(:product).where(status: ACTIVE_SUB_STATUSES, payment_subscriptions: { created_at: prev_time_range }).sum("payment_products.price_unit_amount")
+      prev_revenue_cents = tx_prev_cents + sub_prev_cents
 
       # Transactions
-      period_transactions = Payment::Transaction.kept.where(status: "succeeded", created_at: time_range).count
-      prev_transactions = Payment::Transaction.kept.where(status: "succeeded", created_at: prev_time_range).count
+      period_transactions = Payment::Transaction.kept.where(status: SUCCEEDED_TX_STATUS, created_at: time_range).count
+      prev_transactions   = Payment::Transaction.kept.where(status: SUCCEEDED_TX_STATUS, created_at: prev_time_range).count
 
       # Subscriptions
-      active_subscriptions = Payment::Subscription.kept.where(status: %w[active trialing]).count
+      active_subscriptions = Payment::Subscription.kept.where(status: ACTIVE_SUB_STATUSES).count
 
       # Chat & AI Messages
-      current_messages = Chat::Message.kept.where(created_at: time_range)
+      current_messages    = Chat::Message.kept.where(created_at: time_range)
       prev_messages_count = Chat::Message.kept.where(created_at: prev_time_range).count
       total_chat_messages = current_messages.count
-      user_messages_count = current_messages.where(role: "user").count
-      ai_messages_count = current_messages.where(role: "assistant").count
+      user_messages_count = current_messages.where(role: AiConstants::ChatRole::USER).count
+      ai_messages_count   = current_messages.where(role: AiConstants::ChatRole::ASSISTANT).count
 
       # Client Logs (Errors)
       unresolved_errors = Log::Client.kept.where(resolved_at: nil).count
@@ -164,14 +170,19 @@ module AnalyticsService
       buckets = generate_bucket_keys
 
       # Group queries in pure UTC
-      users_by_bucket = group_count(User.kept.where(created_at: time_range))
-      transactions_by_bucket = group_count(Payment::Transaction.kept.where(status: "succeeded", created_at: time_range))
-      revenue_by_bucket = group_sum(Payment::Transaction.kept.where(status: "succeeded", created_at: time_range), :price_unit_amount)
-      user_messages_by_bucket = group_count(Chat::Message.kept.where(role: "user", created_at: time_range))
-      ai_messages_by_bucket = group_count(Chat::Message.kept.where(role: "assistant", created_at: time_range))
+      users_by_bucket         = group_count(User.kept.where(created_at: time_range))
+      transactions_by_bucket  = group_count(Payment::Transaction.kept.where(status: SUCCEEDED_TX_STATUS, created_at: time_range))
+      tx_revenue_by_bucket    = group_sum(Payment::Transaction.kept.where(status: SUCCEEDED_TX_STATUS, created_at: time_range), :price_unit_amount)
+      sub_revenue_by_bucket   = group_sum(
+        Payment::Subscription.kept.joins(:product).where(status: ACTIVE_SUB_STATUSES, payment_subscriptions: { created_at: time_range }),
+        "payment_products.price_unit_amount",
+        "payment_subscriptions.created_at"
+      )
+      user_messages_by_bucket = group_count(Chat::Message.kept.where(role: AiConstants::ChatRole::USER, created_at: time_range))
+      ai_messages_by_bucket   = group_count(Chat::Message.kept.where(role: AiConstants::ChatRole::ASSISTANT, created_at: time_range))
 
       buckets.map do |key, label|
-        rev_cents = revenue_by_bucket[key] || 0
+        rev_cents = (tx_revenue_by_bucket[key] || 0) + (sub_revenue_by_bucket[key] || 0)
         {
           date: label,
           key: key,
@@ -211,31 +222,33 @@ module AnalyticsService
       buckets
     end
 
-    def group_count(scope)
+    def group_count(scope, time_col = nil)
+      col = time_col || "#{scope.table_name}.created_at"
       case grain
       when :hourly
-        scope.group("TO_CHAR(created_at, 'YYYY-MM-DD HH24:00')").count
+        scope.group("TO_CHAR(#{col}, 'YYYY-MM-DD HH24:00')").count
       when :monthly
-        scope.group("TO_CHAR(created_at, 'YYYY-MM')").count
+        scope.group("TO_CHAR(#{col}, 'YYYY-MM')").count
       else
-        scope.group("TO_CHAR(created_at, 'YYYY-MM-DD')").count
+        scope.group("TO_CHAR(#{col}, 'YYYY-MM-DD')").count
       end
     end
 
-    def group_sum(scope, column)
+    def group_sum(scope, column, time_col = nil)
+      col = time_col || "#{scope.table_name}.created_at"
       case grain
       when :hourly
-        scope.group("TO_CHAR(created_at, 'YYYY-MM-DD HH24:00')").sum(column)
+        scope.group("TO_CHAR(#{col}, 'YYYY-MM-DD HH24:00')").sum(column)
       when :monthly
-        scope.group("TO_CHAR(created_at, 'YYYY-MM')").sum(column)
+        scope.group("TO_CHAR(#{col}, 'YYYY-MM')").sum(column)
       else
-        scope.group("TO_CHAR(created_at, 'YYYY-MM-DD')").sum(column)
+        scope.group("TO_CHAR(#{col}, 'YYYY-MM-DD')").sum(column)
       end
     end
 
     def build_breakdowns
       subscription_cycles = Payment::Subscription.kept
-        .where(status: %w[active trialing])
+        .where(status: ACTIVE_SUB_STATUSES)
         .group(:cycle)
         .count
 

@@ -345,7 +345,7 @@ Payload sent on uncaught errors in Web and Mobile:
   - **Rails Administrate**: Low-level database table CRUD for development and database inspection.
 - **Client Admin Panel (React SPA)**:
   - Focuses exclusively on **Business Growth, Governance, and End-User Operations**:
-    - Operational Analytics & KPIs (Gross revenue, active subscriptions, user acquisition, AI chat usage).
+    - Operational Analytics & KPIs (Gross revenue, active subscriptions, user acquisition, AI chat usage — see [ANALYTICS.md](ANALYTICS.md)).
     - Governance & RBAC (User management, role assignment, permission matrix, lifecycle recovery).
     - Commerce Catalogue (Product creation, Free vs. Premium rules, entitlements).
     - User Feedback Inbox & Triage (Ratings, category taxonomy, priority levels, status workflows).

@@ -5591,6 +5591,16 @@ paths:
           required: false
           schema:
             type: string
+            enum:
+              - today
+              - yesterday
+              - 7d
+              - 30d
+              - this_month
+              - last_month
+              - this_year
+              - last_year
+              - custom
         - name: start_date
           in: query
           required: false

@@ -1047,7 +1047,7 @@ module Openapi
       paths["/v1/admin/analytics/overview"] = {
         get: operation(tags: "Admin / Analytics", summary: "Get admin analytics overview KPIs, time-series data, and breakdowns",
                        parameters: [
-                         query_parameter(:period, type: :string),
+                         query_parameter(:period, enum: AnalyticsConstants::Period::ALL),
                          query_parameter(:start_date, type: :string),
                          query_parameter(:end_date, type: :string)
                        ], errors: [ 401, 403 ])
