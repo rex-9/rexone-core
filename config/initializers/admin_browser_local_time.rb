@@ -63,14 +63,19 @@ module AdminBrowserLocalTime
     extend ActiveSupport::Concern
 
     included do
-      before_action :inject_admin_browser_local_time_script
+      after_action :inject_admin_browser_local_time_script
     end
 
     private
 
     def inject_admin_browser_local_time_script
+      return unless response.media_type&.include?("html")
+
+      body = response.body
+      return unless body.is_a?(String) && body.include?("</body>")
+
       nonce = respond_to?(:rails_pulse_csp_nonce, true) ? rails_pulse_csp_nonce : nil
-      content_for :head, AdminBrowserLocalTime.script_tag(view_context, nonce: nonce)
+      response.body = body.sub("</body>", "#{AdminBrowserLocalTime.script_tag(view_context, nonce: nonce)}</body>")
     end
   end
 
