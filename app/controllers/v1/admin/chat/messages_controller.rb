@@ -1,9 +1,14 @@
 class V1::Admin::Chat::MessagesController < V1::ApplicationController
-  before_action :set_message, only: %i[show update destroy]
+  before_action :set_active_message, only: %i[show update discard]
+  before_action :set_message_including_discarded, only: %i[undiscard destroy]
 
   # GET /v1/admin/chat/messages
   def index
-    messages = ::Chat::Message.includes(:room)
+    messages = if params[:discarded].to_s == "true"
+      ::Chat::Message.with_discarded.discarded.includes(:room)
+    else
+      ::Chat::Message.kept.includes(:room)
+    end
     messages = sort(messages, columns: SortConstants::Columns::CHAT_MSG)
     pagy, records = pagy(messages)
 
@@ -41,6 +46,27 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
     end
   end
 
+  # POST /v1/admin/chat/messages/:id/discard
+  def discard
+    @message.discard!
+
+    render_json_response(
+      status_code: 200,
+      message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_DELETED)
+    )
+  end
+
+  # POST /v1/admin/chat/messages/:id/undiscard
+  def undiscard
+    @message.undiscard!
+
+    render_json_response(
+      status_code: 200,
+      message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_UPDATED),
+      data: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
+    )
+  end
+
   # DELETE /v1/admin/chat/messages/:id
   def destroy
     @message.destroy
@@ -53,8 +79,12 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
 
   private
 
-  def set_message
+  def set_active_message
     @message = ::Chat::Message.find(params[:id])
+  end
+
+  def set_message_including_discarded
+    @message = ::Chat::Message.with_discarded.find(params[:id])
   end
 
   def message_params

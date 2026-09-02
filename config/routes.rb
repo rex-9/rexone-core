@@ -108,6 +108,8 @@ Rails.application.routes.draw do
         member do
           put :update_resolve, path: "resolve"
           put :update_unresolve, path: "unresolve"
+          post :discard
+          post :undiscard
         end
       end
     end
@@ -134,12 +136,27 @@ Rails.application.routes.draw do
 
       namespace :iam do
         resources :permissions, only: %i[index show create update destroy]
-        resources :roles, only: %i[index show create update destroy]
+        resources :roles, only: %i[index show create update destroy] do
+          member do
+            post :discard
+            post :undiscard
+          end
+        end
       end
 
       namespace :chat do
-        resources :rooms, only: %i[index show update destroy]
-        resources :messages, only: %i[index show update destroy]
+        resources :rooms, only: %i[index show update destroy] do
+          member do
+            post :discard
+            post :undiscard
+          end
+        end
+        resources :messages, only: %i[index show update destroy] do
+          member do
+            post :discard
+            post :undiscard
+          end
+        end
       end
 
       namespace :payment do

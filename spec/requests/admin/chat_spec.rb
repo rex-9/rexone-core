@@ -49,18 +49,56 @@ RSpec.describe "Admin chat", type: :request do
     expect(response_data).to include("id" => message.id, "content" => "Updated message")
   end
 
-  it "deletes chat records through admin endpoints" do
+  it "discards, restores, and permanently deletes chat records through admin endpoints" do
     grant_admin_chat_permission(:delete, "messages")
     grant_admin_chat_permission(:delete, "rooms")
     message
+    room
 
+    # Discard message
+    post "/v1/admin/chat/messages/#{message.id}/discard", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(message.reload.discarded?).to be(true)
+
+    # Active messages list should not include discarded message
+    get "/v1/admin/chat/messages", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(response_data.map { |m| m["id"] }).not_to include(message.id)
+
+    # Discarded messages list should include discarded message
+    get "/v1/admin/chat/messages?discarded=true", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(response_data.map { |m| m["id"] }).to include(message.id)
+
+    # Restore message
+    post "/v1/admin/chat/messages/#{message.id}/undiscard", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(message.reload.discarded?).to be(false)
+
+    # Permanent destroy message
     delete "/v1/admin/chat/messages/#{message.id}", headers: headers
     expect(response).to have_http_status(:ok)
-    expect(response_status["message"]).to eq(I18n.t("admin.chat.message_deleted"))
+    expect(Chat::Message.with_discarded.find_by(id: message.id)).to be_nil
 
+    # Discard room
+    post "/v1/admin/chat/rooms/#{room.id}/discard", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(room.reload.discarded?).to be(true)
+
+    # Discarded rooms list should include discarded room
+    get "/v1/admin/chat/rooms?discarded=true", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(response_data.map { |r| r["id"] }).to include(room.id)
+
+    # Restore room
+    post "/v1/admin/chat/rooms/#{room.id}/undiscard", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(room.reload.discarded?).to be(false)
+
+    # Permanent destroy room
     delete "/v1/admin/chat/rooms/#{room.id}", headers: headers
     expect(response).to have_http_status(:ok)
-    expect(response_status["message"]).to eq(I18n.t("admin.chat.room_deleted"))
+    expect(Chat::Room.with_discarded.find_by(id: room.id)).to be_nil
   end
 
   describe "GET /v1/admin/chat/rooms/:id" do

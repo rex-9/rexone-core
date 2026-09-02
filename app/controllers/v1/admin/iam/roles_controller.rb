@@ -1,11 +1,16 @@
 # app/controllers/v1/admin/iam/roles_controller.rb
 class V1::Admin::Iam::RolesController < V1::ApplicationController
   before_action :super_admin_required!
-  before_action :set_role, only: %i[show update destroy]
+  before_action :set_active_role, only: %i[show update discard]
+  before_action :set_role_including_discarded, only: %i[undiscard destroy]
 
   # GET /v1/admin/iam/roles
   def index
-    roles = ::Iam::Role.includes(:permissions)
+    roles = if params[:discarded].to_s == "true"
+      ::Iam::Role.with_discarded.discarded.includes(:permissions)
+    else
+      ::Iam::Role.kept.includes(:permissions)
+    end
     roles = sort(roles, columns: SortConstants::Columns::ROLE)
     pagy, records = pagy(roles)
     render_json_response(
@@ -65,6 +70,36 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     end
   end
 
+  # POST /v1/admin/iam/roles/:id/discard
+  def discard
+    if @role.system?
+      render_json_response(
+        status_code: 422,
+        message: iam_message(MessageService::Iam::SYSTEM_ROLE_DELETE_FORBIDDEN),
+        error: iam_message(MessageService::Iam::SYSTEM_ROLE_DELETE_ERROR)
+      )
+      return
+    end
+
+    @role.discard!
+
+    render_json_response(
+      status_code: 200,
+      message: iam_message(MessageService::Iam::ROLE_DELETED)
+    )
+  end
+
+  # POST /v1/admin/iam/roles/:id/undiscard
+  def undiscard
+    @role.undiscard!
+
+    render_json_response(
+      status_code: 200,
+      message: iam_message(MessageService::Iam::ROLE_UPDATED),
+      data: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
+    )
+  end
+
   # DELETE /v1/admin/iam/roles/:id
   def destroy
     if @role.system?
@@ -86,8 +121,12 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
   private
 
-  def set_role
+  def set_active_role
     @role = ::Iam::Role.find(params[:id])
+  end
+
+  def set_role_including_discarded
+    @role = ::Iam::Role.with_discarded.find(params[:id])
   end
 
   def role_params

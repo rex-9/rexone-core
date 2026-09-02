@@ -1,7 +1,8 @@
 # app/controllers/v1/log/clients_controller.rb
 class V1::Log::ClientsController < V1::ApplicationController
   skip_before_action :authenticate_user!, only: [ :create ]
-  before_action :set_log_client, only: [ :show, :update_resolve, :update_unresolve, :destroy ]
+  before_action :set_log_client, only: [ :show, :update_resolve, :update_unresolve, :discard ]
+  before_action :set_log_client_including_discarded, only: [ :undiscard, :destroy ]
 
   # POST /log/clients
   def create
@@ -90,6 +91,27 @@ class V1::Log::ClientsController < V1::ApplicationController
     )
   end
 
+  # POST /log/clients/:id/discard
+  def discard
+    @log_client.discard!
+
+    render_json_response(
+      status_code: 200,
+      message: log_message(MessageService::Log::DELETED)
+    )
+  end
+
+  # POST /log/clients/:id/undiscard
+  def undiscard
+    @log_client.undiscard!
+
+    render_json_response(
+      status_code: 200,
+      message: log_message(MessageService::Log::RESOLVED),
+      data: Log::ClientSerializer.new(@log_client).serializable_hash[:data]
+    )
+  end
+
   # DELETE /log/clients/:id
   def destroy
     @log_client.destroy!
@@ -108,6 +130,10 @@ class V1::Log::ClientsController < V1::ApplicationController
 
   def set_log_client
     @log_client = Log::Client.find(params[:id])
+  end
+
+  def set_log_client_including_discarded
+    @log_client = Log::Client.with_discarded.find(params[:id])
   end
 
   def log_client_params
@@ -140,6 +166,11 @@ class V1::Log::ClientsController < V1::ApplicationController
   end
 
   def apply_filters(logs)
+    logs = if params[:discarded].to_s == "true"
+      logs.with_discarded.discarded
+    else
+      logs.kept
+    end
     logs = logs.by_severity(params[:severity]) if params[:severity].present?
     logs = logs.by_platform(params[:platform]) if params[:platform].present?
     logs = logs.by_environment(params[:environment]) if params[:environment].present?

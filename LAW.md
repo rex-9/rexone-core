@@ -143,10 +143,12 @@ Service Layer (app/services/)
   }
   ```
 
-### 4.3 Mandatory Pagination on ALL Collection Endpoints
+### 4.3 Mandatory Universal Pagy Pagination on ALL Collection Endpoints
 
-- **Rule**: ALL list/index endpoints MUST use `Pagy` offset pagination (`pagy(:offset, collection, limit: params[:limit])`).
-- Never return unbounded database arrays or unpaginated collections.
+- **Universal Pagy Protocol**: ALL list and index endpoints MUST use `Pagy` offset pagination (`pagy, records = pagy(collection)` via `PagyHelper`).
+- **Default Full Collection (Zero Query Params)**: When the client requests a collection without `page` or `limit` parameters, `PagyHelper` automatically returns ALL records in a single page wrapped in standard `pagy` metadata (`current_page: 1`, `total_pages: 1`, `total_count: N`, `limit: total_count`).
+- **Prohibition of "all" Flags & Branching**: Controllers MUST NEVER implement custom `if params[:limit] == "all"` branching or return unpaginated serializers without `pagy`. Clients NEVER pass `limit: "all"` or arbitrary string flags; omitting `page` and `limit` fetches the full collection cleanly and uniformly through `pagy`.
+- **Zero Unpaginated Collections**: Never return unbounded database arrays or raw unpaginated collections.
 
 ---
 
