@@ -4,8 +4,9 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # GET /v1/admin/payment/products
   def index
-    products = ::Payment::Product.order(created_at: :desc)
-    pagy, records = pagy(:offset, products, limit: params[:limit])
+    products = ::Payment::Product.all
+    products = sort(products, columns: SortConstants::Columns::PRODUCT)
+    pagy, records = pagy(products)
 
     render_json_response(
       status_code: 200,
@@ -17,8 +18,9 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # GET /v1/admin/payment/products/discarded
   def read_discarded
-    products = ::Payment::Product.with_discarded.discarded.order(discarded_at: :desc)
-    pagy, records = pagy(:offset, products, limit: params[:limit])
+    products = ::Payment::Product.with_discarded.discarded
+    products = sort(products, columns: SortConstants::Columns::PRODUCT, default_column: :discarded_at)
+    pagy, records = pagy(products)
 
     render_json_response(
       status_code: 200,

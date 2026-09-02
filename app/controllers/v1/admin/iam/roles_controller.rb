@@ -1,15 +1,17 @@
+# app/controllers/v1/admin/iam/roles_controller.rb
 class V1::Admin::Iam::RolesController < V1::ApplicationController
   before_action :super_admin_required!
   before_action :set_role, only: %i[show update destroy]
 
   # GET /v1/admin/iam/roles
   def index
-    roles = ::Iam::Role.includes(:permissions).order(created_at: :desc)
-    pagy, records = pagy(:offset, roles, limit: params[:limit])
+    roles = ::Iam::Role.includes(:permissions)
+    roles = sort(roles, columns: SortConstants::Columns::ROLE)
+    pagy, records = pagy(roles)
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USER_ROLES_RETRIEVED),
-      data: Iam::RoleSerializer.paginated(records, pagy),
+      data: ::Iam::RoleSerializer.paginated(records, pagy),
       pagy: pagy
     )
   end

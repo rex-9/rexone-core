@@ -44,10 +44,11 @@ class V1::Log::ClientsController < V1::ApplicationController
 
   # GET /log/clients
   def index
-    logs = Log::Client.all.order(created_at: :desc)
+    logs = Log::Client.all
     logs = apply_filters(logs)
+    logs = sort(logs, columns: SortConstants::Columns::CLIENT_LOG)
 
-    pagy, records = pagy(:offset, logs, limit: params[:limit])
+    pagy, records = pagy(logs)
     serialized = Log::ClientSerializer.paginated(records, pagy)
 
     render_json_response(

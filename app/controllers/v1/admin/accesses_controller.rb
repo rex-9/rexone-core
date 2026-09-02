@@ -10,7 +10,8 @@ class V1::Admin::AccessesController < V1::ApplicationController
       user_id: params[:user_id],
       search: params[:search]
     )
-    pagy, records = pagy(:offset, accesses, limit: params[:limit])
+    accesses = sort(accesses, columns: SortConstants::Columns::ACCESS)
+    pagy, records = pagy(accesses)
 
     render_json_response(
       status_code: 200,

@@ -12,10 +12,10 @@ module ApplicationHelper
 
     response[:status][:error] = error if error
 
-    # Handle paginated data (already formatted by serializer)
-    if pagy && data.is_a?(Hash) && data[:data].present?
-      response[:data] = data[:data]  # The serialized data array
-      response[:meta] = data[:meta]  # The pagination meta
+    # Handle serialized data (already formatted by serializer)
+    if data.is_a?(Hash) && data.key?(:data)
+      response[:data] = data[:data] # The serialized data array
+      response[:meta] = data[:meta] if data[:meta].present? # The pagination meta
     else
       response[:data] = data if data
     end

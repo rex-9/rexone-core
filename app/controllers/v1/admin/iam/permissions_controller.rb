@@ -1,17 +1,16 @@
+# app/controllers/v1/admin/iam/permissions_controller.rb
 class V1::Admin::Iam::PermissionsController < V1::ApplicationController
-  include PagyHelper
-
   before_action :super_admin_required!
   before_action :set_permission, only: %i[show update destroy]
 
   # GET /v1/admin/iam/permissions
   def index
     permissions = ::Iam::Permission.order(:resource, :action)
-    pagy, records = pagy_with_optional_limit(permissions)
+    pagy, records = pagy(permissions)
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::PERMISSIONS_FETCHED),
-      data: serialize_permissions(records, pagy),
+      data: ::Iam::PermissionSerializer.paginated(records, pagy),
       pagy: pagy
     )
   end
@@ -89,12 +88,6 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
     return if permission.action.blank? || permission.resource.blank?
 
     permission.name = "#{permission.action}_#{permission.resource}"
-  end
-
-  def serialize_permissions(records, pagy)
-    return ::Iam::PermissionSerializer.paginated(records, pagy) if pagy
-
-    ::Iam::PermissionSerializer.new(records).serializable_hash[:data]
   end
 
   def iam_message(key, **options)

@@ -16,10 +16,11 @@ class V1::Admin::UsersController < V1::ApplicationController
 
   # GET /users?page=2&limit=25
   def index
-    users = search_users(User.includes(:roles)).order(created_at: :desc)
+    users = search_users(User.includes(:roles))
+    users = sort(users, columns: SortConstants::Columns::USER)
     Rails.logger.info("#{LOG_PREFIX} Query: #{users.to_sql}")
 
-    pagy, records = pagy(:offset, users, limit: params[:limit])
+    pagy, records = pagy(users)
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USERS_RETRIEVED),
@@ -30,8 +31,9 @@ class V1::Admin::UsersController < V1::ApplicationController
 
   # GET /v1/admin/users/discarded?page=1&limit=25
   def read_discarded
-    users = search_users(User.with_discarded.discarded.includes(:roles)).order(discarded_at: :desc)
-    pagy, records = pagy(:offset, users, limit: params[:limit])
+    users = search_users(User.with_discarded.discarded.includes(:roles))
+    users = sort(users, columns: SortConstants::Columns::USER, default_column: :discarded_at)
+    pagy, records = pagy(users)
 
     render_json_response(
       status_code: 200,

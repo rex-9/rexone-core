@@ -834,14 +834,20 @@ module Openapi
         get: operation(tags: "Admin / Users", summary: "List users for the admin client",
                        parameters: [
                          query_parameter(:limit, type: :integer, minimum: 1),
-                         query_parameter(:search, type: :string)
+                         query_parameter(:search, type: :string),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
                        ], errors: [ 401, 403 ]),
         post: operation(tags: "Admin / Users", summary: "Create an admin-managed user", success: 201,
                         body: ref(:admin_user_request), errors: [ 401, 403, 422 ])
       }
       paths["/v1/admin/users/discarded"] = {
         get: operation(tags: "Admin / Users", summary: "List discarded users in the recycle bin",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+                       parameters: [
+                         query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ], errors: [ 401, 403 ])
       }
       paths["/v1/admin/users/{id}"] = {
         get: operation(tags: "Admin / Users", summary: "Get an admin-managed user",
@@ -857,7 +863,12 @@ module Openapi
         }
       end
       paths["/v1/admin/iam/roles"] = {
-        get: operation(tags: "Admin / IAM Roles", summary: "List roles for the admin client", errors: [ 401, 403 ]),
+        get: operation(tags: "Admin / IAM Roles", summary: "List roles for the admin client",
+                       parameters: [
+                         query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ], errors: [ 401, 403 ]),
         post: operation(tags: "Admin / IAM Roles", summary: "Create an admin-managed role", success: 201,
                         body: ref(:role_request), errors: [ 401, 403, 422 ])
       }
@@ -887,7 +898,11 @@ module Openapi
       }
       paths["/v1/admin/chat/rooms"] = {
         get: operation(tags: "Admin / Chat Rooms", summary: "List chat rooms for the admin client",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+                       parameters: [
+                         query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ], errors: [ 401, 403 ])
       }
       paths["/v1/admin/chat/rooms/{id}"] = {
         get: operation(tags: "Admin / Chat Rooms", summary: "Get an admin chat room",
@@ -900,7 +915,11 @@ module Openapi
       }
       paths["/v1/admin/chat/messages"] = {
         get: operation(tags: "Admin / Chat Messages", summary: "List chat messages for the admin client",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+                       parameters: [
+                         query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ], errors: [ 401, 403 ])
       }
       paths["/v1/admin/chat/messages/{id}"] = {
         get: operation(tags: "Admin / Chat Messages", summary: "Get an admin chat message",
@@ -913,13 +932,21 @@ module Openapi
       }
       paths["/v1/admin/payment/products"] = {
         get: operation(tags: "Admin / Payment Products", summary: "List Stripe-backed products for the admin client",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ]),
+                       parameters: [
+                         query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ], errors: [ 401, 403 ]),
         post: operation(tags: "Admin / Payment Products", summary: "Create a Stripe-backed product", success: 201,
                         body: ref(:admin_product_request), errors: [ 401, 403, 422 ])
       }
       paths["/v1/admin/payment/products/discarded"] = {
         get: operation(tags: "Admin / Payment Products", summary: "List discarded Stripe-backed products for the recycle bin",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+                       parameters: [
+                         query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ], errors: [ 401, 403 ])
       }
       paths["/v1/admin/payment/products/{id}"] = {
         get: operation(tags: "Admin / Payment Products", summary: "Get a Stripe-backed product",
@@ -930,11 +957,11 @@ module Openapi
       }
       paths["/v1/admin/payment/products/{id}/discard"] = {
         post: operation(tags: "Admin / Payment Products", summary: "Discard a Stripe-backed product",
-                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
       paths["/v1/admin/payment/products/{id}/undiscard"] = {
         post: operation(tags: "Admin / Payment Products", summary: "Restore a discarded Stripe-backed product",
-                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
       paths["/v1/admin/accesses"] = {
         get: operation(
@@ -944,7 +971,9 @@ module Openapi
             query_parameter(:status, enum: AccessConstants::AccessStatus::ALL + [ "expiring_soon" ]),
             query_parameter(:product_id, type: :string),
             query_parameter(:user_id, type: :string),
-            query_parameter(:search, type: :string)
+            query_parameter(:search, type: :string),
+            query_parameter(:sort_by, type: :string),
+            query_parameter(:sort_order, enum: SortConstants::Order::ALL)
           ],
           errors: [ 401, 403 ]
         ),
@@ -991,7 +1020,11 @@ module Openapi
       end
       paths["/v1/log/clients"] = {
         get: operation(tags: "Client Logs", summary: "List and filter client error reports",
-                       parameters: log_filters + [ query_parameter(:limit, type: :integer, minimum: 1) ],
+                       parameters: log_filters + [
+                         query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ],
                        errors: [ 401, 403 ]),
         post: operation(tags: "Client Logs", summary: "Report or increment a client error", success: 201,
                         security: nil, body: ref(:client_log_request), errors: [ 422 ])
@@ -1117,7 +1150,12 @@ module Openapi
       feedback_filters = %i[status category priority search].map { |name| query_parameter(name) }
       paths["/v1/admin/feedbacks"] = {
         get: operation(tags: "Admin / Feedbacks", summary: "List and filter user feedbacks for admins",
-                       parameters: feedback_filters + [ query_parameter(:page, type: :integer), query_parameter(:limit, type: :integer) ],
+                       parameters: feedback_filters + [
+                         query_parameter(:page, type: :integer),
+                         query_parameter(:limit, type: :integer),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ],
                        errors: [ 401, 403 ])
       }
       paths["/v1/admin/feedbacks/{id}"] = {

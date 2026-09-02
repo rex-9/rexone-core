@@ -1,17 +1,23 @@
-# app/helpers/pagy_helper.rb
+# frozen_string_literal: true
+
+# app/controllers/concerns/pagy_helper.rb
+#
+# Pagy defaults to limit: 20 when no params are provided.
+# We override to return all records as a single page when
+# the client omits both page and limit params.
 module PagyHelper
-  PAGINATION_OFF_VALUES = %w[off all unlimited none].freeze
+  def pagy(method = :offset, scope, **options)
+    page = options[:page] || params[:page]
+    limit = options[:limit] || params[:limit]
 
-  def pagy_with_optional_limit(scope)
-    limit = params[:limit].to_s.downcase
-
-    if PAGINATION_OFF_VALUES.include?(limit)
-      records = scope
-      pagy = nil
-
-      return [pagy, records]
+    if page.blank? && limit.blank?
+      count = scope.count(:all)
+      return super(method, scope, **options.merge(page: 1, limit: [ count, 1 ].max))
     end
 
-    pagy(:offset, scope, limit: params[:limit])
+    merged = {}
+    merged[:page] = page if page.present?
+    merged[:limit] = limit.to_i if limit.present?
+    super(method, scope, **options.merge(merged))
   end
 end

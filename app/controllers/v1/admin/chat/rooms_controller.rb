@@ -3,8 +3,9 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
 
   # GET /v1/admin/chat/rooms
   def index
-    rooms = ::Chat::Room.includes(:user, :messages).order(created_at: :desc)
-    pagy, records = pagy(:offset, rooms, limit: params[:limit])
+    rooms = ::Chat::Room.includes(:user, :messages)
+    rooms = sort(rooms, columns: SortConstants::Columns::CHAT_ROOM)
+    pagy, records = pagy(rooms)
 
     render_json_response(
       status_code: 200,

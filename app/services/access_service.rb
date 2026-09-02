@@ -72,7 +72,7 @@ class AccessService
     end
 
     def list_for_admin(status: nil, product_id: nil, user_id: nil, search: nil)
-      scope = Access.includes(:user, :product).order(created_at: :desc)
+      scope = Access.includes(:user, :product)
       scope = scope.where(user_id: user_id) if user_id.present?
       scope = scope.where(product_id: product_id) if product_id.present?
 

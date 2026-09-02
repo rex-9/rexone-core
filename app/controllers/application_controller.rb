@@ -6,6 +6,8 @@ class ApplicationController < ActionController::API
   include Pagy::Method
   include Authorization
   include ApplicationHelper
+  include PagyHelper
+  include SortableHelper
   include PlatformSession
 
   around_action :switch_locale

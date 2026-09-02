@@ -3,14 +3,14 @@
 class V1::Admin::FeedbacksController < V1::ApplicationController
   # GET /v1/admin/feedbacks
   def index
-    feedbacks = Feedback.recent
-                        .by_status(params[:status])
+    feedbacks = Feedback.by_status(params[:status])
                         .by_category(params[:category])
                         .by_priority(params[:priority])
                         .by_platform(params[:platform])
                         .by_user(params[:user_id])
 
-    pagy, records = pagy(:offset, feedbacks, limit: params[:limit])
+    feedbacks = sort(feedbacks, columns: SortConstants::Columns::FEEDBACK)
+    pagy, records = pagy(feedbacks)
 
     render_json_response(
       status_code: 200,

@@ -39,11 +39,25 @@ RSpec.describe "V1 Admin Accesses API", type: :request do
     end
 
     it "lists accesses for super admins" do
-      get "/v1/admin/accesses", headers: super_admin_headers
+      get "/v1/admin/accesses", params: { page: 1, limit: 20 }, headers: super_admin_headers
 
       expect(response).to have_http_status(:ok)
       expect(response_data.size).to eq(3)
       expect(response_meta).to have_key("pagination")
+    end
+
+    it "returns all records in a single page when pagination params are omitted" do
+      get "/v1/admin/accesses", headers: super_admin_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.size).to eq(3)
+      expect(response_meta["pagination"]).to include(
+        "current_page" => 1,
+        "total_pages" => 1,
+        "total_count" => 3,
+        "next_page" => nil,
+        "prev_page" => nil
+      )
     end
 
     it "lists accesses for admins with accesses permissions" do

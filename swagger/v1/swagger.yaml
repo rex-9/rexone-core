@@ -2445,6 +2445,19 @@ paths:
           required: false
           schema:
             type: string
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
@@ -2558,6 +2571,19 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
@@ -2869,6 +2895,25 @@ paths:
               - web
               - mobile
             default: web
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
@@ -3481,6 +3526,19 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
@@ -3725,6 +3783,19 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
@@ -3969,6 +4040,19 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
@@ -4082,6 +4166,19 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
@@ -4424,6 +4521,19 @@ paths:
           required: false
           schema:
             type: string
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
@@ -5069,6 +5179,19 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
@@ -6504,6 +6627,19 @@ paths:
           required: false
           schema:
             type: integer
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - dsc
       responses:
         "200":
           description: Successful response
