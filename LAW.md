@@ -175,7 +175,27 @@ Service Layer (app/services/)
 
 ---
 
-## 🗄️ 6. Models, Database & Migrations Law
+## 🔐 6. RBAC & IAM Authorization Law
+
+### 6.1 Three-Tier Administrative Hierarchy
+
+1. **`super_admin`**: Full authority across all operational, user governance, and IAM resource domains.
+2. **`admin`**: Full operational authority (`feedbacks`, `payments`, `ai`, `logs`, `notifications`). Excluded from `users` and `iam`.
+3. **Partial Admin (`*_admin` Suffix)**: Scoped authority over specific domain capabilities (e.g. `notification_admin`, `product_admin`, `chat_admin`, `log_admin`, `feedback_admin`).
+
+### 6.2 Strict Non-Admin Role Isolation & Scoping Law
+
+- **Non-Admin Portal Isolation**: Users holding ONLY non-admin roles (`user`, `member`, `subscriber`) have ZERO access to administrative endpoints or portal capabilities.
+- **Role Scoping / Partitioning**: When evaluating administrative permissions, capabilities are scoped STRICTLY to resources covered by the user's active **admin roles** (`super_admin`, `admin`, `*_admin`). Permissions granted under base/non-admin roles (`user`) are ignored and never leak into administrative workflows.
+- **Granular CUD Action Enforcement**:
+  - `create`: Gated by `user.can?(:create, resource)`.
+  - `update` / `edit`: Gated by `user.can?(:update, resource)`.
+  - `discard` / `undiscard` / `destroy`: Gated by `user.can?(:delete, resource)`.
+  - `read` / `index` / `show`: Gated by `user.can?(:read, resource)`.
+
+---
+
+## 🗄️ 7. Models, Database & Migrations Law
 
 - **UUID Primary Keys**: All tables use `id: :uuid, default: -> { "gen_random_uuid()" }`.
 - **Soft Deletion & Lifecycle Hierarchy**:
