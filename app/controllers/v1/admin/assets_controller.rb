@@ -53,7 +53,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
     result = StorageService::Client.upload(
       file,
       storage_key: storage_key,
-      folder: params[:folder] || asset_type,
+      folder: params[:folder].presence || "admin_uploads/#{asset_type}",
       resource_type: determine_resource_type(file),
       metadata: {
         user_id: current_user.id.to_s,

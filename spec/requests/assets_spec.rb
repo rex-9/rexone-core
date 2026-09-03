@@ -48,7 +48,7 @@ RSpec.describe "Asset uploads", type: :request do
     )
     expect(StorageService::Client).to have_received(:upload).with(
       kind_of(ActionDispatch::Http::UploadedFile),
-      hash_including(folder: "avatar", resource_type: "image")
+      hash_including(folder: "user_uploads/avatar", resource_type: "image")
     )
   end
 

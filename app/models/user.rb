@@ -61,13 +61,8 @@ class User < ApplicationRecord
     end
   end
 
-  def get_profile_pic_url
-    # get 'upload' first and then 'google'
-    profile_picture = assets
-                      .where(type: AssetConstants::AssetType::AVATAR)
-                      .order(Arel.sql("CASE WHEN source = 'upload' THEN 1 ELSE 2 END"), created_at: :desc)
-                      .first
-    profile_picture&.url
+  def get_avatar_url
+    assets.find_by(type: AssetConstants::AssetType::AVATAR)&.url
   end
 
   def stripe_customer

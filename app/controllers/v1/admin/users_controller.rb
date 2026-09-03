@@ -82,11 +82,12 @@ class V1::Admin::UsersController < V1::ApplicationController
   def update
     if @user.update(user_params)
       assign_roles(@user) if role_ids_param_provided?
+      assign_avatar(@user) if avatar_param_provided?
 
       render_json_response(
         status_code: 200,
         message: admin_user_message(MessageService::Admin::User::USER_UPDATED),
-        data: UserSerializer.new(@user).serializable_hash[:data][:attributes]
+        data: UserSerializer.new(@user.reload).serializable_hash[:data][:attributes]
       )
     else
       render_json_response(
@@ -184,6 +185,22 @@ class V1::Admin::UsersController < V1::ApplicationController
     user.user_roles.destroy_all
     roles.each do |role|
       user.user_roles.find_or_create_by!(role: role)
+    end
+  end
+
+  def avatar_param_provided?
+    params[:user].respond_to?(:key?) && params[:user].key?(:avatar_asset_id)
+  end
+
+  def assign_avatar(user)
+    avatar_asset_id = params.dig(:user, :avatar_asset_id)
+    if avatar_asset_id.present?
+      asset = Asset.find(avatar_asset_id)
+      old_avatars = user.assets.where(type: AssetConstants::AssetType::AVATAR).where.not(id: asset.id)
+      Asset.purge_and_destroy_all!(old_avatars)
+      asset.update!(assetable: user, type: AssetConstants::AssetType::AVATAR)
+    else
+      Asset.purge_and_destroy_all!(user.assets.where(type: AssetConstants::AssetType::AVATAR))
     end
   end
 

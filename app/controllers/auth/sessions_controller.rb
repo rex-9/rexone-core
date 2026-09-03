@@ -446,12 +446,12 @@ class Auth::SessionsController < Devise::SessionsController
 
   def save_google_profile_picture_if_missing(user, picture_url)
     return if picture_url.blank?
-    return if user.assets.uploaded.exists?(type: AssetConstants::AssetType::AVATAR)
+    return if user.assets.exists?(type: AssetConstants::AssetType::AVATAR)
 
     storage_result = StorageService::Client.upload(
       picture_url,
       storage_key: AssetConstants::AssetName.google_profile(user.id),
-      folder: AssetConstants::AssetType::AVATAR,
+      folder: "user_uploads/#{AssetConstants::AssetType::AVATAR}",
       resource_type: AssetConstants::AssetFormat::IMAGE,
       metadata: {
         user_id: user.id.to_s,
@@ -467,11 +467,13 @@ class Auth::SessionsController < Devise::SessionsController
       format: AssetConstants::AssetFormat::IMAGE,
       extension: storage_result[:format],
       size_bytes: storage_result[:bytes],
-      source: AssetConstants::AssetSource::UPLOAD,
+      source: AssetConstants::AssetSource::GOOGLE,
       assetable: user
     )
 
     if asset.save
+      old_avatars = user.assets.where(type: AssetConstants::AssetType::AVATAR).where.not(id: asset.id)
+      Asset.purge_and_destroy_all!(old_avatars)
       user.assets.reset
       return
     end

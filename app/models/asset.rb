@@ -38,12 +38,16 @@ class Asset < ApplicationRecord
     Rails.logger.error("#{LOG_PREFIX} Failed to queue storage deletion: #{e.message}")
   end
 
+  def self.purge_and_destroy_all!(scope)
+    scope.find_each(&:destroy)
+  end
+
   def uploaded?
     source == AssetConstants::AssetSource::UPLOAD
   end
 
   def uploaded_file?
-    source == AssetConstants::AssetSource::UPLOAD && storage_key.present?
+    storage_key.present?
   end
 
   def generate_storage_key

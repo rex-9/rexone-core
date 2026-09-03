@@ -33,6 +33,20 @@ RSpec.describe "Admin users", type: :request do
     expect(response_status["message"]).to eq(I18n.t("admin.user.user_created", locale: :my))
   end
 
+  it "assigns and updates user avatar from uploaded assets" do
+    grant_admin_user_permission(:update)
+    avatar_asset = create(:asset, type: "avatar", format: "image", assetable: nil)
+
+    patch "/v1/admin/users/#{user.id}",
+          params: { user: { avatar_asset_id: avatar_asset.id } },
+          headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_data["avatar_asset_id"]).to eq(avatar_asset.id)
+    expect(response_data["avatar_url"]).to eq(avatar_asset.url)
+    expect(avatar_asset.reload.assetable).to eq(user)
+  end
+
   it "discards and restores a user with localized messages" do
     grant_admin_user_permission(:delete)
 
@@ -118,9 +132,9 @@ RSpec.describe "Admin users", type: :request do
     it "assigns roles on creation" do
       grant_admin_user_permission(:create)
       role = create(:role, name: "test_role")
-      
+
       post "/v1/admin/users",
-           params: { user: valid_user_params.merge(role_ids: [role.id]) },
+           params: { user: valid_user_params.merge(role_ids: [ role.id ]) },
            headers: headers
 
       expect(response).to have_http_status(:created)

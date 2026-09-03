@@ -52,9 +52,10 @@
   - Metadata: `storage_key`, `type` (`AssetConstants::AssetType::*`), `format` (`AssetConstants::AssetFormat::*`), `source` (`AssetConstants::AssetSource::*`), `size_bytes`, `duration_secs`, `extension`.
 - Owning models declare `has_many :assets, as: :assetable`. Setting `asset.assetable = user` automatically populates `assetable_type = "User"` and `assetable_id = user.id` via Rails standard polymorphic behavior.
 
-### 2.2 Dynamic User Avatar Resolution
+### 2.2 User Avatar & Product Cover Resolution
 
-- The `User` model resolves avatars via `User#get_profile_pic_url`, querying `assets.where(type: AssetConstants::AssetType::AVATAR).order(Arel.sql("CASE WHEN source = 'upload' THEN 1 ELSE 2 END"), created_at: :desc).first&.url`.
+- Each `User` has at most one avatar asset, resolved via `User#get_avatar_url` (`assets.find_by(type: AssetConstants::AssetType::AVATAR)&.url`). When a new avatar is uploaded or assigned, any prior avatar asset for that user is destroyed and replaced.
+- Each `Payment::Product` has at most one cover asset, resolved via `Payment::Product#get_thumbnail_url` (`assets.find_by(type: AssetConstants::AssetType::THUMBNAIL)&.url`).
 
 ---
 

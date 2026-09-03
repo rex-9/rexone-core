@@ -1211,7 +1211,7 @@ components:
           enum:
             - email
             - google
-        profile_pic_url:
+        avatar_url:
           type: string
           format: uri
           nullable: true

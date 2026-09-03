@@ -596,7 +596,7 @@ module Openapi
         username: { type: :string },
         name: { type: :string, nullable: true },
         provider: { type: :string, enum: %w[email google] },
-        profile_pic_url: { type: :string, format: :uri, nullable: true },
+        avatar_url: { type: :string, format: :uri, nullable: true },
         role_ids: { type: :array, items: UUID },
         role_names: { type: :array, items: { type: :string } },
         permissions: { type: :object, additionalProperties: { type: :array, items: { type: :string } } },

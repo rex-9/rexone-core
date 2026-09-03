@@ -38,11 +38,10 @@ RSpec.describe Asset, type: :model do
     expect(google_avatar).to have_attributes(extension: nil, format: "image")
   end
 
-  it "prefers an uploaded profile picture over a Google picture" do
+  it "resolves a user's single profile avatar" do
     user = create(:user)
-    create(:asset, source: "google", storage_key: nil, assetable_type: "User", assetable_id: user.id, type: "avatar", url: "https://example.com/google.jpg")
-    uploaded = create(:asset, assetable_type: "User", assetable_id: user.id, type: "avatar", url: "https://example.com/upload.jpg")
-    expect(user.get_profile_pic_url).to eq(uploaded.url)
+    avatar = create(:asset, assetable_type: "User", assetable_id: user.id, type: "avatar", url: "https://example.com/avatar.jpg")
+    expect(user.get_avatar_url).to eq(avatar.url)
   end
 
   it "queues storage deletion after an uploaded record commits" do
@@ -62,6 +61,19 @@ RSpec.describe Asset, type: :model do
     allow(StorageService::Client).to receive(:delete_later)
     asset.destroy!
     expect(StorageService::Client).not_to have_received(:delete_later)
+  end
+
+  it "purges from storage and destroys records via Asset.purge_and_destroy_all!" do
+    asset = create(:asset, storage_key: "custom/key_123")
+    allow(StorageService::Client).to receive(:delete_later)
+
+    Asset.purge_and_destroy_all!(Asset.where(id: asset.id))
+
+    expect(StorageService::Client).to have_received(:delete_later).with(
+      "custom/key_123",
+      resource_type: "image"
+    )
+    expect(Asset.find_by(id: asset.id)).to be_nil
   end
 
   it "refreshes uploaded URLs and preserves the old URL when storage fails" do

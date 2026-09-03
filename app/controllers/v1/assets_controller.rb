@@ -52,7 +52,7 @@ class V1::AssetsController < V1::ApplicationController
     result = StorageService::Client.upload(
       file,
       storage_key: storage_key,
-      folder: params[:folder] || asset_type,
+      folder: params[:folder].presence || "user_uploads/#{asset_type}",
       resource_type: determine_resource_type(file),
       metadata: {
         user_id: current_user.id.to_s,
@@ -77,6 +77,11 @@ class V1::AssetsController < V1::ApplicationController
     )
 
     if asset.save
+      if asset.type == AssetConstants::AssetType::AVATAR && asset.assetable_type.to_s.downcase == "user" && asset.assetable_id.present?
+        old_avatars = Asset.where(type: AssetConstants::AssetType::AVATAR, assetable_type: asset.assetable_type, assetable_id: asset.assetable_id)
+                           .where.not(id: asset.id)
+        Asset.purge_and_destroy_all!(old_avatars)
+      end
       render_json_response(
         status_code: 201,
         message: asset_message(MessageService::Asset::UPLOADED),
