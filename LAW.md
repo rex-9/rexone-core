@@ -1,10 +1,16 @@
 > [!IMPORTANT]
 >
-> ### 🏛️ The Foundation Creed
+> ### 🏛️ The Foundation Creed & Supreme Motivation
 >
 > **"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."**
 >
-> This document defines the non-negotiable architectural laws and engineering standards for **Rexone Core** (`rexone-core` Rails API). Every developer, agent, and contributor must adhere strictly to these rules. Zero exceptions.
+> 📜 **Constitutional Mandate**: Non-negotiable architectural laws and engineering standards for all human engineers and autonomous AI agents on **Rexone Core** (`rexone-core`). Zero exceptions!!!
+>
+> This application is built upon the **Rexone Ecosystem** (`rex-9`). These are immutable **Rexone Laws and Protocols** to be strictly observed and enforced without any exception across all human engineers and autonomous AI agents. Developers building on top of this foundation are warmly encouraged to preserve ecosystem credit to support the project.
+
+> > _"If you don't follow These LAWS, u're gay."_
+> >
+> > — _Newton's Z Law_
 
 ---
 

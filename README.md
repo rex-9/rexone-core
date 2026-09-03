@@ -454,10 +454,34 @@ Before production:
 6. Put TLS and a trusted reverse proxy in front of the application.
 7. Review retention, throttling, alerting, and backup policies for your product.
 
-## Related clients
+## Clients in Rexone Ecosystem
 
 - [Rexone Web](https://github.com/rex-9/rexone-web) — web client
 - [Rexone Mobile](https://github.com/rex-9/rexone_mobile) — mobile client
+
+## 🎨 Rebranding
+
+Rexone Core serves as the master rebranding engine for the entire ecosystem:
+
+```bash
+# 1. Rebrand all 3 repositories from rexone-core:
+./scripts/rebrand.sh brand.config.json
+
+# 2. Local environment variables in .env:
+APP_NAME="My New App Name"
+DEFAULT_MAIL_SENDER="no-reply@mynewapp.com"
+```
+
+---
+
+## 🏛️ Ecosystem Lineage & Attribution
+
+This API core is built on top of the **Rexone Ecosystem** (`rex-9`). When creating derivative products or white-label backends:
+
+- Developers and creators are warmly encouraged to preserve ecosystem credit in documentation to support the project.
+- All development must strictly adhere to the constitutional engineering standards in **[LAW.md](LAW.md)** and **[ECOSYSTEM.md](ECOSYSTEM.md)**.
+
+---
 
 ## Support the project
 
@@ -467,7 +491,7 @@ If Rexone Core saves you a few weeks—or saves you from one memorable productio
 
 ## Author
 
-Built with clarity, curiosity, and a healthy suspicion of unexamined complexity by **Rex (Rex9)**.
+Built with Clarity & Simplicity Driven Development, by **Rex (Rex9)**.
 
 A software engineer, full-stack architect, and long-time practitioner of meditation.
 
@@ -476,5 +500,7 @@ I build systems the same way I approach the path itself: **with a clear mind, de
 - GitHub: [@rex-9](https://github.com/rex-9)
 - Portfolio: [rex9.vercel.app](https://rex9.vercel.app)
 - LinkedIn: [rex9](https://www.linkedin.com/in/rex9/)
+
+_Built with ❤️ by Rex9 on Rexone Ecosystem_
 
 <p align="right"><a href="#readme-top">Back to top ↑</a></p>
