@@ -71,7 +71,7 @@ class Speech::ProcessTtsJob < ApplicationJob
       source: AssetConstants::AssetSource::UPLOAD,
       storage_key: upload[:storage_key],
       extension: upload[:format].presence || "mp3",
-      resource: message
+      assetable: message
     )
     asset.save!
     asset

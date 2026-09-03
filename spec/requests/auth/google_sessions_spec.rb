@@ -34,8 +34,8 @@ RSpec.describe "Google authentication", type: :request do
         :asset,
         source: AssetConstants::AssetSource::GOOGLE,
         storage_key: nil,
-        resource_model: "user",
-        resource_id: user.id,
+        assetable_type: "user",
+        assetable_id: user.id,
         url: "https://lh3.googleusercontent.com/stale-avatar"
       )
       stub_google_token(email: user.email, name: user.name, picture: "https://example.com/avatar.jpg")

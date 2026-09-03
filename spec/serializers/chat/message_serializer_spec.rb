@@ -31,9 +31,9 @@ RSpec.describe Chat::MessageSerializer do
       format: "audio",
       source: "upload",
       url: "https://cdn.example.com/speech.mp3",
-      storage_key: "speech/tts/tts_of_message_#{message.id}",
-      resource_model: "chat_message",
-      resource_id: message.id
+      storage_key: "speech/tts/tts_message_#{message.id}",
+      assetable_type: "Chat::Message",
+      assetable_id: message.id
     )
 
     attributes = serialized_attributes(message.reload)
@@ -45,8 +45,8 @@ RSpec.describe Chat::MessageSerializer do
         url: "https://cdn.example.com/speech.mp3",
         type: "audio",
         format: "audio",
-        resource_model: "chat_message",
-        resource_id: message.id
+        assetable_type: "Chat::Message",
+        assetable_id: message.id
       )
     )
   end

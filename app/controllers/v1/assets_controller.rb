@@ -41,8 +41,8 @@ class V1::AssetsController < V1::ApplicationController
     end
 
     asset_type = params[:type].presence || AssetConstants::AssetType::GENERAL
-    resource_model = params[:resource_model].presence
-    resource_id = params[:resource_id].presence
+    assetable_type = params[:assetable_type].presence
+    assetable_id = params[:assetable_id].presence
     duration_secs = params[:duration_secs]
 
     # Generate storage_key
@@ -70,8 +70,8 @@ class V1::AssetsController < V1::ApplicationController
       size_bytes: result[:bytes],
       duration_secs: duration_secs,
       source: AssetConstants::AssetSource::UPLOAD,
-      resource_model: resource_model,
-      resource_id: resource_id,
+      assetable_type: assetable_type,
+      assetable_id: assetable_id,
       storage_key: result[:storage_key],
       extension: result[:format] || File.extname(file.original_filename).delete("."),
     )
@@ -221,38 +221,16 @@ class V1::AssetsController < V1::ApplicationController
   end
 
   def asset_params
-    params.require(:asset).permit(:name, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :resource_model, :resource_id)
+    params.require(:asset).permit(:name, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :assetable_type, :assetable_id)
   end
 
   def determine_resource_type(file)
-    extension = File.extname(file.original_filename).delete(".").downcase
-
-    case extension
-    when "jpg", "jpeg", "png", "gif", "webp", "svg"
-      "image"
-    when "mp4", "mov", "avi", "webm", "mkv", "mp3", "wav", "m4a", "aac", "ogg", "flac"
-      "video"
-    when "pdf", "doc", "docx", "txt", "rtf"
-      "raw"
-    else
-      "auto"
-    end
+    ext = File.extname(file.original_filename).delete(".").downcase
+    AssetConstants::AssetFormat.storage_resource_type(ext)
   end
 
   def determine_asset_format(file)
-    extension = File.extname(file.original_filename).delete(".").downcase
-
-    case extension
-    when "jpg", "jpeg", "png", "gif", "webp", "svg"
-      AssetConstants::AssetFormat::IMAGE
-    when "mp3", "wav", "m4a", "aac", "ogg", "flac"
-      AssetConstants::AssetFormat::AUDIO
-    when "mp4", "mov", "avi", "webm", "mkv"
-      AssetConstants::AssetFormat::VIDEO
-    when "pdf", "doc", "docx", "txt", "rtf"
-      AssetConstants::AssetFormat::DOC
-    else
-      nil
-    end
+    ext = File.extname(file.original_filename).delete(".").downcase
+    AssetConstants::AssetFormat.from_extension(ext)
   end
 end

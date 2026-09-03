@@ -69,9 +69,9 @@ RSpec.describe Chat::Message, type: :model do
       format: "audio",
       source: "upload",
       url: "https://cdn.example.com/speech.mp3",
-      storage_key: "speech/tts/tts_of_message_#{message.id}",
-      resource_model: "chat_message",
-      resource_id: message.id
+      storage_key: "speech/tts/tts_message_#{message.id}",
+      assetable_type: "Chat::Message",
+      assetable_id: message.id
     )
 
     expect(message.assets).to contain_exactly(asset)

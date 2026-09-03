@@ -53,8 +53,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
     t.string "extension"
     t.string "format"
     t.string "name", null: false
-    t.uuid "resource_id"
-    t.string "resource_model"
+    t.uuid "assetable_id"
+    t.string "assetable_type"
     t.bigint "size_bytes"
     t.string "source", default: "upload", null: false
     t.string "storage_key"
@@ -68,7 +68,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
     t.index ["discarded_at"], name: "index_assets_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_assets_on_discarded_by_id"
     t.index ["name"], name: "index_assets_on_name"
-    t.index ["resource_model", "resource_id"], name: "index_assets_on_resource_model_and_resource_id"
+    t.index ["assetable_type", "assetable_id"], name: "index_assets_on_assetable_type_and_assetable_id"
     t.index ["type"], name: "index_assets_on_type"
     t.index ["undiscarded_by_id"], name: "index_assets_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_assets_on_updated_by_id"

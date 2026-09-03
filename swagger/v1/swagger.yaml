@@ -539,10 +539,10 @@ components:
             source:
               type: string
               nullable: true
-            resource_model:
+            assetable_type:
               type: string
               nullable: true
-            resource_id:
+            assetable_id:
               type: string
               format: uuid
               nullable: true
@@ -576,10 +576,10 @@ components:
             source:
               type: string
               nullable: true
-            resource_model:
+            assetable_type:
               type: string
               nullable: true
-            resource_id:
+            assetable_id:
               type: string
               format: uuid
               nullable: true
@@ -781,12 +781,12 @@ components:
           description:
             "Asset type: avatar, cover, card, audio, video, attachment,
             general."
-        resource_model:
+        assetable_type:
           type: string
           description:
             "Resource model name: user, course, lesson, monastery, teacher,
             message."
-        resource_id:
+        assetable_id:
           type: string
           format: uuid
           description: UUID of the linked resource.
@@ -1534,11 +1534,11 @@ components:
           enum:
             - upload
             - google
-        resource_model:
+        assetable_type:
           type: string
           nullable: true
           description: Polymorphic owner model, e.g. chat_message or user.
-        resource_id:
+        assetable_id:
           type: string
           format: uuid
           nullable: true

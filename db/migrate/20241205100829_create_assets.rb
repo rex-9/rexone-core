@@ -10,8 +10,8 @@ class CreateAssets < ActiveRecord::Migration[8.1]
       t.integer :duration_secs                                          # Duration in seconds (for audio / video)
       t.string :source, null: false, default: "upload"                  # "google", "upload", etc.
       t.string :extension                                               # File extension (e.g., "jpg", "mp3", "png")
-      t.string :resource_model                                          # Model name (e.g. "user", "course", "lesson", "teacher", "monastery", "message")
-      t.uuid :resource_id                                               # ID of the associated resource
+      t.string :assetable_type                                          # Model name (e.g. "user", "course", "lesson", "teacher", "monastery", "message")
+      t.uuid :assetable_id                                               # ID of the associated resource
 
       # ===== AUDIT =====
       t.references :created_by,
@@ -40,7 +40,7 @@ class CreateAssets < ActiveRecord::Migration[8.1]
     add_index :assets, :url, unique: true
     add_index :assets, :name
     add_index :assets, :type
-    add_index :assets, [ :resource_model, :resource_id ]
+    add_index :assets, [ :assetable_type, :assetable_id ]
     add_index :assets, :discarded_at
   end
 end

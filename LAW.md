@@ -48,9 +48,9 @@
 
 - **Rule**: NEVER add `avatar_url`, `image_url`, `video_url`, or specific media URL columns into the `users` table or any domain resource tables (`products`, `courses`, etc.).
 - ALL media is managed through the distributed centralized `assets` table:
-  - Polymorphic link: `resource_model` (e.g. `"user"`) and `resource_id` (UUID).
+  - Polymorphic link: Rails standard `assetable_type` (e.g. `"User"`) and `assetable_id` (UUID) via `belongs_to :assetable, polymorphic: true, optional: true`.
   - Metadata: `storage_key`, `type` (`AssetConstants::AssetType::*`), `format` (`AssetConstants::AssetFormat::*`), `source` (`AssetConstants::AssetSource::*`), `size_bytes`, `duration_secs`, `extension`.
-- Setting polymorphic resources (e.g., `asset.resource = user`) automatically populates `resource_model = "user"` (`record.class.model_name.singular`) and `resource_id = user.id`.
+- Owning models declare `has_many :assets, as: :assetable`. Setting `asset.assetable = user` automatically populates `assetable_type = "User"` and `assetable_id = user.id` via Rails standard polymorphic behavior.
 
 ### 2.2 Dynamic User Avatar Resolution
 

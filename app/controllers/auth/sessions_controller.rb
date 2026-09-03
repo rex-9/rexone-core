@@ -468,7 +468,7 @@ class Auth::SessionsController < Devise::SessionsController
       extension: storage_result[:format],
       size_bytes: storage_result[:bytes],
       source: AssetConstants::AssetSource::UPLOAD,
-      resource: user
+      assetable: user
     )
 
     if asset.save
@@ -483,6 +483,11 @@ class Auth::SessionsController < Devise::SessionsController
   rescue StorageService::Error => e
     Rails.logger.warn(
       "#{LOG_PREFIX} Failed to upload Google profile picture " \
+      "for user #{user.id}: #{e.message}"
+    )
+  rescue StandardError => e
+    Rails.logger.warn(
+      "#{LOG_PREFIX} Unexpected error saving Google profile picture " \
       "for user #{user.id}: #{e.message}"
     )
   end

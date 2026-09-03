@@ -314,8 +314,8 @@ module Openapi
           type: { type: :string, nullable: true },
           format: { type: :string, nullable: true },
           source: { type: :string, nullable: true },
-          resource_model: { type: :string, nullable: true },
-          resource_id: UUID.merge(nullable: true),
+          assetable_type: { type: :string, nullable: true },
+          assetable_id: UUID.merge(nullable: true),
           size_bytes: { type: :integer, nullable: true },
           duration_secs: { type: :integer, nullable: true },
           extension: { type: :string, nullable: true }
@@ -328,8 +328,8 @@ module Openapi
           type: { type: :string, nullable: true },
           format: { type: :string, nullable: true },
           source: { type: :string, nullable: true },
-          resource_model: { type: :string, nullable: true },
-          resource_id: UUID.merge(nullable: true),
+          assetable_type: { type: :string, nullable: true },
+          assetable_id: UUID.merge(nullable: true),
           size_bytes: { type: :integer, nullable: true },
           duration_secs: { type: :integer, nullable: true },
           extension: { type: :string, nullable: true }
@@ -411,11 +411,11 @@ module Openapi
           default: "general",
           description: "Asset type: avatar, cover, card, audio, video, attachment, general."
         },
-        resource_model: {
+        assetable_type: {
           type: :string,
           description: "Resource model name: user, course, lesson, monastery, teacher, message."
         },
-        resource_id: UUID.merge(description: "UUID of the linked resource."),
+        assetable_id: UUID.merge(description: "UUID of the linked resource."),
         duration_secs: { type: :integer, description: "Duration in seconds for audio / video files." },
         size_bytes: { type: :integer, description: "Exact file size in bytes." }
       ),
@@ -703,8 +703,8 @@ module Openapi
         size_bytes: { type: :integer, nullable: true },
         duration_secs: { type: :integer, nullable: true },
         source: { type: :string, enum: [ AssetConstants::AssetSource::UPLOAD, AssetConstants::AssetSource::GOOGLE ] },
-        resource_model: { type: :string, nullable: true, description: "Polymorphic owner model, e.g. chat_message or user." },
-        resource_id: UUID.merge(nullable: true),
+        assetable_type: { type: :string, nullable: true, description: "Polymorphic owner model, e.g. chat_message or user." },
+        assetable_id: UUID.merge(nullable: true),
         created_by_id: UUID.merge(nullable: true),
         created_at: DATE_TIME,
         updated_at: DATE_TIME

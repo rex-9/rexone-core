@@ -26,10 +26,7 @@ module Chat
     store_accessor :metadata, :tts_status, :tts_error
 
     belongs_to :room, class_name: "Chat::Room"
-    has_many :assets,
-             -> { where("LOWER(resource_model) = 'chat_message'") },
-             foreign_key: :resource_id,
-             dependent: :nullify
+    has_many :assets, as: :assetable, dependent: :nullify
 
     validates :role, presence: true, inclusion: { in: [ AiConstants::ChatRole::USER, AiConstants::ChatRole::ASSISTANT ] }
     validates :content, presence: true

@@ -2,8 +2,8 @@
 
 module AssetConstants
   module AssetName
-    GOOGLE_PROFILE_PREFIX = "profile_google_of_user_".freeze
-    TTS_MESSAGE_PREFIX = "tts_of_message_".freeze
+    GOOGLE_PROFILE_PREFIX = "google_avatar_user_".freeze
+    TTS_MESSAGE_PREFIX = "tts_message_".freeze
 
     def self.google_profile(user_id)
       "#{GOOGLE_PROFILE_PREFIX}#{user_id}".freeze

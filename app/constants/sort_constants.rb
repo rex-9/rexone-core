@@ -17,5 +17,6 @@ module SortConstants
     FEEDBACK    = %w[created_at user_name rating].freeze
     CLIENT_LOG  = %w[created_at occurrence_count resolved_at].freeze
     NOTIF       = %w[created_at event].freeze
+    ASSET       = %w[created_at name type format size_bytes duration_secs source discarded_at].freeze
   end
 end

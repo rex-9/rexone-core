@@ -32,12 +32,16 @@ RSpec.describe Asset, type: :model do
     unclassified.validate
     expect(unclassified.format).to be_nil
     expect(unclassified.extension).to eq("bin")
+
+    google_avatar = build(:asset, source: "google", storage_key: nil, type: "avatar", url: "https://lh3.googleusercontent.com/a/ACg8ocIHfd-mGmXDQx6BD6yEsOVzIi0BaV7GKqzL9XDRTWQNK7pAFfA=s96-c", format: nil, extension: nil)
+    google_avatar.validate
+    expect(google_avatar).to have_attributes(extension: nil, format: "image")
   end
 
   it "prefers an uploaded profile picture over a Google picture" do
     user = create(:user)
-    create(:asset, source: "google", storage_key: nil, resource_model: "user", resource_id: user.id, type: "avatar", url: "https://example.com/google.jpg")
-    uploaded = create(:asset, resource_model: "user", resource_id: user.id, type: "avatar", url: "https://example.com/upload.jpg")
+    create(:asset, source: "google", storage_key: nil, assetable_type: "User", assetable_id: user.id, type: "avatar", url: "https://example.com/google.jpg")
+    uploaded = create(:asset, assetable_type: "User", assetable_id: user.id, type: "avatar", url: "https://example.com/upload.jpg")
     expect(user.get_profile_pic_url).to eq(uploaded.url)
   end
 

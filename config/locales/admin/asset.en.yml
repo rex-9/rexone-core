@@ -1,0 +1,17 @@
+en:
+  admin:
+    asset:
+      assets_retrieved: "Assets retrieved successfully."
+      asset_retrieved: "Asset retrieved successfully."
+      asset_uploaded: "Asset uploaded successfully."
+      asset_updated: "Asset updated successfully."
+      asset_discarded: "Asset discarded successfully."
+      asset_restored: "Asset restored successfully."
+      asset_deleted: "Asset permanently deleted."
+      discarded_assets_retrieved: "Discarded assets retrieved successfully."
+      not_found: "Asset not found."
+      no_file_uploaded: "No file uploaded."
+      file_required: "File is required."
+      save_failed: "Failed to save asset."
+      storage_upload_failed: "Storage upload failed."
+      update_failed: "Failed to update asset."

@@ -17,8 +17,8 @@ class AssetDashboard < Administrate::BaseDashboard
     name: Field::String,
     url: Field::String,
     storage_key: Field::String,
-    resource_model: Field::String,
-    resource_id: Field::String,
+    assetable_type: Field::String,
+    assetable_id: Field::String,
     resource: Field::Polymorphic,
     created_by_id: Field::String,
     creator: Field::BelongsTo,
@@ -39,7 +39,7 @@ class AssetDashboard < Administrate::BaseDashboard
     type
     format
     name
-    resource_model
+    assetable_type
   ].freeze
 
   SHOW_PAGE_ATTRIBUTES = %i[
@@ -53,8 +53,8 @@ class AssetDashboard < Administrate::BaseDashboard
     name
     url
     storage_key
-    resource_model
-    resource_id
+    assetable_type
+    assetable_id
     creator
     updater
     discarded_at
@@ -73,8 +73,8 @@ class AssetDashboard < Administrate::BaseDashboard
     name
     url
     storage_key
-    resource_model
-    resource_id
+    assetable_type
+    assetable_id
   ].freeze
 
   # COLLECTION_FILTERS

@@ -1,5 +1,5 @@
 class GoogleAuthService
-  TIMEOUT = 5
+  TIMEOUT = 10
 
   def self.fetch_user_info(token)
     return nil if token.blank?

@@ -33,14 +33,14 @@ RSpec.describe "Asset uploads", type: :request do
     )
 
     expect do
-      post "/v1/media/upload", params: { file: file, type: "avatar", resource_model: "user", resource_id: user.id }, headers: headers
+      post "/v1/media/upload", params: { file: file, type: "avatar", assetable_type: "user", assetable_id: user.id }, headers: headers
     end.to change(Asset, :count).by(1)
 
     expect(response).to have_http_status(:created)
     expect(Asset.last).to have_attributes(
       created_by_id: user.id,
-      resource_model: "user",
-      resource_id: user.id,
+      assetable_type: "user",
+      assetable_id: user.id,
       type: "avatar",
       storage_key: "profile/avatar",
       format: "image",
