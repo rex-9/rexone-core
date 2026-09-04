@@ -24,6 +24,12 @@ module MessageService
       COMPRESSION_OPTIMAL = "admin.asset.compression_optimal".freeze
       COMPRESSION_ALREADY_OPTIMAL = "admin.asset.compression_already_optimal".freeze
       FILE_SIZE_EXCEEDED = "admin.asset.file_size_exceeded".freeze
+      STORAGE_STATS_RETRIEVED = "admin.asset.storage_stats_retrieved".freeze
+      RECYCLE_BIN_EMPTIED = "admin.asset.recycle_bin_emptied".freeze
+      BATCH_DISCARDED = "admin.asset.batch_discarded".freeze
+      BATCH_RESTORED = "admin.asset.batch_restored".freeze
+      BATCH_DELETED = "admin.asset.batch_deleted".freeze
+      NO_ASSETS_SELECTED = "admin.asset.no_assets_selected".freeze
     end
   end
 end

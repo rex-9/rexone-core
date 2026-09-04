@@ -127,7 +127,7 @@ RSpec.describe "Google authentication", type: :request do
       expect(user).to be_confirmed
       expect(user).to have_attributes(username: "new_user", provider: "google")
       expect(user.assets.find_by(type: AssetConstants::AssetType::AVATAR)).to have_attributes(
-        name: AssetConstants::AssetName.google_profile(user.id),
+        name: a_string_starting_with("users/#{user.id}/avatar_google_"),
         url: "https://example.com/avatar.jpg",
         format: AssetConstants::AssetFormat::IMAGE,
         source: AssetConstants::AssetSource::GOOGLE

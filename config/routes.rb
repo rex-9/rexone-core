@@ -127,6 +127,11 @@ Rails.application.routes.draw do
         collection do
           get :read_discarded, path: "discarded"
           post :create_upload, path: "upload"
+          get :read_storage_stats, path: "storage_stats"
+          delete :destroy_bin, path: "bin"
+          post :discard_batch
+          post :undiscard_batch
+          post :destroy_batch
         end
         member do
           post :discard

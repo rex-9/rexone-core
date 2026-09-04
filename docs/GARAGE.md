@@ -108,6 +108,8 @@ S3_BUCKET=rexone
 S3_REGION=garage
 S3_ACCESS_KEY=GKxxxxxxxxxxxxxxxxxxxxxxxx
 S3_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+S3_ADMIN_ENDPOINT=http://garage:3101
+S3_ADMIN_TOKEN=rexone_garage_admin_token_secret_key_xxxxx
 ```
 
 ---
@@ -147,7 +149,9 @@ For browsing object storage, viewing thumbnails, and inspecting bucket hierarchi
 Cyberduck is a free, native graphical file browser for S3 on macOS.
 
 ##### Method A: One-Click Profile (Instant Setup)
+
 We have included a pre-configured profile at [`docs/Garage_Local.cyberduckprofile`](Garage_Local.cyberduckprofile):
+
 1. Double-click **`docs/Garage_Local.cyberduckprofile`** in Finder.
 2. Cyberduck will open with **Server (`localhost`)**, **Port (`3100`)**, and **Path (`/rexone`)** automatically configured over HTTP.
 3. Paste your credentials:
@@ -156,15 +160,17 @@ We have included a pre-configured profile at [`docs/Garage_Local.cyberduckprofil
 4. Click **Connect** (or Save Bookmark).
 
 ##### Method B: Manual Connection
+
 1. Open Cyberduck and click **Open Connection** (`Cmd + O`).
-2. Protocol dropdown: Select **S3 (HTTP)**.  
-   *(Note: If only "Amazon S3" appears, it forces port 443/TLS. Use the profile file from Method A or download the official [Cyberduck S3 (HTTP) Profile](https://docs.cyberduck.io/s3/)).*
+2. Protocol dropdown: Select **S3 (HTTP)**.
+   _(Note: If only "Amazon S3" appears, it forces port 443/TLS. Use the profile file from Method A or download the official [Cyberduck S3 (HTTP) Profile](https://docs.cyberduck.io/s3/))._
 3. Set **Server**: `localhost` | **Port**: `3100`.
 4. Enter **Access Key ID** (`S3_ACCESS_KEY`) and **Secret Access Key** (`S3_SECRET_KEY`).
-5. Expand *More Options*, set **Region**: `garage` and **Path**: `/rexone`.
+5. Expand _More Options_, set **Region**: `garage` and **Path**: `/rexone`.
 6. Click **Connect**. You can now view all files, download, drag-and-drop upload, and organize buckets visually.
 
 #### 3. WinSCP / FileZilla Pro
+
 - Use the **Amazon S3** protocol pointing to `http://localhost:3100` with path-style requests enabled.
 
 ---
@@ -209,6 +215,7 @@ All commands can be executed via `docker exec`:
 Here are the real-world issues you may encounter when setting up and running Garage, along with their root causes and resolutions.
 
 ### 🔴 Problem 1: `403 Forbidden` / `AccessDenied: Forbidden: Garage does not support anonymous access yet`
+
 - **Symptom**: Opening a direct asset URL in the browser (e.g. `http://localhost:3100/rexone/my-image.png`) or loading an `<img>` element returns an XML error with `<Code>AccessDenied</Code>` and `<Message>Forbidden: Garage does not support anonymous access yet</Message>`.
 - **Root Cause**: Garage's S3 API (`[s3_api]` on port 3100) is private by default. It requires AWS SigV4 authentication on every request and intentionally rejects unauthenticated/anonymous HTTP `GET` requests.
 - **Solution**:
@@ -217,6 +224,7 @@ Here are the real-world issues you may encounter when setting up and running Gar
   - `AssetSerializer` and `Asset#storage_url` generate fully signed URLs (`?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...&X-Amz-Signature=...`) that web browsers, mobile apps, and video players can access seamlessly.
 
 ### 🔴 Problem 2: `Errno::ECONNREFUSED` on `localhost:3100` Inside Background Workers
+
 - **Symptom**: Background jobs (`Media::CompressImageJob` or `Media::CompressVideoJob`) fail with `Failed to open TCP connection to localhost:3100 (Connection refused - connect(2) for "localhost" port 3100)`.
 - **Root Cause**: Inside a Docker container (`media` or `waka`), `localhost:3100` resolves to the worker container itself where no Garage daemon is running.
 - **Solution**:
@@ -224,6 +232,7 @@ Here are the real-world issues you may encounter when setting up and running Gar
   - Always use `StorageService::Client.download(asset.storage_key, local_path)` instead of HTTP loopback calls (`URI.open(asset.url)`). `StorageService::Garage#download` streams objects directly from `@client.get_object` across the Docker network without relying on host port forwarding.
 
 ### 🔴 Problem 3: `curl -I` Returns 403 Forbidden on a Working Presigned URL
+
 - **Symptom**: When testing a presigned URL using `curl -I "http://localhost:3100/rexone/..."`, Garage returns `403 Forbidden`, but pasting the exact same URL into a web browser tab returns `200 OK` and loads the image.
 - **Root Cause**: Presigned URLs are cryptographically bound to the HTTP method they were generated for (`:get_object` signs `GET`). The `curl -I` command sends a `HEAD` request, which produces a signature mismatch in AWS SigV4 validation.
 - **Solution**:
@@ -234,6 +243,7 @@ Here are the real-world issues you may encounter when setting up and running Gar
   - This outputs the HTTP headers (`HTTP/1.1 200 OK`) and discards the binary body, verifying the `GET` signature accurately.
 
 ### 🔴 Problem 4: Garage Container Exits with `IO error: No such file or directory (os error 2)`
+
 - **Symptom**: Running `docker compose up garage` exits immediately with status code 1 and logs `Error: IO error: No such file or directory (os error 2)`.
 - **Root Cause**: Garage cannot locate its configuration file at `/etc/garage.toml` or the meta/data volume directories.
 - **Solution**:
@@ -248,12 +258,14 @@ Here are the real-world issues you may encounter when setting up and running Gar
   - Use `./scripts/dev_garage.sh`, which verifies these prerequisites before launching the container.
 
 ### 🔴 Problem 5: Port 5000 / 5001 Binding Conflicts on macOS
+
 - **Symptom**: Starting Garage on port 5000 fails because the port is already in use by a macOS system process (`ControlCenter`).
 - **Root Cause**: macOS Monterey and newer bind port 5000 to the system **AirPlay Receiver**.
 - **Solution**:
   - Rexone Core intentionally configures Garage on ports **`3100`** (S3 API) and **`3101`** (Admin API), avoiding any macOS AirPlay conflicts without requiring changes to macOS system settings.
 
 ### 🔴 Problem 6: Cyberduck Error: `Failed to parse XML document with handler class org.jets3t.service.impl.rest.XmlResponsesSaxParser$ListBucketHandler`
+
 - **Symptom**: Connecting to Garage via Cyberduck displays the error dialog:
   `Failed to parse XML document with handler class org.jets3t.service.impl.rest.XmlResponsesSaxParser$ListBucketHandler. Please contact your web hosting service provider for assistance.`
 - **Root Cause**:
@@ -313,30 +325,35 @@ rexone/
 ```
 
 ### 1. Short Scope Prefixes: `admin/` vs `users/`
+
 - Avoid redundant suffixes like `_uploads` (e.g. `admin_uploads/`, `user_uploads/`). In object storage, all stored objects are uploaded assets.
 - **`admin/`**: Holds platform-wide assets, system logos, marketing hero banners, static email templates, and admin catalog files.
 - **`users/`**: Scoped container for all end-user content.
 
 ### 2. User Subfolders: `users/{user_id}/` (The Gold Standard)
+
 Partitioning user assets by `users/{user_id}/` provides critical production advantages:
+
 - **GDPR / Account Deletion ("Right to be Forgotten")**: When a user deletes their account, purging all their files is a single atomic S3 prefix deletion (`delete_objects` with prefix `users/{user_id}/`).
 - **Quota Tracking & Billing**: Calculating a user's total storage consumption requires only a single S3 query: sum the `size` of all objects with prefix `users/{user_id}/`.
 - **Zero Collision Risk**: Multiple users can upload `photo.jpg` simultaneously without name collision.
 - **Intuitive GUI Browsing**: In Cyberduck or S3 browsers, you see organized per-user folders rather than tens of thousands of loose files in a single flat directory.
 
 ### 3. Put `type` in the Filename, NOT as a Subfolder
+
 **Why avoid `users/{user_id}/{type}/` subfolders?**
+
 - **Types are Mutable**: An asset's `type` often evolves over time (e.g., from `general` to `avatar`, or from `attachment` to `document`).
 - **Moving Files in S3 is Costly**: Object storage does not have a native "rename" or "move" operation. Moving a file requires `CopyObject` (copying the entire byte stream) + `DeleteObject` (deleting the old key). This invalidates cached presigned URLs, introduces race conditions, and requires updating database references.
 - **Folder Proliferation**: Most users only upload 1–3 files (e.g. 1 avatar). Creating separate subfolders (`/avatar/`, `/audio/`, `/document/`, `/general/`) for every user creates excessive empty folders and navigation friction in S3 GUIs.
 
 **Recommended Filename Pattern:**
-`users/{user_id}/{type}_{sanitized_basename}_{timestamp}.{ext}`  
-and for admins:  
+`users/{user_id}/{type}_{sanitized_basename}_{timestamp}.{ext}`
+and for admins:
 `admin/{type}_{sanitized_basename}_{timestamp}.{ext}`
 
-- **Database Column (`Asset#type`)**: Remains the single source of truth for queries, filtering, authorization, and UI grouping.
-- **S3 Storage Key**: Remains a permanent, immutable pointer that never needs to be moved or copied if the asset type is reclassified in Rails.
+- **Database Column (`Asset#type`)**: Single source of truth for queries, filtering, authorization, and UI grouping.
+- **S3 Storage Key In-Place Rename**: When an admin reclassifies an asset's `type` via the Admin Portal, the backend renames the object in-place (`StorageService::Client.move(old_key, new_key)`) using Garage's metadata copy + delete, updating the key and URL without leaving orphan files.
 - **File Extension (`.png`, `.mp4`)**: Always retain the true file extension in the key so Cyberduck, browsers, and CDNs immediately recognize the MIME type and render native thumbnail previews.
 
 ---
@@ -344,7 +361,9 @@ and for admins:
 ## 10. Monitoring Disk Capacity & Automated Backups
 
 ### Does Garage take up VPS storage?
+
 **Yes.** All uploaded media, video streams, user avatars, and metadata chunks are physically stored inside Docker named volumes on your VPS disk:
+
 - `rexone-core_garage-data`: Content-addressed immutable data blocks.
 - `rexone-core_garage-meta`: SQLite database files, indexes, and write-ahead logs.
 
@@ -353,38 +372,58 @@ and for admins:
 ### How to Check Used & Available Space
 
 #### 1. Garage Node Status & Free VPS Disk (Fastest)
+
 ```bash
 docker exec dev-rexone-core-garage /garage status
 ```
+
 Output:
+
 ```text
 ==== HEALTHY NODES ====
 ID                Hostname      Address          Tags  Zone  Capacity   DataAvail
 87134ce57f61018a  6f32e77d686f  172.19.0.6:3901  []    dc1   1000.0 MB  53.9 GB (85.9%)
 ```
+
 - **`DataAvail`**: The actual free disk space remaining on your VPS host drive (e.g. `53.9 GB`).
 - **`Capacity`**: Logical maximum assigned to this node.
 
 #### 2. Bucket Object Count & Byte Size
+
 ```bash
 docker exec dev-rexone-core-garage /garage bucket info rexone
 ```
+
 Output:
+
 ```text
 Size: 168.9 kiB (173.0 KB)
 Objects: 3
 ```
 
 #### 3. Docker Volume Physical Size
+
 ```bash
 docker system df -v | grep garage
 ```
 
 #### 4. Total VPS Host Disk Space
+
 ```bash
 df -h /
 ```
-When `df -h /` shows $> 80\%$ usage, upgrade or resize your VPS block storage volume in your hosting provider console (e.g. Hetzner, DigitalOcean, AWS, Linode).
+
+When `df -h /` shows $> 80\%$ usage, upgrade or resize your VPS block storage volume in your hosting provider console (e.g. Contabo, Hetzner, DigitalOcean).
+
+#### 5. Live Admin Asset Control Center Widget
+
+In `rexone-web` at `/admin/assets`, administrators can monitor storage metrics directly from the browser without logging into SSH:
+
+- **Garage Occupied Storage**: Live bucket bytes and object count.
+- **VPS Host Disk Space**: Live available disk space, total capacity, and used percentage progress bar.
+- **Low Disk Alert**: Automatic warning banner when host free disk space drops below 15%.
+- **Active Database Records**: Active asset record count and tracked bytes.
+- **Live Refresh**: Instant re-fetch querying `GET /v1/admin/assets/storage_stats`.
 
 ---
 
@@ -400,21 +439,19 @@ When `df -h /` shows $> 80\%$ usage, upgrade or resize your VPS block storage vo
 
 For catastrophic disaster recovery (VPS hardware failure, disk corruption, accidental server deletion), use the built-in backup scripts in `scripts/`:
 
-| Script | Function | Target |
-|:-------|:---------|:-------|
-| **`./scripts/backup_all.sh`** | Runs full unified backup | Both DB & Garage |
-| **`./scripts/backup_db.sh`** | Dumps PostgreSQL (`pg_dump`) | `backups/db/rexone_core_*.sql.gz` |
+| Script                           | Function                                    | Target                                  |
+| :------------------------------- | :------------------------------------------ | :-------------------------------------- |
+| **`./scripts/backup_all.sh`**    | Runs full unified backup                    | Both DB & Garage                        |
+| **`./scripts/backup_db.sh`**     | Dumps PostgreSQL (`pg_dump`)                | `backups/db/rexone_core_*.sql.gz`       |
 | **`./scripts/backup_garage.sh`** | Takes live meta snapshot & tarballs volumes | `backups/garage/garage_backup_*.tar.gz` |
 
 - **Automatic Pruning**: Retains backups for 7 days by default (`RETENTION_DAYS=7`).
 - **Zero Lock-In**: Backups are written to the local `./backups/` directory (git-ignored).
 
 #### Setting Up a Daily Cron Job on the VPS
+
 Add this single cron line to your VPS (`crontab -e`) to back up everything automatically every night at 3:00 AM:
 
 ```bash
 0 3 * * * cd /path/to/rexone-core && ./scripts/backup_all.sh >> /var/log/rexone_backup.log 2>&1
 ```
-
-
-

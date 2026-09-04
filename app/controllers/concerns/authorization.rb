@@ -44,7 +44,7 @@ module Authorization
       :read
     when /\Aupdate_/, /\Aedit\z/
       :update
-    when /\Adelete_/, /\Adestroy\z/, /\Adiscard\z/, /\Adiscarded\z/, /\Aundiscard\z/, /\Aundiscarded\z/
+    when /\Adestroy/, /\Adestroy_/, /\Adiscard/, /\Adiscard_/, /\Aundiscard/, /\Aundiscard_/
       :delete
     when "create", "read", "update", "delete"
       action.to_sym

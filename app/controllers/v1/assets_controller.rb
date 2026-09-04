@@ -64,16 +64,12 @@ class V1::AssetsController < V1::ApplicationController
     duration_secs = params[:duration_secs]
 
     # Generate storage_key
-    storage_key = "#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}_#{Time.now.to_i}"
-
-    folder_prefix = params[:folder].presence || "user_uploads"
-    folder = folder_prefix.end_with?("/#{asset_type}") ? folder_prefix : "#{folder_prefix}/#{asset_type}"
+    storage_key = AssetConstants::AssetName.for_user(user_id: current_user.id, type: asset_type, original_filename: file.original_filename)
 
     # Upload to storage service
     result = StorageService::Client.upload(
       file,
       storage_key: storage_key,
-      folder: folder,
       resource_type: determine_resource_type(file),
       metadata: {
         user_id: current_user.id.to_s,
@@ -118,7 +114,7 @@ class V1::AssetsController < V1::ApplicationController
         }
       )
     else
-      StorageService::Client.delete_later(
+      StorageService::Client.delete(
         result[:storage_key],
         resource_type: result[:resource_type]
       )

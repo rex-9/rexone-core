@@ -66,15 +66,11 @@ class V1::Admin::AssetsController < V1::ApplicationController
     assetable_id = params[:assetable_id].presence
     duration_secs = params[:duration_secs]
 
-    folder_prefix = params[:folder].presence || "admin_uploads"
-    folder = folder_prefix.end_with?("/#{asset_type}") ? folder_prefix : "#{folder_prefix}/#{asset_type}"
-
-    storage_key = "#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}_#{Time.now.to_i}"
+    storage_key = AssetConstants::AssetName.for_admin(type: asset_type, original_filename: file.original_filename)
 
     result = StorageService::Client.upload(
       file,
       storage_key: storage_key,
-      folder: folder,
       resource_type: determine_resource_type(file),
       metadata: {
         user_id: current_user.id.to_s,
@@ -114,7 +110,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
         }
       )
     else
-      StorageService::Client.delete_later(
+      StorageService::Client.delete(
         result[:storage_key],
         resource_type: result[:resource_type]
       )
@@ -135,7 +131,44 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
   # PUT /v1/admin/assets/:id
   def update
-    if @asset.update(admin_asset_params)
+    new_type = params.dig(:asset, :type).presence
+    client_name = params.dig(:asset, :name).to_s.strip
+    old_storage_key = @asset.storage_key
+    old_name = @asset.name
+    new_storage_key = nil
+
+    if new_type.present? && new_type != @asset.type && @asset.uploaded_file? && @asset.storage_key.present?
+      new_storage_key = AssetConstants::AssetName.rename_type(@asset.storage_key, new_type, @asset.created_by_id)
+      if new_storage_key != @asset.storage_key
+        Rails.logger.info("[AssetsController] Renaming storage object: #{@asset.storage_key} -> #{new_storage_key}")
+        StorageService::Client.move(@asset.storage_key, new_storage_key)
+        @asset.storage_key = new_storage_key
+        @asset.url = StorageService::Client.url(new_storage_key)
+        @asset.name = new_storage_key
+      end
+    end
+
+    update_params = admin_asset_params
+    if new_storage_key.present?
+      if client_name.blank? ||
+         client_name == old_name ||
+         client_name == old_storage_key ||
+         client_name == new_storage_key ||
+         client_name == AssetConstants::AssetName.rename_type(old_name, new_type, @asset.created_by_id)
+        update_params = update_params.merge(name: new_storage_key)
+      else
+        update_params = update_params.merge(name: AssetConstants::AssetName.rename_type(client_name, new_type, @asset.created_by_id))
+      end
+    elsif new_type.present? && new_type == @asset.type && @asset.storage_key.present?
+      expected_name = AssetConstants::AssetName.rename_type(client_name, @asset.type, @asset.created_by_id)
+      if expected_name != client_name
+        update_params = update_params.merge(name: expected_name)
+      elsif @asset.name != @asset.storage_key && (@asset.name == old_storage_key || client_name == old_name)
+        update_params = update_params.merge(name: @asset.storage_key)
+      end
+    end
+
+    if @asset.update(update_params)
       render_json_response(
         status_code: 200,
         message: admin_asset_message(MessageService::Admin::Asset::ASSET_UPDATED),
@@ -150,6 +183,13 @@ class V1::Admin::AssetsController < V1::ApplicationController
         error: @asset.errors.full_messages.to_sentence
       )
     end
+  rescue StorageService::Error => e
+    Rails.logger.error("[AssetsController] Failed to rename storage object: #{e.message}")
+    render_json_response(
+      status_code: 500,
+      message: admin_asset_message(MessageService::Admin::Asset::UPDATE_FAILED),
+      error: e.message
+    )
   end
 
   # POST /v1/admin/assets/:id/discard
@@ -193,6 +233,24 @@ class V1::Admin::AssetsController < V1::ApplicationController
     )
   end
 
+  # GET /v1/admin/assets/storage_stats
+  def read_storage_stats
+    stats = StorageService::Client.storage_stats
+    db_count = Asset.kept.count
+    db_bytes = Asset.kept.sum(:size_bytes)
+
+    render_json_response(
+      status_code: 200,
+      message: admin_asset_message(MessageService::Admin::Asset::STORAGE_STATS_RETRIEVED),
+      data: {
+        stats: stats.merge(
+          db_assets_count: db_count,
+          db_assets_bytes: db_bytes
+        )
+      }
+    )
+  end
+
   # DELETE /v1/admin/assets/:id
   def destroy
     @asset.destroy!
@@ -206,6 +264,92 @@ class V1::Admin::AssetsController < V1::ApplicationController
       status_code: 422,
       message: admin_asset_message(MessageService::Admin::Asset::ASSET_DELETED),
       error: e.message
+    )
+  end
+
+  # DELETE /v1/admin/assets/bin
+  def destroy_bin
+    scope = Asset.with_discarded.discarded
+    count = scope.count
+    Asset.purge_and_destroy_all!(scope)
+
+    render_json_response(
+      status_code: 200,
+      message: admin_asset_message(MessageService::Admin::Asset::RECYCLE_BIN_EMPTIED, count: count),
+      data: { count: count }
+    )
+  end
+
+  # POST /v1/admin/assets/discard_batch
+  def discard_batch
+    ids = Array(params[:ids]).compact_blank
+    if ids.blank?
+      render_json_response(
+        status_code: 422,
+        message: admin_asset_message(MessageService::Admin::Asset::NO_ASSETS_SELECTED),
+        error: admin_asset_message(MessageService::Admin::Asset::NO_ASSETS_SELECTED)
+      )
+      return
+    end
+
+    scope = Asset.kept.where(id: ids)
+    count = 0
+    scope.find_each do |asset|
+      count += 1 if asset.discard
+    end
+
+    render_json_response(
+      status_code: 200,
+      message: admin_asset_message(MessageService::Admin::Asset::BATCH_DISCARDED, count: count),
+      data: { count: count }
+    )
+  end
+
+  # POST /v1/admin/assets/undiscard_batch
+  def undiscard_batch
+    ids = Array(params[:ids]).compact_blank
+    if ids.blank?
+      render_json_response(
+        status_code: 422,
+        message: admin_asset_message(MessageService::Admin::Asset::NO_ASSETS_SELECTED),
+        error: admin_asset_message(MessageService::Admin::Asset::NO_ASSETS_SELECTED)
+      )
+      return
+    end
+
+    scope = Asset.with_discarded.discarded.where(id: ids)
+    count = 0
+    scope.find_each do |asset|
+      count += 1 if asset.undiscard
+    end
+
+    render_json_response(
+      status_code: 200,
+      message: admin_asset_message(MessageService::Admin::Asset::BATCH_RESTORED, count: count),
+      data: { count: count }
+    )
+  end
+
+  # POST /v1/admin/assets/destroy_batch
+  def destroy_batch
+    ids = Array(params[:ids]).compact_blank
+    if ids.blank?
+      render_json_response(
+        status_code: 422,
+        message: admin_asset_message(MessageService::Admin::Asset::NO_ASSETS_SELECTED),
+        error: admin_asset_message(MessageService::Admin::Asset::NO_ASSETS_SELECTED)
+      )
+      return
+    end
+
+    scope = Asset.with_discarded.where(id: ids)
+    count = scope.count
+    Asset.purge_and_destroy_all!(scope)
+
+    render_json_response(
+      status_code: 200,
+      message: admin_asset_message(MessageService::Admin::Asset::BATCH_DELETED, count: count),
+      data: { count: count }
     )
   end
 

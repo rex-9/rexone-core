@@ -48,7 +48,7 @@ RSpec.describe "Asset uploads", type: :request do
     )
     expect(StorageService::Client).to have_received(:upload).with(
       kind_of(ActionDispatch::Http::UploadedFile),
-      hash_including(folder: "user_uploads/avatar", resource_type: "image")
+      hash_including(resource_type: "image", storage_key: a_string_matching(/\Ausers\/#{user.id}\/avatar_/))
     )
   end
 
@@ -65,19 +65,19 @@ RSpec.describe "Asset uploads", type: :request do
     expect(StorageService::Client).to have_received(:upload).with(anything, hash_including(resource_type: "raw"))
   end
 
-  it "queues remote cleanup when the uploaded result cannot be saved" do
+  it "cleans up remote storage when the uploaded result cannot be saved" do
     existing = create(:asset, url: "https://cdn.example.com/taken.png")
     allow(StorageService::Client).to receive(:upload).and_return(
       storage_key: "profile/new", url: existing.url, bytes: 11, format: "png", resource_type: "image"
     )
-    allow(StorageService::Client).to receive(:delete_later)
+    allow(StorageService::Client).to receive(:delete)
 
     expect do
       post "/v1/media/upload", params: { file: file }, headers: headers
     end.not_to change(Asset, :count)
 
     expect(response).to have_http_status(:unprocessable_content)
-    expect(StorageService::Client).to have_received(:delete_later).with("profile/new", resource_type: "image")
+    expect(StorageService::Client).to have_received(:delete).with("profile/new", resource_type: "image")
   end
 
   it "returns a server error without persisting when storage fails" do

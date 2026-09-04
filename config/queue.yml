@@ -9,7 +9,7 @@ default: &default
 development:
   <<: *default
   workers: # idle worker checks ready queue & execute (excludes :media which is handled by media container)
-    - queues: "default,payments,notifications,storage,ai"
+    - queues: "default,payments,notifications,ai"
       threads: 3
       polling_interval: 0.5 # 2 checks per second
 
@@ -33,11 +33,6 @@ production:
     - queues: "notifications"
       threads: 3
       polling_interval: 0.5
-
-    # Storage uploads, deletion
-    - queues: "storage"
-      threads: 2
-      polling_interval: 1
 
     # AI
     - queues: "ai"

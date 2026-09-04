@@ -44,32 +44,32 @@ RSpec.describe Asset, type: :model do
     expect(user.get_avatar_url).to eq(avatar.url)
   end
 
-  it "queues storage deletion after an uploaded record commits" do
+  it "deletes from storage after an uploaded record commits" do
     asset = create(:asset)
-    allow(StorageService::Client).to receive(:delete_later)
+    allow(StorageService::Client).to receive(:delete)
 
     asset.destroy!
 
-    expect(StorageService::Client).to have_received(:delete_later).with(
+    expect(StorageService::Client).to have_received(:delete).with(
       asset.storage_key,
       resource_type: "image"
     )
   end
 
-  it "does not queue deletion for Google assets" do
+  it "does not trigger deletion for Google assets" do
     asset = create(:asset, source: "google", storage_key: nil)
-    allow(StorageService::Client).to receive(:delete_later)
+    allow(StorageService::Client).to receive(:delete)
     asset.destroy!
-    expect(StorageService::Client).not_to have_received(:delete_later)
+    expect(StorageService::Client).not_to have_received(:delete)
   end
 
   it "purges from storage and destroys records via Asset.purge_and_destroy_all!" do
     asset = create(:asset, storage_key: "custom/key_123")
-    allow(StorageService::Client).to receive(:delete_later)
+    allow(StorageService::Client).to receive(:delete)
 
     Asset.purge_and_destroy_all!(Asset.where(id: asset.id))
 
-    expect(StorageService::Client).to have_received(:delete_later).with(
+    expect(StorageService::Client).to have_received(:delete).with(
       "custom/key_123",
       resource_type: "image"
     )

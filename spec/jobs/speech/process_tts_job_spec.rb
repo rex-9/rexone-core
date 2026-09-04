@@ -21,6 +21,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
       bytes: 12345,
       format: "mp3"
     )
+    allow(StorageService::Client).to receive(:url).and_return("https://cdn.example.com/speech.mp3")
 
     expect { described_class.perform_now(message.id) }.to change(Asset, :count).by(1)
 

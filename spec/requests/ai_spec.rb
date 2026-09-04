@@ -66,6 +66,7 @@ RSpec.describe "Queued AI chat", type: :request do
   end
 
   it "returns TTS assets on room history messages" do
+    allow(StorageService::Client).to receive(:url).and_return("https://cdn.example.com/speech.mp3")
     assistant_message = create(:chat_message, room: room, role: "assistant", content: "Hello there")
     create(
       :asset,

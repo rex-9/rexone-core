@@ -160,7 +160,7 @@ The `/v1/admin/` namespace provides comprehensive management capabilities protec
 - **IAM Management**: `GET/PATCH/DELETE /v1/admin/iam/roles` and `GET/POST/PATCH/DELETE /v1/admin/iam/permissions` (auto-named).
 - **Chat Moderation**: `GET/PATCH/DELETE /v1/admin/chat/rooms` and `/messages`.
 - **Product Management**: `GET/POST/PATCH/DELETE /v1/admin/payment/products` (Stripe sync, discard/undiscard).
-- **Asset Management**: `GET/PUT/DELETE /v1/admin/assets` (CRUD + upload + discard/undiscard/destroy, search, filter by type/format/source, real-time ActionCable compression status updates, secondary compression pass trigger with 2-pass safeguard).
+- **Asset Management**: `GET/PUT/DELETE /v1/admin/assets` (CRUD + upload + discard/undiscard/destroy, search, filter by type/format/source, dynamic in-place S3 rename on type update, `GET /v1/admin/assets/storage_stats` for Garage bucket & VPS disk metrics, real-time ActionCable compression status updates, secondary compression pass trigger with 2-pass safeguard).
 - **Notification Broadcasts**: `GET /v1/admin/notifications/templates` and `POST /v1/admin/notifications` (audience targeting via roles/users/all, multi-channel fanout).
 
 ---
@@ -192,7 +192,7 @@ Defined under `src/design/`:
 - **Commerce & Stripe**: Fetches products, triggers Checkout Session (`/v1/payment/session`), redirects to Stripe, handles success/cancel redirects, manages active subscriptions and transactions, and provides modal confirmation for cancellations.
 - **AI Workspace**: Non-blocking queued chat. Submits message, displays thinking state, receives completion or event over WebSocket (`useAiSocket`), auto-refreshes room history. Includes utilities for translation, summarization, and sentiment analysis.
 - **Speech & Audio**: Plays raw binary MP3 audio streams directly from `/v1/speech/tts` without base64 wrapper overhead, handles chat message TTS audio playback, and integrates live audio recognition.
-- **Asset Control Center**: Dedicated operational asset management under `/admin/assets`. Features a multi-file bulk upload dialog with optimistic row prepending, out-of-order socket reconciliation (`pendingSocketUpdates`), real-time compression badges (`optimal`, `ready`, `processing`, `pending`), disabled action buttons during in-flight processing, and manual secondary compression pass triggers.
+- **Asset Control Center**: Dedicated operational asset management under `/admin/assets`. Features a live Storage & VPS Capacity dashboard (`AdminAssetStorageStats`) showing real-time Garage bucket occupied space, object count, and host VPS disk capacity with low-disk alerts; a multi-file batch upload dialog with optimistic row prepending; out-of-order socket reconciliation (`pendingSocketUpdates`); real-time compression badges (`optimal`, `ready`, `processing`, `pending`); disabled action buttons during in-flight processing; and manual secondary compression pass triggers.
 - **Client Admin Panel & RBAC Governance**: Admin UI module under `src/modules/admin/` with sidebar navigation, route guards (`AdminRootRoute`, `AdminHomeRoute`), and client-side RBAC evaluation (`usePermissions`).
   - **Non-Admin Portal Isolation**: Users with only non-admin roles (`user`) cannot access `/admin/*` under any circumstance.
   - **Admin Role Scoping**: Capabilities within `/admin/*` evaluate only permissions mapped from active admin roles (`super_admin`, `admin`, `*_admin`). Base `user` permissions never leak into the admin portal.
@@ -260,7 +260,8 @@ All three pillars of the Rexone platform are fully aligned at **100% feature par
 | **Media: Multi-Provider Storage (Garage S3, Cloudinary, Local)**                 |      ✅       |          ✅          |            ✅            |
 | **Media: Silent Underground Compression (libvips / FFmpeg)**                     |      ✅       |          ✅          |           N/A            |
 | **Media: Real-Time Cable Compression Updates**                                   |      ✅       |          ✅          |           N/A            |
-| **Media: Bulk Upload & Optimal-First Pipeline**                                  |      ✅       |          ✅          |           N/A            |
+| **Media: Batch Upload & Optimal-First Pipeline**                                 |      ✅       |          ✅          |           N/A            |
+| **Media: Multi-Select Batch Actions & Empty Recycle Bin**                        |      ✅       |          ✅          |           N/A            |
 | **Push Notifications (OneSignal)**                                               |      ✅       |         N/A          |            ✅            |
 | **Product Analytics (Firebase)**                                                 |      N/A      |         N/A          |            ✅            |
 | **Client Admin Panel: User, IAM, Product, Chat, Asset, Notification Management** |      ✅       |          ✅          |           N/A            |

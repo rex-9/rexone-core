@@ -24,6 +24,7 @@ RSpec.describe Chat::MessageSerializer do
   end
 
   it "nests linked assets as full AssetSerializer objects" do
+    allow(StorageService::Client).to receive(:url).and_return("https://cdn.example.com/speech.mp3")
     message = create(:chat_message, role: "assistant", content: "Speak this")
     asset = create(
       :asset,

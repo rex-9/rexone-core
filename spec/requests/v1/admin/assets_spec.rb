@@ -82,7 +82,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(response_data.dig("asset", "type")).to eq("thumbnail")
       expect(StorageService::Client).to have_received(:upload).with(
         anything,
-        hash_including(folder: "admin_uploads/thumbnail")
+        hash_including(storage_key: a_string_matching(/^admin\/thumbnail_avatar_\d+\.png$/))
       )
     end
 
@@ -183,6 +183,34 @@ RSpec.describe "V1 Admin Assets API", type: :request do
     end
   end
 
+  describe "GET /v1/admin/assets/storage_stats" do
+    it "returns storage statistics" do
+      allow(StorageService::Client).to receive(:storage_stats).and_return(
+        provider: "garage",
+        bucket: "rexone",
+        bucket_bytes: 5000,
+        bucket_objects: 5,
+        disk_available_bytes: 50_000_000_000,
+        disk_total_bytes: 60_000_000_000,
+        disk_used_percent: 16.7,
+        disk_free_percent: 83.3,
+        node_capacity_bytes: 1_000_000_000
+      )
+      create_list(:asset, 2, size_bytes: 1000)
+
+      get "/v1/admin/assets/storage_stats", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      stats = response_data.dig("stats")
+      expect(stats["provider"]).to eq("garage")
+      expect(stats["bucket"]).to eq("rexone")
+      expect(stats["bucket_bytes"]).to eq(5000)
+      expect(stats["bucket_objects"]).to eq(5)
+      expect(stats["db_assets_count"]).to eq(2)
+      expect(stats["db_assets_bytes"]).to eq(2000)
+    end
+  end
+
   describe "PATCH /v1/admin/assets/:id" do
     it "updates asset attributes" do
       asset = create(:asset, name: "Old Name")
@@ -191,6 +219,57 @@ RSpec.describe "V1 Admin Assets API", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(asset.reload.name).to eq("Updated Name")
+    end
+
+    it "renames storage key and name when asset type changes" do
+      asset = create(:asset,
+        name: "admin/avatar_company_1788500000.png",
+        storage_key: "admin/avatar_company_1788500000.png",
+        type: "avatar",
+        source: AssetConstants::AssetSource::UPLOAD
+      )
+      allow(StorageService::Client).to receive(:move)
+      allow(StorageService::Client).to receive(:url).and_return("http://localhost:3100/rexone/admin/thumbnail_company_1788500000.png")
+
+      patch "/v1/admin/assets/#{asset.id}", params: { asset: { type: "thumbnail" } }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(StorageService::Client).to have_received(:move).with(
+        "admin/avatar_company_1788500000.png",
+        "admin/thumbnail_company_1788500000.png"
+      )
+      expect(asset.reload.type).to eq("thumbnail")
+      expect(asset.storage_key).to eq("admin/thumbnail_company_1788500000.png")
+      expect(asset.name).to eq("admin/thumbnail_company_1788500000.png")
+    end
+
+    it "renames name and storage key even when form submits stale old name" do
+      asset = create(:asset,
+        name: "admin/general_sayadaw-kelasa_1788540008.png",
+        storage_key: "admin/general_sayadaw-kelasa_1788540008.png",
+        type: "general",
+        source: AssetConstants::AssetSource::UPLOAD
+      )
+      allow(StorageService::Client).to receive(:move)
+      allow(StorageService::Client).to receive(:url).and_return("http://localhost:3100/rexone/admin/video_sayadaw-kelasa_1788540008.png")
+
+      patch "/v1/admin/assets/#{asset.id}",
+            params: {
+              asset: {
+                name: "admin/general_sayadaw-kelasa_1788540008.png",
+                type: "video"
+              }
+            },
+            headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(StorageService::Client).to have_received(:move).with(
+        "admin/general_sayadaw-kelasa_1788540008.png",
+        "admin/video_sayadaw-kelasa_1788540008.png"
+      )
+      expect(asset.reload.type).to eq("video")
+      expect(asset.storage_key).to eq("admin/video_sayadaw-kelasa_1788540008.png")
+      expect(asset.name).to eq("admin/video_sayadaw-kelasa_1788540008.png")
     end
   end
 
@@ -211,12 +290,93 @@ RSpec.describe "V1 Admin Assets API", type: :request do
   describe "DELETE /v1/admin/assets/:id" do
     it "permanently destroys an asset" do
       asset = create(:asset)
-      allow(StorageService::Client).to receive(:delete_later)
+      allow(StorageService::Client).to receive(:delete)
 
       delete "/v1/admin/assets/#{asset.id}", headers: headers
 
       expect(response).to have_http_status(:ok)
       expect(Asset.find_by(id: asset.id)).to be_nil
+    end
+  end
+
+  describe "DELETE /v1/admin/assets/bin and /empty_recycle_bin" do
+    it "permanently purges all discarded assets via /bin" do
+      kept_asset = create(:asset)
+      discarded_assets = create_list(:asset, 3)
+      discarded_assets.each(&:discard!)
+
+      allow(StorageService::Client).to receive(:delete)
+
+      delete "/v1/admin/assets/bin", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["count"]).to eq(3)
+      expect(Asset.kept.count).to eq(1)
+      expect(Asset.with_discarded.discarded.count).to eq(0)
+      expect(Asset.find_by(id: kept_asset.id)).to be_present
+    end
+
+    it "permanently purges all discarded assets via /bin" do
+      discarded_assets = create_list(:asset, 2)
+      discarded_assets.each(&:discard!)
+
+      delete "/v1/admin/assets/bin", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["count"]).to eq(2)
+      expect(Asset.with_discarded.discarded.count).to eq(0)
+    end
+  end
+
+  describe "POST /v1/admin/assets/discard_batch" do
+    it "discards multiple selected assets" do
+      assets = create_list(:asset, 3)
+      ids_to_discard = assets.first(2).map(&:id)
+
+      post "/v1/admin/assets/discard_batch", params: { ids: ids_to_discard }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["count"]).to eq(2)
+      expect(Asset.kept.count).to eq(1)
+      expect(Asset.with_discarded.discarded.count).to eq(2)
+    end
+
+    it "rejects empty ids with 422" do
+      post "/v1/admin/assets/discard_batch", params: { ids: [] }, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "POST /v1/admin/assets/undiscard_batch" do
+    it "restores multiple selected discarded assets" do
+      assets = create_list(:asset, 3)
+      assets.each(&:discard!)
+
+      ids_to_restore = assets.first(2).map(&:id)
+
+      post "/v1/admin/assets/undiscard_batch", params: { ids: ids_to_restore }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["count"]).to eq(2)
+      expect(Asset.kept.count).to eq(2)
+      expect(Asset.with_discarded.discarded.count).to eq(1)
+    end
+  end
+
+  describe "POST /v1/admin/assets/destroy_batch" do
+    it "permanently deletes multiple selected assets and queues storage deletions" do
+      assets = create_list(:asset, 3)
+      ids_to_destroy = assets.first(2).map(&:id)
+
+      allow(StorageService::Client).to receive(:delete)
+
+      post "/v1/admin/assets/destroy_batch", params: { ids: ids_to_destroy }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["count"]).to eq(2)
+      expect(Asset.with_discarded.count).to eq(1)
+      expect(Asset.find_by(id: assets.last.id)).to be_present
     end
   end
 end

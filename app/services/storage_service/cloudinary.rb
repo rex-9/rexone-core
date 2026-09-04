@@ -11,9 +11,9 @@ module StorageService
 
     def initialize
       Cloudinary.config do |config|
-        config.cloud_name = ENV.fetch("CLOUDINARY_CLOUD_NAME")
-        config.api_key = ENV.fetch("CLOUDINARY_API_KEY")
-        config.api_secret = ENV.fetch("CLOUDINARY_API_SECRET")
+        config.cloud_name = AppConfig::CLOUDINARY_CLOUD_NAME
+        config.api_key = AppConfig::CLOUDINARY_API_KEY
+        config.api_secret = AppConfig::CLOUDINARY_API_SECRET
         config.secure = true
       end
     rescue KeyError => e
@@ -158,7 +158,7 @@ module StorageService
           timestamp: timestamp,
           transformation: transformation.join("/")
         },
-        ENV.fetch("CLOUDINARY_API_SECRET")
+        AppConfig::CLOUDINARY_API_SECRET
       )
 
       {
@@ -185,6 +185,23 @@ module StorageService
     rescue => e
       Rails.logger.error("#{LOG_PREFIX} Download Error: #{e.message}")
       raise StorageService::Error, e.message
+    end
+
+    def storage_stats
+      bytes = defined?(Asset) ? Asset.kept.where(source: AssetConstants::AssetSource::UPLOAD).sum(:size_bytes).to_i : 0
+      objects = defined?(Asset) ? Asset.kept.where(source: AssetConstants::AssetSource::UPLOAD).count : 0
+
+      {
+        provider: "cloudinary",
+        bucket: "cloudinary",
+        bucket_bytes: bytes,
+        bucket_objects: objects,
+        disk_available_bytes: 0,
+        disk_total_bytes: 0,
+        disk_used_percent: nil,
+        disk_free_percent: nil,
+        node_capacity_bytes: 0
+      }
     end
 
     private

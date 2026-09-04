@@ -20,7 +20,7 @@ class Asset < ApplicationRecord
   validates :assetable_id, presence: true, if: -> { assetable_type.present? }
   validate :url_must_be_valid
   before_validation :set_extension_and_format
-  after_destroy_commit :delete_from_storage_later, if: :uploaded_file?
+  after_destroy_commit :delete_from_storage, if: :uploaded_file?
 
   scope :uploaded, -> { where(source: AssetConstants::AssetSource::UPLOAD) }
   scope :google, -> { where(source: AssetConstants::AssetSource::GOOGLE) }
@@ -30,17 +30,17 @@ class Asset < ApplicationRecord
   scope :processing, -> { where(status: MediaConstants::Status::PROCESSING) }
   scope :failed, -> { where(status: MediaConstants::Status::FAILED) }
 
-  def delete_from_storage_later
+  def delete_from_storage
     return unless storage_key.present?
 
-    StorageService::Client.delete_later(
+    StorageService::Client.delete(
       storage_key,
       resource_type: storage_resource_type
     )
-    Rails.logger.info("#{LOG_PREFIX} Queued storage deletion: #{storage_key}")
+    Rails.logger.info("#{LOG_PREFIX} Deleted from storage: #{storage_key}")
   rescue StandardError => e
     Rails.error.report(e)
-    Rails.logger.error("#{LOG_PREFIX} Failed to queue storage deletion: #{e.message}")
+    Rails.logger.error("#{LOG_PREFIX} Failed to delete from storage: #{e.message}")
   end
 
   def self.purge_and_destroy_all!(scope)
@@ -53,12 +53,6 @@ class Asset < ApplicationRecord
 
   def uploaded_file?
     storage_key.present?
-  end
-
-  def generate_storage_key
-    return storage_key if storage_key.present?
-
-    self.storage_key = "#{type}/#{name}_#{Time.now.to_i}"
   end
 
   def storage_url(options = {})

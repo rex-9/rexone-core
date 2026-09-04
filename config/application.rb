@@ -6,6 +6,8 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+require_relative "app_config"
+
 module RexoneCore
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -37,7 +39,7 @@ module RexoneCore
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
-    Rails.application.config.secret_key_base = Rails.application.credentials.secret_key_base
+    Rails.application.config.secret_key_base = AppConfig::SECRET_KEY_BASE.presence || Rails.application.credentials.secret_key_base
 
     # Enable Flash, Cookies, MethodOverride for Administrate Gem
     config.middleware.use ActionDispatch::Flash
