@@ -1,0 +1,24 @@
+# config/garage.toml
+# Garage S3-compatible Object Storage Configuration
+# Reference: https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/
+
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "sqlite"
+
+# Single-node cluster deployment
+replication_factor = 1
+
+# Internal cluster RPC
+rpc_bind_addr = "[::]:3901"
+rpc_secret = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+[s3_api]
+s3_region = "garage"
+api_bind_addr = "[::]:3100"
+root_domain = ".s3.garage.localhost"
+
+[admin]
+api_bind_addr = "[::]:3101"
+admin_token = "rexone_garage_admin_token_secret_key_12345"
+metrics_token = "rexone_garage_metrics_token_secret_key_12345"

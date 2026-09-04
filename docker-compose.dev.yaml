@@ -60,5 +60,19 @@ services:
         condition: service_healthy
     command: ["./bin/jobs", "-c", "config/queue.media.yml"]
 
+  # Garage S3 Storage [OPTIONAL] - self-hosted S3-compatible object storage
+  garage:
+    image: dxflrs/garage:v1.0.1
+    container_name: ${GARAGE_CONTAINER_NAME:-dev-rexone-core-garage}
+    volumes:
+      - ./config/garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    ports:
+      - "${GARAGE_S3_PORT_MAP:-3100:3100}"
+      - "${GARAGE_ADMIN_PORT_MAP:-3101:3101}"
+
 volumes:
   postgres:
+  garage-meta:
+  garage-data:

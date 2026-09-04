@@ -111,6 +111,21 @@ module StorageService
       end
     end
 
+    def download(identifier, destination_path = nil)
+      source_path = get_full_path(identifier)
+      raise Error, "File not found: #{identifier}" unless File.exist?(source_path)
+
+      if destination_path
+        FileUtils.cp(source_path, destination_path)
+        destination_path
+      else
+        File.read(source_path)
+      end
+    rescue => e
+      Rails.logger.error("#{LOG_PREFIX} Download Error: #{e.message}")
+      raise Error, e.message
+    end
+
     private
 
     def get_full_path(identifier, options = {})

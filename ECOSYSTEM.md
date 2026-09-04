@@ -84,7 +84,7 @@ flowchart TB
   - `waka` (Dedicated Solid Queue worker process for general background queues)
   - `db` (PostgreSQL `18` on `:5432`)
   - `media` (Dedicated Solid Queue worker process for `:media` queue - image & video compression via libvips/FFmpeg)
-  - `garage` (Self-hosted S3-compatible distributed object storage on `:3900` API / `:3902` Admin)
+  - `garage` (Self-hosted S3-compatible distributed object storage on `:3100` API / `:3101` Admin)
 - **Key Gems**: `devise`, `devise-jwt`, `solid_queue`, `solid_cable`, `solid_cache`, `discard` (soft deletes), `jsonapi-serializer`, `pagy` (pagination), `rails_pulse` (performance monitoring), `rails_error_dashboard` (exception tracking), `rswag` (OpenAPI/Swagger docs), `administrate` (server-rendered back office).
 
 ### 📦 Database, Schema & Models

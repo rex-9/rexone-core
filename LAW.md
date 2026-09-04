@@ -4,7 +4,13 @@
 >
 > **"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."**
 >
-> 📜 **Constitutional Mandate**: Non-negotiable architectural laws and engineering standards for all human engineers and autonomous AI agents on **Rexone Core** (`rexone-core`). Zero exceptions!!!
+> 📜 **Supreme Constitutional Primacy**: Non-negotiable architectural laws and engineering standards for all human engineers and autonomous AI agents on **Rexone Core** (`rexone-core`).
+>
+> **The Law Takes Absolute First Priority Over The Code**:  
+> - `LAW.md` represents the non-negotiable constitutional framework of this ecosystem.
+> - **NEVER modify, bend, or "fix" `LAW.md` to accommodate non-compliant code.**
+> - If existing code violates or deviates from `LAW.md`, **THE CODE IS WRONG — FIX THE CODE.**
+> - `LAW.md` may ONLY be adjusted when the project creator (Rex) explicitly decrees a constitutional law change.
 >
 > This application is built upon the **Rexone Ecosystem** (`rex-9`). These are immutable **Rexone Laws and Protocols** to be strictly observed and enforced without any exception across all human engineers and autonomous AI agents. Developers building on top of this foundation are warmly encouraged to preserve ecosystem credit to support the project.
 
@@ -255,9 +261,30 @@ Service Layer (app/services/)
 
 ---
 
-## 📚 11. Documentation Synchronization Law
+## 📚 11. Omnipresent Documentation Synchronization Law
 
-- **Rule**: After EVERY feature creation, modification, or bugfix:
-  - **`README.md`** MUST be updated with newly added endpoints, dashboard routes, jobs, or configuration variables.
-  - **`ECOSYSTEM.md`** MUST be updated if changes affect cross-platform feature parity, shared contracts, WebSocket events, or communication protocols between Core, Web, and Mobile.
-  - **`LAW.md`** represents the non-negotiable constitutional framework; it should ONLY be modified when establishing, refining, or expanding fundamental architectural laws and engineering standards.
+- **Rule**: Documentation is NOT an afterthought; documentation files MUST be updated synchronously in the exact same turn as code changes:
+  - **`README.md`** MUST be updated with newly added endpoints, dashboard routes, jobs, CLI scripts, or configuration variables.
+  - **`ECOSYSTEM.md`** MUST be updated whenever changes affect cross-platform feature parity, shared contracts, WebSocket events, or communication protocols between Core, Web, and Mobile.
+  - **`SCHEMA.md`** MUST be updated synchronously whenever tables, columns, indexes, or ApplicationRecord models are modified (Law 12).
+  - **`LAW.md`** represents the supreme, non-negotiable constitutional framework. **The Law takes absolute first priority over the code.** Never alter or weaken `LAW.md` to justify non-compliant code; fix the code instead. `LAW.md` should ONLY be adjusted when the project creator (Rex) explicitly decrees a constitutional law change.
+
+---
+
+## 🏛️ 12. Database Schema Documentation Law (`SCHEMA.md`)
+
+- **Rule**: `SCHEMA.md` MUST be updated synchronously EVERY TIME the database schema is updated:
+  - Whenever a database migration is created, run, or modified (`db/migrate/*` or `db/schema.rb`).
+  - Whenever an `ApplicationRecord` model is created, updated, soft-deleted, or deleted.
+  - Whenever new columns, foreign keys, indexes, enums, or relationships are added or changed.
+  - **Omission Rule**: Keep `SCHEMA.md` focused strictly on **Core Application Records** (`users`, `roles`, `permissions`, `products`, `subscriptions`, `transactions`, `accesses`, `assets`, `chat_rooms`, `chat_messages`, `feedbacks`, `log_clients`). NEVER include background engine / APM telemetry tables (`solid_queue_*`, `solid_cable_*`, `solid_cache_*`, `rails_pulse_*`, `rails_error_dashboard_*`).
+  - **Zero Tolerance**: Leaving `SCHEMA.md` out-of-sync with `db/schema.rb` or active models is an architectural violation.
+
+---
+
+## 🔒 13. Environment File & Secret Isolation Law
+
+- **Rule**: NEVER inspect, read, parse, or directly modify git-ignored `.env` files via automated tools or background scripts.
+- **Git Visibility**: Code modifications, default settings, and schema changes MUST leave history in git source control. Modifying private `.env` files behind the scenes violates auditability.
+- **Example File Standard**: ONLY `.env.example` may be inspected or updated to document newly introduced environment keys and configurations.
+- **Developer Copy-Paste Protocol**: When credentials, access tokens, or configuration variables are generated or required, agents must provide clear, explicit code snippets in the response for developers to copy-paste into their local `.env` files manually.

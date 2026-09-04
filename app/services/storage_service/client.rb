@@ -10,6 +10,7 @@ module StorageService
                :copy,
                :exists?,
                :list,
+               :download,
                to: :provider
 
       def delete_later(identifier, options = {})
@@ -26,7 +27,7 @@ module StorageService
       end
 
       def initialize_provider
-        provider_name = ENV.fetch("STORAGE_PROVIDER", "cloudinary").to_sym
+        provider_name = ENV.fetch("STORAGE_PROVIDER", "garage").to_sym
 
         case provider_name
         when :garage

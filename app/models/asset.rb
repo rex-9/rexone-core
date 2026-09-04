@@ -64,7 +64,14 @@ class Asset < ApplicationRecord
   def storage_url(options = {})
     return url unless uploaded_file? && storage_key.present?
 
-    StorageService::Client.url(storage_key, options)
+    opts = options.dup
+    if extension.present? && !opts.key?(:response_content_type)
+      mime = Rack::Mime.mime_type(".#{extension}", nil)
+      opts[:response_content_type] = mime if mime
+    end
+    opts[:response_content_disposition] ||= "inline"
+
+    StorageService::Client.url(storage_key, opts)
   end
 
   def refresh_url

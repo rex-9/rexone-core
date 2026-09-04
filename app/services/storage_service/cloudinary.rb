@@ -168,6 +168,25 @@ module StorageService
       }
     end
 
+    def download(identifier, destination_path = nil)
+      require "open-uri"
+      download_url = url(identifier)
+
+      if destination_path
+        URI.open(download_url) do |remote|
+          File.open(destination_path, "wb") do |local|
+            IO.copy_stream(remote, local)
+          end
+        end
+        destination_path
+      else
+        URI.open(download_url, &:read)
+      end
+    rescue => e
+      Rails.logger.error("#{LOG_PREFIX} Download Error: #{e.message}")
+      raise StorageService::Error, e.message
+    end
+
     private
 
     def generate_storage_key(file)

@@ -87,9 +87,9 @@ services:
       RAILS_DATABASE_URL: ${RAILS_DATABASE_URL}
       RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-7}
       DB_POOL: ${MEDIA_DB_POOL:-3}
-      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-cloudinary}
-      S3_ENDPOINT: ${S3_ENDPOINT:-http://garage:3900}
-      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-garage}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://garage:3100}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://localhost:3100}
       S3_BUCKET: ${S3_BUCKET:-rexone}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
@@ -104,5 +104,24 @@ services:
     labels:
       - coolify.traefik.enable=false
 
+  # ── GARAGE (S3 Storage) ─── [OPTIONAL] ──────────────────
+  # Self-hosted S3-compatible object storage.
+  # Disable by not launching this service and using STORAGE_PROVIDER=cloudinary.
+  garage:
+    image: dxflrs/garage:v1.0.1
+    container_name: ${GARAGE_CONTAINER_NAME:-rexone-core-garage}
+    restart: unless-stopped
+    volumes:
+      - ./config/garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    ports:
+      - "${GARAGE_S3_PORT_MAP:-3100:3100}"
+      - "${GARAGE_ADMIN_PORT_MAP:-3101:3101}"
+    labels:
+      - coolify.traefik.enable=true
+
 volumes:
   postgres:
+  garage-meta:
+  garage-data:

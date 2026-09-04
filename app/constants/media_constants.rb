@@ -2,7 +2,7 @@
 module MediaConstants
   # Feature flags
   MEDIA_CONTAINER_ENABLED = ENV.fetch("MEDIA_CONTAINER_ENABLED", "true") == "true"
-  GARAGE_CONTAINER_ENABLED = ENV.fetch("GARAGE_CONTAINER_ENABLED", "false") == "true"
+  GARAGE_CONTAINER_ENABLED = ENV.fetch("GARAGE_CONTAINER_ENABLED", "true") == "true"
 
   # Upload size limits conditioned on MEDIA_CONTAINER_ENABLED (in MB)
   MAX_VIDEO_SIZE_MB = ENV.fetch("MEDIA_MAX_VIDEO_SIZE_MB", MEDIA_CONTAINER_ENABLED ? 100 : 10).to_i

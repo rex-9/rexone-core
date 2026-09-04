@@ -202,9 +202,10 @@ The admin- and permission-protected `POST /v1/admin/notifications` contract is r
 
 ### Storage & assets
 
-The storage abstraction supports **Garage** (self-hosted S3-compatible distributed object storage), **Cloudinary**, and a local filesystem provider with a unified interface for upload, deletion, URL generation, move, copy, existence checks, and listing.
+The storage abstraction defaults to **Garage** (self-hosted S3-compatible distributed object storage on port 3100) with full fallback support for **Cloudinary** and local filesystem storage. Read the complete [Garage Guide](docs/GARAGE.md) for architecture, configuration, and UI tooling.
 
 - **Unified Asset Lifecycle**: Uploads return the URL and metadata the client needs immediately while retaining provider identifiers, category, media type, extension, size, source, and ownership.
+- **Default Self-Hosted Storage**: `STORAGE_PROVIDER=garage` uses the official `aws-sdk-s3` client connected to the local or production Garage daemon (`http://garage:3100` / `http://localhost:3100`).
 - **Durable Cleanup**: Remote deletion executes asynchronously via Solid Queue (`Storage::DeleteJob`) after the database transaction commits, retrying on failure and treating "already absent" objects idempotently.
 - **Provider Switching**: Easily switch between `garage` (S3), `cloudinary`, or `local` via `STORAGE_PROVIDER` without code changes.
 
@@ -374,7 +375,7 @@ This starts the 5-container ecosystem:
 - `waka` — General Solid Queue background worker (payments, notifications, AI, speech, storage)
 - `db` — PostgreSQL 18 on port 5432
 - `media` — Dedicated Solid Queue worker for `:media` queue (libvips / FFmpeg compression)
-- `garage` — Self-hosted S3-compatible object storage on [http://localhost:3900](http://localhost:3900) (Admin on port 3902)
+- `garage` — Self-hosted S3-compatible object storage on [http://localhost:3100](http://localhost:3100) (Admin on port 3101)
 
 The development entrypoint runs `db:prepare` when the API starts.
 
@@ -409,6 +410,12 @@ Review and replace seeded credentials before using them outside local developmen
 
 # Run the repository test script
 ./scripts/test.sh
+
+# Automated Backups
+./scripts/backup_all.sh     # Backs up both PostgreSQL and Garage S3 storage
+./scripts/backup_db.sh      # Backs up PostgreSQL database (.sql.gz)
+./scripts/backup_garage.sh  # Backs up Garage S3 metadata and data volumes (.tar.gz)
+
 
 # Watch specs
 ./scripts/test_watch.sh

@@ -105,17 +105,12 @@ module Media
 
     def download_from_storage
       require "tempfile"
-      require "open-uri"
 
       ext = @asset.extension.present? ? ".#{@asset.extension}" : ".jpg"
       @temp_dir = Dir.mktmpdir("media_compress")
       input_path = File.join(@temp_dir, "input#{ext}")
 
-      URI.open(@asset.url) do |remote|
-        File.open(input_path, "wb") do |local|
-          local.write(remote.read)
-        end
-      end
+      StorageService::Client.download(@asset.storage_key, input_path)
 
       Rails.logger.info("[CompressImageJob] Downloaded #{File.size(input_path)} bytes to #{input_path}")
       input_path
