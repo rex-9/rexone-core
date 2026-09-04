@@ -14,12 +14,22 @@ module NotificationService
 
         # 1. Socket (WebSocket)
         if send_socket
+          notification = create_in_app_notification(
+            user_id: user_id,
+            title: title,
+            message: message || title,
+            data: data
+          )
+
           results[:socket] = enqueue(:socket) do
             {
               user_id: user_id,
-              message: message || title,
-              data: data
-            }
+              id: notification&.id,
+              title: notification&.title,
+              message: notification&.message || message || title,
+              data: notification&.data || data,
+              created_at: notification&.created_at&.iso8601
+            }.compact
           end
         end
 
@@ -257,6 +267,21 @@ module NotificationService
 
       def notification_message(key, **options)
         MessageService::Notification.t(key, **options)
+      end
+
+      def create_in_app_notification(user_id:, title:, message:, data:)
+        Notification.create!(
+          user_id: user_id,
+          title: title,
+          message: message || notification_message(MessageService::Notification::DEFAULT_BODY),
+          event: data[:type] || data["type"],
+          data: data || {}
+        )
+      rescue ActiveRecord::ActiveRecordError => e
+        Rails.logger.error(
+          "#{LOG_PREFIX} Could not persist in-app notification for user #{user_id}: #{e.message}"
+        )
+        nil
       end
 
       def payment_message(key, **options)

@@ -1,8 +1,12 @@
 module MessageService
   class Notification < Base
     QUEUED = "notification.queued"
+    FETCHED = "notification.fetched"
+    READ = "notification.read"
+    READ_ALL = "notification.read_all"
     RECIPIENTS_FETCHED = "notification.recipients_fetched"
     TEMPLATES_FETCHED = "notification.templates_fetched"
+    NOT_FOUND = "notification.not_found"
     QUEUE_FAILED = "notification.queue_failed"
     INVALID_REQUEST = "notification.invalid_request"
     TITLE_REQUIRED = "notification.title_required"

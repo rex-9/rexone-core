@@ -403,6 +403,17 @@ module Openapi
           description: "One or more delivery channels: socket, push, or email."
         }
       ),
+      notification: object(
+        id: UUID,
+        title: { type: :string, nullable: true },
+        message: { type: :string },
+        event: { type: :string, nullable: true },
+        data: { type: :object, additionalProperties: true },
+        read: { type: :boolean },
+        read_at: DATE_TIME,
+        created_at: DATE_TIME,
+        updated_at: DATE_TIME
+      ),
       asset_upload_request: object(
         required: [ :file ],
         file: { type: :string, format: :binary },
@@ -827,6 +838,28 @@ module Openapi
         },
         "/v1/users/current/iam" => {
           get: operation(tags: "Users", summary: "Get the current user's roles and permissions", errors: [ 401 ])
+        },
+        "/v1/notifications" => {
+          get: operation(
+            tags: "Notifications",
+            summary: "List the current user's in-app notifications",
+            parameters: [
+              query_parameter(:page, type: :integer),
+              query_parameter(:limit, type: :integer)
+            ],
+            errors: [ 401 ]
+          )
+        },
+        "/v1/notifications/read_all" => {
+          put: operation(tags: "Notifications", summary: "Mark all current-user notifications as read", errors: [ 401 ])
+        },
+        "/v1/notifications/{id}/read" => {
+          put: operation(
+            tags: "Notifications",
+            summary: "Mark an owned in-app notification as read",
+            parameters: [ path_parameter(:id) ],
+            errors: [ 401, 404 ]
+          )
         }
       }
 

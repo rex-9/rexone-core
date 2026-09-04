@@ -8,7 +8,7 @@ RSpec.describe "OpenAPI V1 document" do
   it "documents every intentional public API operation" do
     operation_count = document[:paths].sum { |_path, methods| methods.size }
 
-    expect(operation_count).to eq(108)
+    expect(operation_count).to eq(111)
     expect(document[:paths]).to include(
       "/signup",
       "/v1/payment/session",
@@ -18,6 +18,7 @@ RSpec.describe "OpenAPI V1 document" do
       "/v1/admin/accesses",
       "/v1/admin/feedbacks",
       "/v1/admin/analytics/overview",
+      "/v1/notifications",
       "/v1/feedbacks",
       "/v1/assets",
       "/webhooks/stripe"

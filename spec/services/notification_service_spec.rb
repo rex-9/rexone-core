@@ -16,6 +16,36 @@ RSpec.describe NotificationService::Center do
     )
   end
 
+  it "persists in-app notifications for valid socket recipients" do
+    user = create(:user)
+
+    expect do
+      described_class.notify(
+        user_id: user.id,
+        title: "Title",
+        message: "Message",
+        data: { type: "custom" },
+        send_socket: true
+      )
+    end.to change(Notification, :count).by(1)
+
+    notification = Notification.last
+
+    expect(notification.user_id).to eq(user.id)
+    expect(notification.event).to eq("custom")
+    expect(Notification::DeliverJob).to have_been_enqueued.with(
+      channel: :socket,
+      payload: {
+        user_id: user.id,
+        id: notification.id,
+        title: "Title",
+        message: "Message",
+        data: { "type" => "custom" },
+        created_at: notification.created_at.iso8601
+      }
+    )
+  end
+
   it "does not enqueue push without a title" do
     expect do
       described_class.notify(user_id: "user-id", message: "Body", send_push: true)

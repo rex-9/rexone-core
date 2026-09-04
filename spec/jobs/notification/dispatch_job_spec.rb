@@ -71,21 +71,41 @@ RSpec.describe Notification::DispatchJob, type: :job do
   it "enqueues in-app notification delivery with message" do
     allow(NotificationService::Center).to receive(:notify).and_call_original
 
-    described_class.perform_now(
-      audience: { type: "users", user_ids: [ second_user.id ] },
-      channels: %w[socket],
-      event: "general_announcement",
-      locale: "en"
-    )
+    expect do
+      described_class.perform_now(
+        audience: { type: "users", user_ids: [ second_user.id ] },
+        channels: %w[socket],
+        event: "general_announcement",
+        locale: "en"
+      )
+    end.to change(Notification, :count).by(1)
+
+    notification = Notification.last
 
     expect(Notification::DeliverJob).to have_been_enqueued.with(
       channel: :socket,
       payload: {
         user_id: second_user.id,
+        id: notification.id,
+        title: "Announcement",
         message: "We have an important announcement for you.",
-        data: { type: "general_announcement" }
+        data: { "type" => "general_announcement" },
+        created_at: notification.created_at.iso8601
       }
     )
+  end
+
+  it "does not persist push-only notifications as in-app records" do
+    allow(NotificationService::Center).to receive(:notify).and_call_original
+
+    expect do
+      described_class.perform_now(
+        audience: { type: "users", user_ids: [ second_user.id ] },
+        channels: %w[push],
+        event: "general_announcement",
+        locale: "en"
+      )
+    end.not_to change(Notification, :count)
   end
 
   it "does not target unconfirmed accounts" do

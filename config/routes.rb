@@ -118,6 +118,17 @@ Rails.application.routes.draw do
     get "users/current", to: "users#read_current_user"
     get "users/current/iam", to: "users#read_current_iam"
 
+    # ===== NOTIFICATIONS =====
+    resources :notifications, only: %i[index] do
+      collection do
+        put :update_read_all, path: "read_all"
+      end
+
+      member do
+        put :update_read, path: "read"
+      end
+    end
+
     # ===== ADMIN API =====
     # React Admin Dashboard.
     # Requires admin role (with `_admin` suffix) + resource permissions.
