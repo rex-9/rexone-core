@@ -94,6 +94,8 @@ gem "rack-attack", "~> 6.8"
 gem "cloudinary", "~> 2.4"
 gem "stripe", "~> 19.6"
 gem "websocket-client-simple", "~> 0.9"
+# Uncomment and rebuild container when using STORAGE_PROVIDER=garage
+# gem "aws-sdk-s3", "~> 1.0"
 
 # ============================================================
 # Utilities

@@ -10,10 +10,11 @@ RUN gem install bundler -v "$BUNDLER_VERSION"
 # Rails app lives here
 WORKDIR /rails
 
-# Install base packages - ADD libyaml-dev HERE
+# Install base packages
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
     curl \
+    ffmpeg \
     libjemalloc2 \
     libvips \
     postgresql-client \

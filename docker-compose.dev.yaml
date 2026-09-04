@@ -45,5 +45,20 @@ services:
     # ports: # enable to access from outside of docker
     #   - ${PG_PORT_MAP}
 
+  # Media Worker [OPTIONAL] - processes :media queue only
+  media:
+    container_name: ${MEDIA_CONTAINER_NAME}
+    build:
+      context: .
+      dockerfile: ${RAILS_DOCKERFILE}
+    env_file:
+      - .env
+    volumes:
+      - .:/rails
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["./bin/jobs", "-c", "config/queue.media.yml"]
+
 volumes:
   postgres:

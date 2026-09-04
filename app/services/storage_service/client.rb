@@ -29,6 +29,8 @@ module StorageService
         provider_name = ENV.fetch("STORAGE_PROVIDER", "cloudinary").to_sym
 
         case provider_name
+        when :garage
+          Garage.new
         when :cloudinary
           Cloudinary.new
         when :local

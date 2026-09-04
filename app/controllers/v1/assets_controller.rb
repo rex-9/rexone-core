@@ -40,6 +40,24 @@ class V1::AssetsController < V1::ApplicationController
       return
     end
 
+    max_size_mb = if determine_resource_type(file) == "video"
+                    MediaConstants::MAX_VIDEO_SIZE_MB
+    else
+                    MediaConstants::MAX_NON_VIDEO_SIZE_MB
+    end
+
+    if file.size > max_size_mb.megabytes
+      render_json_response(
+        status_code: 422,
+        message: asset_message(MessageService::Asset::SAVE_FAILED),
+        error: asset_message(
+          MessageService::Asset::FILE_SIZE_EXCEEDED,
+          limit: max_size_mb
+        )
+      )
+      return
+    end
+
     asset_type = params[:type].presence || AssetConstants::AssetType::GENERAL
     assetable_type = params[:assetable_type].presence
     assetable_id = params[:assetable_id].presence
@@ -48,11 +66,14 @@ class V1::AssetsController < V1::ApplicationController
     # Generate storage_key
     storage_key = "#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}_#{Time.now.to_i}"
 
+    folder_prefix = params[:folder].presence || "user_uploads"
+    folder = folder_prefix.end_with?("/#{asset_type}") ? folder_prefix : "#{folder_prefix}/#{asset_type}"
+
     # Upload to storage service
     result = StorageService::Client.upload(
       file,
       storage_key: storage_key,
-      folder: params[:folder].presence || "user_uploads/#{asset_type}",
+      folder: folder,
       resource_type: determine_resource_type(file),
       metadata: {
         user_id: current_user.id.to_s,
@@ -74,9 +95,11 @@ class V1::AssetsController < V1::ApplicationController
       assetable_id: assetable_id,
       storage_key: result[:storage_key],
       extension: result[:format] || File.extname(file.original_filename).delete("."),
+      status: compression_status_for(file)
     )
 
     if asset.save
+      enqueue_compression_if_needed(asset)
       if asset.type == AssetConstants::AssetType::AVATAR && asset.assetable_type.to_s.downcase == "user" && asset.assetable_id.present?
         old_avatars = Asset.where(type: AssetConstants::AssetType::AVATAR, assetable_type: asset.assetable_type, assetable_id: asset.assetable_id)
                            .where.not(id: asset.id)
@@ -237,5 +260,32 @@ class V1::AssetsController < V1::ApplicationController
   def determine_asset_format(file)
     ext = File.extname(file.original_filename).delete(".").downcase
     AssetConstants::AssetFormat.from_extension(ext)
+  end
+
+  def compression_status_for(file)
+    if MediaConstants::MEDIA_CONTAINER_ENABLED && file_compressible?(file)
+      MediaConstants::Status::PENDING
+    else
+      MediaConstants::Status::READY
+    end
+  end
+
+  def enqueue_compression_if_needed(asset)
+    return unless asset.status == MediaConstants::Status::PENDING
+
+    if asset.compressible_video?
+      Media::CompressVideoJob.perform_later(asset_id: asset.id)
+      Rails.logger.info("[AssetsController] Enqueued video compression for asset #{asset.id}")
+    elsif asset.compressible_image?
+      Media::CompressImageJob.perform_later(asset_id: asset.id)
+      Rails.logger.info("[AssetsController] Enqueued image compression for asset #{asset.id}")
+    end
+  end
+
+  def file_compressible?(file)
+    filename = file.respond_to?(:original_filename) ? file.original_filename : file.to_s
+    ext = File.extname(filename).delete(".").downcase
+    MediaConstants::COMPRESSIBLE_VIDEO_EXTENSIONS.include?(ext) ||
+      MediaConstants::COMPRESSIBLE_IMAGE_EXTENSIONS.include?(ext)
   end
 end

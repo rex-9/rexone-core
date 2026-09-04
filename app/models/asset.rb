@@ -14,6 +14,7 @@ class Asset < ApplicationRecord
   validates :source, inclusion: { in: [ AssetConstants::AssetSource::UPLOAD, AssetConstants::AssetSource::GOOGLE ] }
   validates :size_bytes, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :duration_secs, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :status, inclusion: { in: MediaConstants::Status::ALL }
   validates :storage_key, presence: true, if: :uploaded?
   validates :assetable_type, presence: true, if: -> { assetable_id.present? }
   validates :assetable_id, presence: true, if: -> { assetable_type.present? }
@@ -24,6 +25,10 @@ class Asset < ApplicationRecord
   scope :uploaded, -> { where(source: AssetConstants::AssetSource::UPLOAD) }
   scope :google, -> { where(source: AssetConstants::AssetSource::GOOGLE) }
   scope :for_resource, ->(model, id) { where(assetable_type: model.to_s, assetable_id: id) }
+  scope :ready, -> { where(status: MediaConstants::Status::READY) }
+  scope :optimal, -> { where(status: MediaConstants::Status::OPTIMAL) }
+  scope :processing, -> { where(status: MediaConstants::Status::PROCESSING) }
+  scope :failed, -> { where(status: MediaConstants::Status::FAILED) }
 
   def delete_from_storage_later
     return unless storage_key.present?
@@ -72,7 +77,80 @@ class Asset < ApplicationRecord
     false
   end
 
+  def compressible?
+    !max_compressed? && (compressible_video? || compressible_image?)
+  end
+
+  def compressible_video?
+    MediaConstants::COMPRESSIBLE_VIDEO_EXTENSIONS.include?(extension&.downcase)
+  end
+
+  def compressible_image?
+    MediaConstants::COMPRESSIBLE_IMAGE_EXTENSIONS.include?(extension&.downcase)
+  end
+
+  def pending?
+    status == MediaConstants::Status::PENDING
+  end
+
+  def processing?
+    status == MediaConstants::Status::PROCESSING
+  end
+
+  def ready?
+    status == MediaConstants::Status::READY
+  end
+
+  def optimal?
+    status == MediaConstants::Status::OPTIMAL
+  end
+
+  def failed?
+    status == MediaConstants::Status::FAILED
+  end
+
+  def compression_count
+    return MediaConstants::MAX_COMPRESSION_PASSES if optimal?
+
+    CacheService.read(compression_cache_key).to_i
+  end
+
+  def increment_compression_count!
+    new_val = compression_count + 1
+    CacheService.write(compression_cache_key, new_val)
+    new_val
+  end
+
+  def clear_compression_count!
+    CacheService.delete(compression_cache_key)
+  end
+
+  def max_compressed?
+    optimal? || compression_count >= MediaConstants::MAX_COMPRESSION_PASSES
+  end
+
+  def mark_processing!
+    update!(status: MediaConstants::Status::PROCESSING)
+  end
+
+  def mark_ready!
+    update!(status: MediaConstants::Status::READY)
+  end
+
+  def mark_optimal!
+    clear_compression_count!
+    update!(status: MediaConstants::Status::OPTIMAL)
+  end
+
+  def mark_failed!
+    update!(status: MediaConstants::Status::FAILED)
+  end
+
   private
+
+  def compression_cache_key
+    "asset_compression_count:#{id}"
+  end
 
   def storage_resource_type
     AssetConstants::AssetFormat.storage_resource_type(extension)

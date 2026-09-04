@@ -90,6 +90,24 @@ RSpec.describe "Asset uploads", type: :request do
     expect(response_status["error"]).to eq("storage offline")
   end
 
+  it "rejects files exceeding maximum size with localized error message" do
+    allow_any_instance_of(ActionDispatch::Http::UploadedFile).to receive(:size).and_return(MediaConstants::MAX_NON_VIDEO_SIZE_MB.megabytes + 1)
+
+    post "/v1/media/upload", params: { file: file }, headers: headers
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response_status["error"]).to eq("File size exceeds maximum allowed limit (#{MediaConstants::MAX_NON_VIDEO_SIZE_MB}MB)")
+  end
+
+  it "returns localized error message in Burmese when X-Locale is my" do
+    allow_any_instance_of(ActionDispatch::Http::UploadedFile).to receive(:size).and_return(MediaConstants::MAX_NON_VIDEO_SIZE_MB.megabytes + 1)
+
+    post "/v1/media/upload", params: { file: file }, headers: headers.merge("X-Locale" => "my")
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response_status["error"]).to eq("ဖိုင်အရွယ်အစားသည် သတ်မှတ်ထားသော ကန့်သတ်ချက်ထက် ကျော်လွန်နေပါသည် (#{MediaConstants::MAX_NON_VIDEO_SIZE_MB}MB)")
+  end
+
   def grant_asset_create_permission(account)
     role = create(:role, name: "asset_uploader")
     permission = create(:permission, action: "create", resource: "assets")

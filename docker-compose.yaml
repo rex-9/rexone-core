@@ -68,5 +68,41 @@ services:
     # ports: # enable to access from outside of docker
     #   - ${PG_PORT_MAP}
 
+  # ── MEDIA (Media Worker) ─── [OPTIONAL] ─────────────────
+  # Processes :media queue only (video/image compression).
+  # Same codebase as api/waka. Disable by not launching this service.
+  # Enable via MEDIA_CONTAINER_ENABLED=true in api/waka env.
+  media:
+    container_name: ${MEDIA_CONTAINER_NAME}
+    build:
+      context: .
+      dockerfile: ${RAILS_DOCKERFILE}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: ${RAILS_ENV}
+      RAILS_JWT_SECRET_KEY: ${RAILS_JWT_SECRET_KEY}
+      RAILS_DATABASE_URL: ${RAILS_DATABASE_URL}
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-7}
+      DB_POOL: ${MEDIA_DB_POOL:-3}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-cloudinary}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://garage:3900}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT}
+      S3_BUCKET: ${S3_BUCKET:-rexone}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_REGION: ${S3_REGION:-garage}
+    command: ["./bin/jobs", "-c", "config/queue.media.yml"]
+    stop_grace_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "3.0"
+          memory: 4096M
+    labels:
+      - coolify.traefik.enable=false
+
 volumes:
   postgres:

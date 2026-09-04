@@ -8,8 +8,8 @@ default: &default
 
 development:
   <<: *default
-  workers: # idle worker checks ready queue & execute
-    - queues: "*"
+  workers: # idle worker checks ready queue & execute (excludes :media which is handled by media container)
+    - queues: "default,payments,notifications,storage,ai"
       threads: 3
       polling_interval: 0.5 # 2 checks per second
 
@@ -34,7 +34,7 @@ production:
       threads: 3
       polling_interval: 0.5
 
-    # Storage uploads, deletion and media processing
+    # Storage uploads, deletion
     - queues: "storage"
       threads: 2
       polling_interval: 1
@@ -43,3 +43,7 @@ production:
     - queues: "ai"
       threads: 2
       polling_interval: 0.5
+
+    # NOTE: :media queue is NOT listed here.
+    # It is processed exclusively by the `media` container
+    # using config/queue.media.yml.

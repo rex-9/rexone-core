@@ -693,7 +693,7 @@ module Openapi
         updated_at: DATE_TIME
       ),
       asset: object(
-        required: %i[id name url type source],
+        required: %i[id name url type source status],
         id: UUID,
         name: { type: :string },
         url: { type: :string, format: :uri },
@@ -703,9 +703,9 @@ module Openapi
         size_bytes: { type: :integer, nullable: true },
         duration_secs: { type: :integer, nullable: true },
         source: { type: :string, enum: [ AssetConstants::AssetSource::UPLOAD, AssetConstants::AssetSource::GOOGLE ] },
+        status: { type: :string, enum: MediaConstants::Status::ALL },
         assetable_type: { type: :string, nullable: true, description: "Polymorphic owner model, e.g. chat_message or user." },
         assetable_id: UUID.merge(nullable: true),
-        created_by_id: UUID.merge(nullable: true),
         created_at: DATE_TIME,
         updated_at: DATE_TIME
       ),
@@ -1175,6 +1175,56 @@ module Openapi
       paths["/v1/feedbacks/{id}"] = {
         get: operation(tags: "Feedbacks", summary: "Get owned feedback details",
                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+
+      asset_filters = %i[search type format source status sort_by sort_order].map { |name| query_parameter(name) }
+      paths["/v1/admin/assets"] = {
+        get: operation(tags: "Admin / Assets", summary: "List and filter assets for admins",
+                       parameters: asset_filters + [
+                         query_parameter(:page, type: :integer),
+                         query_parameter(:limit, type: :integer)
+                       ],
+                       errors: [ 401, 403 ])
+      }
+      paths["/v1/admin/assets/discarded"] = {
+        get: operation(tags: "Admin / Assets", summary: "List discarded assets in the recycle bin",
+                       parameters: [
+                         query_parameter(:limit, type: :integer),
+                         query_parameter(:page, type: :integer),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ], errors: [ 401, 403 ])
+      }
+      paths["/v1/admin/assets/upload"] = {
+        post: operation(tags: "Admin / Assets", summary: "Upload and persist an asset via admin", success: 201,
+                        body: ref(:asset_upload_request), errors: [ 401, 403, 422, 500 ])
+      }
+      paths["/v1/admin/assets/upload"][:post][:requestBody] = {
+        required: true,
+        content: {
+          "multipart/form-data" => {
+            schema: ref(:asset_upload_request)
+          }
+        }
+      }
+      paths["/v1/admin/assets/{id}"] = {
+        get: operation(tags: "Admin / Assets", summary: "Get an admin-managed asset",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / Assets", summary: "Update an admin-managed asset",
+                         parameters: [ path_parameter(:id) ], body: ref(:asset_update_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / Assets", summary: "Permanently destroy an asset",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+      %w[discard undiscard].each do |action|
+        paths["/v1/admin/assets/{id}/#{action}"] = {
+          post: operation(tags: "Admin / Assets", summary: "#{action.capitalize} an asset",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+        }
+      end
+      paths["/v1/admin/assets/{id}/compress"] = {
+        post: operation(tags: "Admin / Assets", summary: "Manually trigger background compression for an asset",
+                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
 
       paths["/v1/assets"] = {

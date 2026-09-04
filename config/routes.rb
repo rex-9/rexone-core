@@ -131,6 +131,7 @@ Rails.application.routes.draw do
         member do
           post :discard
           post :undiscard
+          post :update_compress, path: "compress"
         end
       end
 

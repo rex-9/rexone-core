@@ -18,5 +18,6 @@ module MessageService
     STORAGE_LISTED = "asset.storage_listed"
     STORAGE_LIST_FAILED = "asset.storage_list_failed"
     NOT_FOUND = "asset.not_found"
+    FILE_SIZE_EXCEEDED = "asset.file_size_exceeded"
   end
 end

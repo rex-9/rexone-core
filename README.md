@@ -66,21 +66,22 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 ## Feature map
 
-| Foundation     | What is ready                                                                                   | Details                                                |
-| -------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                          | [Authentication & security](#authentication--security) |
-| Authorization  | Roles, permissions, user-role and role-permission assignments                                   | [IAM & access control](#iam--access-control)           |
-| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                           | [Payments & entitlements](#payments--entitlements)     |
-| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                 | [Background processing](#background-processing)        |
-| Notifications  | Socket, push, and email coordination through OneSignal and Action Cable                         | [Notifications & real time](#notifications--real-time) |
-| Media          | Cloudinary/local providers, uploads, URLs, metadata, queued deletion                            | [Storage & assets](#storage--assets)                   |
-| AI             | Durable queued chat, persisted history, completion alerts, and language tools                   | [AI capabilities](#ai-capabilities)                    |
-| Localization   | Request-scoped English and Myanmar responses with modular domain translations                   | [Localization](#localization)                          |
-| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                  | [Data & API design](#data--api-design)                 |
-| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                           | [Observability](#observability)                        |
-| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, and notifications | [Administration](#administration)                      |
-| Delivery       | Docker images, separate API/worker processes, health checks, graceful shutdown                  | [Deployment](#deployment)                              |
-| Quality        | RSpec, factories, security scanning, dependency auditing, linting                               | [Quality toolchain](#quality-toolchain)                |
+| Foundation     | What is ready                                                                                           | Details                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                  | [Authentication & security](#authentication--security) |
+| Authorization  | Roles, permissions, user-role and role-permission assignments                                           | [IAM & access control](#iam--access-control)           |
+| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                                   | [Payments & entitlements](#payments--entitlements)     |
+| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                         | [Background processing](#background-processing)        |
+| Notifications  | Socket, push, and email coordination through OneSignal and Action Cable                                 | [Notifications & real time](#notifications--real-time) |
+| Media          | Garage S3/Cloudinary/local storage, underground silent compression (libvips/FFmpeg), optimal-first flow | [Storage & assets](#storage--assets)                   |
+| Speech         | Synchronous & async TTS (MP3 binary stream), batch STT, live audio WebSocket streaming (Azure/Nova)     | [Speech capabilities](#speech-capabilities)            |
+| AI             | Durable queued chat, persisted history, completion alerts, and language tools                           | [AI capabilities](#ai-capabilities)                    |
+| Localization   | Request-scoped English and Myanmar responses with modular domain translations                           | [Localization](#localization)                          |
+| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                          | [Data & API design](#data--api-design)                 |
+| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                   | [Observability](#observability)                        |
+| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications     | [Administration](#administration)                      |
+| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                       | [Deployment](#deployment)                              |
+| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                       | [Quality toolchain](#quality-toolchain)                |
 
 ## Architecture
 
@@ -104,11 +105,12 @@ flowchart LR
 
     Services --> Stripe[Stripe]
     Services --> OneSignal[OneSignal]
-    Services --> Cloudinary[Cloudinary]
+    Services --> Storage[Garage S3 · Cloudinary]
     Services --> DeepSeek[DeepSeek]
     Services --> Speech[Nova · Azure Speech]
 
     Jobs --> Services
+    Jobs --> MediaWorker[Media Worker · libvips/FFmpeg]
     API --> Observability[Pulse · RED · client logs]
 ```
 
@@ -129,6 +131,7 @@ The foundation currently queues work where it benefits from durability, isolatio
 | Stripe webhook processing        | `payments`      | Durable ingestion, idempotency, retries, and concurrency safety |
 | Socket, push, and email delivery | `notifications` | Provider latency must not delay the originating request         |
 | Physical asset deletion          | `storage`       | Database operations can complete before remote cleanup          |
+| Image & video compression        | `media`         | Dedicated worker (libvips/FFmpeg) isolating heavy media compute |
 
 Production workers are separated by workload in [`config/queue.yml`](config/queue.yml), and recurring maintenance lives in [`config/recurring.yml`](config/recurring.yml).
 
@@ -199,14 +202,28 @@ The admin- and permission-protected `POST /v1/admin/notifications` contract is r
 
 ### Storage & assets
 
-The storage abstraction supports Cloudinary and a local provider with a consistent interface for upload, deletion, URL generation, move, copy, existence checks, and listing.
+The storage abstraction supports **Garage** (self-hosted S3-compatible distributed object storage), **Cloudinary**, and a local filesystem provider with a unified interface for upload, deletion, URL generation, move, copy, existence checks, and listing.
 
-- Uploads return the URL and metadata the client needs immediately.
-- Assets retain provider identifiers, category, media type, extension, size, source, and ownership.
-- Remote deletion happens after the database transaction commits.
-- Failed deletion is retried and "already absent" is treated idempotently.
-- Local paths are constrained to the configured storage root.
-- Cloudinary image, video, and raw document resource types are handled separately.
+- **Unified Asset Lifecycle**: Uploads return the URL and metadata the client needs immediately while retaining provider identifiers, category, media type, extension, size, source, and ownership.
+- **Durable Cleanup**: Remote deletion executes asynchronously via Solid Queue (`Storage::DeleteJob`) after the database transaction commits, retrying on failure and treating "already absent" objects idempotently.
+- **Provider Switching**: Easily switch between `garage` (S3), `cloudinary`, or `local` via `STORAGE_PROVIDER` without code changes.
+
+#### Silent Underground Media Compression Pipeline
+
+When the media container is enabled (`MEDIA_CONTAINER_ENABLED=true`), uploaded assets run through an isolated, background media optimization pipeline:
+
+- **Isolated Worker (`media` container)**: CPU- and memory-intensive media processing runs on a dedicated Solid Queue worker (`config/queue.media.yml`), completely isolating image/video compression from API requests and transactional jobs.
+- **Image Compression (`Media::CompressImageJob`)**: Powered by `libvips` with smart palette quantization (`palette: true`, dynamic Q factor), dimension constraints (`IMAGE_MAX_WIDTH`, `IMAGE_MAX_HEIGHT`), and format-specific optimizations across JPEG, PNG, and WebP.
+- **Video Compression (`Media::CompressVideoJob`)**: Powered by `ffmpeg` (`libx264`, `aac`) with adaptive CRF tuning, dimension constraints, bitrate caps (`VIDEO_MAX_BITRATE`), and audio stream optimization.
+- **Optimal-First Flow**:
+  - If initial compression yields no improvement or reduction is negligible (`< 3%`), the pipeline immediately marks the asset as `optimal` without incrementing cache counters or scheduling redundant passes.
+  - If meaningful reduction is achieved, the pass counter increments with a fallback safety cap of 2 passes (`MAX_COMPRESSION_PASSES = 2`).
+- **Real-Time Cable Broadcasts**: Status changes (`pending` $\rightarrow$ `processing` $\rightarrow$ `ready` or `optimal`), updated file sizes, and compression ratios broadcast in real-time over ActionCable (`NotificationChannel`) to connected clients.
+- **Upload Boundaries (`MAX_NON_VIDEO_SIZE_MB` & `MAX_VIDEO_SIZE_MB`)**:
+  - Dynamically conditioned on `MEDIA_CONTAINER_ENABLED` and configurable via `MEDIA_MAX_NON_VIDEO_SIZE_MB` and `MEDIA_MAX_VIDEO_SIZE_MB`.
+  - **With Media Container** (`MEDIA_CONTAINER_ENABLED=true`): Defaults to **10 MB** for images/non-videos and **100 MB** for videos.
+  - **Without Media Container** (`MEDIA_CONTAINER_ENABLED=false`): Defaults to **1 MB** for images/non-videos and **10 MB** for videos.
+  - Server-side validation cleanly returns a localized 422 error if files exceed configured limits.
 
 ### AI capabilities
 
@@ -351,20 +368,24 @@ Development placeholders are fine for providers you are not exercising, but neve
 docker compose -f docker-compose.dev.yaml up --build
 ```
 
-This starts:
+This starts the 5-container ecosystem:
 
-- `api` — Rails on [http://localhost:3000](http://localhost:3000)
-- `waka` — the dedicated Solid Queue worker
-- `db` — PostgreSQL
+- `api` — Rails API on [http://localhost:3000](http://localhost:3000)
+- `waka` — General Solid Queue background worker (payments, notifications, AI, speech, storage)
+- `db` — PostgreSQL 18 on port 5432
+- `media` — Dedicated Solid Queue worker for `:media` queue (libvips / FFmpeg compression)
+- `garage` — Self-hosted S3-compatible object storage on [http://localhost:3900](http://localhost:3900) (Admin on port 3902)
 
 The development entrypoint runs `db:prepare` when the API starts.
 
-If you prefer separate terminals, the repository includes:
+If you prefer separate terminals, the repository includes dedicated scripts:
 
 ```bash
-./scripts/dev_db.sh
-./scripts/dev_api.sh
-./scripts/dev_waka.sh
+./scripts/dev_db.sh      # PostgreSQL database container
+./scripts/dev_api.sh     # Rails API server
+./scripts/dev_waka.sh    # General background worker
+./scripts/dev_media.sh   # Dedicated media compression worker
+./scripts/dev_garage.sh  # Garage S3 storage service
 ```
 
 ### 3. Seed IAM and admin users
@@ -410,8 +431,10 @@ The important groups are:
 - JWT/session, confirmation, and password-reset lifetimes.
 - Stripe credentials, webhook secret, and redirect URLs.
 - OneSignal application, API key, sender, and sound configuration.
-- DeepSeek API URL, key, and model.
-- Cloudinary credentials or local storage path.
+- DeepSeek AI API URL, key, and model.
+- Speech services: Azure Speech (key, region) and Nova Speech (key, endpoint) for TTS/STT.
+- Storage & S3: `STORAGE_PROVIDER` (`garage`, `cloudinary`, `local`), S3 endpoints, credentials, and bucket.
+- Media compression: `MEDIA_CONTAINER_ENABLED`, upload size limits (`MEDIA_MAX_VIDEO_SIZE_MB`, `MEDIA_MAX_NON_VIDEO_SIZE_MB`), video profile (CRF, preset, bitrate, resolution), and image profile (JPEG/PNG/WebP quality, compression).
 - Solid Queue process and shutdown settings.
 
 Keep real credentials in your deployment platform or encrypted secret store—not in Git.

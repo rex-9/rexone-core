@@ -22,7 +22,7 @@ module StorageService
 
     def upload(file, options = {})
       storage_key = options[:storage_key] || generate_storage_key(file)
-      folder = options[:folder] || "uploads"
+      folder = storage_key.include?("/") ? nil : (options[:folder] || "uploads")
 
       result = Cloudinary::Uploader.upload(
         file.is_a?(String) ? file : file.path,

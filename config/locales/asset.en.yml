@@ -18,3 +18,4 @@ en:
     storage_listed: "Storage assets listed successfully"
     storage_list_failed: "Failed to list storage assets"
     not_found: "Asset not found"
+    file_size_exceeded: "File size exceeds maximum allowed limit (%{limit}MB)"
