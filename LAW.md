@@ -161,7 +161,7 @@ Service Layer (app/services/)
 ### 5.2 Provider Isolation
 
 - Third-party SDK integrations (Stripe, DeepSeek, Cloudinary, OneSignal) MUST be encapsulated behind generic service client boundaries:
-  - `StorageService::Client` $\rightarrow$ `StorageService::Cloudinary` / `StorageService::Local`
+  - `StorageService::Client` $\rightarrow$ `StorageService::Cloudinary` / `StorageService::Local` / `StorageService::S3`
   - `PaymentService::Client` $\rightarrow$ `PaymentService::Stripe`
   - `AiService::Client` $\rightarrow$ `AiService::DeepSeek`
   - `EmailService::Client` $\rightarrow$ `EmailService::OneSignal`

@@ -91,6 +91,7 @@ gem "rack-attack", "~> 6.8"
 # External Services
 # ============================================================
 
+gem "aws-sdk-s3", "~> 1.229"
 gem "cloudinary", "~> 2.4"
 gem "stripe", "~> 19.6"
 gem "websocket-client-simple", "~> 0.9"

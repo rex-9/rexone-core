@@ -73,7 +73,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                           | [Payments & entitlements](#payments--entitlements)     |
 | Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                 | [Background processing](#background-processing)        |
 | Notifications  | Socket, push, and email coordination through OneSignal and Action Cable                         | [Notifications & real time](#notifications--real-time) |
-| Media          | Cloudinary/local providers, uploads, URLs, metadata, queued deletion                            | [Storage & assets](#storage--assets)                   |
+| Media          | Cloudinary/S3/local providers, uploads, URLs, metadata, queued deletion                         | [Storage & assets](#storage--assets)                   |
 | AI             | Durable queued chat, persisted history, completion alerts, and language tools                   | [AI capabilities](#ai-capabilities)                    |
 | Localization   | Request-scoped English and Myanmar responses with modular domain translations                   | [Localization](#localization)                          |
 | Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                  | [Data & API design](#data--api-design)                 |
@@ -104,7 +104,7 @@ flowchart LR
 
     Services --> Stripe[Stripe]
     Services --> OneSignal[OneSignal]
-    Services --> Cloudinary[Cloudinary]
+    Services --> Storage[Cloudinary · S3]
     Services --> DeepSeek[DeepSeek]
     Services --> Speech[Nova · Azure Speech]
 
@@ -199,7 +199,7 @@ The admin- and permission-protected `POST /v1/admin/notifications` contract is r
 
 ### Storage & assets
 
-The storage abstraction supports Cloudinary and a local provider with a consistent interface for upload, deletion, URL generation, move, copy, existence checks, and listing.
+The storage abstraction supports Cloudinary, any S3-compatible service (Garage, MinIO, R2, AWS), and a local provider with a consistent interface for upload, deletion, URL generation, move, copy, existence checks, and listing. `STORAGE_PROVIDER` selects between them.
 
 - Uploads return the URL and metadata the client needs immediately.
 - Assets retain provider identifiers, category, media type, extension, size, source, and ownership.
@@ -207,6 +207,7 @@ The storage abstraction supports Cloudinary and a local provider with a consiste
 - Failed deletion is retried and "already absent" is treated idempotently.
 - Local paths are constrained to the configured storage root.
 - Cloudinary image, video, and raw document resource types are handled separately.
+- The S3 provider uses path-style addressing, sets an explicit content type on every object, and serves stable public URLs so persisted asset URLs keep resolving.
 
 ### AI capabilities
 
@@ -411,7 +412,7 @@ The important groups are:
 - Stripe credentials, webhook secret, and redirect URLs.
 - OneSignal application, API key, sender, and sound configuration.
 - DeepSeek API URL, key, and model.
-- Cloudinary credentials or local storage path.
+- Storage provider selection plus Cloudinary credentials, S3 endpoint/bucket/keys, or local storage path.
 - Solid Queue process and shutdown settings.
 
 Keep real credentials in your deployment platform or encrypted secret store—not in Git.

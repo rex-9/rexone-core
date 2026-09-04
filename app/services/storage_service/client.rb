@@ -26,13 +26,15 @@ module StorageService
       end
 
       def initialize_provider
-        provider_name = ENV.fetch("STORAGE_PROVIDER", "cloudinary").to_sym
+        provider_name = ENV.fetch("STORAGE_PROVIDER", StorageConstants::Provider::CLOUDINARY)
 
         case provider_name
-        when :cloudinary
+        when StorageConstants::Provider::CLOUDINARY
           Cloudinary.new
-        when :local
+        when StorageConstants::Provider::LOCAL
           Local.new
+        when StorageConstants::Provider::S3
+          S3.new
         else
           raise Error, "Unknown storage provider: #{provider_name}"
         end

@@ -36,6 +36,14 @@ module AppConfig
   AZURE_SPEECH_LANGUAGE = ENV.fetch("AZURE_SPEECH_LANGUAGE", "en-US")
   AZURE_SPEECH_VOICE = ENV.fetch("AZURE_SPEECH_VOICE", "en-US-AvaNeural")
 
+  # S3-compatible storage (Garage, MinIO, R2, AWS)
+  S3_ENDPOINT = ENV.fetch("S3_ENDPOINT", "")
+  S3_REGION = ENV.fetch("S3_REGION", "garage")
+  S3_ACCESS_KEY_ID = ENV.fetch("S3_ACCESS_KEY_ID", "")
+  S3_SECRET_ACCESS_KEY = ENV.fetch("S3_SECRET_ACCESS_KEY", "")
+  S3_BUCKET = ENV.fetch("S3_BUCKET", "")
+  S3_PUBLIC_BASE_URL = ENV.fetch("S3_PUBLIC_BASE_URL", "")
+
   # Session & token timeouts
   SESSION_TIMEOUT = ENV.fetch("SESSION_TIMEOUT") { 1.week }.to_i.seconds # 7-day maximum login, Cache Active Platform Session Lifespan
   JWT_EXPIRATION = ENV.fetch("JWT_EXPIRATION") { 1.week }.to_i.seconds #  7-day inactivity timeout, JWT Token Expiration Lifespan
