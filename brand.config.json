@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "brand": {
+    "name": "Rexone",
+    "slug": "rexone",
+    "shortName": "Rexone",
+    "description": "Unified Cross-Platform Product Foundation",
+    "company": "Rex9",
+    "author": "Rex (Htet Naing)",
+    "supportEmail": "rex9.tech@gmail.com",
+    "website": "https://rex9.vercel.app",
+    "logoPath": "brand/logo.png"
+  },
+  "mobile": {
+    "appName": "Rexone Mobile",
+    "packageName": "com.rex9.rexone",
+    "bundleId": "com.rex9.rexone"
+  },
+  "web": {
+    "appName": "Rexone Web",
+    "title": "Rexone — Product Foundation",
+    "shortName": "Rexone"
+  },
+  "core": {
+    "appName": "Rexone Core",
+    "mailerSender": "no-reply@rexone.com"
+  }
+}

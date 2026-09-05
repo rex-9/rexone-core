@@ -12,16 +12,16 @@ my:
         email: "အီးမေးလ်"
         username: "အသုံးပြုသူအမည်"
         name: "အမည်"
-        password: "လျှို့ဝှက်နံပါတ်"
-        password_confirmation: "လျှို့ဝှက်နံပါတ် အတည်ပြုချက်"
+        password: "စကားဝှက်"
+        password_confirmation: "စကားဝှက် အတည်ပြုချက်"
     errors:
       models:
         user:
           attributes:
             username:
-              invalid_format: "အင်္ဂလိပ်စာလုံးအသေး၊ နံပါတ်နှင့် underscore တို့သာ ပါဝင်နိုင်ပါသည်"
+              invalid_format: "စာလုံးအသေး၊ ဂဏန်းနှင့် _ သာ ရပါမည်"
             confirmation_code:
-              invalid_or_expired: "မမှန်ကန်ပါ သို့မဟုတ် သက်တမ်းကုန်သွားပါပြီ"
+              invalid_or_expired: "မမှန်ပါ သို့မဟုတ် သက်တမ်းကုန်သွားပါပြီ"
   errors:
     format: "%{attribute} %{message}"
     messages:
@@ -30,5 +30,5 @@ my:
       too_short: "အနည်းဆုံး စာလုံး %{count} လုံး ရှိရမည်"
       too_long: "အများဆုံး စာလုံး %{count} လုံးသာ ရှိရမည်"
       wrong_length: "စာလုံး %{count} လုံး ဖြစ်ရမည်"
-      invalid: "မမှန်ကန်ပါ"
+      invalid: "မမှန်ပါ"
       confirmation: "မကိုက်ညီပါ"

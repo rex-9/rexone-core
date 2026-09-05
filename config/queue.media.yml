@@ -1,0 +1,31 @@
+# config/queue.media.yml
+# SolidQueue configuration for the `media` container.
+# This worker ONLY processes jobs on the :media queue.
+# Usage: ./bin/jobs -c config/queue.media.yml
+
+default: &default
+  dispatchers:
+    - polling_interval: 2
+      batch_size: 50
+      concurrency_maintenance_interval: 60
+
+development:
+  <<: *default
+  workers:
+    - queues: "media"
+      threads: 2
+      polling_interval: 1
+
+test:
+  <<: *default
+  workers:
+    - queues: "media"
+      threads: 1
+      polling_interval: 0.5
+
+production:
+  <<: *default
+  workers:
+    - queues: "media"
+      threads: 2
+      polling_interval: 1

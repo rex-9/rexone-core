@@ -131,6 +131,23 @@ RSpec.describe "Admin payment products", type: :request do
     expect(PaymentService::Client).to have_received(:discard_product).with(product.id)
   end
 
+  it "assigns a thumbnail to a product" do
+    grant_admin_product_permission(:update)
+    product = create(:payment_product)
+    thumbnail_asset = create(:asset, type: AssetConstants::AssetType::THUMBNAIL, format: "image", assetable: nil)
+
+    allow(PaymentService::Client).to receive(:update_product).and_return(data: product)
+
+    patch "/v1/admin/payment/products/#{product.id}",
+          params: { product: { thumbnail_asset_id: thumbnail_asset.id } },
+          headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(response_data["thumbnail_asset_id"]).to eq(thumbnail_asset.id)
+    expect(response_data["thumbnail_url"]).to eq(thumbnail_asset.url)
+    expect(thumbnail_asset.reload.assetable).to eq(product)
+  end
+
   it "restores a discarded Stripe-backed product" do
     grant_admin_product_permission(:delete)
     product = create(:payment_product)

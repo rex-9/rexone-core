@@ -21,6 +21,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
       bytes: 12345,
       format: "mp3"
     )
+    allow(StorageService::Client).to receive(:url).and_return("https://cdn.example.com/speech.mp3")
 
     expect { described_class.perform_now(message.id) }.to change(Asset, :count).by(1)
 
@@ -35,8 +36,8 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
       size_bytes: 12345,
       source: "upload",
       storage_key: storage_key,
-      resource_model: "chat_message",
-      resource_id: message.id
+      assetable_type: "Chat::Message",
+      assetable_id: message.id
     )
     expect(message).to have_attributes(
       tts_status: "completed",
@@ -65,8 +66,8 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
               id: asset.id,
               url: "https://cdn.example.com/speech.mp3",
               type: "audio",
-              resource_model: "chat_message",
-              resource_id: message.id
+              assetable_type: "Chat::Message",
+              assetable_id: message.id
             )
           ]
         )
@@ -83,8 +84,8 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
       name: AssetConstants::AssetName.tts_for_message(message.id),
       url: "https://cdn.example.com/old.mp3",
       storage_key: storage_key,
-      resource_model: "chat_message",
-      resource_id: message.id
+      assetable_type: "Chat::Message",
+      assetable_id: message.id
     )
     message.update!(metadata: message.metadata.merge("tts_status" => "queued"))
 

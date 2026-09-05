@@ -34,8 +34,8 @@ RSpec.describe "Google authentication", type: :request do
         :asset,
         source: AssetConstants::AssetSource::GOOGLE,
         storage_key: nil,
-        resource_model: "user",
-        resource_id: user.id,
+        assetable_type: "user",
+        assetable_id: user.id,
         url: "https://lh3.googleusercontent.com/stale-avatar"
       )
       stub_google_token(email: user.email, name: user.name, picture: "https://example.com/avatar.jpg")
@@ -43,12 +43,12 @@ RSpec.describe "Google authentication", type: :request do
       post "/signin/google", params: { token: "google-token" }
 
       expect(response).to have_http_status(:ok)
-      expect(user.reload.get_profile_pic_url).to eq("https://example.com/avatar.jpg")
+      expect(user.reload.get_avatar_url).to eq("https://example.com/avatar.jpg")
       expect(StorageService::Client).to have_received(:upload).with(
         "https://example.com/avatar.jpg",
         hash_including(
           storage_key: AssetConstants::AssetName.google_profile(user.id),
-          folder: AssetConstants::AssetType::AVATAR,
+          folder: "user_uploads/#{AssetConstants::AssetType::AVATAR}",
           resource_type: AssetConstants::AssetFormat::IMAGE
         )
       )
@@ -126,16 +126,17 @@ RSpec.describe "Google authentication", type: :request do
       expect(response).to have_http_status(:created)
       expect(user).to be_confirmed
       expect(user).to have_attributes(username: "new_user", provider: "google")
-      expect(user.assets.uploaded.find_by(type: AssetConstants::AssetType::AVATAR)).to have_attributes(
-        name: AssetConstants::AssetName.google_profile(user.id),
+      expect(user.assets.find_by(type: AssetConstants::AssetType::AVATAR)).to have_attributes(
+        name: a_string_starting_with("users/#{user.id}/avatar_google_"),
         url: "https://example.com/avatar.jpg",
-        format: AssetConstants::AssetFormat::IMAGE
+        format: AssetConstants::AssetFormat::IMAGE,
+        source: AssetConstants::AssetSource::GOOGLE
       )
       expect(StorageService::Client).to have_received(:upload).with(
         "https://example.com/avatar.jpg",
         hash_including(
           storage_key: AssetConstants::AssetName.google_profile(user.id),
-          folder: AssetConstants::AssetType::AVATAR,
+          folder: "user_uploads/#{AssetConstants::AssetType::AVATAR}",
           resource_type: AssetConstants::AssetFormat::IMAGE
         )
       )

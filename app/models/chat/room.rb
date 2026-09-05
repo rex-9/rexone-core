@@ -9,11 +9,11 @@ module Chat
 
     validates :title, presence: true
 
-    scope :recent, -> { order(created_at: :desc) }
+    scope :recent, -> { order(SortConstants::Columns::CHAT_ROOM.first => SortConstants::Order::DESC) }
     scope :for_user, ->(user) { where(user: user) }
 
     def last_message
-      messages.order(created_at: :desc).first
+      messages.order(SortConstants::Columns::CHAT_MSG.first => SortConstants::Order::DESC).first
     end
 
     def message_count

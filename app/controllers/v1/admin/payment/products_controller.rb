@@ -44,10 +44,16 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
     result = PaymentService::Client.create_product(product_params)
     return render_service_error(MessageService::Payment::PRODUCT_CREATE_FAILED, result[:error]) if result[:error]
 
+    product = result[:data]
+    if thumbnail_param_provided? && product.respond_to?(:persisted?) && product.persisted?
+      assign_thumbnail(product)
+      product.reload
+    end
+
     render_json_response(
       status_code: 201,
       message: payment_message(MessageService::Payment::PRODUCT_CREATED),
-      data: ::Payment::ProductSerializer.new(result[:data]).serializable_hash[:data][:attributes]
+      data: ::Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
     )
   rescue ActiveRecord::RecordInvalid => error
     render_service_error(MessageService::Payment::PRODUCT_CREATE_FAILED, error.record.errors.full_messages.to_sentence)
@@ -58,10 +64,16 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
     result = PaymentService::Client.update_product(@product.id, product_params)
     return render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, result[:error]) if result[:error]
 
+    product = result[:data]
+    if thumbnail_param_provided? && product.respond_to?(:persisted?) && product.persisted?
+      assign_thumbnail(product)
+      product.reload
+    end
+
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::PRODUCT_UPDATED),
-      data: ::Payment::ProductSerializer.new(result[:data]).serializable_hash[:data][:attributes]
+      data: ::Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
     )
   rescue ActiveRecord::RecordInvalid => error
     render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, error.record.errors.full_messages.to_sentence)
@@ -107,6 +119,23 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
                    .symbolize_keys
 
     values
+  end
+
+  def thumbnail_param_provided?
+    params[:product].respond_to?(:key?) && params[:product].key?(:thumbnail_asset_id)
+  end
+
+  def assign_thumbnail(product)
+    thumbnail_asset_id = params.dig(:product, :thumbnail_asset_id)
+
+    if thumbnail_asset_id.present?
+      asset = Asset.find(thumbnail_asset_id)
+      old_thumbnails = product.assets.where(type: AssetConstants::AssetType::THUMBNAIL).where.not(id: asset.id)
+      Asset.purge_and_destroy_all!(old_thumbnails)
+      asset.update!(assetable: product, type: AssetConstants::AssetType::THUMBNAIL)
+    else
+      Asset.purge_and_destroy_all!(product.assets.where(type: AssetConstants::AssetType::THUMBNAIL))
+    end
   end
 
   def render_service_error(message_key, error)

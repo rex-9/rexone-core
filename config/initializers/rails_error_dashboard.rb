@@ -100,7 +100,7 @@ RailsErrorDashboard.configure do |config|
   # config.webhook_urls = ENV.fetch("WEBHOOK_URLS", "").split(",").map(&:strip).reject(&:empty?)
 
   # Dashboard base URL (used in notification links)
-  config.dashboard_base_url = ENV["DASHBOARD_BASE_URL"]
+  config.dashboard_base_url = AppConfig::DASHBOARD_BASE_URL
 
   # ============================================================================
   # PERFORMANCE & SCALABILITY
@@ -261,8 +261,8 @@ RailsErrorDashboard.configure do |config|
   # }
 
   # Enhanced metrics (optional)
-  config.app_version = ENV["APP_VERSION"]
-  config.git_sha = ENV["GIT_SHA"]
+  config.app_version = AppConfig::APP_VERSION
+  config.git_sha = AppConfig::GIT_SHA
   # config.total_users_for_impact = 10000  # For user impact % calculation
 
   # Git repository URL for clickable commit links and issue tracking

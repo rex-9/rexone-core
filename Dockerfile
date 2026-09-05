@@ -18,6 +18,7 @@ WORKDIR /rails
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
       curl \
+      ffmpeg \
       libjemalloc2 \
       libvips \
       postgresql-client && \

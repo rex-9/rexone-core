@@ -66,6 +66,7 @@ RSpec.describe "Queued AI chat", type: :request do
   end
 
   it "returns TTS assets on room history messages" do
+    allow(StorageService::Client).to receive(:url).and_return("https://cdn.example.com/speech.mp3")
     assistant_message = create(:chat_message, room: room, role: "assistant", content: "Hello there")
     create(
       :asset,
@@ -73,9 +74,9 @@ RSpec.describe "Queued AI chat", type: :request do
       format: "audio",
       source: "upload",
       url: "https://cdn.example.com/speech.mp3",
-      storage_key: "speech/tts/tts_of_message_#{assistant_message.id}",
-      resource_model: "chat_message",
-      resource_id: assistant_message.id
+      storage_key: "speech/tts/tts_message_#{assistant_message.id}",
+      assetable_type: "Chat::Message",
+      assetable_id: assistant_message.id
     )
     assistant_message.update!(
       metadata: assistant_message.metadata.merge(
@@ -92,8 +93,8 @@ RSpec.describe "Queued AI chat", type: :request do
       hash_including(
         "url" => "https://cdn.example.com/speech.mp3",
         "type" => "audio",
-        "resource_model" => "chat_message",
-        "resource_id" => assistant_message.id
+        "assetable_type" => "Chat::Message",
+        "assetable_id" => assistant_message.id
       )
     )
   end

@@ -124,6 +124,23 @@ Rails.application.routes.draw do
     # Requires admin role (with `_admin` suffix) + resource permissions.
     namespace :admin do
       # API-only: no new/edit needed
+      resources :assets, only: %i[index show update destroy] do
+        collection do
+          get :read_discarded, path: "discarded"
+          post :create_upload, path: "upload"
+          get :read_storage_stats, path: "storage_stats"
+          delete :destroy_bin, path: "bin"
+          post :discard_batch
+          post :undiscard_batch
+          post :destroy_batch
+        end
+        member do
+          post :discard
+          post :undiscard
+          post :update_compress, path: "compress"
+        end
+      end
+
       resources :users, only: %i[index show create update] do
         collection do
           get :read_discarded, path: "discarded"

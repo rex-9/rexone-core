@@ -66,21 +66,22 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 ## Feature map
 
-| Foundation     | What is ready                                                                                   | Details                                                |
-| -------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                          | [Authentication & security](#authentication--security) |
-| Authorization  | Roles, permissions, user-role and role-permission assignments                                   | [IAM & access control](#iam--access-control)           |
-| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                           | [Payments & entitlements](#payments--entitlements)     |
-| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                 | [Background processing](#background-processing)        |
-| Notifications  | Socket, push, and email coordination through OneSignal and Action Cable                         | [Notifications & real time](#notifications--real-time) |
-| Media          | Cloudinary/S3/local providers, uploads, URLs, metadata, queued deletion                         | [Storage & assets](#storage--assets)                   |
-| AI             | Durable queued chat, persisted history, completion alerts, and language tools                   | [AI capabilities](#ai-capabilities)                    |
-| Localization   | Request-scoped English and Myanmar responses with modular domain translations                   | [Localization](#localization)                          |
-| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                  | [Data & API design](#data--api-design)                 |
-| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                           | [Observability](#observability)                        |
-| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, and notifications | [Administration](#administration)                      |
-| Delivery       | Docker images, separate API/worker processes, health checks, graceful shutdown                  | [Deployment](#deployment)                              |
-| Quality        | RSpec, factories, security scanning, dependency auditing, linting                               | [Quality toolchain](#quality-toolchain)                |
+| Foundation     | What is ready                                                                                           | Details                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                  | [Authentication & security](#authentication--security) |
+| Authorization  | Roles, permissions, user-role and role-permission assignments                                           | [IAM & access control](#iam--access-control)           |
+| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                                   | [Payments & entitlements](#payments--entitlements)     |
+| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                         | [Background processing](#background-processing)        |
+| Notifications  | Socket, push, and email coordination through OneSignal and Action Cable                                 | [Notifications & real time](#notifications--real-time) |
+| Media          | Garage S3/Cloudinary/local storage, underground silent compression (libvips/FFmpeg), optimal-first flow | [Storage & assets](#storage--assets)                   |
+| Speech         | Synchronous & async TTS (MP3 binary stream), batch STT, live audio WebSocket streaming (Azure/Nova)     | [Speech capabilities](#speech-capabilities)            |
+| AI             | Durable queued chat, persisted history, completion alerts, and language tools                           | [AI capabilities](#ai-capabilities)                    |
+| Localization   | Request-scoped English and Myanmar responses with modular domain translations                           | [Localization](#localization)                          |
+| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                          | [Data & API design](#data--api-design)                 |
+| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                   | [Observability](#observability)                        |
+| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications     | [Administration](#administration)                      |
+| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                       | [Deployment](#deployment)                              |
+| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                       | [Quality toolchain](#quality-toolchain)                |
 
 ## Architecture
 
@@ -104,11 +105,12 @@ flowchart LR
 
     Services --> Stripe[Stripe]
     Services --> OneSignal[OneSignal]
-    Services --> Storage[Cloudinary · S3]
+    Services --> Storage[Garage S3 · Cloudinary]
     Services --> DeepSeek[DeepSeek]
     Services --> Speech[Nova · Azure Speech]
 
     Jobs --> Services
+    Jobs --> MediaWorker[Media Worker · libvips/FFmpeg]
     API --> Observability[Pulse · RED · client logs]
 ```
 
@@ -128,7 +130,7 @@ The foundation currently queues work where it benefits from durability, isolatio
 | -------------------------------- | --------------- | --------------------------------------------------------------- |
 | Stripe webhook processing        | `payments`      | Durable ingestion, idempotency, retries, and concurrency safety |
 | Socket, push, and email delivery | `notifications` | Provider latency must not delay the originating request         |
-| Physical asset deletion          | `storage`       | Database operations can complete before remote cleanup          |
+| Image & video compression        | `media`         | Dedicated worker (libvips/FFmpeg) isolating heavy media compute |
 
 Production workers are separated by workload in [`config/queue.yml`](config/queue.yml), and recurring maintenance lives in [`config/recurring.yml`](config/recurring.yml).
 
@@ -199,15 +201,45 @@ The admin- and permission-protected `POST /v1/admin/notifications` contract is r
 
 ### Storage & assets
 
-The storage abstraction supports Cloudinary, any S3-compatible service (Garage, MinIO, R2, AWS), and a local provider with a consistent interface for upload, deletion, URL generation, move, copy, existence checks, and listing. `STORAGE_PROVIDER` selects between them.
+The storage abstraction defaults to **Garage** (self-hosted S3-compatible distributed object storage on port 3100) with full fallback support for **Cloudinary** and local filesystem storage. Read the complete [Garage Guide](docs/GARAGE.md) for architecture, configuration, and UI tooling.
 
-- Uploads return the URL and metadata the client needs immediately.
-- Assets retain provider identifiers, category, media type, extension, size, source, and ownership.
-- Remote deletion happens after the database transaction commits.
-- Failed deletion is retried and "already absent" is treated idempotently.
-- Local paths are constrained to the configured storage root.
-- Cloudinary image, video, and raw document resource types are handled separately.
-- The S3 provider uses path-style addressing, sets an explicit content type on every object, and serves stable public URLs so persisted asset URLs keep resolving.
+- **Hierarchical S3 Key Structure**:
+  - Admin uploads: `admin/{type}_{name}_{timestamp}.{ext}`
+  - User uploads: `users/{user_id}/{type}_{name}_{timestamp}.{ext}`
+  - Google avatar imports: `users/{user_id}/avatar_google_{timestamp}.{ext}`
+- **Zero-Footprint Storage In-Place Rename**: When an administrator updates an asset's `type` via the Admin Portal, the backend dynamically moves the storage object (`StorageService::Client.move(old_key, new_key)`) without creating duplicate or orphaned files in Garage.
+- **Storage & VPS Capacity Monitoring**: `GET /v1/admin/assets/storage_stats` polls the Garage Admin API (`S3_ADMIN_ENDPOINT=http://garage:3101`, `S3_ADMIN_TOKEN=...`) to return real-time bucket usage (bytes, object count) and VPS host disk capacity (total/free bytes, used/free percentages), triggering proactive low-disk alerts when free disk space falls below 15%.
+- **Automated Backup Scripts**:
+  - `scripts/backup_db.sh`: Automated PostgreSQL database dumps with 7-day rolling retention.
+  - `scripts/backup_garage.sh`: Automated Garage metadata & block backups with 7-day rolling retention.
+  - `scripts/backup_all.sh`: Unified single-command backup runner configured for cron automation.
+- **Empty Recycle Bin (`DELETE /v1/admin/assets/bin`)**: Hard-purges all discarded assets (`Asset.purge_and_destroy_all!`) and immediately removes backing objects from Garage S3 / Cloudinary storage without orphaned files.
+- **Batch Operations**:
+  - `POST /v1/admin/assets/batch_discard`: Multi-select soft-deletion (discards multiple active assets to recycle bin via `discard_batch`).
+  - `POST /v1/admin/assets/batch_undiscard`: Multi-select restoration (restores multiple discarded assets via `undiscard_batch`).
+  - `POST /v1/admin/assets/batch_destroy`: Multi-select permanent purging (hard-deletes selected assets and immediately purges backing objects from Garage S3 via `destroy_batch`).
+  - All lifecycle actions map cleanly: `destroy_bin`, `destroy_batch`, `discard_batch`, and `undiscard_batch` resolve uniformly under `:delete` permission in authorization.
+- **Unified Asset Lifecycle**: Uploads return the URL and metadata the client needs immediately while retaining provider identifiers, category, media type, extension, size, source, and ownership.
+- **Default Self-Hosted Storage**: `STORAGE_PROVIDER=garage` uses the official `aws-sdk-s3` client connected to the local or production Garage daemon (`http://garage:3100` / `http://localhost:3100`).
+- **Instant Clean Purge**: Storage deletion executes directly (`StorageService::Client.delete`) upon record destruction commit, ensuring storage objects are permanently cleaned without orphan drift.
+- **Provider Switching**: Easily switch between `garage` (S3), `cloudinary`, or `local` via `STORAGE_PROVIDER` without code changes.
+
+#### Silent Underground Media Compression Pipeline
+
+When the media container is enabled (`MEDIA_CONTAINER_ENABLED=true`), uploaded assets run through an isolated, background media optimization pipeline:
+
+- **Isolated Worker (`media` container)**: CPU- and memory-intensive media processing runs on a dedicated Solid Queue worker (`config/queue.media.yml`), completely isolating image/video compression from API requests and transactional jobs.
+- **Image Compression (`Media::CompressImageJob`)**: Powered by `libvips` with smart palette quantization (`palette: true`, dynamic Q factor), dimension constraints (`IMAGE_MAX_WIDTH`, `IMAGE_MAX_HEIGHT`), and format-specific optimizations across JPEG, PNG, and WebP.
+- **Video Compression (`Media::CompressVideoJob`)**: Powered by `ffmpeg` (`libx264`, `aac`) with adaptive CRF tuning, dimension constraints, bitrate caps (`VIDEO_MAX_BITRATE`), and audio stream optimization.
+- **Optimal-First Flow**:
+  - If initial compression yields no improvement or reduction is negligible (`< 3%`), the pipeline immediately marks the asset as `optimal` without incrementing cache counters or scheduling redundant passes.
+  - If meaningful reduction is achieved, the pass counter increments with a fallback safety cap of 2 passes (`MAX_COMPRESSION_PASSES = 2`).
+- **Real-Time Cable Broadcasts**: Status changes (`pending` $\rightarrow$ `processing` $\rightarrow$ `ready` or `optimal`), updated file sizes, and compression ratios broadcast in real-time over ActionCable (`NotificationChannel`) to connected clients.
+- **Upload Boundaries (`MAX_NON_VIDEO_SIZE_MB` & `MAX_VIDEO_SIZE_MB`)**:
+  - Dynamically conditioned on `MEDIA_CONTAINER_ENABLED` and configurable via `MEDIA_MAX_NON_VIDEO_SIZE_MB` and `MEDIA_MAX_VIDEO_SIZE_MB`.
+  - **With Media Container** (`MEDIA_CONTAINER_ENABLED=true`): Defaults to **10 MB** for images/non-videos and **100 MB** for videos.
+  - **Without Media Container** (`MEDIA_CONTAINER_ENABLED=false`): Defaults to **1 MB** for images/non-videos and **10 MB** for videos.
+  - Server-side validation cleanly returns a localized 422 error if files exceed configured limits.
 
 ### AI capabilities
 
@@ -352,20 +384,24 @@ Development placeholders are fine for providers you are not exercising, but neve
 docker compose -f docker-compose.dev.yaml up --build
 ```
 
-This starts:
+This starts the 5-container ecosystem:
 
-- `api` — Rails on [http://localhost:3000](http://localhost:3000)
-- `waka` — the dedicated Solid Queue worker
-- `db` — PostgreSQL
+- `api` — Rails API on [http://localhost:3000](http://localhost:3000)
+- `waka` — General Solid Queue background worker (payments, notifications, AI, speech)
+- `db` — PostgreSQL 18 on port 5432
+- `media` — Dedicated Solid Queue worker for `:media` queue (libvips / FFmpeg compression)
+- `garage` — Self-hosted S3-compatible object storage on [http://localhost:3100](http://localhost:3100) (Admin on port 3101)
 
 The development entrypoint runs `db:prepare` when the API starts.
 
-If you prefer separate terminals, the repository includes:
+If you prefer separate terminals, the repository includes dedicated scripts:
 
 ```bash
-./scripts/dev_db.sh
-./scripts/dev_api.sh
-./scripts/dev_waka.sh
+./scripts/dev_db.sh      # PostgreSQL database container
+./scripts/dev_api.sh     # Rails API server
+./scripts/dev_waka.sh    # General background worker
+./scripts/dev_media.sh   # Dedicated media compression worker
+./scripts/dev_garage.sh  # Garage S3 storage service
 ```
 
 ### 3. Seed IAM and admin users
@@ -390,6 +426,12 @@ Review and replace seeded credentials before using them outside local developmen
 # Run the repository test script
 ./scripts/test.sh
 
+# Automated Backups
+./scripts/backup_all.sh     # Backs up both PostgreSQL and Garage S3 storage
+./scripts/backup_db.sh      # Backs up PostgreSQL database (.sql.gz)
+./scripts/backup_garage.sh  # Backs up Garage S3 metadata and data volumes (.tar.gz)
+
+
 # Watch specs
 ./scripts/test_watch.sh
 
@@ -406,14 +448,18 @@ The checked-in [`.env.example`](.env.example) documents the available settings.
 
 The important groups are:
 
-- Rails environment, URLs, logging, threads, and secrets.
-- PostgreSQL connection and Docker service names.
+- **Centralized Application Configuration**: All environment variables are validated, given safe defaults, and mapped to constants in [`config/app_config.rb`](config/app_config.rb) (`AppConfig::*`), preventing string typos and runtime drift across environments.
+- Rails environment, URLs, logging, threads, ports, and secrets (`PORT`, `RAILS_SECRET_KEY_BASE`, `RAILS_MASTER_KEY`).
+- PostgreSQL connection, connection pools (`DB_POOL`, `API_DB_POOL`, `WAKA_DB_POOL`, `MEDIA_DB_POOL`), and Docker service names.
 - JWT/session, confirmation, and password-reset lifetimes.
 - Stripe credentials, webhook secret, and redirect URLs.
 - OneSignal application, API key, sender, and sound configuration.
-- DeepSeek API URL, key, and model.
-- Storage provider selection plus Cloudinary credentials, S3 endpoint/bucket/keys, or local storage path.
-- Solid Queue process and shutdown settings.
+- DeepSeek AI API URL, key, and model.
+- Speech services: Azure Speech (key, region) and Nova Speech (key, endpoint) for TTS/STT.
+- Storage & S3: `STORAGE_PROVIDER` (`garage`, `cloudinary`, `local`), S3 endpoints, credentials, and bucket.
+- Media compression: `MEDIA_CONTAINER_ENABLED`, upload size limits (`MEDIA_MAX_VIDEO_SIZE_MB`, `MEDIA_MAX_NON_VIDEO_SIZE_MB`), video profile (CRF, preset, bitrate, resolution), and image profile (JPEG/PNG/WebP quality, compression).
+- Solid Queue process, supervisors (`SOLID_QUEUE_IN_PUMA`), and shutdown settings (`SOLID_QUEUE_SHUTDOWN_TIMEOUT`).
+- Observability & Error Dashboard: `DASHBOARD_BASE_URL`, `APP_VERSION`, `GIT_SHA`.
 
 Keep real credentials in your deployment platform or encrypted secret store—not in Git.
 
@@ -455,10 +501,34 @@ Before production:
 6. Put TLS and a trusted reverse proxy in front of the application.
 7. Review retention, throttling, alerting, and backup policies for your product.
 
-## Related clients
+## Clients in Rexone Ecosystem
 
 - [Rexone Web](https://github.com/rex-9/rexone-web) — web client
 - [Rexone Mobile](https://github.com/rex-9/rexone_mobile) — mobile client
+
+## 🎨 Rebranding
+
+Rexone Core serves as the master rebranding engine for the entire ecosystem:
+
+```bash
+# 1. Rebrand all 3 repositories from rexone-core:
+./scripts/rebrand.sh brand.config.json
+
+# 2. Local environment variables in .env:
+APP_NAME="My New App Name"
+DEFAULT_MAIL_SENDER="no-reply@mynewapp.com"
+```
+
+---
+
+## 🏛️ Ecosystem Lineage & Attribution
+
+This API core is built on top of the **Rexone Ecosystem** (`rex-9`). When creating derivative products or white-label backends:
+
+- Developers and creators are warmly encouraged to preserve ecosystem credit in documentation to support the project.
+- All development must strictly adhere to the constitutional engineering standards in **[LAW.md](LAW.md)** and **[ECOSYSTEM.md](ECOSYSTEM.md)**.
+
+---
 
 ## Support the project
 
@@ -468,7 +538,7 @@ If Rexone Core saves you a few weeks—or saves you from one memorable productio
 
 ## Author
 
-Built with clarity, curiosity, and a healthy suspicion of unexamined complexity by **Rex (Rex9)**.
+Built with Clarity & Simplicity Driven Development, by **Rex (Rex9)**.
 
 A software engineer, full-stack architect, and long-time practitioner of meditation.
 
@@ -477,5 +547,7 @@ I build systems the same way I approach the path itself: **with a clear mind, de
 - GitHub: [@rex-9](https://github.com/rex-9)
 - Portfolio: [rex9.vercel.app](https://rex9.vercel.app)
 - LinkedIn: [rex9](https://www.linkedin.com/in/rex9/)
+
+_Built with ❤️ by Rex9 on Rexone Ecosystem_
 
 <p align="right"><a href="#readme-top">Back to top ↑</a></p>

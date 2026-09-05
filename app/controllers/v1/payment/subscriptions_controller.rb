@@ -2,7 +2,7 @@
 class V1::Payment::SubscriptionsController < V1::ApplicationController
   # GET /payment/subscriptions?page=1&limit=10
   def index
-    subscriptions = current_user.subscriptions.includes(:product).order(created_at: :desc)
+    subscriptions = current_user.subscriptions.includes(:product).order(SortConstants::Columns::PRODUCT.first => SortConstants::Order::DESC)
     pagy, records = pagy(:offset, subscriptions, limit: params[:limit])
 
     render_json_response(

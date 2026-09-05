@@ -3,12 +3,12 @@
 module AssetConstants
   module AssetType
     AVATAR     = "avatar".freeze
-    COVER      = "cover".freeze
-    CARD       = "card".freeze
+    THUMBNAIL  = "thumbnail".freeze
     AUDIO      = "audio".freeze
     VIDEO      = "video".freeze
     ATTACHMENT = "attachment".freeze
     GENERAL    = "general".freeze
-    ALL        = [ AVATAR, COVER, CARD, AUDIO, VIDEO, ATTACHMENT, GENERAL ].freeze
+    ALL        = [ AVATAR, THUMBNAIL, AUDIO, VIDEO, ATTACHMENT, GENERAL ].freeze
+    IMAGE_TYPES = [ AVATAR, THUMBNAIL ].freeze
   end
 end

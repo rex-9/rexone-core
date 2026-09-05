@@ -40,19 +40,36 @@ class V1::AssetsController < V1::ApplicationController
       return
     end
 
+    max_size_mb = if determine_resource_type(file) == "video"
+                    MediaConstants::MAX_VIDEO_SIZE_MB
+    else
+                    MediaConstants::MAX_NON_VIDEO_SIZE_MB
+    end
+
+    if file.size > max_size_mb.megabytes
+      render_json_response(
+        status_code: 422,
+        message: asset_message(MessageService::Asset::SAVE_FAILED),
+        error: asset_message(
+          MessageService::Asset::FILE_SIZE_EXCEEDED,
+          limit: max_size_mb
+        )
+      )
+      return
+    end
+
     asset_type = params[:type].presence || AssetConstants::AssetType::GENERAL
-    resource_model = params[:resource_model].presence
-    resource_id = params[:resource_id].presence
+    assetable_type = params[:assetable_type].presence
+    assetable_id = params[:assetable_id].presence
     duration_secs = params[:duration_secs]
 
     # Generate storage_key
-    storage_key = "#{File.basename(file.original_filename, '.*')}_of_user_#{current_user.id}_#{Time.now.to_i}"
+    storage_key = AssetConstants::AssetName.for_user(user_id: current_user.id, type: asset_type, original_filename: file.original_filename)
 
     # Upload to storage service
     result = StorageService::Client.upload(
       file,
       storage_key: storage_key,
-      folder: params[:folder] || asset_type,
       resource_type: determine_resource_type(file),
       metadata: {
         user_id: current_user.id.to_s,
@@ -70,13 +87,20 @@ class V1::AssetsController < V1::ApplicationController
       size_bytes: result[:bytes],
       duration_secs: duration_secs,
       source: AssetConstants::AssetSource::UPLOAD,
-      resource_model: resource_model,
-      resource_id: resource_id,
+      assetable_type: assetable_type,
+      assetable_id: assetable_id,
       storage_key: result[:storage_key],
       extension: result[:format] || File.extname(file.original_filename).delete("."),
+      status: compression_status_for(file)
     )
 
     if asset.save
+      enqueue_compression_if_needed(asset)
+      if asset.type == AssetConstants::AssetType::AVATAR && asset.assetable_type.to_s.downcase == "user" && asset.assetable_id.present?
+        old_avatars = Asset.where(type: AssetConstants::AssetType::AVATAR, assetable_type: asset.assetable_type, assetable_id: asset.assetable_id)
+                           .where.not(id: asset.id)
+        Asset.purge_and_destroy_all!(old_avatars)
+      end
       render_json_response(
         status_code: 201,
         message: asset_message(MessageService::Asset::UPLOADED),
@@ -90,7 +114,7 @@ class V1::AssetsController < V1::ApplicationController
         }
       )
     else
-      StorageService::Client.delete_later(
+      StorageService::Client.delete(
         result[:storage_key],
         resource_type: result[:resource_type]
       )
@@ -221,38 +245,43 @@ class V1::AssetsController < V1::ApplicationController
   end
 
   def asset_params
-    params.require(:asset).permit(:name, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :resource_model, :resource_id)
+    params.require(:asset).permit(:name, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :assetable_type, :assetable_id)
   end
 
   def determine_resource_type(file)
-    extension = File.extname(file.original_filename).delete(".").downcase
-
-    case extension
-    when "jpg", "jpeg", "png", "gif", "webp", "svg"
-      "image"
-    when "mp4", "mov", "avi", "webm", "mkv", "mp3", "wav", "m4a", "aac", "ogg", "flac"
-      "video"
-    when "pdf", "doc", "docx", "txt", "rtf"
-      "raw"
-    else
-      "auto"
-    end
+    ext = File.extname(file.original_filename).delete(".").downcase
+    AssetConstants::AssetFormat.storage_resource_type(ext)
   end
 
   def determine_asset_format(file)
-    extension = File.extname(file.original_filename).delete(".").downcase
+    ext = File.extname(file.original_filename).delete(".").downcase
+    AssetConstants::AssetFormat.from_extension(ext)
+  end
 
-    case extension
-    when "jpg", "jpeg", "png", "gif", "webp", "svg"
-      AssetConstants::AssetFormat::IMAGE
-    when "mp3", "wav", "m4a", "aac", "ogg", "flac"
-      AssetConstants::AssetFormat::AUDIO
-    when "mp4", "mov", "avi", "webm", "mkv"
-      AssetConstants::AssetFormat::VIDEO
-    when "pdf", "doc", "docx", "txt", "rtf"
-      AssetConstants::AssetFormat::DOC
+  def compression_status_for(file)
+    if MediaConstants::MEDIA_CONTAINER_ENABLED && file_compressible?(file)
+      MediaConstants::Status::PENDING
     else
-      nil
+      MediaConstants::Status::READY
     end
+  end
+
+  def enqueue_compression_if_needed(asset)
+    return unless asset.status == MediaConstants::Status::PENDING
+
+    if asset.compressible_video?
+      Media::CompressVideoJob.perform_later(asset_id: asset.id)
+      Rails.logger.info("[AssetsController] Enqueued video compression for asset #{asset.id}")
+    elsif asset.compressible_image?
+      Media::CompressImageJob.perform_later(asset_id: asset.id)
+      Rails.logger.info("[AssetsController] Enqueued image compression for asset #{asset.id}")
+    end
+  end
+
+  def file_compressible?(file)
+    filename = file.respond_to?(:original_filename) ? file.original_filename : file.to_s
+    ext = File.extname(filename).delete(".").downcase
+    MediaConstants::COMPRESSIBLE_VIDEO_EXTENSIONS.include?(ext) ||
+      MediaConstants::COMPRESSIBLE_IMAGE_EXTENSIONS.include?(ext)
   end
 end

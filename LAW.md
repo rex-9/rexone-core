@@ -1,10 +1,22 @@
 > [!IMPORTANT]
 >
-> ### 🏛️ The Foundation Creed
+> ### 🏛️ The Foundation Creed & Supreme Motivation
 >
 > **"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."**
 >
-> This document defines the non-negotiable architectural laws and engineering standards for **Rexone Core** (`rexone-core` Rails API). Every developer, agent, and contributor must adhere strictly to these rules. Zero exceptions.
+> 📜 **Supreme Constitutional Primacy**: Non-negotiable architectural laws and engineering standards for all human engineers and autonomous AI agents on **Rexone Core** (`rexone-core`).
+>
+> **The Law Takes Absolute First Priority Over The Code**:  
+> - `LAW.md` represents the non-negotiable constitutional framework of this ecosystem.
+> - **NEVER modify, bend, or "fix" `LAW.md` to accommodate non-compliant code.**
+> - If existing code violates or deviates from `LAW.md`, **THE CODE IS WRONG — FIX THE CODE.**
+> - `LAW.md` may ONLY be adjusted when the project creator (Rex) explicitly decrees a constitutional law change.
+>
+> This application is built upon the **Rexone Ecosystem** (`rex-9`). These are immutable **Rexone Laws and Protocols** to be strictly observed and enforced without any exception across all human engineers and autonomous AI agents. Developers building on top of this foundation are warmly encouraged to preserve ecosystem credit to support the project.
+
+> > _"If you don't follow These LAWS, u're gay."_
+> >
+> > — _Newton'z Law_
 
 ---
 
@@ -42,13 +54,14 @@
 
 - **Rule**: NEVER add `avatar_url`, `image_url`, `video_url`, or specific media URL columns into the `users` table or any domain resource tables (`products`, `courses`, etc.).
 - ALL media is managed through the distributed centralized `assets` table:
-  - Polymorphic link: `resource_model` (e.g. `"user"`) and `resource_id` (UUID).
+  - Polymorphic link: Rails standard `assetable_type` (e.g. `"User"`) and `assetable_id` (UUID) via `belongs_to :assetable, polymorphic: true, optional: true`.
   - Metadata: `storage_key`, `type` (`AssetConstants::AssetType::*`), `format` (`AssetConstants::AssetFormat::*`), `source` (`AssetConstants::AssetSource::*`), `size_bytes`, `duration_secs`, `extension`.
-- Setting polymorphic resources (e.g., `asset.resource = user`) automatically populates `resource_model = "user"` (`record.class.model_name.singular`) and `resource_id = user.id`.
+- Owning models declare `has_many :assets, as: :assetable`. Setting `asset.assetable = user` automatically populates `assetable_type = "User"` and `assetable_id = user.id` via Rails standard polymorphic behavior.
 
-### 2.2 Dynamic User Avatar Resolution
+### 2.2 User Avatar & Product Cover Resolution
 
-- The `User` model resolves avatars via `User#get_profile_pic_url`, querying `assets.where(type: AssetConstants::AssetType::AVATAR).order(Arel.sql("CASE WHEN source = 'upload' THEN 1 ELSE 2 END"), created_at: :desc).first&.url`.
+- Each `User` has at most one avatar asset, resolved via `User#get_avatar_url` (`assets.find_by(type: AssetConstants::AssetType::AVATAR)&.url`). When a new avatar is uploaded or assigned, any prior avatar asset for that user is destroyed and replaced.
+- Each `Payment::Product` has at most one cover asset, resolved via `Payment::Product#get_thumbnail_url` (`assets.find_by(type: AssetConstants::AssetType::THUMBNAIL)&.url`).
 
 ---
 
@@ -175,7 +188,27 @@ Service Layer (app/services/)
 
 ---
 
-## 🗄️ 6. Models, Database & Migrations Law
+## 🔐 6. RBAC & IAM Authorization Law
+
+### 6.1 Three-Tier Administrative Hierarchy
+
+1. **`super_admin`**: Full authority across all operational, user governance, and IAM resource domains.
+2. **`admin`**: Full operational authority (`feedbacks`, `payments`, `ai`, `logs`, `notifications`). Excluded from `users` and `iam`.
+3. **Partial Admin (`*_admin` Suffix)**: Scoped authority over specific domain capabilities (e.g. `notification_admin`, `product_admin`, `chat_admin`, `log_admin`, `feedback_admin`).
+
+### 6.2 Strict Non-Admin Role Isolation & Scoping Law
+
+- **Non-Admin Portal Isolation**: Users holding ONLY non-admin roles (`user`, `member`, `subscriber`) have ZERO access to administrative endpoints or portal capabilities.
+- **Role Scoping / Partitioning**: When evaluating administrative permissions, capabilities are scoped STRICTLY to resources covered by the user's active **admin roles** (`super_admin`, `admin`, `*_admin`). Permissions granted under base/non-admin roles (`user`) are ignored and never leak into administrative workflows.
+- **Granular CUD Action Enforcement**:
+  - `create`: Gated by `user.can?(:create, resource)`.
+  - `update` / `edit`: Gated by `user.can?(:update, resource)`.
+  - `discard` / `undiscard` / `destroy`: Gated by `user.can?(:delete, resource)`.
+  - `read` / `index` / `show`: Gated by `user.can?(:read, resource)`.
+
+---
+
+## 🗄️ 7. Models, Database & Migrations Law
 
 - **UUID Primary Keys**: All tables use `id: :uuid, default: -> { "gen_random_uuid()" }`.
 - **Soft Deletion & Lifecycle Hierarchy**:
@@ -228,9 +261,30 @@ Service Layer (app/services/)
 
 ---
 
-## 📚 11. Documentation Synchronization Law
+## 📚 11. Omnipresent Documentation Synchronization Law
 
-- **Rule**: After EVERY feature creation, modification, or bugfix:
-  - **`README.md`** MUST be updated with newly added endpoints, dashboard routes, jobs, or configuration variables.
-  - **`ECOSYSTEM.md`** MUST be updated if changes affect cross-platform feature parity, shared contracts, WebSocket events, or communication protocols between Core, Web, and Mobile.
-  - **`LAW.md`** represents the non-negotiable constitutional framework; it should ONLY be modified when establishing, refining, or expanding fundamental architectural laws and engineering standards.
+- **Rule**: Documentation is NOT an afterthought; documentation files MUST be updated synchronously in the exact same turn as code changes:
+  - **`README.md`** MUST be updated with newly added endpoints, dashboard routes, jobs, CLI scripts, or configuration variables.
+  - **`ECOSYSTEM.md`** MUST be updated whenever changes affect cross-platform feature parity, shared contracts, WebSocket events, or communication protocols between Core, Web, and Mobile.
+  - **`SCHEMA.md`** MUST be updated synchronously whenever tables, columns, indexes, or ApplicationRecord models are modified (Law 12).
+  - **`LAW.md`** represents the supreme, non-negotiable constitutional framework. **The Law takes absolute first priority over the code.** Never alter or weaken `LAW.md` to justify non-compliant code; fix the code instead. `LAW.md` should ONLY be adjusted when the project creator (Rex) explicitly decrees a constitutional law change.
+
+---
+
+## 🏛️ 12. Database Schema Documentation Law (`SCHEMA.md`)
+
+- **Rule**: `SCHEMA.md` MUST be updated synchronously EVERY TIME the database schema is updated:
+  - Whenever a database migration is created, run, or modified (`db/migrate/*` or `db/schema.rb`).
+  - Whenever an `ApplicationRecord` model is created, updated, soft-deleted, or deleted.
+  - Whenever new columns, foreign keys, indexes, enums, or relationships are added or changed.
+  - **Omission Rule**: Keep `SCHEMA.md` focused strictly on **Core Application Records** (`users`, `roles`, `permissions`, `products`, `subscriptions`, `transactions`, `accesses`, `assets`, `chat_rooms`, `chat_messages`, `feedbacks`, `log_clients`). NEVER include background engine / APM telemetry tables (`solid_queue_*`, `solid_cable_*`, `solid_cache_*`, `rails_pulse_*`, `rails_error_dashboard_*`).
+  - **Zero Tolerance**: Leaving `SCHEMA.md` out-of-sync with `db/schema.rb` or active models is an architectural violation.
+
+---
+
+## 🔒 13. Environment File & Secret Isolation Law
+
+- **Rule**: NEVER inspect, read, parse, or directly modify git-ignored `.env` files via automated tools or background scripts.
+- **Git Visibility**: Code modifications, default settings, and schema changes MUST leave history in git source control. Modifying private `.env` files behind the scenes violates auditability.
+- **Example File Standard**: ONLY `.env.example` may be inspected or updated to document newly introduced environment keys and configurations.
+- **Developer Copy-Paste Protocol**: When credentials, access tokens, or configuration variables are generated or required, agents must provide clear, explicit code snippets in the response for developers to copy-paste into their local `.env` files manually.

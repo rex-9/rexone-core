@@ -3,8 +3,12 @@
 class UserSerializer < ApplicationSerializer
   attributes :id, :email, :username, :name, :provider, :created_at, :updated_at, :discarded_at, :undiscarded_at
 
-  attribute :profile_pic_url do |user|
-    user.get_profile_pic_url
+  attribute :avatar_url do |user|
+    user.get_avatar_url
+  end
+
+  attribute :avatar_asset_id do |user|
+    user.assets.find_by(type: AssetConstants::AssetType::AVATAR)&.id
   end
 
   attribute :role_ids do |user|

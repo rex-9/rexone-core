@@ -11,7 +11,7 @@ FactoryBot.define do
     source { "upload" }
     sequence(:storage_key) { |n| "avatar/asset_file_#{n}" }
     association :creator, factory: :user
-    resource_model { "user" }
-    resource_id { creator&.id || SecureRandom.uuid }
+    assetable_type { "User" }
+    assetable_id { creator&.id || SecureRandom.uuid }
   end
 end

@@ -2,7 +2,7 @@
 class V1::Payment::ProductsController < V1::ApplicationController
   # GET /payment/products?page=1&limit=10
   def index
-    products = Payment::Product.active.order(created_at: :desc)
+    products = Payment::Product.active.order(SortConstants::Columns::PRODUCT.first => SortConstants::Order::DESC)
     pagy, records = pagy(:offset, products, limit: params[:limit])
 
     render_json_response(

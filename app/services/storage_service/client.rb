@@ -10,14 +10,9 @@ module StorageService
                :copy,
                :exists?,
                :list,
+               :download,
+               :storage_stats,
                to: :provider
-
-      def delete_later(identifier, options = {})
-        Storage::DeleteJob.perform_later(
-          identifier: identifier,
-          options: options
-        )
-      end
 
       private
 
@@ -26,15 +21,15 @@ module StorageService
       end
 
       def initialize_provider
-        provider_name = ENV.fetch("STORAGE_PROVIDER", StorageConstants::Provider::CLOUDINARY)
+        provider_name = AppConfig::STORAGE_PROVIDER.to_sym
 
         case provider_name
-        when StorageConstants::Provider::CLOUDINARY
+        when :garage
+          Garage.new
+        when :cloudinary
           Cloudinary.new
-        when StorageConstants::Provider::LOCAL
+        when :local
           Local.new
-        when StorageConstants::Provider::S3
-          S3.new
         else
           raise Error, "Unknown storage provider: #{provider_name}"
         end

@@ -49,6 +49,7 @@ RSpec.configure do |config|
         { name: 'Admin / Payment Products', description: 'Admin payment product operations.' },
         { name: 'Admin / Feedbacks', description: 'Admin feedback review and triage.' },
         { name: 'Admin / Analytics', description: 'Admin analytics overview metrics and KPIs.' },
+        { name: 'Admin / Assets', description: 'Admin asset management, upload, and media compression.' },
         { name: 'IAM Permissions', description: 'Super-admin permission management.' },
         { name: 'IAM Roles', description: 'Role definitions and their permission assignments.' },
         { name: 'IAM User Roles', description: 'Admin-managed role assignments for users.' },

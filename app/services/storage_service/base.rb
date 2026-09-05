@@ -29,5 +29,13 @@ module StorageService
     def list(prefix = nil)
       raise NotImplementedError, "#{self.class} must implement #list"
     end
+
+    def download(identifier, destination_path = nil)
+      raise NotImplementedError, "#{self.class} must implement #download"
+    end
+
+    def storage_stats
+      raise NotImplementedError, "#{self.class} must implement #storage_stats"
+    end
   end
 end

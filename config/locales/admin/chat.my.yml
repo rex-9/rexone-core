@@ -1,13 +1,13 @@
 my:
   admin:
     chat:
-      rooms_retrieved: "ချတ်ခန်းများကို ရယူပြီးပါပြီ။"
-      room_retrieved: "ချတ်ခန်းကို ရယူပြီးပါပြီ။"
-      room_updated: "ချတ်ခန်းကို ပြင်ဆင်ပြီးပါပြီ။"
-      room_update_failed: "ချတ်ခန်းကို ပြင်ဆင်၍ မရပါ။"
-      room_deleted: "ချတ်ခန်းကို ဖျက်ပြီးပါပြီ။"
-      messages_retrieved: "ချတ်စာများကို ရယူပြီးပါပြီ။"
-      message_retrieved: "ချတ်စာကို ရယူပြီးပါပြီ။"
-      message_updated: "ချတ်စာကို ပြင်ဆင်ပြီးပါပြီ။"
-      message_update_failed: "ချတ်စာကို ပြင်ဆင်၍ မရပါ။"
-      message_deleted: "ချတ်စာကို ဖျက်ပြီးပါပြီ။"
+      rooms_retrieved: "အခန်းများ ရယူပြီးပါပြီ။"
+      room_retrieved: "အခန်း အချက်အလက် ရယူပြီးပါပြီ။"
+      room_updated: "အခန်း ပြင်ဆင်ပြီးပါပြီ။"
+      room_update_failed: "အခန်း ပြင်၍ မရပါ။"
+      room_deleted: "အခန်း ဖျက်ပြီးပါပြီ။"
+      messages_retrieved: "မက်ဆေ့ခ်ျများ ရယူပြီးပါပြီ။"
+      message_retrieved: "မက်ဆေ့ခ်ျ ရယူပြီးပါပြီ။"
+      message_updated: "မက်ဆေ့ခ်ျ ပြင်ဆင်ပြီးပါပြီ။"
+      message_update_failed: "မက်ဆေ့ခ်ျ ပြင်၍ မရပါ။"
+      message_deleted: "မက်ဆေ့ခ်ျ ဖျက်ပြီးပါပြီ။"

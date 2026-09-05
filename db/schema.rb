@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_04_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -45,6 +45,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
   end
 
   create_table "assets", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "assetable_id"
+    t.string "assetable_type"
     t.datetime "created_at", null: false
     t.uuid "created_by_id"
     t.datetime "discarded_at"
@@ -53,10 +55,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
     t.string "extension"
     t.string "format"
     t.string "name", null: false
-    t.uuid "resource_id"
-    t.string "resource_model"
     t.bigint "size_bytes"
     t.string "source", default: "upload", null: false
+    t.string "status", default: "pending", null: false
     t.string "storage_key"
     t.string "type", default: "general", null: false
     t.datetime "undiscarded_at"
@@ -64,11 +65,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
     t.datetime "updated_at", null: false
     t.uuid "updated_by_id"
     t.string "url", null: false
+    t.index ["assetable_type", "assetable_id"], name: "index_assets_on_assetable_type_and_assetable_id"
     t.index ["created_by_id"], name: "index_assets_on_created_by_id"
     t.index ["discarded_at"], name: "index_assets_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_assets_on_discarded_by_id"
     t.index ["name"], name: "index_assets_on_name"
-    t.index ["resource_model", "resource_id"], name: "index_assets_on_resource_model_and_resource_id"
+    t.index ["status"], name: "index_assets_on_status"
     t.index ["type"], name: "index_assets_on_type"
     t.index ["undiscarded_by_id"], name: "index_assets_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_assets_on_updated_by_id"

@@ -43,3 +43,8 @@
 /.cursor/skills/
 /.cursor/instruction.md
 
+# Backups
+/backups/*
+!/backups/.keep
+
+

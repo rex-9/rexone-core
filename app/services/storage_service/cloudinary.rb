@@ -11,9 +11,9 @@ module StorageService
 
     def initialize
       Cloudinary.config do |config|
-        config.cloud_name = ENV.fetch("CLOUDINARY_CLOUD_NAME")
-        config.api_key = ENV.fetch("CLOUDINARY_API_KEY")
-        config.api_secret = ENV.fetch("CLOUDINARY_API_SECRET")
+        config.cloud_name = AppConfig::CLOUDINARY_CLOUD_NAME
+        config.api_key = AppConfig::CLOUDINARY_API_KEY
+        config.api_secret = AppConfig::CLOUDINARY_API_SECRET
         config.secure = true
       end
     rescue KeyError => e
@@ -22,7 +22,7 @@ module StorageService
 
     def upload(file, options = {})
       storage_key = options[:storage_key] || generate_storage_key(file)
-      folder = options[:folder] || "uploads"
+      folder = storage_key.include?("/") ? nil : (options[:folder] || "uploads")
 
       result = Cloudinary::Uploader.upload(
         file.is_a?(String) ? file : file.path,
@@ -158,13 +158,49 @@ module StorageService
           timestamp: timestamp,
           transformation: transformation.join("/")
         },
-        ENV.fetch("CLOUDINARY_API_SECRET")
+        AppConfig::CLOUDINARY_API_SECRET
       )
 
       {
         url: url(identifier, transformation: transformation),
         expiry: Time.at(timestamp),
         signature: signature
+      }
+    end
+
+    def download(identifier, destination_path = nil)
+      require "open-uri"
+      download_url = url(identifier)
+
+      if destination_path
+        URI.open(download_url) do |remote|
+          File.open(destination_path, "wb") do |local|
+            IO.copy_stream(remote, local)
+          end
+        end
+        destination_path
+      else
+        URI.open(download_url, &:read)
+      end
+    rescue => e
+      Rails.logger.error("#{LOG_PREFIX} Download Error: #{e.message}")
+      raise StorageService::Error, e.message
+    end
+
+    def storage_stats
+      bytes = defined?(Asset) ? Asset.kept.where(source: AssetConstants::AssetSource::UPLOAD).sum(:size_bytes).to_i : 0
+      objects = defined?(Asset) ? Asset.kept.where(source: AssetConstants::AssetSource::UPLOAD).count : 0
+
+      {
+        provider: "cloudinary",
+        bucket: "cloudinary",
+        bucket_bytes: bytes,
+        bucket_objects: objects,
+        disk_available_bytes: 0,
+        disk_total_bytes: 0,
+        disk_used_percent: nil,
+        disk_free_percent: nil,
+        node_capacity_bytes: 0
       }
     end
 

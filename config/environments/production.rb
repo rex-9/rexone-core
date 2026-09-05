@@ -53,7 +53,7 @@ Rails.application.configure do
   config.solid_queue.logger = config.logger
 
   # Change to "debug" to log everything (including potentially personally-identifiable information!).
-  config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
+  config.log_level = AppConfig::RAILS_LOG_LEVEL
 
   # Prevent health checks from clogging up the logs.
   config.silence_healthcheck_path = "/up"
@@ -86,7 +86,7 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: ENV["RAILS_SERVER_HOST"], protocol: "https" }
+  config.action_mailer.default_url_options = { host: AppConfig::RAILS_SERVER_HOST, protocol: "https" }
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {
@@ -100,11 +100,11 @@ Rails.application.configure do
   # SMTP settings
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    address:              ENV["SMTP_ADDRESS"],
-    port:                 ENV["SMTP_PORT"],
-    domain:               ENV["SMTP_DOMAIN"],
-    user_name:            ENV["SMTP_USERNAME"],
-    password:             ENV["SMTP_PASSWORD"],
+    address:              AppConfig::SMTP_ADDRESS,
+    port:                 AppConfig::SMTP_PORT,
+    domain:               AppConfig::SMTP_DOMAIN,
+    user_name:            AppConfig::SMTP_USERNAME,
+    password:             AppConfig::SMTP_PASSWORD,
     authentication:       "plain",
     enable_starttls_auto: true
   }

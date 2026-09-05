@@ -50,7 +50,7 @@ class Ai::ProcessChatJob < ApplicationJob
   def conversation_for(user_message)
     messages = user_message.room.messages
                            .where("created_at <= ?", user_message.created_at)
-                           .order(created_at: :desc)
+                           .order(SortConstants::Columns::CHAT_MSG.first => SortConstants::Order::DESC)
                            .limit(20)
                            .reverse
                            .map { |message| { role: message.role, content: message.content } }

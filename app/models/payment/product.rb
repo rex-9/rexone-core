@@ -19,6 +19,8 @@ class Payment::Product < ApplicationRecord
           foreign_key: :product_id,
           dependent: :restrict_with_exception
 
+  has_many :assets, as: :assetable, dependent: :nullify
+
   # ===== ENUMS =====
   enum :cycle, { monthly: "month", yearly: "year" }, prefix: true
   enum :currency, { usd: "usd" }, prefix: true
@@ -83,6 +85,10 @@ class Payment::Product < ApplicationRecord
   def period_label
     return "One-time purchase" unless recurring?
     cycle.humanize.downcase
+  end
+
+  def get_thumbnail_url
+    assets.find_by(type: AssetConstants::AssetType::THUMBNAIL)&.url
   end
 
   private
