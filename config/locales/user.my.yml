@@ -1,9 +1,11 @@
 my:
   user:
-    current_fetched: "အသုံးပြုသူ အချက်အလက် ရယူပြီးပါပြီ။"
-    not_authenticated: "အကောင့် မဝင်ထားပါ။"
-    current_not_found: "အသုံးပြုသူ ရှာမတွေ့ပါ။"
-    iam_fetched: "IAM အချက်အလက် ရယူပြီးပါပြီ"
+    current_fetched: "လက်ရှိအသုံးပြုသူ အချက်အလက်ကို ရယူပြီးပါပြီ။"
+    not_authenticated: "အသုံးပြုသူကို အတည်ပြုမထားပါ။"
+    current_not_found: "လက်ရှိအသုံးပြုသူကို ရှာမတွေ့ပါ။"
+    iam_fetched: "အသုံးပြုသူ IAM အချက်အလက်ကို ရယူပြီးပါပြီ"
+    current_updated: "ပရိုဖိုင်ကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။"
+    current_update_failed: "ပရိုဖိုင်ကို ပြင်ဆင်ရန် မအောင်မြင်ပါ။"
   activerecord:
     attributes:
       user:

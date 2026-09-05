@@ -200,6 +200,19 @@ module Openapi
           role_ids: { type: :array, uniqueItems: true, items: UUID }
         )
       ),
+      current_user_update_request: object(
+        required: [ :user ],
+        user: object(
+          name: { type: :string, maxLength: 50, example: "Alice Updated" },
+          username: {
+            type: :string,
+            minLength: 3,
+            maxLength: 30,
+            pattern: "^[a-z0-9_]+$",
+            example: "alice_new"
+          }
+        )
+      ),
       admin_chat_room_request: object(
         required: [ :room ],
         room: object(
@@ -822,7 +835,13 @@ module Openapi
           )
         },
         "/v1/users/current" => {
-          get: operation(tags: "Users", summary: "Get the current user", errors: [ 401 ])
+          get: operation(tags: "Users", summary: "Get the current user", errors: [ 401 ]),
+          put: operation(
+            tags: "Users",
+            summary: "Update the current user's name and username",
+            body: ref(:current_user_update_request),
+            errors: [ 401, 403, 422 ]
+          )
         },
         "/v1/users/current/iam" => {
           get: operation(tags: "Users", summary: "Get the current user's roles and permissions", errors: [ 401 ])

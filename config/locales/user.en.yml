@@ -4,6 +4,8 @@ en:
     not_authenticated: "User not authenticated."
     current_not_found: "No current user found."
     iam_fetched: "User IAM fetched"
+    current_updated: "Profile updated successfully."
+    current_update_failed: "Failed to update profile."
   activerecord:
     attributes:
       user:

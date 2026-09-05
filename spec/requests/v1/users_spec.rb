@@ -68,4 +68,62 @@ RSpec.describe "V1 Users API", type: :request do
       expect(response_status["error"]).to include("users")
     end
   end
+
+  describe "PUT /v1/users/current" do
+    before { grant_permissions(user, "users", :update) }
+
+    it "updates name and username" do
+      put "/v1/users/current",
+          params: { user: { name: "Alice Updated", username: "alice_new" } },
+          headers: headers,
+          as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response_status["message"]).to eq(I18n.t("user.current_updated"))
+      expect(response_data.dig("user", "name")).to eq("Alice Updated")
+      expect(response_data.dig("user", "username")).to eq("alice_new")
+      expect(user.reload).to have_attributes(name: "Alice Updated", username: "alice_new")
+    end
+
+    it "returns 422 when the username is already taken" do
+      create(:user, username: "bob")
+
+      put "/v1/users/current",
+          params: { user: { username: "bob" } },
+          headers: headers,
+          as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response_status["message"]).to eq(I18n.t("user.current_update_failed"))
+      expect(response_status["error"]).to match(/taken/i)
+      expect(user.reload.username).not_to eq("bob")
+    end
+
+    it "ignores non-permitted attributes like email" do
+      original_email = user.email
+
+      put "/v1/users/current",
+          params: { user: { name: "Only Name", email: "hacker@example.com" } },
+          headers: headers,
+          as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.dig("user", "name")).to eq("Only Name")
+      expect(user.reload.email).to eq(original_email)
+    end
+
+    it "requires update users permission" do
+      user.user_roles.destroy_all
+      grant_permissions(user, "users", :read)
+
+      put "/v1/users/current",
+          params: { user: { name: "Nope" } },
+          headers: headers,
+          as: :json
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response_status["error"]).to include("update")
+      expect(response_status["error"]).to include("users")
+    end
+  end
 end

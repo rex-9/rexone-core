@@ -27,7 +27,7 @@ module IamConstants
     USERS         = "users".freeze
     ROLES         = "roles".freeze
     USER_ROLES    = "user_roles".freeze
-    PERMISSIONS   = "permissions".freeze
+  PERMISSIONS   = "permissions".freeze
     PRODUCTS      = "products".freeze
     PAYMENTS      = "payments".freeze
     SUBSCRIPTIONS = "subscriptions".freeze
