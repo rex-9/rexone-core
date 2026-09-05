@@ -6,6 +6,30 @@ RSpec.describe Notification::DispatchJob, type: :job do
   let(:teacher_role) { create(:role, name: "teacher") }
   let(:admin_role) { create(:role, name: "admin") }
 
+  let!(:announcement) do
+    create(:notification,
+      event: "general_announcement",
+      name: "Announcement",
+      in_app_title: "Announcement",
+      in_app_body: "We have an important announcement for you.",
+      push_title: "Announcement",
+      push_body: "We have an important announcement for you.",
+      email_subject: "Announcement",
+      email_body: "We have an important announcement for you."
+    )
+  end
+
+  let!(:feature_update) do
+    create(:notification,
+      event: "feature_update",
+      name: "New Feature",
+      in_app_title: "New Feature",
+      in_app_body: "A new feature is available.",
+      push_title: "New Feature",
+      push_body: "A new feature is available."
+    )
+  end
+
   before do
     allow(NotificationService::Center).to receive(:notify)
   end
@@ -24,14 +48,20 @@ RSpec.describe Notification::DispatchJob, type: :job do
     expect(NotificationService::Center).to have_received(:notify).once.with(
       user_id: first_user.id,
       user_email: first_user.email,
+      template_id: announcement.id,
       title: "Announcement",
       message: "We have an important announcement for you.",
+      push_title: "Announcement",
+      push_body: "We have an important announcement for you.",
+      link: nil,
       data: { type: "general_announcement" },
-      email_template: NotificationService::Templates::GENERAL_ANNOUNCEMENT,
+      push_template_id: nil,
+      email_template: nil,
       email_template_data: {
-        event: "general_announcement",
         title: "Announcement",
         message: "We have an important announcement for you.",
+        subject: "Announcement",
+        body: "We have an important announcement for you.",
         user_name: first_user.name || first_user.username
       },
       send_socket: true,
@@ -68,23 +98,29 @@ RSpec.describe Notification::DispatchJob, type: :job do
     )
   end
 
-  it "enqueues in-app notification delivery with message" do
+  it "enqueues in-app notification delivery with message and persists user notification" do
     allow(NotificationService::Center).to receive(:notify).and_call_original
 
-    described_class.perform_now(
-      audience: { type: "users", user_ids: [ second_user.id ] },
-      channels: %w[socket],
-      event: "general_announcement",
-      locale: "en"
-    )
+    expect {
+      described_class.perform_now(
+        audience: { type: "users", user_ids: [ second_user.id ] },
+        channels: %w[socket],
+        event: "general_announcement",
+        locale: "en"
+      )
+    }.to change { second_user.user_notifications.count }.by(1)
+
+    created_notification = second_user.user_notifications.last
 
     expect(Notification::DeliverJob).to have_been_enqueued.with(
       channel: :socket,
-      payload: {
+      payload: hash_including(
         user_id: second_user.id,
+        id: created_notification.id,
+        title: "Announcement",
         message: "We have an important announcement for you.",
-        data: { type: "general_announcement" }
-      }
+        data: { "type" => "general_announcement" }
+      )
     )
   end
 

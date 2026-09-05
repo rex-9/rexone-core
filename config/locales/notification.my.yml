@@ -35,3 +35,18 @@ my:
     sign_in_alert:
       title: "အကောင့်ဝင်ရောက်မှုသစ်"
       body: "မင်္ဂလာပါ %{name}၊ သင့်အကောင့်သို့ အသစ်ဝင်ရောက်မှုတစ်ခု ရှိပါသည်။"
+    notifications_fetched: "အသိပေးချက်များ ရယူပြီးပါပြီ။"
+    unread_count_fetched: "မဖတ်ရသေးသော အသိပေးချက် အရေအတွက် ရယူပြီးပါပြီ။"
+    marked_as_read: "အသိပေးချက်ကို ဖတ်ပြီးအဖြစ် သတ်မှတ်ပြီးပါပြီ။"
+    all_marked_as_read: "အသိပေးချက် အားလုံးကို ဖတ်ပြီးအဖြစ် သတ်မှတ်ပြီးပါပြီ။"
+    notification_deleted: "အသိပေးချက်ကို ပယ်ဖျက်ပြီးပါပြီ။"
+    notification_not_found: "အသိပေးချက် ရှာမတွေ့ပါ။"
+    template_created: "Notification template အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ။"
+    template_updated: "Notification template အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။"
+    template_discarded: "Notification template ကို အမှိုက်ပုံးသို့ ရွှေ့ပြီးပါပြီ။"
+    template_undiscarded: "Notification template ကို ပြန်လည်ရယူပြီးပါပြီ။"
+    notification_created: "Notification အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ။"
+    notification_updated: "Notification အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။"
+    notification_discarded: "Notification ကို အမှိုက်ပုံးသို့ ရွှေ့ပြီးပါပြီ။"
+    notification_undiscarded: "Notification ကို ပြန်လည်ရယူပြီးပါပြီ။"
+

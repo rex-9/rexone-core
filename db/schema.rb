@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_05_100002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -282,6 +282,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
     t.index ["updated_by_id"], name: "index_log_clients_on_updated_by_id"
     t.index ["user_id", "created_at"], name: "index_log_clients_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_log_clients_on_user_id"
+  end
+
+  create_table "notifications", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.boolean "admin", default: true, null: false
+    t.string "category", default: "broadcast", null: false
+    t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.text "description"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
+    t.text "email_body"
+    t.string "email_subject"
+    t.string "email_template_id"
+    t.string "event", null: false
+    t.text "in_app_body"
+    t.jsonb "in_app_data", default: {}
+    t.string "in_app_title"
+    t.string "link"
+    t.string "name", null: false
+    t.text "push_body"
+    t.string "push_template_id"
+    t.string "push_title"
+    t.integer "read_count", default: 0, null: false
+    t.integer "sent_count", default: 0, null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
+    t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.index ["category"], name: "index_notifications_on_category"
+    t.index ["created_by_id"], name: "index_notifications_on_created_by_id"
+    t.index ["discarded_at"], name: "index_notifications_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_notifications_on_discarded_by_id"
+    t.index ["event"], name: "index_notifications_on_event"
+    t.index ["undiscarded_by_id"], name: "index_notifications_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_notifications_on_updated_by_id"
   end
 
   create_table "payment_products", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -965,6 +1000,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "user_notifications", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.jsonb "data", default: {}, null: false
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
+    t.string "link"
+    t.text "message", null: false
+    t.uuid "notification_id"
+    t.datetime "read_at"
+    t.string "title", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
+    t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.uuid "user_id", null: false
+    t.index ["created_by_id"], name: "index_user_notifications_on_created_by_id"
+    t.index ["discarded_at"], name: "index_user_notifications_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_user_notifications_on_discarded_by_id"
+    t.index ["notification_id"], name: "index_user_notifications_on_notification_id"
+    t.index ["undiscarded_by_id"], name: "index_user_notifications_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_user_notifications_on_updated_by_id"
+    t.index ["user_id", "created_at"], name: "index_user_notifications_on_user_id_and_created_at"
+    t.index ["user_id", "read_at"], name: "index_user_notifications_on_user_id_and_read_at"
+    t.index ["user_id"], name: "index_user_notifications_on_user_id"
+  end
+
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "confirmation_code"
     t.datetime "confirmation_sent_at"
@@ -1055,6 +1117,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
   add_foreign_key "log_clients", "users", column: "created_by_id"
   add_foreign_key "log_clients", "users", column: "resolved_by_id"
   add_foreign_key "log_clients", "users", column: "updated_by_id"
+  add_foreign_key "notifications", "users", column: "created_by_id"
+  add_foreign_key "notifications", "users", column: "discarded_by_id"
+  add_foreign_key "notifications", "users", column: "undiscarded_by_id"
+  add_foreign_key "notifications", "users", column: "updated_by_id"
   add_foreign_key "payment_products", "users", column: "created_by_id"
   add_foreign_key "payment_products", "users", column: "discarded_by_id"
   add_foreign_key "payment_products", "users", column: "undiscarded_by_id"
@@ -1094,6 +1160,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_183500) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "user_notifications", "notifications", on_delete: :nullify
+  add_foreign_key "user_notifications", "users"
+  add_foreign_key "user_notifications", "users", column: "created_by_id"
+  add_foreign_key "user_notifications", "users", column: "discarded_by_id"
+  add_foreign_key "user_notifications", "users", column: "undiscarded_by_id"
+  add_foreign_key "user_notifications", "users", column: "updated_by_id"
   add_foreign_key "users", "users", column: "created_by_id"
   add_foreign_key "users", "users", column: "discarded_by_id"
   add_foreign_key "users", "users", column: "undiscarded_by_id"

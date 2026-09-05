@@ -9,7 +9,7 @@ default: &default
 development:
   <<: *default
   workers: # idle worker checks ready queue & execute (excludes :media which is handled by media container)
-    - queues: "default,payments,notifications,ai"
+    - queues: [ default, payments, notifications, ai, solid_queue_recurring ]
       threads: 3
       polling_interval: 0.5 # 2 checks per second
 
@@ -24,18 +24,18 @@ production:
   <<: *default
 
   workers:
-    # Payment operations and ordinary application jobs
-    - queues: "payments,default"
+    # Payment operations, recurring scheduler, and ordinary application jobs
+    - queues: [ payments, default, solid_queue_recurring ]
       threads: 3
       polling_interval: 0.2
 
     # Everything coordinated by NotificationService
-    - queues: "notifications"
+    - queues: [ notifications ]
       threads: 3
       polling_interval: 0.5
 
     # AI
-    - queues: "ai"
+    - queues: [ ai ]
       threads: 2
       polling_interval: 0.5
 

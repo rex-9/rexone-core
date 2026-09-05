@@ -101,6 +101,7 @@ All tables use **UUID** primary keys (`gen_random_uuid()`), utilize **Discard** 
 | **Media**            | `Asset`                                                                                      | Unified media metadata (`storage_key` for Garage/S3/Cloudinary/Local, format, size_bytes, original_size_bytes, compressed_size_bytes, compression_ratio, compression_passes, status enum: `pending`/`processing`/`ready`/`optimal`, duration_secs, type, polymorphic `assetable_type`/`assetable_id`). |
 | **Telemetry**        | `Log::Client`                                                                                | Frontend error ingest (stack traces, device, OS, browser, URL, severity, occurrences, local/session storage keys, cookies, resolution status).                                                                                                                                                         |
 | **Feedback**         | `Feedback`                                                                                   | Intelligent in-place feedback (1-10 rating, auto-inferred category: `bug`/`feature_request`/`improvement`/`general`, priority: `low`/`normal`/`high`/`urgent`, status, automated device/route telemetry).                                                                                              |
+| **Notifications**    | `Notification`, `UserNotification`                                                           | Multi-channel notification repository (In-App, Push, Email) with dynamic variable interpolation; persistent user in-app inbox receipts with immutable snapshots, read tracking, and Pagy pagination.                                                                                                   |
 
 ### ⚙️ Services & Background Jobs (Solid Queue / Waka / Media)
 
@@ -109,9 +110,9 @@ Heavy or external provider operations sit behind clean service interfaces and ex
 - **AI & Speech Queue (`ai`)**: `Ai::ProcessChatJob` communicates with DeepSeek (`AiService::Client`) for chat completion. `Speech::ProcessTtsJob` communicates with Azure/Nova (`SpeechService::Client`) to synthesize audio for chat messages, saves MP3 assets via `StorageService::Client`, and alerts the user over WebSocket (`NotificationChannel`).
 - **Media Compression Queue (`media`)**: Dedicated `media` worker process running `Media::CompressImageJob` (libvips) and `Media::CompressVideoJob` (FFmpeg). Uses an **optimal-first pipeline**: if reduction is negligible (`< 3%`) or size doesn't decrease on initial upload, the asset is immediately marked as `optimal` without touching cache. If meaningful reduction is achieved, cache counter tracks passes with a fallback safety cap of 2 passes (`MAX_COMPRESSION_PASSES = 2`). Broadcasts real-time updates over ActionCable (`NotificationChannel`). Supports uploads up to 10 MB for images/non-videos and 100 MB for videos.
 - **Payments Queue (`payments`)**: `Payment::ProcessWebhookJob` asynchronously fulfills Stripe webhooks (checkout completed, invoice paid, subscription updated/deleted) with idempotency.
-- **Notifications Queue (`notifications`)**: `NotificationService` fans out work to `Notification::DeliverJob` for Action Cable broadcasts, OneSignal push notifications, and OneSignal transactional emails.
+- **Notifications Queue (`notifications`)**: `NotificationService` fans out work via `Notification::DispatchJob` to `Notification::DeliverJob` for Action Cable broadcasts (persisting `UserNotification` in-app receipts), push notifications, and transactional/broadcast emails.
 - **Storage Queue (`storage`)**: `Storage::DeleteJob` handles remote deletion asynchronously after DB commits.
-- **Recurring Maintenance** (`config/recurring.yml`): Tasks purge stale cache, expired access, old webhook events, and discarded records.
+- **Recurring Maintenance & Data Reconciliation** (`config/recurring.yml`): Tasks purge stale cache, expired access, old webhook events, discarded records, and aged notifications via `Notification::CleanupJob` (purging read >30d, unread >90d, discarded >7d), alongside generic periodic reconciliation of system data via `DataSyncJob` invoking `DataSyncService.sync_all!` weekly (configured via `DATA_SYNC_SCHEDULE`). Notification counters (`sent_count`, `read_count`) are maintained atomically in real-time as cumulative lifetime telemetry and are protected from retention purges.
 
 ### 🛡️ Active Platform Session Control
 
@@ -161,7 +162,7 @@ The `/v1/admin/` namespace provides comprehensive management capabilities protec
 - **Chat Moderation**: `GET/PATCH/DELETE /v1/admin/chat/rooms` and `/messages`.
 - **Product Management**: `GET/POST/PATCH/DELETE /v1/admin/payment/products` (Stripe sync, discard/undiscard).
 - **Asset Management**: `GET/PUT/DELETE /v1/admin/assets` (CRUD + upload + discard/undiscard/destroy, search, filter by type/format/source, dynamic in-place S3 rename on type update, `GET /v1/admin/assets/storage_stats` for Garage bucket & VPS disk metrics, real-time ActionCable compression status updates, secondary compression pass trigger with 2-pass safeguard).
-- **Notification Broadcasts**: `GET /v1/admin/notifications/templates` and `POST /v1/admin/notifications` (audience targeting via roles/users/all, multi-channel fanout).
+- **Notification Broadcasts**: `GET /v1/admin/notifications`, `POST /v1/admin/notifications`, and `POST /v1/admin/notifications/dispatch` (audience targeting via roles/users/all, multi-channel fanout).
 
 ---
 
@@ -316,6 +317,7 @@ All three pillars of the Rexone platform are fully aligned at **100% feature par
   - `asset_updated`: `{ "type": "asset_updated", "id": "UUID", "status": "optimal" | "ready" | "processing", "size_bytes": 12345, "compressed_size_bytes": 12000, "compression_ratio": "2.8%", "compression_passes": 1 }`
   - `payment_success`: `{ "type": "payment_success", "product_name": "Pro Plan", "amount": "$10.00" }`
   - `subscription_created` / `subscription_canceled` / `subscription_resumed`: `{ "type": "subscription_canceled", "product_name": "...", "active_until": "ISO8601" }`
+  - `in_app_notification`: `{ "id": "UUID", "title": "...", "message": "...", "link": "/dashboard", "read_at": null, "created_at": "ISO8601", "data": { ... } }`
   - `welcome`: Sent upon first successful Action Cable subscription.
 
 ### 3. Client Telemetry Contract (`POST /v1/log/clients`)

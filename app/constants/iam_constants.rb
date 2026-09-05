@@ -60,7 +60,8 @@ module IamConstants
       { resource: Resource::USERS, actions: Action::ALL },
       { resource: Resource::AI, actions: Action::ALL },
       { resource: Resource::SPEECH, actions: Action::ALL },
-      { resource: Resource::FEEDBACKS, actions: [ Action::CREATE, Action::READ ] }
+      { resource: Resource::FEEDBACKS, actions: [ Action::CREATE, Action::READ ] },
+      { resource: Resource::NOTIFICATIONS, actions: [ Action::READ, Action::UPDATE, Action::DELETE ] }
     ].freeze
   end
 end

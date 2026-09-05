@@ -16,15 +16,21 @@ module SocketService
     # }
     # (via streamed from notification_user_0917b97f-b7cb-4d03-a6fb-f36ba1421731)
 
-    def broadcast(user_id:, message:, data: {})
+    def broadcast(user_id:, message:, data: {}, id: nil, title: nil, link: nil, read_at: nil, created_at: nil)
+      payload = {
+        id: id,
+        type: NotificationConstants::NotificationType::NOTIFICATION,
+        title: title,
+        message: message,
+        link: link,
+        data: data,
+        read_at: read_at,
+        created_at: created_at || Time.current.iso8601
+      }.compact
+
       ActionCable.server.broadcast(
         "notification_user_#{user_id}",
-        {
-          type: NotificationConstants::NotificationType::NOTIFICATION,
-          message: message,
-          data: data,
-          created_at: Time.current.iso8601
-        }
+        payload
       )
       true
     rescue => e
