@@ -117,6 +117,7 @@ Rails.application.routes.draw do
     # ===== USERS =====
     get "users/current", to: "users#read_current_user"
     get "users/current/iam", to: "users#read_current_iam"
+    put "users/current", to: "users#update_current_user"
 
     # ===== ADMIN API =====
     # React Admin Dashboard.

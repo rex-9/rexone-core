@@ -38,7 +38,28 @@ class V1::UsersController < V1::ApplicationController
     )
   end
 
+  # PUT /users/current
+  def update_current_user
+    if current_user.update(current_user_params)
+      render_json_response(
+        status_code: 200,
+        message: user_message(MessageService::User::CURRENT_UPDATED),
+        data: { user: UserSerializer.new(current_user).serializable_hash[:data][:attributes] }
+      )
+    else
+      render_json_response(
+        status_code: 422,
+        message: user_message(MessageService::User::CURRENT_UPDATE_FAILED),
+        error: current_user.errors.full_messages.to_sentence
+      )
+    end
+  end
+
   private
+
+  def current_user_params
+    params.require(:user).permit(:name, :username)
+  end
 
   def user_message(key, **options)
     MessageService::User.t(key, **options)
