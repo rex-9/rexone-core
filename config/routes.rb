@@ -63,6 +63,8 @@ Rails.application.routes.draw do
       resources :clients, only: %i[index show new create edit update destroy]
     end
 
+    resources :notifications, only: %i[index show new create edit update destroy]
+
     root to: "users#index"
   end
 
@@ -189,9 +191,12 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :notifications, only: %i[create] do
+      resources :notifications do
         collection do
-          get :read_templates, path: "templates"
+          post :dispatch, action: :create_dispatch
+        end
+        member do
+          post :undiscard
         end
       end
 
@@ -200,6 +205,17 @@ Rails.application.routes.draw do
       resources :feedbacks, only: %i[index show update destroy]
 
       get "analytics/overview", to: "analytics#read_overview"
+    end
+
+    # ===== NOTIFICATIONS (User In-App) =====
+    resources :notifications, only: %i[index destroy] do
+      collection do
+        get :read_unread_count, path: "unread_count"
+        put :update_read_all, path: "read_all"
+      end
+      member do
+        put :update_read, path: "read"
+      end
     end
 
     # ===== FEEDBACK =====

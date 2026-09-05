@@ -2,7 +2,7 @@
 
 module SocketService
   class Base
-    def broadcast(user_id:, message:, data: {})
+    def broadcast(user_id:, message:, data: {}, **extra)
       raise NotImplementedError, "#{self.class} must implement #broadcast"
     end
 

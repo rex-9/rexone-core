@@ -376,8 +376,7 @@ module Openapi
         required: %i[event audience channels],
         event: {
           type: :string,
-          enum: NotificationService::Templates.events,
-          description: "Admin-enabled event whose server-side template supplies the title and message."
+          description: "Notification event or UUID whose server-side template supplies the title and message."
         },
         audience: {
           description: "Use exactly one audience shape. Role matches use OR semantics and each user is notified once.",

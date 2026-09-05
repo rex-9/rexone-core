@@ -1,7 +1,7 @@
 # Database Schema Documentation (`rexone-core`)
 
 > **Database Engine:** PostgreSQL 16  
-> **Schema Version:** `2026_09_04_000001`  
+> **Schema Version:** `2026_09_05_100002`  
 > **Key Conventions:** UUID v4 Primary Keys (`gen_random_uuid()`), Soft Deletion (`discard` gem), Audit Tracking (`Auditable` concern).
 
 > [!IMPORTANT]
@@ -65,6 +65,9 @@ erDiagram
 
   users ||--o{ feedbacks : "submits"
   users ||--o{ log_clients : "originates"
+
+  users ||--o{ user_notifications : "receives"
+  notification_templates ||--o{ user_notifications : "templated_by"
 
   users ||--o{ assets : "assetable (polymorphic)"
   payment_products ||--o{ assets : "assetable (polymorphic)"
@@ -621,7 +624,81 @@ erDiagram
 
 ---
 
-## 10. Summary Matrix of Core Tables
+## 10. Multi-Channel Notifications
+
+### 10.1. `notifications`
+- **Model**: [`Notification`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/notification.rb)
+- **Description**: Central multi-channel notification registry managing content, placeholders, counters, and provider template IDs for In-App (Socket), Push Notifications, and Email.
+
+| Column | Type | Nullable | Default | Description / Notes |
+| :--- | :--- | :---: | :--- | :--- |
+| `id` | `uuid` | ❌ | `gen_random_uuid()` | Primary Key |
+| `event` | `string` | ❌ | — | Unique event key (e.g. `welcome`, `general_announcement`) |
+| `name` | `string` | ❌ | — | Human-readable notification name |
+| `description` | `text` | ✔️ | `NULL` | Administrative description |
+| `category` | `string` | ❌ | `broadcast` | `system`, `marketing`, or `broadcast` |
+| `link` | `string` | ✔️ | `NULL` | Default target navigation URL/path |
+| `admin` | `boolean` | ❌ | `true` | Indicates if notification is available for admin broadcast |
+| `in_app_title` | `string` | ✔️ | `NULL` | In-app notification title template |
+| `in_app_body` | `text` | ✔️ | `NULL` | In-app notification body template |
+| `in_app_data` | `jsonb` | ❌ | `{}` | Custom payload / metadata |
+| `push_title` | `string` | ✔️ | `NULL` | Push notification title template |
+| `push_body` | `text` | ✔️ | `NULL` | Push notification body template |
+| `push_template_id` | `string` | ✔️ | `NULL` | Provider-agnostic push template ID |
+| `email_subject` | `string` | ✔️ | `NULL` | Email subject line template |
+| `email_body` | `text` | ✔️ | `NULL` | Email HTML body template |
+| `email_template_id` | `string` | ✔️ | `NULL` | Provider-agnostic transactional email template ID |
+| `sent_count` | `integer` | ❌ | `0` | Total dispatches count |
+| `read_count` | `integer` | ❌ | `0` | Total read receipts count |
+| `created_by_id` | `uuid` | ✔️ | `NULL` | Admin author FK (`users.id`) |
+| `updated_by_id` | `uuid` | ✔️ | `NULL` | Last updater FK (`users.id`) |
+| `discarded_by_id` | `uuid` | ✔️ | `NULL` | Discard actor FK (`users.id`) |
+| `undiscarded_by_id` | `uuid` | ✔️ | `NULL` | Undiscard actor FK (`users.id`) |
+| `discarded_at` | `datetime` | ✔️ | `NULL` | Soft delete timestamp |
+| `undiscarded_at` | `datetime` | ✔️ | `NULL` | Undiscard timestamp |
+| `created_at` | `datetime` | ❌ | — | Timestamp |
+| `updated_at` | `datetime` | ❌ | — | Timestamp |
+
+**Indexes & Foreign Keys**:
+- `index_notifications_on_event` (`event`)
+- `index_notifications_on_category` (`category`)
+- `index_notifications_on_discarded_at` (`discarded_at`)
+- FKs to `users(id)` for `created_by_id`, `updated_by_id`, `discarded_by_id`, `undiscarded_by_id`.
+
+### 10.2. `user_notifications`
+- **Model**: [`UserNotification`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/user_notification.rb)
+- **Description**: Persistent historical inbox store for user in-app notifications dispatched via ActionCable WebSocket. Stores immutable snapshot text rendered at dispatch time.
+
+| Column | Type | Nullable | Default | Description / Notes |
+| :--- | :--- | :---: | :--- | :--- |
+| `id` | `uuid` | ❌ | `gen_random_uuid()` | Primary Key |
+| `user_id` | `uuid` | ❌ | — | Recipient user FK (`users.id`) |
+| `notification_id` | `uuid` | ✔️ | `NULL` | Originating notification FK (`notifications.id`, nullified on delete) |
+| `title` | `string` | ❌ | — | Immutable rendered title |
+| `message` | `text` | ❌ | — | Immutable rendered body message |
+| `link` | `string` | ✔️ | `NULL` | Deep link target URL or app route |
+| `data` | `jsonb` | ❌ | `{}` | Custom payload / metadata |
+| `read_at` | `datetime` | ✔️ | `NULL` | Read status timestamp |
+| `created_by_id` | `uuid` | ✔️ | `NULL` | Creator FK (`users.id`) |
+| `updated_by_id` | `uuid` | ✔️ | `NULL` | Last updater FK (`users.id`) |
+| `discarded_by_id` | `uuid` | ✔️ | `NULL` | Discard actor FK (`users.id`) |
+| `undiscarded_by_id` | `uuid` | ✔️ | `NULL` | Undiscard actor FK (`users.id`) |
+| `discarded_at` | `datetime` | ✔️ | `NULL` | Soft delete timestamp |
+| `undiscarded_at` | `datetime` | ✔️ | `NULL` | Undiscard timestamp |
+| `created_at` | `datetime` | ❌ | — | Timestamp |
+| `updated_at` | `datetime` | ❌ | — | Timestamp |
+
+**Indexes & Foreign Keys**:
+- `index_user_notifications_on_user_id_and_created_at` (`user_id`, `created_at`)
+- `index_user_notifications_on_user_id_and_read_at` (`user_id`, `read_at`)
+- `index_user_notifications_on_discarded_at` (`discarded_at`)
+- FK to `users(id)` on delete cascade.
+- FK to `notifications(id)` on delete nullify.
+- FKs to `users(id)` for `created_by_id`, `updated_by_id`, `discarded_by_id`, `undiscarded_by_id`.
+
+---
+
+## 11. Summary Matrix of Core Tables
 
 | Table Name | Model | Domain | Soft Deletion | Audited | Polymorphic Targets |
 | :--- | :--- | :--- | :---: | :---: | :--- |
@@ -640,10 +717,12 @@ erDiagram
 | `assets` | [`Asset`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset.rb) | Media | ✔️ | ✔️ | Belongs to `assetable` (Polymorphic) |
 | `feedbacks` | [`Feedback`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/feedback.rb) | Support | ✔️ | ✔️ | — |
 | `log_clients` | [`Log::Client`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/log/client.rb) | Diagnostics | ✔️ | ✔️ | — |
+| `notifications` | [`Notification`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/notification.rb) | Notifications | ✔️ | ✔️ | — |
+| `user_notifications` | [`UserNotification`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/user_notification.rb) | Notifications | ✔️ | ✔️ | — |
 
 ---
 
-## 11. Excluded Infrastructure Tables
+## 12. Excluded Infrastructure Tables
 
 The following tables are managed automatically by backend engine gems and are excluded from core application business logic:
 

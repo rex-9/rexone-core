@@ -5,7 +5,7 @@ module PushNotiService
       raise NotImplementedError, "#{self.class} must implement #send_to_device"
     end
 
-    def send_to_user(user_id:, title:, body:, data: {}, sound: nil)
+    def send_to_user(user_id:, title: nil, body: nil, data: {}, sound: nil, **kwargs)
       raise NotImplementedError, "#{self.class} must implement #send_to_user"
     end
 

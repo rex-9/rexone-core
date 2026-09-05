@@ -11,6 +11,7 @@ class User < ApplicationRecord
   has_many :user_roles, class_name: "Iam::UserRole", dependent: :destroy
   has_many :roles, through: :user_roles, class_name: "Iam::Role"
   has_many :feedbacks, dependent: :nullify
+  has_many :user_notifications, dependent: :destroy
 
   devise :database_authenticatable, :registerable, :validatable, :confirmable,
   :recoverable, :rememberable, :lockable, :trackable, :timeoutable,

@@ -127,4 +127,12 @@ module AppConfig
   DASHBOARD_BASE_URL = env_or.call("DASHBOARD_BASE_URL", nil)
   APP_VERSION = env_or.call("APP_VERSION", nil)
   GIT_SHA = env_or.call("GIT_SHA", nil)
+
+  # Notification Retention & Cleanup
+  NOTIFICATION_READ_RETENTION_DAYS = env_or.call("NOTIFICATION_READ_RETENTION_DAYS", "30").to_i
+  NOTIFICATION_UNREAD_RETENTION_DAYS = env_or.call("NOTIFICATION_UNREAD_RETENTION_DAYS", "90").to_i
+  NOTIFICATION_DISCARDED_RETENTION_DAYS = env_or.call("NOTIFICATION_DISCARDED_RETENTION_DAYS", "7").to_i
+
+  # Data Synchronization Schedule (Default: weekly on Sunday at 3am)
+  DATA_SYNC_SCHEDULE = env_or.call("DATA_SYNC_SCHEDULE", "at 3:00am every Sunday")
 end

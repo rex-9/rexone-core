@@ -191,13 +191,49 @@ The important distinction is deliberate: customer-facing payment flows remain re
 
 `NotificationService` coordinates three independent delivery paths:
 
-- Action Cable broadcasts for live in-product updates.
-- OneSignal push notifications.
-- OneSignal email and template delivery.
+- Action Cable broadcasts for live in-product updates and persistent inbox storage.
+- Push notifications (e.g. OneSignal).
+- Transactional and marketing email delivery.
 
 Each enabled channel receives its own Solid Queue job. A failed email therefore does not repeat a successful push, and a notification provider outage does not roll back a completed payment or authentication action.
 
-The admin- and permission-protected `POST /v1/admin/notifications` contract is ready for the dashboard to send custom content to confirmed users holding selected roles—or to the full confirmed audience—through any combination of socket, push, and email. Users with several selected roles are included only once. Audience fanout runs in the `notifications` queue, while each resulting channel delivery keeps its own retry boundary. Transactional OneSignal email template identifiers live beside the email provider instead of in application initializers, and sensitive confirmation or password-reset workflows are never exposed as admin-selectable presets.
+- **Persistent In-App Notifications (`user_notifications`)**:
+  - In-app socket broadcasts are persisted to `user_notifications` as immutable historical receipts (`title`, `message`, `link`, `data`, `read_at`).
+  - Subsequent admin template alterations never rewrite historical inbox receipts received by users.
+  - Endpoints:
+    - `GET /v1/notifications` — Paginated inbox list (Pagy 20 items, supports `filter=all|unread|read`).
+    - `GET /v1/notifications/unread_count` — Total unread count for real-time badge counters without fetching full lists.
+    - `PUT /v1/notifications/:id/read` — Marks an individual notification as read.
+    - `PUT /v1/notifications/read_all` — Marks all unread notifications as read.
+    - `DELETE /v1/notifications/:id` — Soft-deletes an individual notification from the user inbox.
+
+- **Multi-Channel Notifications (`notifications`)**:
+  - Database-backed multi-channel notifications supporting dynamic variable interpolation (`{{user_name}}`, `{{user_email}}`, custom variables).
+  - Provider-agnostic identifiers (`push_template_id`, `email_template_id`) decouple notifications from external delivery vendors.
+  - Admin management endpoints:
+    - `GET /v1/admin/notifications` — List and filter notifications with pagination and search.
+    - `GET /v1/admin/notifications/:id` — Read single notification details.
+    - `POST /v1/admin/notifications` — Create custom marketing and broadcast notifications.
+    - `PUT /v1/admin/notifications/:id` — Update notification content across In-App, Push, and Email channels.
+    - `DELETE /v1/admin/notifications/:id` — Soft-delete notification.
+    - `POST /v1/admin/notifications/:id/undiscard` — Restore soft-deleted notification.
+    - `POST /v1/admin/notifications/dispatch` — Broadcast dispatch to confirmed users holding selected roles, specific user IDs, or the full confirmed audience.
+
+- **Automated Retention Cleanup (`Notification::CleanupJob`)**:
+  - Daily maintenance job scheduled at 2:30am via `config/recurring.yml`:
+    - Purges read notifications older than 30 days (`AppConfig::NOTIFICATION_READ_RETENTION_DAYS = 30`).
+    - Purges unread notifications older than 90 days (`AppConfig::NOTIFICATION_UNREAD_RETENTION_DAYS = 90`).
+    - Purges discarded notifications older than 7 days (`AppConfig::NOTIFICATION_DISCARDED_RETENTION_DAYS = 7`).
+
+- **Cumulative Lifetime Notification Metrics**:
+  - `UserNotification` maintains `sent_count` and `read_count` counters on `Notification` atomically in real-time via transactional lifecycle callbacks on notification creation, individual reading, and bulk read-all operations.
+  - Because `Notification::CleanupJob` routinely purges older inbox receipts, notification metrics are strictly cumulative lifetime telemetry and are intentionally decoupled from recount queries to prevent retention-induced data loss.
+
+- **Data Synchronization Pipeline (`DataSyncService` & `DataSyncJob`)**:
+  - Provides an extensible background reconciliation framework (`DataSyncJob` $\rightarrow$ `DataSyncService.sync_all!`) scheduled via `config/recurring.yml` using `DATA_SYNC_SCHEDULE` (defaults to weekly: `"at 3:00am every Sunday"`, configurable via environment) for periodic synchronization of non-lossy resources and caches.
+
+The admin- and permission-protected `POST /v1/admin/notifications/dispatch` contract is ready for the dashboard to send custom content to confirmed users holding selected roles—or to the full confirmed audience—through any combination of socket, push, and email. Users with several selected roles are included only once. Audience fanout runs in the `notifications` queue, while each resulting channel delivery keeps its own retry boundary. Sensitive confirmation or password-reset workflows are never exposed as admin-selectable presets.
+
 
 ### Storage & assets
 

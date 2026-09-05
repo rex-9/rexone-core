@@ -35,3 +35,18 @@ en:
     sign_in_alert:
       title: "New Sign In"
       body: "Hi %{name}, we noticed a new sign-in to your account."
+    notifications_fetched: "Notifications fetched successfully."
+    unread_count_fetched: "Unread notification count fetched."
+    marked_as_read: "Notification marked as read."
+    all_marked_as_read: "All notifications marked as read."
+    notification_deleted: "Notification deleted."
+    notification_not_found: "Notification not found."
+    template_created: "Notification template created successfully."
+    template_updated: "Notification template updated successfully."
+    template_discarded: "Notification template moved to recycle bin."
+    template_undiscarded: "Notification template restored."
+    notification_created: "Notification created successfully."
+    notification_updated: "Notification updated successfully."
+    notification_discarded: "Notification moved to recycle bin."
+    notification_undiscarded: "Notification restored."
+

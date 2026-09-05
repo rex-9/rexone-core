@@ -36,19 +36,20 @@ module PushNotiService
     end
 
     # Send to all devices belonging to a user (external_id)
-    def send_to_user(user_id:, title:, body:, data: {}, sound: nil)
+    def send_to_user(user_id:, title: nil, body: nil, data: {}, sound: nil, template_id: nil, **kwargs)
       payload = {
         app_id: @app_id,
         include_aliases: {
           external_id: [ user_id ]
         },
         target_channel: NotificationConstants::Channel::PUSH,
-        headings: { en: title },
-        contents: { en: body },
+        headings: title ? { en: title } : nil,
+        contents: body ? { en: body } : nil,
         data: data,
         android_sound: sound || @default_sound,
-        ios_sound: sound || @default_sound
-      }
+        ios_sound: sound || @default_sound,
+        template_id: template_id
+      }.compact
 
       send_notification(payload)
     rescue => e

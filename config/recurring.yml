@@ -46,6 +46,16 @@ production:
     command: "Payment::WebhookEvent.cleanup_old!"
     schedule: at 3:30am every day
 
+  # General system data reconciliation - Weekly safety net (configurable)
+  data_sync:
+    class: DataSyncJob
+    schedule: <%= ENV.fetch("DATA_SYNC_SCHEDULE", "at 3:00am every Sunday") %>
+
+  # Purge read and discarded notifications - Daily at 2:30am
+  notification_cleanup:
+    class: Notification::CleanupJob
+    schedule: at 2:30am every day
+
   # Example: Send weekly reports
   # weekly_report:
   #   class: WeeklyReportJob
@@ -77,6 +87,15 @@ development:
   clear_old_payment_webhook_events:
     command: "Payment::WebhookEvent.cleanup_old!"
     schedule: at 3:30am every day
+
+  # General system data reconciliation - Weekly safety net (configurable)
+  data_sync:
+    class: DataSyncJob
+    schedule: <%= ENV.fetch("DATA_SYNC_SCHEDULE", "at 3:00am every Sunday") %>
+
+  notification_cleanup:
+    class: Notification::CleanupJob
+    schedule: at 2:30am every day
 
   # rails_pulse_summary:
   #   class: RailsPulse::SummaryJob

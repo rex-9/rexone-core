@@ -124,6 +124,17 @@ end
 
 puts "✅ #{User.count} users have roles assigned"
 
+# ===== DEFAULT NOTIFICATIONS =====
+puts "🌱 Seeding default notifications..."
+
+NotificationConstants::DefaultNotifications::ALL.each do |noti_data|
+  noti = Notification.find_or_initialize_by(event: noti_data[:event])
+  noti.assign_attributes(noti_data)
+  noti.save!
+end
+
+puts "✅ #{Notification.count} notifications ready"
+
 puts "✅ Seeding complete!"
 
 puts "\n📋 Summary:"
