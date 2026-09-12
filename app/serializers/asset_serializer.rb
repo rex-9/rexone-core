@@ -19,5 +19,17 @@ class AssetSerializer < ApplicationSerializer
     }
   end
 
+  attribute :subtitle do |asset|
+    subtitle = asset.subtitle
+    next unless subtitle
+
+    {
+      id: subtitle.id,
+      url: subtitle.storage_url,
+      status: subtitle.status,
+      size_bytes: subtitle.size_bytes
+    }
+  end
+
   belongs_to :creator, serializer: UserSerializer, id_method_name: :created_by_id, optional: true
 end

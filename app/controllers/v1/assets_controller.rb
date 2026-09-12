@@ -3,9 +3,10 @@ class V1::AssetsController < V1::ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show ]
   before_action :set_asset, only: [ :show, :update, :destroy ]
 
-  # GET /assets?page=1&limit=10
+  # GET /v1/assets?type=video&page=1&limit=10
   def index
     assets = Asset.all
+    assets = assets.where(type: params[:type]) if params[:type].present?
     pagy, records = pagy(:offset, assets, limit: params[:limit])
 
     render_json_response(
@@ -63,74 +64,83 @@ class V1::AssetsController < V1::ApplicationController
     assetable_id = params[:assetable_id].presence
     duration_secs = params[:duration_secs]
 
-    # Generate storage_key
-    storage_key = AssetConstants::AssetName.for_user(user_id: current_user.id, type: asset_type, original_filename: file.original_filename)
+    conversion = nil
+    begin
+      conversion = MediaService::SvgToPng.prepare(file)
+      storage_key = AssetConstants::AssetName.for_user(user_id: current_user.id, type: asset_type, original_filename: conversion.filename)
 
-    # Upload to storage service
-    result = StorageService::Client.upload(
-      file,
-      storage_key: storage_key,
-      resource_type: determine_resource_type(file),
-      metadata: {
-        user_id: current_user.id.to_s,
-        original_filename: file.original_filename
-      }
-    )
-
-    # Find or create asset
-    asset = Asset.find_or_initialize_by(storage_key: result[:storage_key])
-    asset.assign_attributes(
-      name: result[:storage_key],
-      url: result[:url],
-      type: asset_type,
-      format: determine_asset_format(file),
-      size_bytes: result[:bytes],
-      duration_secs: duration_secs,
-      source: AssetConstants::AssetSource::UPLOAD,
-      assetable_type: assetable_type,
-      assetable_id: assetable_id,
-      storage_key: result[:storage_key],
-      extension: result[:format] || File.extname(file.original_filename).delete("."),
-      status: compression_status_for(file)
-    )
-
-    if asset.save
-      enqueue_compression_if_needed(asset)
-      if asset.type == AssetConstants::AssetType::AVATAR && asset.assetable_type.to_s.downcase == "user" && asset.assetable_id.present?
-        old_avatars = Asset.where(type: AssetConstants::AssetType::AVATAR, assetable_type: asset.assetable_type, assetable_id: asset.assetable_id)
-                           .where.not(id: asset.id)
-        Asset.purge_and_destroy_all!(old_avatars)
-      end
-      render_json_response(
-        status_code: 201,
-        message: asset_message(MessageService::Asset::UPLOADED),
-        data: {
-          asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes],
-          storage_details: {
-            storage_key: result[:storage_key],
-            bytes: result[:bytes],
-            format: result[:format]
-          }
+      result = StorageService::Client.upload(
+        conversion.file,
+        storage_key: storage_key,
+        resource_type: determine_resource_type(conversion.filename),
+        metadata: {
+          user_id: current_user.id.to_s,
+          original_filename: file.original_filename
         }
       )
-    else
-      StorageService::Client.delete(
-        result[:storage_key],
-        resource_type: result[:resource_type]
+
+      asset = Asset.find_or_initialize_by(storage_key: result[:storage_key])
+      asset.assign_attributes(
+        name: result[:storage_key],
+        url: result[:url],
+        type: asset_type,
+        format: determine_asset_format(conversion.filename),
+        size_bytes: result[:bytes],
+        duration_secs: duration_secs,
+        source: AssetConstants::AssetSource::UPLOAD,
+        assetable_type: assetable_type,
+        assetable_id: assetable_id,
+        storage_key: result[:storage_key],
+        extension: result[:format] || File.extname(conversion.filename).delete("."),
+        status: conversion.converted? ? MediaConstants::Status::OPTIMAL : compression_status_for(conversion.filename)
       )
 
+      if asset.save
+        enqueue_compression_if_needed(asset)
+        if asset.type == AssetConstants::AssetType::AVATAR && asset.assetable_type.to_s.downcase == "user" && asset.assetable_id.present?
+          old_avatars = Asset.where(type: AssetConstants::AssetType::AVATAR, assetable_type: asset.assetable_type, assetable_id: asset.assetable_id)
+                             .where.not(id: asset.id)
+          Asset.purge_and_destroy_all!(old_avatars)
+        end
+        render_json_response(
+          status_code: 201,
+          message: asset_message(MessageService::Asset::UPLOADED),
+          data: {
+            asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes],
+            storage_details: {
+              storage_key: result[:storage_key],
+              bytes: result[:bytes],
+              format: result[:format]
+            }
+          }
+        )
+      else
+        StorageService::Client.delete(
+          result[:storage_key],
+          resource_type: result[:resource_type]
+        )
+
+        render_json_response(
+          status_code: 422,
+          message: asset_message(MessageService::Asset::SAVE_FAILED),
+          error: asset.errors.full_messages.to_sentence
+        )
+      end
+    rescue MediaService::ConversionError => e
       render_json_response(
         status_code: 422,
         message: asset_message(MessageService::Asset::SAVE_FAILED),
-        error: asset.errors.full_messages.to_sentence
+        error: e.message
       )
+    rescue StorageService::Error => e
+      render_json_response(
+        status_code: 500,
+        message: asset_message(MessageService::Asset::STORAGE_UPLOAD_FAILED),
+        error: e.message
+      )
+    ensure
+      MediaService::SvgToPng.cleanup(conversion)
     end
-  rescue StorageService::Error => e
-    render_json_response(
-      status_code: 500,
-      message: asset_message(MessageService::Asset::STORAGE_UPLOAD_FAILED),
-      error: e.message
-    )
   end
 
   # POST /assets
@@ -248,13 +258,17 @@ class V1::AssetsController < V1::ApplicationController
     params.require(:asset).permit(:name, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :assetable_type, :assetable_id)
   end
 
-  def determine_resource_type(file)
-    ext = File.extname(file.original_filename).delete(".").downcase
+  def filename_for(file_or_name)
+    file_or_name.respond_to?(:original_filename) ? file_or_name.original_filename.to_s : file_or_name.to_s
+  end
+
+  def determine_resource_type(file_or_name)
+    ext = File.extname(filename_for(file_or_name)).delete(".").downcase
     AssetConstants::AssetFormat.storage_resource_type(ext)
   end
 
-  def determine_asset_format(file)
-    ext = File.extname(file.original_filename).delete(".").downcase
+  def determine_asset_format(file_or_name)
+    ext = File.extname(filename_for(file_or_name)).delete(".").downcase
     AssetConstants::AssetFormat.from_extension(ext)
   end
 
@@ -276,6 +290,9 @@ class V1::AssetsController < V1::ApplicationController
     elsif asset.compressible_image?
       Media::CompressImageJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued image compression for asset #{asset.id}")
+    elsif asset.compressible_audio?
+      Media::CompressAudioJob.perform_later(asset_id: asset.id)
+      Rails.logger.info("[AssetsController] Enqueued audio compression for asset #{asset.id}")
     end
   end
 
@@ -283,6 +300,7 @@ class V1::AssetsController < V1::ApplicationController
     filename = file.respond_to?(:original_filename) ? file.original_filename : file.to_s
     ext = File.extname(filename).delete(".").downcase
     MediaConstants::COMPRESSIBLE_VIDEO_EXTENSIONS.include?(ext) ||
-      MediaConstants::COMPRESSIBLE_IMAGE_EXTENSIONS.include?(ext)
+      MediaConstants::COMPRESSIBLE_IMAGE_EXTENSIONS.include?(ext) ||
+      MediaConstants::COMPRESSIBLE_AUDIO_EXTENSIONS.include?(ext)
   end
 end

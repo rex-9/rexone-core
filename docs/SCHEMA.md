@@ -562,16 +562,16 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `name`              | `string`   |    ❌    | —                   | File original name                                                     |
 | `url`               | `string`   |    ❌    | —                   | Accessible CDN or storage URL                                          |
 | `storage_key`       | `string`   |    ✔️    | `NULL`              | Cloud bucket path (e.g. `user/{user_id}/avatar_profile_12345.png`)     |
-| `type`              | `string`   |    ❌    | `"general"`         | `general`, `avatar`, `audio`, `video`, `document` (STI disabled)       |
+| `type`              | `string`   |    ❌    | `"general"`         | `general`, `avatar`, `thumbnail`, `subtitle`, `audio`, `video`, `attachment` (STI disabled) |
 | `source`            | `string`   |    ❌    | `"upload"`          | Source: `upload`, `google`                                             |
-| `format`            | `string`   |    ✔️    | `NULL`              | Format mime/type (e.g. `png`, `mp4`, `webm`)                           |
+| `format`            | `string`   |    ✔️    | `NULL`              | Media kind: `image`, `audio`, `video`, `doc`, `subtitle`               |
 | `extension`         | `string`   |    ✔️    | `NULL`              | File extension without dot                                             |
 | `size_bytes`        | `bigint`   |    ✔️    | `NULL`              | File size in bytes                                                     |
 | `duration_secs`     | `integer`  |    ✔️    | `NULL`              | Video/audio duration in seconds                                        |
 | `status`            | `string`   |    ❌    | `"pending"`         | Pipeline status: `pending`, `processing`, `ready`, `optimal`, `failed` |
 | `assetable_type`    | `string`   |    ✔️    | `NULL`              | Polymorphic owner type (`User`, `Chat::Message`, etc.)                 |
 | `assetable_id`      | `uuid`     |    ✔️    | `NULL`              | Polymorphic owner ID                                                   |
-| `parent_asset_id`   | `uuid`     |    ✔️    | `NULL`              | Original video for a generated thumbnail asset                         |
+| `parent_asset_id`   | `uuid`     |    ✔️    | `NULL`              | Source asset for a thumbnail or subtitle child (compressible video or audio parent) |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                      |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                     |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                    |
@@ -585,7 +585,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 - `index_assets_on_url` (UNIQUE: `url`)
 - `index_assets_on_assetable_type_and_assetable_id` (`assetable_type`, `assetable_id`)
-- `index_assets_on_parent_asset_id` (`parent_asset_id`, UNIQUE)
+- `index_assets_on_parent_asset_id` (`parent_asset_id`)
 - `index_assets_on_name` (`name`)
 - `index_assets_on_status` (`status`)
 - `index_assets_on_type` (`type`)
@@ -597,7 +597,11 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 **Generated Video Thumbnails**:
 
-- A video may own one generated thumbnail through the unique self-reference `assets.parent_asset_id`. Thumbnail generation runs asynchronously on the `media` queue, stores a WebP object beside its source video, and preserves the original asset's polymorphic owner.
+- A compressible video or audio parent may own one thumbnail and one subtitle. That one-of-each rule is enforced on `Asset` (`type` unique per `parent_asset_id`), not by a unique database index. Thumbnail generation runs asynchronously on the `media` queue, stores a WebP object beside its source video, and preserves the original asset's polymorphic owner. Admin may also upload an image thumbnail for a compressible video or audio parent; SVG covers are converted to PNG at save time and marked `optimal`. `.srt` children are stored as `type`/`format` `subtitle` and are not compressed; admin attaches or replaces them with `POST /v1/admin/assets/:id/subtitle/upload`.
+
+**Audio Compression**:
+
+- Compressible audio extensions (`mp3`, `wav`, `m4a`, `aac`, `ogg`, `flac`) follow the same optimal-first `media` queue pipeline as images and videos. WAV, FLAC, and OGG are remuxed to `m4a` (AAC); the asset `extension` is updated to `m4a` while `storage_key` is overwritten in place.
 
 ---
 

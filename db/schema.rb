@@ -71,7 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_100002) do
     t.index ["discarded_at"], name: "index_assets_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_assets_on_discarded_by_id"
     t.index ["name"], name: "index_assets_on_name"
-    t.index ["parent_asset_id"], name: "index_assets_on_parent_asset_id", unique: true
+    t.index ["parent_asset_id"], name: "index_assets_on_parent_asset_id"
     t.index ["status"], name: "index_assets_on_status"
     t.index ["type"], name: "index_assets_on_type"
     t.index ["undiscarded_by_id"], name: "index_assets_on_undiscarded_by_id"

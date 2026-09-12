@@ -16,7 +16,7 @@ class CreateAssets < ActiveRecord::Migration[8.1]
 
       t.references :parent_asset,
                   type: :uuid,
-                  index: { unique: true },
+                  index: true,
                   foreign_key: { to_table: :assets }
 
       # ===== AUDIT =====

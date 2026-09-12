@@ -2,7 +2,7 @@
 
 class V1::Admin::AssetsController < V1::ApplicationController
   before_action :super_admin_required!, only: :read_storage_stats
-  before_action :set_active_asset, only: %i[show update discard update_compress read_download update_thumbnail_regenerate update_thumbnail_upload]
+  before_action :set_active_asset, only: %i[show update discard update_compress read_download update_thumbnail_regenerate update_thumbnail_upload update_subtitle_upload]
   before_action :set_asset_including_discarded, only: %i[undiscard destroy]
 
   # GET /v1/admin/assets
@@ -75,67 +75,79 @@ class V1::Admin::AssetsController < V1::ApplicationController
     assetable_id = params[:assetable_id].presence
     duration_secs = params[:duration_secs]
 
-    storage_key = AssetConstants::AssetName.for_admin(type: asset_type, original_filename: file.original_filename)
+    conversion = nil
+    begin
+      conversion = MediaService::SvgToPng.prepare(file)
+      storage_key = AssetConstants::AssetName.for_admin(type: asset_type, original_filename: conversion.filename)
 
-    result = StorageService::Client.upload(
-      file,
-      storage_key: storage_key,
-      resource_type: determine_resource_type(file),
-      metadata: {
-        user_id: current_user.id.to_s,
-        original_filename: file.original_filename
-      }
-    )
-
-    asset = Asset.find_or_initialize_by(storage_key: result[:storage_key])
-    asset.assign_attributes(
-      name: result[:storage_key],
-      url: result[:url],
-      type: asset_type,
-      format: determine_asset_format(file),
-      size_bytes: result[:bytes],
-      duration_secs: duration_secs,
-      source: AssetConstants::AssetSource::UPLOAD,
-      assetable_type: assetable_type,
-      assetable_id: assetable_id,
-      storage_key: result[:storage_key],
-      extension: result[:format] || File.extname(file.original_filename).delete("."),
-      status: compression_status_for(file)
-    )
-
-    if asset.save
-      enqueue_compression_if_needed(asset)
-
-      render_json_response(
-        status_code: 201,
-        message: admin_asset_message(MessageService::Admin::Asset::ASSET_UPLOADED),
-        data: {
-          asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes],
-          storage_details: {
-            storage_key: result[:storage_key],
-            bytes: result[:bytes],
-            format: result[:format]
-          }
+      result = StorageService::Client.upload(
+        conversion.file,
+        storage_key: storage_key,
+        resource_type: determine_resource_type(conversion.filename),
+        metadata: {
+          user_id: current_user.id.to_s,
+          original_filename: file.original_filename
         }
       )
-    else
-      StorageService::Client.delete(
-        result[:storage_key],
-        resource_type: result[:resource_type]
+
+      asset = Asset.find_or_initialize_by(storage_key: result[:storage_key])
+      asset.assign_attributes(
+        name: result[:storage_key],
+        url: result[:url],
+        type: asset_type,
+        format: determine_asset_format(conversion.filename),
+        size_bytes: result[:bytes],
+        duration_secs: duration_secs,
+        source: AssetConstants::AssetSource::UPLOAD,
+        assetable_type: assetable_type,
+        assetable_id: assetable_id,
+        storage_key: result[:storage_key],
+        extension: result[:format] || File.extname(conversion.filename).delete("."),
+        status: conversion.converted? ? MediaConstants::Status::OPTIMAL : compression_status_for(conversion.filename)
       )
 
+      if asset.save
+        enqueue_compression_if_needed(asset)
+
+        render_json_response(
+          status_code: 201,
+          message: admin_asset_message(MessageService::Admin::Asset::ASSET_UPLOADED),
+          data: {
+            asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes],
+            storage_details: {
+              storage_key: result[:storage_key],
+              bytes: result[:bytes],
+              format: result[:format]
+            }
+          }
+        )
+      else
+        StorageService::Client.delete(
+          result[:storage_key],
+          resource_type: result[:resource_type]
+        )
+
+        render_json_response(
+          status_code: 422,
+          message: admin_asset_message(MessageService::Admin::Asset::SAVE_FAILED),
+          error: asset.errors.full_messages.to_sentence
+        )
+      end
+    rescue MediaService::ConversionError => e
       render_json_response(
         status_code: 422,
         message: admin_asset_message(MessageService::Admin::Asset::SAVE_FAILED),
-        error: asset.errors.full_messages.to_sentence
+        error: e.message
       )
+    rescue StorageService::Error => e
+      render_json_response(
+        status_code: 500,
+        message: admin_asset_message(MessageService::Admin::Asset::STORAGE_UPLOAD_FAILED),
+        error: e.message
+      )
+    ensure
+      MediaService::SvgToPng.cleanup(conversion)
     end
-  rescue StorageService::Error => e
-    render_json_response(
-      status_code: 500,
-      message: admin_asset_message(MessageService::Admin::Asset::STORAGE_UPLOAD_FAILED),
-      error: e.message
-    )
   end
 
   # PUT /v1/admin/assets/:id
@@ -392,11 +404,9 @@ class V1::Admin::AssetsController < V1::ApplicationController
         operation_id: operation_id
       )
     elsif @asset.compressible_image?
-      Media::CompressImageJob.perform_later(
-        asset_id: @asset.id,
-        notification_user_id: current_user.id,
-        operation_id: operation_id
-      )
+      Media::CompressImageJob.perform_later(asset_id: @asset.id, notification_user_id: current_user.id, operation_id: operation_id)
+    elsif @asset.compressible_audio?
+      Media::CompressAudioJob.perform_later(asset_id: @asset.id, notification_user_id: current_user.id, operation_id: operation_id)
     end
 
     NotificationService::Center.operation(
@@ -469,31 +479,88 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
   def update_thumbnail_upload
     file = params[:file]
-    unless @asset.compressible_video? && file.present? && file.content_type.to_s.start_with?("image/")
+    unless @asset.thumbnail_attachable? && file.present? && file.content_type.to_s.start_with?("image/")
       message = admin_asset_message(MessageService::Admin::Asset::THUMBNAIL_IMAGE_REQUIRED)
       render_json_response(status_code: 422, message: message, error: message)
       return
     end
 
-    result = StorageService::Client.upload(
-      file,
-      storage_key: AssetConstants::AssetName.thumbnail_for(@asset, version: SecureRandom.uuid),
-      resource_type: "image"
-    )
-    replace_thumbnail!(@asset, result, fallback_size: file.size)
-    render_json_response(
-      status_code: 200,
-      message: admin_asset_message(MessageService::Admin::Asset::THUMBNAIL_REPLACED),
-      data: { asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes] }
-    )
-  rescue StandardError
-    StorageService::Client.delete(result[:storage_key]) if result&.dig(:storage_key)
-    raise
+    result = nil
+    conversion = nil
+    begin
+      conversion = MediaService::SvgToPng.prepare(file)
+      result = StorageService::Client.upload(
+        conversion.file,
+        storage_key: AssetConstants::AssetName.thumbnail_for(
+          @asset,
+          version: SecureRandom.uuid,
+          extension: conversion.converted? ? MediaConstants::IMAGE_EXT_PNG : MediaConstants::IMAGE_EXT_WEBP
+        ),
+        resource_type: "image"
+      )
+      fallback_size = conversion.converted? ? File.size(conversion.file) : file.size
+      replace_thumbnail!(
+        @asset,
+        result,
+        fallback_size: fallback_size,
+        status: conversion.converted? ? MediaConstants::Status::OPTIMAL : MediaConstants::Status::READY
+      )
+      render_json_response(
+        status_code: 200,
+        message: admin_asset_message(MessageService::Admin::Asset::THUMBNAIL_REPLACED),
+        data: { asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes] }
+      )
+    rescue MediaService::ConversionError => e
+      StorageService::Client.delete(result[:storage_key]) if result&.dig(:storage_key)
+      render_json_response(
+        status_code: 422,
+        message: admin_asset_message(MessageService::Admin::Asset::SAVE_FAILED),
+        error: e.message
+      )
+    rescue StandardError
+      StorageService::Client.delete(result[:storage_key]) if result&.dig(:storage_key)
+      raise
+    ensure
+      MediaService::SvgToPng.cleanup(conversion)
+    end
+  end
+
+  def update_subtitle_upload
+    file = params[:file]
+    unless @asset.subtitle_attachable?
+      message = admin_asset_message(MessageService::Admin::Asset::SUBTITLE_PARENT_REQUIRED)
+      render_json_response(status_code: 422, message: message, error: message)
+      return
+    end
+
+    unless srt_upload?(file)
+      message = admin_asset_message(MessageService::Admin::Asset::SUBTITLE_SRT_REQUIRED)
+      render_json_response(status_code: 422, message: message, error: message)
+      return
+    end
+
+    result = nil
+    begin
+      result = StorageService::Client.upload(
+        file,
+        storage_key: AssetConstants::AssetName.subtitle_for(@asset, version: SecureRandom.uuid),
+        resource_type: "raw"
+      )
+      replace_subtitle!(@asset, result, fallback_size: file.size)
+      render_json_response(
+        status_code: 200,
+        message: admin_asset_message(MessageService::Admin::Asset::SUBTITLE_REPLACED),
+        data: { asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes] }
+      )
+    rescue StandardError
+      StorageService::Client.delete(result[:storage_key]) if result&.dig(:storage_key)
+      raise
+    end
   end
 
   private
 
-  def replace_thumbnail!(asset, result, fallback_size:)
+  def replace_thumbnail!(asset, result, fallback_size:, status: MediaConstants::Status::READY)
     Asset.transaction do
       asset.thumbnail&.destroy!
       Asset.create!(
@@ -503,11 +570,34 @@ class V1::Admin::AssetsController < V1::ApplicationController
         extension: result[:format].presence || MediaConstants::IMAGE_EXT_WEBP,
         size_bytes: result[:bytes] || fallback_size,
         source: AssetConstants::AssetSource::UPLOAD,
+        status: status,
+        storage_key: result[:storage_key], assetable: asset.assetable,
+        parent_asset: asset, created_by_id: current_user.id
+      )
+    end
+  end
+
+  def replace_subtitle!(asset, result, fallback_size:)
+    Asset.transaction do
+      asset.subtitle&.destroy!
+      Asset.create!(
+        name: result[:storage_key], url: result[:url],
+        type: AssetConstants::AssetType::SUBTITLE,
+        format: AssetConstants::AssetFormat::SUBTITLE,
+        extension: MediaConstants::SUBTITLE_EXT_SRT,
+        size_bytes: result[:bytes] || fallback_size,
+        source: AssetConstants::AssetSource::UPLOAD,
         status: MediaConstants::Status::READY,
         storage_key: result[:storage_key], assetable: asset.assetable,
         parent_asset: asset, created_by_id: current_user.id
       )
     end
+  end
+
+  def srt_upload?(file)
+    file.present? && AssetConstants::AssetFormat::SUBTITLE_EXTENSIONS.include?(
+      File.extname(filename_for(file)).delete(".").downcase
+    )
   end
 
   def admin_asset_message(key, **options)
@@ -555,13 +645,17 @@ class V1::Admin::AssetsController < V1::ApplicationController
     scope
   end
 
-  def determine_resource_type(file)
-    ext = File.extname(file.original_filename).delete(".").downcase
+  def filename_for(file_or_name)
+    file_or_name.respond_to?(:original_filename) ? file_or_name.original_filename.to_s : file_or_name.to_s
+  end
+
+  def determine_resource_type(file_or_name)
+    ext = File.extname(filename_for(file_or_name)).delete(".").downcase
     AssetConstants::AssetFormat.storage_resource_type(ext)
   end
 
-  def determine_asset_format(file)
-    ext = File.extname(file.original_filename).delete(".").downcase
+  def determine_asset_format(file_or_name)
+    ext = File.extname(filename_for(file_or_name)).delete(".").downcase
     AssetConstants::AssetFormat.from_extension(ext)
   end
 
@@ -585,6 +679,9 @@ class V1::Admin::AssetsController < V1::ApplicationController
     elsif asset.compressible_image?
       Media::CompressImageJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued image compression for asset #{asset.id}")
+    elsif asset.compressible_audio?
+      Media::CompressAudioJob.perform_later(asset_id: asset.id)
+      Rails.logger.info("[AssetsController] Enqueued audio compression for asset #{asset.id}")
     end
   end
 
@@ -592,6 +689,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
     filename = file.respond_to?(:original_filename) ? file.original_filename : file.to_s
     ext = File.extname(filename).delete(".").downcase
     MediaConstants::COMPRESSIBLE_VIDEO_EXTENSIONS.include?(ext) ||
-      MediaConstants::COMPRESSIBLE_IMAGE_EXTENSIONS.include?(ext)
+      MediaConstants::COMPRESSIBLE_IMAGE_EXTENSIONS.include?(ext) ||
+      MediaConstants::COMPRESSIBLE_AUDIO_EXTENSIONS.include?(ext)
   end
 end

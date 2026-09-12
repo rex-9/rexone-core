@@ -116,6 +116,8 @@ module AppConfig
   MEDIA_VIDEO_AUDIO_BITRATE = env_or.call("MEDIA_VIDEO_AUDIO_BITRATE", "128k").freeze
   MEDIA_VIDEO_CODEC = env_or.call("MEDIA_VIDEO_CODEC", "libx264").freeze
   MEDIA_VIDEO_AUDIO_CODEC = env_or.call("MEDIA_VIDEO_AUDIO_CODEC", "aac").freeze
+  MEDIA_AUDIO_BITRATE = env_or.call("MEDIA_AUDIO_BITRATE", "128k").freeze
+  MEDIA_AUDIO_CODEC = env_or.call("MEDIA_AUDIO_CODEC", "aac").freeze
   MEDIA_IMAGE_JPEG_QUALITY = env_or.call("MEDIA_IMAGE_JPEG_QUALITY", "82").to_i
   MEDIA_IMAGE_PNG_QUALITY = env_or.call("MEDIA_IMAGE_PNG_QUALITY", "82").to_i
   MEDIA_IMAGE_PNG_COMPRESSION = env_or.call("MEDIA_IMAGE_PNG_COMPRESSION", "9").to_i

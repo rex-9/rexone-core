@@ -49,6 +49,8 @@ RSpec.describe Media::CompressImageJob, type: :job do
   end
 
   it "marks asset as optimal once it reaches MAX_COMPRESSION_PASSES (2 passes)" do
+    stub_const("MediaConstants::MAX_COMPRESSION_PASSES", 2)
+
     # Pass 1 (on upload)
     described_class.perform_now(asset_id: asset.id)
     expect(asset.reload.status).to eq("ready")

@@ -28,6 +28,10 @@ RSpec.describe Asset, type: :model do
     audio_asset.validate
     expect(audio_asset).to have_attributes(extension: "mp3", format: "audio")
 
+    subtitle_asset = build(:asset, url: "https://example.com/captions.srt", format: nil, type: "subtitle")
+    subtitle_asset.validate
+    expect(subtitle_asset).to have_attributes(extension: "srt", format: "subtitle")
+
     unclassified = build(:asset, url: "https://example.com/archive.bin", format: nil)
     unclassified.validate
     expect(unclassified.format).to be_nil
@@ -121,19 +125,106 @@ RSpec.describe Asset, type: :model do
     it "identifies compressible formats accurately" do
       video = build(:asset, extension: "mp4")
       image = build(:asset, extension: "png")
+      audio = build(:asset, extension: "wav", type: "audio")
       doc = build(:asset, extension: "pdf")
       optimal_image = build(:asset, extension: "png", status: "optimal")
 
       expect(video.compressible_video?).to be(true)
       expect(video.compressible_image?).to be(false)
+      expect(video.compressible_audio?).to be(false)
       expect(video.compressible?).to be(true)
 
       expect(image.compressible_video?).to be(false)
       expect(image.compressible_image?).to be(true)
+      expect(image.compressible_audio?).to be(false)
       expect(image.compressible?).to be(true)
+
+      webp = build(:asset, extension: "webp", format: "image")
+      expect(webp.compressible_image?).to be(true)
+      expect(webp.compressible?).to be(true)
+
+      svg = build(:asset, extension: "svg", format: "image")
+      expect(svg.compressible_image?).to be(false)
+      expect(svg.compressible?).to be(false)
+
+      expect(audio.compressible_audio?).to be(true)
+      expect(audio.compressible_video?).to be(false)
+      expect(audio.compressible?).to be(true)
 
       expect(doc.compressible?).to be(false)
       expect(optimal_image.compressible?).to be(false)
+
+      expect(video.thumbnail_attachable?).to be(true)
+      expect(video.subtitle_attachable?).to be(true)
+      expect(audio.thumbnail_attachable?).to be(true)
+      expect(audio.subtitle_attachable?).to be(true)
+      expect(image.thumbnail_attachable?).to be(false)
+      expect(image.subtitle_attachable?).to be(false)
+      expect(doc.thumbnail_attachable?).to be(false)
+      expect(doc.subtitle_attachable?).to be(false)
+    end
+
+    it "allows one thumbnail and one subtitle child on the same parent" do
+      parent = create(:asset, type: "video", format: "video", extension: "mp4", url: "https://example.com/parent.mp4")
+      thumbnail = create(
+        :asset,
+        type: "thumbnail",
+        format: "image",
+        extension: "webp",
+        parent_asset: parent,
+        url: "https://example.com/parent_thumb.webp"
+      )
+      subtitle = create(
+        :asset,
+        type: "subtitle",
+        format: "subtitle",
+        extension: "srt",
+        parent_asset: parent,
+        url: "https://example.com/parent.srt"
+      )
+
+      expect(parent.reload.thumbnail).to eq(thumbnail)
+      expect(parent.subtitle).to eq(subtitle)
+    end
+
+    it "rejects a second thumbnail or subtitle on the same parent" do
+      parent = create(:asset, type: "video", format: "video", extension: "mp4", url: "https://example.com/parent.mp4")
+      create(
+        :asset,
+        type: "thumbnail",
+        format: "image",
+        extension: "webp",
+        parent_asset: parent,
+        url: "https://example.com/parent_thumb.webp"
+      )
+      create(
+        :asset,
+        type: "subtitle",
+        format: "subtitle",
+        extension: "srt",
+        parent_asset: parent,
+        url: "https://example.com/parent.srt"
+      )
+
+      duplicate_thumbnail = build(
+        :asset,
+        type: "thumbnail",
+        format: "image",
+        extension: "webp",
+        parent_asset: parent,
+        url: "https://example.com/parent_thumb_2.webp"
+      )
+      duplicate_subtitle = build(
+        :asset,
+        type: "subtitle",
+        format: "subtitle",
+        extension: "srt",
+        parent_asset: parent,
+        url: "https://example.com/parent_2.srt"
+      )
+
+      expect(duplicate_thumbnail).not_to be_valid
+      expect(duplicate_subtitle).not_to be_valid
     end
 
     it "filters assets via ready, processing, optimal, and failed scopes" do

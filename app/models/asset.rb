@@ -13,10 +13,17 @@ class Asset < ApplicationRecord
           foreign_key: :parent_asset_id,
           dependent: :destroy,
           inverse_of: :parent_asset
+  has_one :subtitle,
+          -> { where(type: AssetConstants::AssetType::SUBTITLE) },
+          class_name: "Asset",
+          foreign_key: :parent_asset_id,
+          dependent: :destroy,
+          inverse_of: :parent_asset
 
   validates :name, presence: true
   validates :url, presence: true, uniqueness: true
   validates :type, inclusion: { in: AssetConstants::AssetType::ALL }
+  validates :type, uniqueness: { scope: :parent_asset_id }, if: -> { parent_asset_id.present? }
   validates :format, inclusion: { in: AssetConstants::AssetFormat::ALL }, allow_nil: true
   validates :source, inclusion: { in: [ AssetConstants::AssetSource::UPLOAD, AssetConstants::AssetSource::GOOGLE ] }
   validates :size_bytes, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
@@ -86,7 +93,7 @@ class Asset < ApplicationRecord
   end
 
   def compressible?
-    !max_compressed? && (compressible_video? || compressible_image?)
+    !max_compressed? && (compressible_video? || compressible_image? || compressible_audio?)
   end
 
   def compressible_video?
@@ -95,6 +102,18 @@ class Asset < ApplicationRecord
 
   def compressible_image?
     MediaConstants::COMPRESSIBLE_IMAGE_EXTENSIONS.include?(extension&.downcase)
+  end
+
+  def compressible_audio?
+    MediaConstants::COMPRESSIBLE_AUDIO_EXTENSIONS.include?(extension&.downcase)
+  end
+
+  def thumbnail_attachable?
+    compressible_video? || compressible_audio?
+  end
+
+  def subtitle_attachable?
+    compressible_video? || compressible_audio?
   end
 
   def pending?

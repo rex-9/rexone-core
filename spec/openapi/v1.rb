@@ -513,6 +513,10 @@ module Openapi
         required: [ :file ],
         file: { type: :string, format: :binary }
       ),
+      asset_subtitle_upload_request: object(
+        required: [ :file ],
+        file: { type: :string, format: :binary }
+      ),
       checkout_session_request: object(
         required: %i[product_id success_url cancel_url],
         product_id: UUID,
@@ -888,6 +892,16 @@ module Openapi
         assetable_id: UUID.merge(nullable: true),
         parent_asset_id: UUID.merge(nullable: true),
         thumbnail: {
+          type: :object,
+          nullable: true,
+          properties: {
+            id: UUID,
+            url: { type: :string, format: :uri },
+            status: { type: :string, enum: MediaConstants::Status::ALL },
+            size_bytes: { type: :integer, nullable: true }
+          }
+        },
+        subtitle: {
           type: :object,
           nullable: true,
           properties: {
@@ -1369,7 +1383,9 @@ module Openapi
       end
 
       paths["/v1/media/upload"] = {
-        post: operation(tags: "Media", summary: "Upload and persist an asset", success: 201,
+        post: operation(tags: "Media", summary: "Upload and persist an asset",
+                        description: "SVG uploads are converted to PNG at save time, fitted to IMAGE_MAX_WIDTH x IMAGE_MAX_HEIGHT, stored with extension png, and marked optimal. They do not enter the image compression pipeline. Existing stored SVG assets are not converted until re-uploaded.",
+                        success: 201,
                         body: ref(:asset_upload_request), errors: [ 401, 422, 500 ])
       }
       paths["/v1/media/upload"][:post][:requestBody] = {
@@ -1593,7 +1609,9 @@ module Openapi
         }
       end
       paths["/v1/admin/assets/upload"] = {
-        post: operation(tags: "Admin / Assets", summary: "Upload and persist an asset via admin", success: 201,
+        post: operation(tags: "Admin / Assets", summary: "Upload and persist an asset via admin",
+                        description: "SVG uploads are converted to PNG at save time, fitted to IMAGE_MAX_WIDTH x IMAGE_MAX_HEIGHT, stored with extension png, and marked optimal. They do not enter the image compression pipeline. Existing stored SVG assets are not converted until re-uploaded.",
+                        success: 201,
                         body: ref(:asset_upload_request), errors: [ 401, 403, 422, 500 ])
       }
       paths["/v1/admin/assets/upload"][:post][:requestBody] = {
@@ -1634,7 +1652,8 @@ module Openapi
                         success_schema: ref(:asset_operation_response))
       }
       paths["/v1/admin/assets/{id}/thumbnail/upload"] = {
-        post: operation(tags: "Admin / Assets", summary: "Upload and replace a video thumbnail",
+        post: operation(tags: "Admin / Assets", summary: "Upload and replace a thumbnail for a compressible video or audio asset",
+                        description: "SVG covers are converted to PNG at save time and stored as optimal. Thumbnail upload does not enqueue compression. Other image formats are stored as uploaded.",
                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422, 500 ])
       }
       paths["/v1/admin/assets/{id}/thumbnail/upload"][:post][:requestBody] = {
@@ -1645,9 +1664,29 @@ module Openapi
           }
         }
       }
+      paths["/v1/admin/assets/{id}/subtitle/upload"] = {
+        post: operation(tags: "Admin / Assets", summary: "Upload and replace an SRT subtitle for a compressible video or audio asset",
+                        description: "Accepts .srt by filename. Stored as type/format subtitle, Garage raw, status ready. Does not enqueue the media queue.",
+                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422, 500 ])
+      }
+      paths["/v1/admin/assets/{id}/subtitle/upload"][:post][:requestBody] = {
+        required: true,
+        content: {
+          "multipart/form-data" => {
+            schema: ref(:asset_subtitle_upload_request)
+          }
+        }
+      }
 
       paths["/v1/assets"] = {
-        get: operation(tags: "Assets", summary: "List stored assets", errors: [ 401, 403 ]),
+        get: operation(tags: "Assets", summary: "List stored assets",
+                       description: "Optional type filter matches AssetType (#{AssetConstants::AssetType::ALL.join(', ')}).",
+                       parameters: [
+                         query_parameter(:type, description: "Filter by asset type"),
+                         query_parameter(:page, type: :integer),
+                         query_parameter(:limit, type: :integer)
+                       ],
+                       errors: [ 401, 403 ]),
         post: operation(tags: "Assets", summary: "Create an asset record", success: 201,
                         body: ref(:asset_request), errors: [ 401, 403, 422 ])
       }

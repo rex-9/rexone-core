@@ -144,6 +144,7 @@ Rails.application.routes.draw do
           get :read_download, path: "download"
           post :update_thumbnail_regenerate, path: "thumbnail/regenerate"
           post :update_thumbnail_upload, path: "thumbnail/upload"
+          post :update_subtitle_upload, path: "subtitle/upload"
         end
       end
 

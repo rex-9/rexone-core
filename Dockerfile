@@ -21,6 +21,7 @@ RUN apt-get update -qq && \
       ffmpeg \
       libjemalloc2 \
       libvips \
+      librsvg2-bin \
       postgresql-client && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives
 
