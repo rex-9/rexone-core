@@ -7,7 +7,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
 
   before do
     allow(NotificationService::Center).to receive(:notify)
-    allow(Media::CompressAudioJob).to receive(:perform_later)
+    allow(Media::CompressMediaJob).to receive(:perform_later)
   end
 
   it "synthesizes, uploads, persists a TTS Asset, queues audio processing, and notifies readiness" do
@@ -58,7 +58,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
         overwrite: true
       )
     )
-    expect(Media::CompressAudioJob).to have_received(:perform_later).with(asset_id: asset.id)
+    expect(Media::CompressMediaJob).to have_received(:perform_later).with(asset_id: asset.id)
     expect(NotificationService::Center).to have_received(:notify).with(
       hash_including(
         user_id: room.user_id,

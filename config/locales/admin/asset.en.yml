@@ -25,7 +25,7 @@ en:
       thumbnail_replaced: "Thumbnail replaced successfully."
       thumbnail_image_required: "An image file is required for a video thumbnail."
       video_required: "Only videos support generated thumbnails."
-      subtitle_replaced: "Subtitle replaced successfully."
+      subtitle_uploaded: "Subtitle uploaded successfully."
       subtitle_srt_required: "An .srt subtitle file is required."
       subtitle_parent_required: "Only compressible video or audio assets can have subtitles."
       thumbnail_failed: "Video thumbnail generation failed for '%{name}'."

@@ -9,7 +9,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   def index
     discarded = params[:discarded].to_s == "true"
     scope = discarded ? Asset.with_discarded.discarded : Asset.kept
-    scope = scope.includes(:thumbnail, :subtitle)
+    scope = scope.includes(:thumbnail, :subtitles)
     assets = search_assets(scope)
     assets = filter_assets(assets)
     assets = if discarded
@@ -31,6 +31,9 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
   # GET /v1/admin/assets/:id
   def show
+    @asset.association(:thumbnail).load_target
+    @asset.association(:subtitles).load_target
+
     render_json_response(
       status_code: 200,
       message: admin_asset_message(MessageService::Admin::Asset::ASSET_RETRIEVED),
@@ -387,15 +390,15 @@ class V1::Admin::AssetsController < V1::ApplicationController
     operation_id = "#{NotificationConstants::OperationType::ASSET_COMPRESSION}:#{@asset.id}:#{SecureRandom.uuid}"
 
     if @asset.compressible_video?
-      Media::CompressVideoJob.perform_later(
+      Media::CompressMediaJob.perform_later(
         asset_id: @asset.id,
         notification_user_id: current_user.id,
         operation_id: operation_id
       )
     elsif @asset.compressible_image?
-      Media::CompressImageJob.perform_later(asset_id: @asset.id, notification_user_id: current_user.id, operation_id: operation_id)
+      Media::CompressMediaJob.perform_later(asset_id: @asset.id, notification_user_id: current_user.id, operation_id: operation_id)
     elsif @asset.compressible_audio?
-      Media::CompressAudioJob.perform_later(asset_id: @asset.id, notification_user_id: current_user.id, operation_id: operation_id)
+      Media::CompressMediaJob.perform_later(asset_id: @asset.id, notification_user_id: current_user.id, operation_id: operation_id)
     end
 
     NotificationService::Center.operation(
@@ -536,10 +539,10 @@ class V1::Admin::AssetsController < V1::ApplicationController
         storage_key: AssetConstants::AssetName.subtitle_for(@asset, version: SecureRandom.uuid),
         resource_type: "raw"
       )
-      replace_subtitle!(@asset, result, fallback_size: file.size)
+      create_subtitle!(@asset, result, fallback_size: file.size)
       render_json_response(
         status_code: 200,
-        message: admin_asset_message(MessageService::Admin::Asset::SUBTITLE_REPLACED),
+        message: admin_asset_message(MessageService::Admin::Asset::SUBTITLE_UPLOADED),
         data: { asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes] }
       )
     rescue StandardError
@@ -583,9 +586,8 @@ class V1::Admin::AssetsController < V1::ApplicationController
     thumbnail
   end
 
-  def replace_subtitle!(asset, result, fallback_size:)
+  def create_subtitle!(asset, result, fallback_size:)
     Asset.transaction do
-      asset.subtitle&.destroy!
       Asset.create!(
         name: result[:storage_key], url: result[:url],
         type: AssetConstants::AssetType::SUBTITLE,
@@ -710,14 +712,14 @@ class V1::Admin::AssetsController < V1::ApplicationController
       Media::ConvertImageJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued image conversion for asset #{asset.id}")
     elsif asset.compressible_video?
-      Media::CompressVideoJob.perform_later(asset_id: asset.id)
+      Media::CompressMediaJob.perform_later(asset_id: asset.id)
       Media::GenerateVideoThumbnailJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued video compression for asset #{asset.id}")
     elsif asset.compressible_image?
-      Media::CompressImageJob.perform_later(asset_id: asset.id)
+      Media::CompressMediaJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued image compression for asset #{asset.id}")
     elsif asset.compressible_audio?
-      Media::CompressAudioJob.perform_later(asset_id: asset.id)
+      Media::CompressMediaJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued audio compression for asset #{asset.id}")
     end
   end

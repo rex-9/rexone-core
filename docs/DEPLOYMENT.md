@@ -286,6 +286,6 @@ After deploying all services, verify each component:
 - [ ] **Action Cable WebSockets:** Browser connects to `wss://api.rexone.me/cable` with `201/101 Switching Protocols` without origin rejection.
 - [ ] **Garage S3 Public Read:** Visit `https://s3.rexone.me/rexone` (should return valid XML from Garage, not Traefik 404/502).
 - [ ] **Folder Partitioning:** Upload an asset on Prod → check Garage to verify the key starts with `prod/` (e.g. `prod/user/...`); upload on UAT → starts with `uat/`.
-- [ ] **Media Worker Compression:** Upload a video via web/mobile; check `docker logs prod-rexone-media` for `[CompressVideoJob] Compressed ... bytes`.
+- [ ] **Media Worker Compression:** Upload a video via web/mobile; check `docker logs prod-rexone-media` for `[CompressMediaJob] Compressed ... bytes`.
 - [ ] **Solid Queue Background Jobs:** `docker logs prod-rexone-waka` shows active Solid Queue polling without errors.
 - [ ] **Web SPA Routing:** Visiting deep links (e.g. `https://rexone.me/profile`, `https://rexone.me/ai`) returns HTTP 200 and loads React correctly (not Nginx 404).

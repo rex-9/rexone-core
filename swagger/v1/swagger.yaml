@@ -2026,6 +2026,7 @@ components:
             - audio
             - video
             - doc
+            - zip
             - subtitle
           nullable: true
         extension:
@@ -2062,48 +2063,130 @@ components:
           type: string
           format: uuid
           nullable: true
-        thumbnail:
+        children:
           type: object
-          nullable: true
           properties:
-            id:
-              type: string
-              format: uuid
-            url:
-              type: string
-              format: uri
-            status:
-              type: string
-              enum:
-                - pending
-                - processing
-                - ready
-                - optimal
-                - failed
-            size_bytes:
-              type: integer
+            thumbnail:
+              type: object
               nullable: true
-        subtitle:
-          type: object
-          nullable: true
-          properties:
-            id:
-              type: string
-              format: uuid
-            url:
-              type: string
-              format: uri
-            status:
-              type: string
-              enum:
-                - pending
-                - processing
-                - ready
-                - optimal
-                - failed
-            size_bytes:
-              type: integer
-              nullable: true
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                url:
+                  type: string
+                  format: uri
+                type:
+                  type: string
+                  enum:
+                    - avatar
+                    - thumbnail
+                    - subtitle
+                    - tts
+                    - attachment
+                    - general
+                format:
+                  type: string
+                  enum:
+                    - image
+                    - audio
+                    - video
+                    - doc
+                    - zip
+                    - subtitle
+                  nullable: true
+                extension:
+                  type: string
+                  nullable: true
+                status:
+                  type: string
+                  enum:
+                    - pending
+                    - processing
+                    - ready
+                    - optimal
+                    - failed
+                size_bytes:
+                  type: integer
+                  nullable: true
+                duration_secs:
+                  type: integer
+                  nullable: true
+                parent_asset_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                created_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                updated_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+            subtitles:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  url:
+                    type: string
+                    format: uri
+                  type:
+                    type: string
+                    enum:
+                      - avatar
+                      - thumbnail
+                      - subtitle
+                      - tts
+                      - attachment
+                      - general
+                  format:
+                    type: string
+                    enum:
+                      - image
+                      - audio
+                      - video
+                      - doc
+                      - zip
+                      - subtitle
+                    nullable: true
+                  extension:
+                    type: string
+                    nullable: true
+                  status:
+                    type: string
+                    enum:
+                      - pending
+                      - processing
+                      - ready
+                      - optimal
+                      - failed
+                  size_bytes:
+                    type: integer
+                    nullable: true
+                  duration_secs:
+                    type: integer
+                    nullable: true
+                  parent_asset_id:
+                    type: string
+                    format: uuid
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  updated_at:
+                    type: string
+                    format: date-time
+                    nullable: true
         created_at:
           type: string
           format: date-time
@@ -10574,9 +10657,7 @@ paths:
     post:
       tags:
         - Admin / Assets
-      summary:
-        Upload and replace an SRT subtitle for a compressible video or audio
-        asset
+      summary: Upload an SRT subtitle for a compressible video or audio asset
       parameters:
         - name: X-Locale
           in: header

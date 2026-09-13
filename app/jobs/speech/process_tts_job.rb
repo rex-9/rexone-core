@@ -85,7 +85,7 @@ class Speech::ProcessTtsJob < ApplicationJob
   def enqueue_media_processing(asset)
     return unless asset.pending?
 
-    Media::CompressAudioJob.perform_later(asset_id: asset.id)
+    Media::CompressMediaJob.perform_later(asset_id: asset.id)
   end
 
   def media_processing_enabled?

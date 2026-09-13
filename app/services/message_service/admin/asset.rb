@@ -27,7 +27,7 @@ module MessageService
       THUMBNAIL_REPLACED = "admin.asset.thumbnail_replaced".freeze
       THUMBNAIL_IMAGE_REQUIRED = "admin.asset.thumbnail_image_required".freeze
       VIDEO_REQUIRED = "admin.asset.video_required".freeze
-      SUBTITLE_REPLACED = "admin.asset.subtitle_replaced".freeze
+      SUBTITLE_UPLOADED = "admin.asset.subtitle_uploaded".freeze
       SUBTITLE_SRT_REQUIRED = "admin.asset.subtitle_srt_required".freeze
       SUBTITLE_PARENT_REQUIRED = "admin.asset.subtitle_parent_required".freeze
       COMPRESSION_FAILED = "admin.asset.compression_failed".freeze

@@ -23,7 +23,7 @@ RSpec.describe "Audio storage contract", type: :integration do
     converted_fixture = Rails.root.join("spec/fixtures/files/clip.m4a").to_s
     allow(MediaService::AudioCompressor).to receive(:compress).and_return(converted_fixture)
 
-    Media::CompressAudioJob.perform_now(asset_id: asset.id)
+    Media::CompressMediaJob.perform_now(asset_id: asset.id)
 
     asset.reload
     expect(asset.storage_key).to end_with(".m4a")
@@ -35,7 +35,7 @@ RSpec.describe "Audio storage contract", type: :integration do
 
   it "uses one concurrency lock for every processor targeting the same asset" do
     asset_id = SecureRandom.uuid
-    jobs = [ Media::CompressAudioJob, Media::CompressImageJob, Media::CompressVideoJob, Media::ConvertImageJob, Media::GenerateVideoThumbnailJob ]
+    jobs = [ Media::CompressMediaJob, Media::ConvertImageJob, Media::GenerateVideoThumbnailJob ]
 
     expect(jobs.map { |job| job.concurrency_key.call(asset_id: asset_id) }.uniq).to eq([ MediaConstants::Processing.concurrency_key(asset_id) ])
   end

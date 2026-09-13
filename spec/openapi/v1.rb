@@ -892,24 +892,47 @@ module Openapi
         assetable_type: { type: :string, nullable: true, description: "Polymorphic owner model, e.g. chat_message or user." },
         assetable_id: UUID.merge(nullable: true),
         parent_asset_id: UUID.merge(nullable: true),
-        thumbnail: {
+        children: {
           type: :object,
-          nullable: true,
           properties: {
-            id: UUID,
-            url: { type: :string, format: :uri },
-            status: { type: :string, enum: MediaConstants::Status::ALL },
-            size_bytes: { type: :integer, nullable: true }
-          }
-        },
-        subtitle: {
-          type: :object,
-          nullable: true,
-          properties: {
-            id: UUID,
-            url: { type: :string, format: :uri },
-            status: { type: :string, enum: MediaConstants::Status::ALL },
-            size_bytes: { type: :integer, nullable: true }
+            thumbnail: {
+              type: :object,
+              nullable: true,
+              properties: {
+                id: UUID,
+                name: { type: :string },
+                url: { type: :string, format: :uri },
+                type: { type: :string, enum: AssetConstants::AssetType::ALL },
+                format: { type: :string, enum: AssetConstants::AssetFormat::ALL, nullable: true },
+                extension: { type: :string, nullable: true },
+                status: { type: :string, enum: MediaConstants::Status::ALL },
+                size_bytes: { type: :integer, nullable: true },
+                duration_secs: { type: :integer, nullable: true },
+                parent_asset_id: UUID.merge(nullable: true),
+                created_at: DATE_TIME,
+                updated_at: DATE_TIME
+              }
+            },
+            subtitles: {
+              type: :array,
+              items: {
+                type: :object,
+                properties: {
+                  id: UUID,
+                  name: { type: :string },
+                  url: { type: :string, format: :uri },
+                  type: { type: :string, enum: AssetConstants::AssetType::ALL },
+                  format: { type: :string, enum: AssetConstants::AssetFormat::ALL, nullable: true },
+                  extension: { type: :string, nullable: true },
+                  status: { type: :string, enum: MediaConstants::Status::ALL },
+                  size_bytes: { type: :integer, nullable: true },
+                  duration_secs: { type: :integer, nullable: true },
+                  parent_asset_id: UUID.merge(nullable: true),
+                  created_at: DATE_TIME,
+                  updated_at: DATE_TIME
+                }
+              }
+            }
           }
         },
         created_at: DATE_TIME,
@@ -1666,7 +1689,7 @@ module Openapi
         }
       }
       paths["/v1/admin/assets/{id}/subtitle/upload"] = {
-        post: operation(tags: "Admin / Assets", summary: "Upload and replace an SRT subtitle for a compressible video or audio asset",
+        post: operation(tags: "Admin / Assets", summary: "Upload an SRT subtitle for a compressible video or audio asset",
                         description: "Accepts an SRT file, stores it as type/format subtitle using raw object storage, and limits it with MEDIA_MAX_OTHER_SIZE_MB. Subtitle files require no media processing.",
                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422, 500 ])
       }

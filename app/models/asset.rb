@@ -13,17 +13,16 @@ class Asset < ApplicationRecord
           foreign_key: :parent_asset_id,
           dependent: :destroy,
           inverse_of: :parent_asset
-  has_one :subtitle,
-          -> { where(type: AssetConstants::AssetType::SUBTITLE) },
-          class_name: "Asset",
-          foreign_key: :parent_asset_id,
-          dependent: :destroy,
-          inverse_of: :parent_asset
+  has_many :subtitles,
+           -> { where(type: AssetConstants::AssetType::SUBTITLE).order(created_at: :asc) },
+           class_name: "Asset",
+           foreign_key: :parent_asset_id,
+           dependent: :destroy,
+           inverse_of: :parent_asset
 
   validates :name, presence: true
   validates :url, presence: true, uniqueness: true
   validates :type, inclusion: { in: AssetConstants::AssetType::ALL }
-  validates :type, uniqueness: { scope: :parent_asset_id }, if: -> { parent_asset_id.present? }
   validates :format, inclusion: { in: AssetConstants::AssetFormat::ALL }, allow_nil: true
   validates :source, inclusion: { in: [ AssetConstants::AssetSource::UPLOAD, AssetConstants::AssetSource::GOOGLE ] }
   validates :size_bytes, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
@@ -33,6 +32,7 @@ class Asset < ApplicationRecord
   validates :assetable_type, presence: true, if: -> { assetable_id.present? }
   validates :assetable_id, presence: true, if: -> { assetable_type.present? }
   validate :url_must_be_valid
+  validate :only_one_thumbnail_per_parent
   before_validation :set_extension_and_format
   after_destroy_commit :delete_from_storage, if: :uploaded_file?
 
@@ -185,6 +185,14 @@ class Asset < ApplicationRecord
 
   def compression_cache_key
     "asset_compression_count:#{id}"
+  end
+
+  def only_one_thumbnail_per_parent
+    return unless parent_asset_id.present? && type == AssetConstants::AssetType::THUMBNAIL
+
+    duplicate = Asset.where(parent_asset_id: parent_asset_id, type: AssetConstants::AssetType::THUMBNAIL)
+    duplicate = duplicate.where.not(id: id) if persisted?
+    errors.add(:type, "thumbnail already exists for this parent asset") if duplicate.exists?
   end
 
   def storage_resource_type

@@ -78,7 +78,7 @@ module Media
     end
 
     def enqueue_image_compression
-      Media::CompressImageJob.perform_later(
+      Media::CompressMediaJob.perform_later(
         asset_id: @asset.id,
         notification_user_id: @notification_user_id,
         operation_id: @operation_id

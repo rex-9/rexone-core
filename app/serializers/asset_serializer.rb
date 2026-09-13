@@ -7,29 +7,29 @@ class AssetSerializer < ApplicationSerializer
     asset.storage_url
   end
 
-  attribute :thumbnail do |asset|
-    thumbnail = asset.thumbnail
-    next unless thumbnail
-
+  attribute :children do |asset|
     {
-      id: thumbnail.id,
-      url: thumbnail.storage_url,
-      status: thumbnail.status,
-      size_bytes: thumbnail.size_bytes
-    }
-  end
-
-  attribute :subtitle do |asset|
-    subtitle = asset.subtitle
-    next unless subtitle
-
-    {
-      id: subtitle.id,
-      url: subtitle.storage_url,
-      status: subtitle.status,
-      size_bytes: subtitle.size_bytes
+      thumbnail: asset.thumbnail ? AssetSerializer.child_payload(asset.thumbnail) : nil,
+      subtitles: asset.subtitles.map { |subtitle| AssetSerializer.child_payload(subtitle) }
     }
   end
 
   belongs_to :creator, serializer: UserSerializer, id_method_name: :created_by_id, optional: true
+
+  def self.child_payload(asset)
+    {
+      id: asset.id,
+      name: asset.name,
+      url: asset.storage_url,
+      type: asset.type,
+      format: asset.format,
+      extension: asset.extension,
+      status: asset.status,
+      size_bytes: asset.size_bytes,
+      duration_secs: asset.duration_secs,
+      parent_asset_id: asset.parent_asset_id,
+      created_at: asset.created_at,
+      updated_at: asset.updated_at
+    }
+  end
 end

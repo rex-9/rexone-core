@@ -1,7 +1,7 @@
 require "rails_helper"
 
-RSpec.describe Media::CompressImageJob, type: :job do
-  let(:asset) { create(:asset, status: "pending", extension: "png", url: "https://example.com/original.png", size_bytes: 500_000) }
+RSpec.describe Media::CompressMediaJob, type: :job do
+  let(:asset) { create(:asset, status: "pending", extension: "mp4", format: "video", url: "https://example.com/original.mp4", size_bytes: 20_000_000) }
 
   around do |example|
     original_cache = Rails.cache
@@ -11,39 +11,39 @@ RSpec.describe Media::CompressImageJob, type: :job do
   end
 
   before do
-    allow_any_instance_of(described_class).to receive(:download_from_storage).and_return("/tmp/fake_input.png")
-    allow(MediaService::ImageCompressor).to receive(:compress).and_return("/tmp/fake_compressed.png")
-    allow(File).to receive(:size).with("/tmp/fake_input.png").and_return(500_000)
-    allow(File).to receive(:size).with("/tmp/fake_compressed.png").and_return(250_000)
+    allow_any_instance_of(described_class).to receive(:download_from_storage).and_return("/tmp/fake_input.mp4")
+    allow(MediaService::VideoCompressor).to receive(:compress).and_return("/tmp/fake_compressed.mp4")
+    allow(File).to receive(:size).with("/tmp/fake_input.mp4").and_return(20_000_000)
+    allow(File).to receive(:size).with("/tmp/fake_compressed.mp4").and_return(8_000_000)
     allow(StorageService::Client).to receive(:upload).and_return(
       storage_key: asset.storage_key,
-      url: "https://example.com/compressed.png",
-      bytes: 250_000,
-      format: "png",
-      resource_type: "image"
+      url: "https://example.com/compressed.mp4",
+      bytes: 8_000_000,
+      format: "mp4",
+      resource_type: "video"
     )
   end
 
-  it "processes pending image asset, re-uploads compressed file, and marks ready" do
+  it "processes pending video asset, re-uploads compressed file, and marks ready" do
     described_class.perform_now(asset_id: asset.id)
 
     expect(asset.reload.status).to eq("ready")
-    expect(asset.size_bytes).to eq(250_000)
-    expect(asset.url).to eq("https://example.com/compressed.png")
-    expect(MediaService::ImageCompressor).to have_received(:compress).with("/tmp/fake_input.png")
+    expect(asset.size_bytes).to eq(8_000_000)
+    expect(asset.url).to eq("https://example.com/compressed.mp4")
+    expect(MediaService::VideoCompressor).to have_received(:compress).with("/tmp/fake_input.mp4")
     expect(StorageService::Client).to have_received(:upload).with(
-      "/tmp/fake_compressed.png",
-      hash_including(storage_key: asset.storage_key, overwrite: true)
+      "/tmp/fake_compressed.mp4",
+      hash_including(storage_key: asset.storage_key, overwrite: true, resource_type: "video")
     )
   end
 
   it "keeps original file and marks optimal immediately if compressed size is not smaller than original" do
-    allow(File).to receive(:size).with("/tmp/fake_compressed.png").and_return(500_000)
+    allow(File).to receive(:size).with("/tmp/fake_compressed.mp4").and_return(20_000_000)
 
     described_class.perform_now(asset_id: asset.id)
 
     expect(asset.reload.status).to eq("optimal")
-    expect(asset.size_bytes).to eq(500_000)
+    expect(asset.size_bytes).to eq(20_000_000)
     expect(StorageService::Client).not_to have_received(:upload)
     expect(asset.compression_count).to eq(MediaConstants::MAX_COMPRESSION_PASSES)
   end
@@ -67,7 +67,7 @@ RSpec.describe Media::CompressImageJob, type: :job do
 
     described_class.perform_now(asset_id: asset.id)
 
-    expect(MediaService::ImageCompressor).not_to have_received(:compress)
+    expect(MediaService::VideoCompressor).not_to have_received(:compress)
   end
 
   it "persists a completed operation notification for the user who created the asset" do
@@ -85,7 +85,7 @@ RSpec.describe Media::CompressImageJob, type: :job do
   end
 
   it "retries without publishing a terminal failure on the first attempt" do
-    allow(MediaService::ImageCompressor).to receive(:compress).and_raise(MediaService::CompressionError, "corrupt image")
+    allow(MediaService::VideoCompressor).to receive(:compress).and_raise(MediaService::CompressionError, "ffmpeg killed")
 
     described_class.perform_now(asset_id: asset.id)
 

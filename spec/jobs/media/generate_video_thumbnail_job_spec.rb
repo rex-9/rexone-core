@@ -58,7 +58,7 @@ RSpec.describe Media::GenerateVideoThumbnailJob, type: :job do
     expect(described_class.concurrency_key.call(asset_id: video.id)).to eq(
       MediaConstants::Processing.concurrency_key(video.id)
     )
-    expect(Media::CompressVideoJob.concurrency_key.call(asset_id: video.id)).to eq(
+    expect(Media::CompressMediaJob.concurrency_key.call(asset_id: video.id)).to eq(
       MediaConstants::Processing.concurrency_key(video.id)
     )
   end

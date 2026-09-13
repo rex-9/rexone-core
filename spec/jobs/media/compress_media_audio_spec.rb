@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe Media::CompressAudioJob, type: :job do
+RSpec.describe Media::CompressMediaJob, type: :job do
   let(:asset) { create(:asset, status: "pending", extension: "mp3", format: "audio", type: "general", url: "https://example.com/original.mp3", size_bytes: 5_000_000) }
 
   around do |example|

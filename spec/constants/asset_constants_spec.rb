@@ -7,8 +7,14 @@ RSpec.describe AssetConstants do
       expect(described_class.upload_limit_mb("wav")).to eq(MediaConstants::MAX_AUDIO_SIZE_MB)
       expect(described_class.upload_limit_mb("amr")).to eq(MediaConstants::MAX_AUDIO_SIZE_MB)
       expect(described_class.upload_limit_mb("svg")).to eq(MediaConstants::MAX_IMAGE_SIZE_MB)
+      expect(described_class.upload_limit_mb("zip")).to eq(MediaConstants::MAX_OTHER_SIZE_MB)
       expect(described_class.upload_limit_mb("srt")).to eq(MediaConstants::MAX_OTHER_SIZE_MB)
       expect(described_class.upload_limit_mb("bin")).to eq(MediaConstants::MAX_OTHER_SIZE_MB)
+    end
+
+    it "classifies zip files as zip format with raw storage" do
+      expect(described_class.from_extension("zip")).to eq(described_class::ZIP)
+      expect(described_class.storage_resource_type("zip")).to eq("raw")
     end
   end
 

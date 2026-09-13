@@ -225,7 +225,7 @@ Here are the real-world issues you may encounter when setting up and running Gar
 
 ### 🔴 Problem 2: `Errno::ECONNREFUSED` on `localhost:3100` Inside Background Workers
 
-- **Symptom**: Background jobs (`Media::CompressImageJob` or `Media::CompressVideoJob`) fail with `Failed to open TCP connection to localhost:3100 (Connection refused - connect(2) for "localhost" port 3100)`.
+- **Symptom**: Background jobs (`Media::CompressMediaJob`) fail with `Failed to open TCP connection to localhost:3100 (Connection refused - connect(2) for "localhost" port 3100)`.
 - **Root Cause**: Inside a Docker container (`media` or `waka`), `localhost:3100` resolves to the worker container itself where no Garage daemon is running.
 - **Solution**:
   - The backend uses internal Docker network routing (`S3_ENDPOINT=http://garage:3100`), whereas external clients use `S3_PUBLIC_ENDPOINT=http://localhost:3100`.
@@ -285,7 +285,7 @@ Here are the real-world issues you may encounter when setting up and running Gar
 **No.** The silent media compression pipeline operates strictly **in-place**:
 
 1. **Exact Storage Key Re-Use**:
-   When `Media::CompressImageJob` or `Media::CompressVideoJob` processes an asset, it downloads the original file to a temporary worker scratchpad, compresses it, and calls:
+   When `Media::CompressMediaJob` processes an asset, it downloads the original file to a temporary worker scratchpad, compresses it, and calls:
    ```ruby
    StorageService::Client.upload(
      compressed_path,

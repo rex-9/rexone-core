@@ -4,8 +4,8 @@ class CreateAssets < ActiveRecord::Migration[8.1]
       t.string :storage_key                                             # Object key / identifier in object storage (Garage, S3, R2, Cloudinary)
       t.string :name, null: false                                       # File name / identifier
       t.string :url, null: false                                        # Public URL to access the file
-      t.string :type, null: false, default: "general"                   # "avatar", "thumbnail", "subtitle", "audio", "video", "attachment", "general"
-      t.string :format                                                  # "image", "audio", "video", "doc", "subtitle" (null if unclassified)
+      t.string :type, null: false, default: "general"                   # "avatar", "thumbnail", "subtitle", "tts", "attachment", "general"
+      t.string :format                                                  # "image", "audio", "video", "doc", "zip", "subtitle" (null if unclassified)
       t.bigint :size_bytes                                              # File size in bytes
       t.integer :duration_secs                                          # Duration in seconds (for audio / video)
       t.string :source, null: false, default: "upload"                  # "google", "upload", etc.

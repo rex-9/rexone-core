@@ -167,7 +167,7 @@ RSpec.describe Asset, type: :model do
       expect(doc.subtitle_attachable?).to be(false)
     end
 
-    it "allows one thumbnail and one subtitle child on the same parent" do
+    it "allows one thumbnail and multiple subtitle children on the same parent" do
       parent = create(:asset, type: "general", format: "video", extension: "mp4", url: "https://example.com/parent.mp4")
       thumbnail = create(
         :asset,
@@ -185,12 +185,20 @@ RSpec.describe Asset, type: :model do
         parent_asset: parent,
         url: "https://example.com/parent.srt"
       )
+      second_subtitle = create(
+        :asset,
+        type: "subtitle",
+        format: "subtitle",
+        extension: "srt",
+        parent_asset: parent,
+        url: "https://example.com/parent_my.srt"
+      )
 
       expect(parent.reload.thumbnail).to eq(thumbnail)
-      expect(parent.subtitle).to eq(subtitle)
+      expect(parent.subtitles).to contain_exactly(subtitle, second_subtitle)
     end
 
-    it "rejects a second thumbnail or subtitle on the same parent" do
+    it "rejects a second thumbnail but allows multiple subtitles on the same parent" do
       parent = create(:asset, type: "general", format: "video", extension: "mp4", url: "https://example.com/parent.mp4")
       create(
         :asset,
@@ -217,7 +225,7 @@ RSpec.describe Asset, type: :model do
         parent_asset: parent,
         url: "https://example.com/parent_thumb_2.webp"
       )
-      duplicate_subtitle = build(
+      another_subtitle = build(
         :asset,
         type: "subtitle",
         format: "subtitle",
@@ -227,7 +235,7 @@ RSpec.describe Asset, type: :model do
       )
 
       expect(duplicate_thumbnail).not_to be_valid
-      expect(duplicate_subtitle).not_to be_valid
+      expect(another_subtitle).to be_valid
     end
 
     it "filters assets via ready, processing, optimal, and failed scopes" do

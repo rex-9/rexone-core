@@ -7,8 +7,9 @@ module AssetConstants
     AUDIO    = "audio".freeze
     VIDEO    = "video".freeze
     DOC      = "doc".freeze
+    ZIP      = "zip".freeze
     SUBTITLE = "subtitle".freeze
-    ALL      = [ IMAGE, AUDIO, VIDEO, DOC, SUBTITLE ].freeze
+    ALL      = [ IMAGE, AUDIO, VIDEO, DOC, ZIP, SUBTITLE ].freeze
 
     # ── Extension Mapping ──────────────────────────────────────────────
     # Single source of truth for file extension → format classification.
@@ -17,6 +18,7 @@ module AssetConstants
     AUDIO_EXTENSIONS    = %w[mp3 wav m4a aac ogg flac amr].freeze
     VIDEO_EXTENSIONS    = %w[mp4 mov avi webm mkv].freeze
     DOC_EXTENSIONS      = %w[pdf doc docx txt rtf].freeze
+    ZIP_EXTENSIONS      = %w[zip].freeze
     SUBTITLE_EXTENSIONS = %w[srt].freeze
 
     EXTENSION_TO_FORMAT = (
@@ -24,6 +26,7 @@ module AssetConstants
         AUDIO_EXTENSIONS.to_h { |ext| [ ext, AUDIO ] },
         VIDEO_EXTENSIONS.to_h { |ext| [ ext, VIDEO ] },
         DOC_EXTENSIONS.to_h   { |ext| [ ext, DOC ] },
+        ZIP_EXTENSIONS.to_h   { |ext| [ ext, ZIP ] },
         SUBTITLE_EXTENSIONS.to_h { |ext| [ ext, SUBTITLE ] }
       )
     ).freeze
@@ -35,6 +38,7 @@ module AssetConstants
         AUDIO_EXTENSIONS.to_h { |ext| [ ext, "video" ] },
         VIDEO_EXTENSIONS.to_h { |ext| [ ext, "video" ] },
         DOC_EXTENSIONS.to_h   { |ext| [ ext, "raw" ] },
+        ZIP_EXTENSIONS.to_h   { |ext| [ ext, "raw" ] },
         SUBTITLE_EXTENSIONS.to_h { |ext| [ ext, "raw" ] }
       )
     ).freeze

@@ -5,7 +5,7 @@ class V1::AssetsController < V1::ApplicationController
 
   # GET /v1/assets?type=video&page=1&limit=10
   def index
-    assets = Asset.includes(:thumbnail, :subtitle)
+    assets = Asset.includes(:thumbnail, :subtitles)
     assets = assets.where(type: params[:type]) if params[:type].present?
     pagy, records = pagy(:offset, assets, limit: params[:limit])
 
@@ -280,14 +280,14 @@ class V1::AssetsController < V1::ApplicationController
       Media::ConvertImageJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued image conversion for asset #{asset.id}")
     elsif asset.compressible_video?
-      Media::CompressVideoJob.perform_later(asset_id: asset.id)
+      Media::CompressMediaJob.perform_later(asset_id: asset.id)
       Media::GenerateVideoThumbnailJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued video compression for asset #{asset.id}")
     elsif asset.compressible_image?
-      Media::CompressImageJob.perform_later(asset_id: asset.id)
+      Media::CompressMediaJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued image compression for asset #{asset.id}")
     elsif asset.compressible_audio?
-      Media::CompressAudioJob.perform_later(asset_id: asset.id)
+      Media::CompressMediaJob.perform_later(asset_id: asset.id)
       Rails.logger.info("[AssetsController] Enqueued audio compression for asset #{asset.id}")
     end
   end
