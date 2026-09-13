@@ -18,17 +18,26 @@ Built under a simple creed: **clear in thought, exact in structure, simple in us
 
 **API-first · Modular · Observable · Queue-aware · Built to grow**
 
-[Quick Start](docs/QUICK_START.md) · [Explore the foundation](#feature-map) · [Foundation Guide](docs/FOUNDATION.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Who it is for](#who-rexone-is-for) · [Development Law](LAW.md) · [Production Deployment](docs/DEPLOYMENT.md)
+[Quick Start](docs/QUICK_START.md) · [Explore the foundation](#feature-map) · [Foundation Guide](docs/FOUNDATION.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Visual Walkthrough](./docs/VISUAL_WALKTHRUOGH.md) · [Who it is for](#who-rexone-is-for) · [Development Law](LAW.md) · [Production Deployment](docs/DEPLOYMENT.md)
 
 </div>
 
 ---
 
 > [!IMPORTANT]
+
 > **🏛️ Unified Ecosystem**: For the complete cross-platform architecture, feature parity matrix, and communication protocols between Core, Web, and Mobile, see **[ECOSYSTEM.md](ECOSYSTEM.md)**.
+
 >
+
+> **🗺️ Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of Rexone across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHRUOGH.md](./docs/VISUAL_WALKTHRUOGH.md**)\*\*\*\*.
+
+>
+
 > **📜 Constitutional Law**: All development must strictly adhere to the architecture, service boundary, and API envelope laws in **[LAW.md](LAW.md)**. Zero exceptions.
+
 >
+
 > **🛡️ Production Security**: Deployments must follow the origin-isolation, edge protection, rate limiting, and verification steps in **[Production DDoS and API Abuse Protection](docs/DDOS.md)**.
 
 ## Why Rexone Core?
@@ -155,10 +164,10 @@ Solid Queue is part of the application architecture, not an afterthought.
 
 The foundation currently queues work where it benefits from durability, isolation, retries, or provider independence:
 
-| Work                             | Queue           | Why                                                             |
-| -------------------------------- | --------------- | --------------------------------------------------------------- |
-| Stripe webhook processing        | `payments`      | Durable ingestion, idempotency, retries, and concurrency safety |
-| Socket, push, and email delivery | `notifications` | Provider latency must not delay the originating request         |
+| Work                             | Queue           | Why                                                                          |
+| -------------------------------- | --------------- | ---------------------------------------------------------------------------- |
+| Stripe webhook processing        | `payments`      | Durable ingestion, idempotency, retries, and concurrency safety              |
+| Socket, push, and email delivery | `notifications` | Provider latency must not delay the originating request                      |
 | Media processing                 | `media`         | Isolated compression, conversion, thumbnail, and remote-image ingestion work |
 
 Production workers are separated by workload in [`config/queue.yml`](config/queue.yml), and recurring maintenance lives in [`config/recurring.yml`](config/recurring.yml).

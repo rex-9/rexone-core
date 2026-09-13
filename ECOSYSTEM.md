@@ -9,10 +9,19 @@ A unified, production-grade architectural blueprint spanning **Rexone Core** (Ba
 Across all three repositories, the architecture adheres to one uncompromising doctrine:
 
 > [!IMPORTANT]
+
 > **"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."**
+
 >
+
 > 📜 **Constitutional Law**: For strict repository-specific engineering constraints and architectural rules, see **[LAW.md](LAW.md)**. All applications and derivative products built upon the **Rexone Ecosystem** (`rex-9`) must strictly adhere to these rules and protocols without exception. Developers are warmly encouraged to preserve ecosystem credit to support the project.
+
 >
+
+> 🗺️ **Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of the ecosystem across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHRUOGH.md](./docs/VISUAL_WALKTHRUOGH.md**)\*\*\*\*.
+
+>
+
 > 🛡️ **Production Operations**: Use the **[Production Deployment Guide](docs/DEPLOYMENT.md)** together with **[DDoS and API Abuse Protection](docs/DDOS.md)**. Cloudflare, origin isolation, proxy limits, Rack Attack, and bounded application resources form one defense system.
 
 The Rexone platform provides a unified, battle-tested foundation where **any modern digital product** can be rapidly developed on top of ready-made capabilities: Identity & IAM, Commerce & Subscriptions, Background Queues, Asset Management, Real-Time WebSockets, Queued AI, Push Notifications, Product Analytics, Client Telemetry, In-App Upgrades, and Multi-Language Localization.

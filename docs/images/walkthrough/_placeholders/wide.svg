@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<rect width="1600" height="900" fill="#160B11"/>
+<rect x="28" y="28" width="1544" height="844" rx="28" fill="none" stroke="#FF2238" stroke-width="4" stroke-dasharray="18 14"/>
+<text x="800" y="405" text-anchor="middle" fill="#F7F2F4" font-family="Arial, sans-serif" font-size="56" font-weight="700">FULL-WIDTH SCREENSHOT</text>
+<text x="800" y="480" text-anchor="middle" fill="#B8AEB3" font-family="Arial, sans-serif" font-size="28">Replace this src with the requested admin / operations capture</text>
+<text x="800" y="535" text-anchor="middle" fill="#FF6B7A" font-family="Arial, sans-serif" font-size="24">Recommended crop: ~1600 × 900</text>
+</svg>
