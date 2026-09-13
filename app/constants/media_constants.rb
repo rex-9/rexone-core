@@ -57,6 +57,7 @@ module MediaConstants
   AUDIO_EXT_AAC = "aac".freeze
   AUDIO_EXT_OGG = "ogg".freeze
   AUDIO_EXT_FLAC = "flac".freeze
+  AUDIO_EXT_AMR = "amr".freeze
 
   # Subtitle format extensions
   SUBTITLE_EXT_SRT = "srt".freeze
@@ -88,7 +89,7 @@ module MediaConstants
     COMPRESSION_EXTENSIONS = {
       AssetConstants::AssetFormat::VIDEO => [ VIDEO_EXT_MP4, VIDEO_EXT_MOV, VIDEO_EXT_AVI, VIDEO_EXT_WEBM, VIDEO_EXT_MKV ].freeze,
       AssetConstants::AssetFormat::IMAGE => [ IMAGE_EXT_JPG, IMAGE_EXT_JPEG, IMAGE_EXT_PNG, IMAGE_EXT_WEBP ].freeze,
-      AssetConstants::AssetFormat::AUDIO => [ AUDIO_EXT_MP3, AUDIO_EXT_WAV, AUDIO_EXT_M4A, AUDIO_EXT_AAC, AUDIO_EXT_OGG, AUDIO_EXT_FLAC ].freeze
+      AssetConstants::AssetFormat::AUDIO => [ AUDIO_EXT_MP3, AUDIO_EXT_WAV, AUDIO_EXT_M4A, AUDIO_EXT_AAC, AUDIO_EXT_OGG, AUDIO_EXT_FLAC, AUDIO_EXT_AMR ].freeze
     }.freeze
     THUMBNAIL_GENERATION_EXTENSIONS = COMPRESSION_EXTENSIONS.fetch(AssetConstants::AssetFormat::VIDEO)
     IMAGE_CONVERSION_EXTENSIONS = [ IMAGE_EXT_SVG ].freeze
@@ -103,8 +104,8 @@ module MediaConstants
   COMPRESSIBLE_VIDEO_EXTENSIONS = Processing::COMPRESSION_EXTENSIONS.fetch(AssetConstants::AssetFormat::VIDEO)
   COMPRESSIBLE_IMAGE_EXTENSIONS = Processing::COMPRESSION_EXTENSIONS.fetch(AssetConstants::AssetFormat::IMAGE)
   COMPRESSIBLE_AUDIO_EXTENSIONS = Processing::COMPRESSION_EXTENSIONS.fetch(AssetConstants::AssetFormat::AUDIO)
-  # WAV / FLAC / OGG cannot host AAC; the compressor remuxes them to M4A.
-  AAC_INCOMPATIBLE_AUDIO_EXTENSIONS = [ AUDIO_EXT_WAV, AUDIO_EXT_FLAC, AUDIO_EXT_OGG ].freeze
+  # These input containers cannot host the configured AAC output; normalize them to M4A.
+  AAC_INCOMPATIBLE_AUDIO_EXTENSIONS = [ AUDIO_EXT_WAV, AUDIO_EXT_FLAC, AUDIO_EXT_OGG, AUDIO_EXT_AMR ].freeze
 
   # Minimum reduction threshold (3%): if compression yields less than 3%, file is considered already at minimum size
   MIN_REDUCTION_THRESHOLD = 0.03

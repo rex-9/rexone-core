@@ -82,6 +82,28 @@ RSpec.describe MediaService::AudioCompressor do
       )
     end
 
+    it "transcodes AMR input to an M4A output" do
+      amr_input = "/tmp/input_audio.amr"
+      generated_output = "/tmp/input_audio_compressed.m4a"
+
+      allow(File).to receive(:exist?).with(amr_input).and_return(true)
+      allow(File).to receive(:zero?).with(amr_input).and_return(false)
+      allow(File).to receive(:size).with(amr_input).and_return(10_000)
+      allow(File).to receive(:exist?).with(generated_output).and_return(true)
+      allow(File).to receive(:zero?).with(generated_output).and_return(false)
+      allow(File).to receive(:size).with(generated_output).and_return(4_000)
+
+      status = instance_double(Process::Status, success?: true)
+      allow(Open3).to receive(:capture3).and_return([ "", "", status ])
+
+      expect(described_class.compress(amr_input)).to eq(generated_output)
+      expect(Open3).to have_received(:capture3).with(
+        "ffmpeg", "-i", amr_input, "-vn", "-acodec", "aac",
+        "-b:a", "128k", "-ar", "44100", "-ac", "2",
+        "-movflags", "+faststart", "-y", generated_output
+      )
+    end
+
     it "raises CompressionError when FFmpeg command fails" do
       allow(File).to receive(:exist?).with(input_path).and_return(true)
       allow(File).to receive(:zero?).with(input_path).and_return(false)

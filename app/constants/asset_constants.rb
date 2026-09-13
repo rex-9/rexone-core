@@ -14,7 +14,7 @@ module AssetConstants
     # Single source of truth for file extension → format classification.
 
     IMAGE_EXTENSIONS    = %w[jpg jpeg png gif webp svg].freeze
-    AUDIO_EXTENSIONS    = %w[mp3 wav m4a aac ogg flac].freeze
+    AUDIO_EXTENSIONS    = %w[mp3 wav m4a aac ogg flac amr].freeze
     VIDEO_EXTENSIONS    = %w[mp4 mov avi webm mkv].freeze
     DOC_EXTENSIONS      = %w[pdf doc docx txt rtf].freeze
     SUBTITLE_EXTENSIONS = %w[srt].freeze

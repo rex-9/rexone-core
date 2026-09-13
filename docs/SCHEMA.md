@@ -601,7 +601,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 **Audio Compression**:
 
-- Compressible audio extensions (`mp3`, `wav`, `m4a`, `aac`, `ogg`, `flac`) follow the same optimal-first `media` queue pipeline as images and videos. WAV, FLAC, and OGG are remuxed to `m4a` (AAC); the asset `extension` is updated to `m4a` while `storage_key` is overwritten in place.
+- Compressible audio extensions (`mp3`, `wav`, `m4a`, `aac`, `ogg`, `flac`, `amr`) follow the same optimal-first `media` queue pipeline as images and videos. WAV, FLAC, OGG, and AMR are normalized to `m4a` (AAC); the asset `extension` is updated to `m4a` while the original storage object is safely replaced.
 
 ---
 

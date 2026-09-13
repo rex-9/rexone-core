@@ -497,7 +497,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
         fallback_size: file.size,
         status: processing_status_for(file)
       )
-      Media::ConvertImageJob.perform_later(asset_id: thumbnail.id) if thumbnail.extension == MediaConstants::IMAGE_EXT_SVG && MediaConstants::MEDIA_CONTAINER_ENABLED
+      enqueue_media_processing_if_needed(thumbnail)
       render_json_response(
         status_code: 200,
         message: admin_asset_message(MessageService::Admin::Asset::THUMBNAIL_REPLACED),
@@ -551,9 +551,14 @@ class V1::Admin::AssetsController < V1::ApplicationController
   private
 
   def replace_thumbnail!(asset, result, fallback_size:, status: MediaConstants::Status::READY)
-    Asset.transaction do
-      asset.thumbnail&.destroy!
-      Asset.create!(
+    previous_storage_key = nil
+    thumbnail = Asset.transaction do
+      existing = Asset.find_by(
+        parent_asset_id: asset.id,
+        type: AssetConstants::AssetType::THUMBNAIL
+      )
+      previous_storage_key = existing&.storage_key
+      attributes = {
         name: result[:storage_key], url: result[:url],
         type: AssetConstants::AssetType::THUMBNAIL,
         format: AssetConstants::AssetFormat::IMAGE,
@@ -563,8 +568,19 @@ class V1::Admin::AssetsController < V1::ApplicationController
         status: status,
         storage_key: result[:storage_key], assetable: asset.assetable,
         parent_asset: asset, created_by_id: current_user.id
-      )
+      }
+
+      if existing
+        existing.update!(attributes)
+        existing
+      else
+        Asset.create!(attributes)
+      end
     end
+
+    delete_replaced_storage(previous_storage_key, thumbnail.storage_key, resource_type: "image")
+    asset.association(:thumbnail).reset
+    thumbnail
   end
 
   def replace_subtitle!(asset, result, fallback_size:)
@@ -588,6 +604,15 @@ class V1::Admin::AssetsController < V1::ApplicationController
     file.present? && file.content_type.to_s.in?(MediaConstants::SUBTITLE_CONTENT_TYPES) && AssetConstants::AssetFormat::SUBTITLE_EXTENSIONS.include?(
       File.extname(filename_for(file)).delete(".").downcase
     )
+  end
+
+  def delete_replaced_storage(previous_key, replacement_key, resource_type:)
+    return if previous_key.blank? || previous_key == replacement_key
+
+    StorageService::Client.delete(previous_key, resource_type: resource_type)
+  rescue StandardError => error
+    Rails.error.report(error)
+    Rails.logger.error("[AssetsController] Failed to delete replaced storage object #{previous_key}: #{error.message}")
   end
 
   def admin_asset_message(key, **options)

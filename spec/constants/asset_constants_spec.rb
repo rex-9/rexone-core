@@ -5,6 +5,7 @@ RSpec.describe AssetConstants do
     it "selects upload limits by application media format" do
       expect(described_class.upload_limit_mb("mp4")).to eq(MediaConstants::MAX_VIDEO_SIZE_MB)
       expect(described_class.upload_limit_mb("wav")).to eq(MediaConstants::MAX_AUDIO_SIZE_MB)
+      expect(described_class.upload_limit_mb("amr")).to eq(MediaConstants::MAX_AUDIO_SIZE_MB)
       expect(described_class.upload_limit_mb("svg")).to eq(MediaConstants::MAX_IMAGE_SIZE_MB)
       expect(described_class.upload_limit_mb("srt")).to eq(MediaConstants::MAX_OTHER_SIZE_MB)
       expect(described_class.upload_limit_mb("bin")).to eq(MediaConstants::MAX_OTHER_SIZE_MB)

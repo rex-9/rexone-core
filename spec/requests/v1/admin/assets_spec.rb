@@ -339,6 +339,8 @@ RSpec.describe "V1 Admin Assets API", type: :request do
     let(:image_file) { fixture_file_upload("avatar.png", "image/png") }
 
     before do
+      allow(Media::CompressImageJob).to receive(:perform_later)
+      allow(Media::ConvertImageJob).to receive(:perform_later)
       allow(StorageService::Client).to receive(:upload).and_return(
         storage_key: "dev/admin/thumbnail_replacement.webp",
         url: "https://assets.example.com/thumbnail-replacement.webp",
@@ -364,8 +366,10 @@ RSpec.describe "V1 Admin Assets API", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response_status["success"]).to be(true)
-      expect(Asset.exists?(previous.id)).to be(false)
-      expect(video_asset.reload.thumbnail.storage_key).to eq("dev/admin/thumbnail_replacement.webp")
+      expect(video_asset.reload.thumbnail).to have_attributes(
+        id: previous.id,
+        storage_key: "dev/admin/thumbnail_replacement.webp"
+      )
       expect(response_data.dig("asset", "thumbnail", "url")).to include("dev/admin/thumbnail_replacement.webp")
       expect(StorageService::Client).to have_received(:delete).with(
         "dev/admin/thumbnail_previous.webp",
@@ -395,7 +399,9 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response_status["success"]).to be(true)
       expect(audio_asset.reload.thumbnail.storage_key).to eq("dev/admin/thumbnail_replacement.webp")
+      expect(audio_asset.thumbnail).to have_attributes(status: "pending")
       expect(response_data.dig("asset", "thumbnail", "url")).to include("dev/admin/thumbnail_replacement.webp")
+      expect(Media::CompressImageJob).to have_received(:perform_later).with(asset_id: audio_asset.thumbnail.id)
     end
 
     it "attaches a thumbnail to a compressible audio parent regardless of type" do
@@ -425,7 +431,6 @@ RSpec.describe "V1 Admin Assets API", type: :request do
 
     it "stores an SVG thumbnail and queues conversion in the media worker" do
       svg_file = fixture_file_upload("icon.svg", "image/svg+xml")
-      allow(Media::ConvertImageJob).to receive(:perform_later)
       allow(StorageService::Client).to receive(:upload).and_return(
         storage_key: "dev/admin/thumbnail_replacement.svg",
         url: "https://assets.example.com/thumbnail-replacement.svg",
@@ -444,6 +449,42 @@ RSpec.describe "V1 Admin Assets API", type: :request do
         hash_including(resource_type: "image", storage_key: a_string_matching(/\.svg$/))
       )
       expect(Media::ConvertImageJob).to have_received(:perform_later).with(asset_id: video_asset.reload.thumbnail.id)
+    end
+
+    it "replaces an existing audio thumbnail with SVG using the same record" do
+      audio_asset = create(:asset, type: "audio", format: "audio", extension: "amr")
+      previous = create(
+        :asset,
+        type: "thumbnail",
+        format: "image",
+        extension: "webp",
+        parent_asset: audio_asset,
+        storage_key: "dev/admin/audio_thumbnail_previous.webp"
+      )
+      svg_file = fixture_file_upload("icon.svg", "image/svg+xml")
+      allow(StorageService::Client).to receive(:upload).and_return(
+        storage_key: "dev/admin/audio_thumbnail_replacement.svg",
+        url: "https://assets.example.com/audio-thumbnail-replacement.svg",
+        bytes: 512,
+        format: "svg"
+      )
+
+      post "/v1/admin/assets/#{audio_asset.id}/thumbnail/upload",
+           params: { file: svg_file },
+           headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(audio_asset.reload.thumbnail).to have_attributes(
+        id: previous.id,
+        extension: "svg",
+        status: "pending",
+        storage_key: "dev/admin/audio_thumbnail_replacement.svg"
+      )
+      expect(StorageService::Client).to have_received(:delete).with(
+        "dev/admin/audio_thumbnail_previous.webp",
+        resource_type: "image"
+      )
+      expect(Media::ConvertImageJob).to have_received(:perform_later).with(asset_id: previous.id)
     end
   end
 
