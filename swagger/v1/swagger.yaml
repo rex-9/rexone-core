@@ -977,8 +977,7 @@ components:
             - avatar
             - thumbnail
             - subtitle
-            - audio
-            - video
+            - tts
             - attachment
             - general
           description: Asset classification.
@@ -2017,8 +2016,7 @@ components:
             - avatar
             - thumbnail
             - subtitle
-            - audio
-            - video
+            - tts
             - attachment
             - general
         format:
@@ -10693,8 +10691,7 @@ paths:
               - avatar
               - thumbnail
               - subtitle
-              - audio
-              - video
+              - tts
               - attachment
               - general
         - name: page
@@ -10716,7 +10713,7 @@ paths:
                 "$ref": "#/components/schemas/response"
       description:
         Optional type filter matches AssetType (avatar, thumbnail, subtitle,
-        audio, video, attachment, general).
+        tts, attachment, general).
     post:
       tags:
         - Assets

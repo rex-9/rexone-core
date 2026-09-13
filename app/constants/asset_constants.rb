@@ -71,7 +71,7 @@ module AssetConstants
     end
 
     def self.tts_for_message(message_id)
-      "#{ADMIN_NAMESPACE}/audio_tts_message_#{message_id}_#{Time.now.to_i}.mp3".freeze
+      "#{ADMIN_NAMESPACE}/#{TTS_MESSAGE_PREFIX}#{message_id}_#{Time.now.to_i}.mp3".freeze
     end
 
     def self.for_admin(type:, original_filename:)
@@ -148,11 +148,10 @@ module AssetConstants
     AVATAR     = "avatar".freeze
     THUMBNAIL  = "thumbnail".freeze
     SUBTITLE   = "subtitle".freeze
-    AUDIO      = "audio".freeze
-    VIDEO      = "video".freeze
+    TTS        = "tts".freeze
     ATTACHMENT = "attachment".freeze
     GENERAL    = "general".freeze
-    ALL        = [ AVATAR, THUMBNAIL, SUBTITLE, AUDIO, VIDEO, ATTACHMENT, GENERAL ].freeze
+    ALL        = [ AVATAR, THUMBNAIL, SUBTITLE, TTS, ATTACHMENT, GENERAL ].freeze
     IMAGE_TYPES = [ AVATAR, THUMBNAIL ].freeze
   end
 end

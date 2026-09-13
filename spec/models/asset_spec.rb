@@ -8,6 +8,9 @@ RSpec.describe Asset, type: :model do
   it "requires valid HTTP URLs and supported metadata" do
     expect(build(:asset, url: "testing.com")).not_to be_valid
     expect(build(:asset, type: "invalid_type")).not_to be_valid
+    expect(build(:asset, type: "audio", format: "audio")).not_to be_valid
+    expect(build(:asset, type: "video", format: "video")).not_to be_valid
+    expect(build(:asset, type: "general", format: "audio")).to be_valid
     expect(build(:asset, format: "archive")).not_to be_valid
     expect(build(:asset, source: "unknown")).not_to be_valid
     expect(build(:asset, size_bytes: -1)).not_to be_valid
@@ -125,7 +128,7 @@ RSpec.describe Asset, type: :model do
     it "identifies compressible formats accurately" do
       video = build(:asset, extension: "mp4")
       image = build(:asset, extension: "png")
-      audio = build(:asset, extension: "wav", type: "audio")
+      audio = build(:asset, extension: "wav", type: "general")
       doc = build(:asset, extension: "pdf")
       optimal_image = build(:asset, extension: "png", status: "optimal")
 
@@ -165,7 +168,7 @@ RSpec.describe Asset, type: :model do
     end
 
     it "allows one thumbnail and one subtitle child on the same parent" do
-      parent = create(:asset, type: "video", format: "video", extension: "mp4", url: "https://example.com/parent.mp4")
+      parent = create(:asset, type: "general", format: "video", extension: "mp4", url: "https://example.com/parent.mp4")
       thumbnail = create(
         :asset,
         type: "thumbnail",
@@ -188,7 +191,7 @@ RSpec.describe Asset, type: :model do
     end
 
     it "rejects a second thumbnail or subtitle on the same parent" do
-      parent = create(:asset, type: "video", format: "video", extension: "mp4", url: "https://example.com/parent.mp4")
+      parent = create(:asset, type: "general", format: "video", extension: "mp4", url: "https://example.com/parent.mp4")
       create(
         :asset,
         type: "thumbnail",

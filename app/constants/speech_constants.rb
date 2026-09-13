@@ -54,7 +54,5 @@ module SpeechConstants
     HEADER_USER_AGENT = "User-Agent".freeze
 
     STORAGE_FOLDER = "speech/tts".freeze
-    # Cloudinary treats audio like video for upload/delete (matches Asset#storage_resource_type).
-    STORAGE_RESOURCE_TYPE = "video".freeze
   end
 end

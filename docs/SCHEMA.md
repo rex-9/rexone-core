@@ -556,30 +556,30 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - **Model**: [`Asset`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset.rb)
 - **Description**: Polymorphic storage tracking for files, images, videos, avatars, and audio with background compression lifecycle.
 
-| Column              | Type       | Nullable | Default             | Description / Notes                                                                         |
-| :------------------ | :--------- | :------: | :------------------ | :------------------------------------------------------------------------------------------ |
-| `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                                 |
-| `name`              | `string`   |    ❌    | —                   | File original name                                                                          |
-| `url`               | `string`   |    ❌    | —                   | Accessible CDN or storage URL                                                               |
-| `storage_key`       | `string`   |    ✔️    | `NULL`              | Cloud bucket path (e.g. `user/{user_id}/avatar_profile_12345.png`)                          |
-| `type`              | `string`   |    ❌    | `"general"`         | `general`, `avatar`, `thumbnail`, `subtitle`, `audio`, `video`, `attachment` (STI disabled) |
-| `source`            | `string`   |    ❌    | `"upload"`          | Source: `upload`, `google`                                                                  |
-| `format`            | `string`   |    ✔️    | `NULL`              | Media kind: `image`, `audio`, `video`, `doc`, `subtitle`                                    |
-| `extension`         | `string`   |    ✔️    | `NULL`              | File extension without dot                                                                  |
-| `size_bytes`        | `bigint`   |    ✔️    | `NULL`              | File size in bytes                                                                          |
-| `duration_secs`     | `integer`  |    ✔️    | `NULL`              | Video/audio duration in seconds                                                             |
-| `status`            | `string`   |    ❌    | `"pending"`         | Pipeline status: `pending`, `processing`, `ready`, `optimal`, `failed`                      |
-| `assetable_type`    | `string`   |    ✔️    | `NULL`              | Polymorphic owner type (`User`, `Chat::Message`, etc.)                                      |
-| `assetable_id`      | `uuid`     |    ✔️    | `NULL`              | Polymorphic owner ID                                                                        |
-| `parent_asset_id`   | `uuid`     |    ✔️    | `NULL`              | Source asset for a thumbnail or subtitle child (compressible video or audio parent)         |
-| `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                           |
-| `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                          |
-| `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                         |
-| `undiscarded_by_id` | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                                                          |
-| `discarded_at`      | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                                       |
-| `undiscarded_at`    | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                                           |
-| `created_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                                   |
-| `updated_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                                   |
+| Column              | Type       | Nullable | Default             | Description / Notes                                                                             |
+| :------------------ | :--------- | :------: | :------------------ | :---------------------------------------------------------------------------------------------- |
+| `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                                     |
+| `name`              | `string`   |    ❌    | —                   | File original name                                                                              |
+| `url`               | `string`   |    ❌    | —                   | Accessible CDN or storage URL                                                                   |
+| `storage_key`       | `string`   |    ✔️    | `NULL`              | Cloud bucket path (e.g. `user/{user_id}/avatar_profile_12345.png`)                              |
+| `type`              | `string`   |    ❌    | `"general"`         | Semantic role: `general`, `avatar`, `thumbnail`, `subtitle`, `tts`, `attachment` (STI disabled) |
+| `source`            | `string`   |    ❌    | `"upload"`          | Source: `upload`, `google`                                                                      |
+| `format`            | `string`   |    ✔️    | `NULL`              | Media kind: `image`, `audio`, `video`, `doc`, `subtitle`                                        |
+| `extension`         | `string`   |    ✔️    | `NULL`              | File extension without dot                                                                      |
+| `size_bytes`        | `bigint`   |    ✔️    | `NULL`              | File size in bytes                                                                              |
+| `duration_secs`     | `integer`  |    ✔️    | `NULL`              | Video/audio duration in seconds                                                                 |
+| `status`            | `string`   |    ❌    | `"pending"`         | Pipeline status: `pending`, `processing`, `ready`, `optimal`, `failed`                          |
+| `assetable_type`    | `string`   |    ✔️    | `NULL`              | Polymorphic owner type (`User`, `Chat::Message`, etc.)                                          |
+| `assetable_id`      | `uuid`     |    ✔️    | `NULL`              | Polymorphic owner ID                                                                            |
+| `parent_asset_id`   | `uuid`     |    ✔️    | `NULL`              | Source asset for a thumbnail or subtitle child (compressible video or audio parent)             |
+| `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                               |
+| `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                              |
+| `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                             |
+| `undiscarded_by_id` | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                                                              |
+| `discarded_at`      | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                                           |
+| `undiscarded_at`    | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                                               |
+| `created_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                                       |
+| `updated_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                                       |
 
 **Indexes**:
 

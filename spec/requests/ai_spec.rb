@@ -70,7 +70,7 @@ RSpec.describe "Queued AI chat", type: :request do
     assistant_message = create(:chat_message, room: room, role: "assistant", content: "Hello there")
     create(
       :asset,
-      type: "audio",
+      type: "tts",
       format: "audio",
       source: "upload",
       url: "https://cdn.example.com/speech.mp3",
@@ -92,7 +92,7 @@ RSpec.describe "Queued AI chat", type: :request do
     expect(message.dig("attributes", "assets")).to contain_exactly(
       hash_including(
         "url" => "https://cdn.example.com/speech.mp3",
-        "type" => "audio",
+        "type" => "tts",
         "assetable_type" => "Chat::Message",
         "assetable_id" => assistant_message.id
       )

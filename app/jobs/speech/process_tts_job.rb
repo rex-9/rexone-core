@@ -28,8 +28,9 @@ class Speech::ProcessTtsJob < ApplicationJob
     result = SpeechService::Client.text_to_speech(text: message.content)
     raise SpeechService::Error, result[:error] if result[:error].present?
 
-    upload = upload_audio!(message, result)
-    persist_asset!(message, upload)
+    upload, asset_name = upload_audio!(message, result)
+    asset = persist_asset!(message, upload, asset_name: asset_name)
+    enqueue_media_processing(asset)
     update_tts!(message, Chat::Message::STATUSES[:completed], tts_error: nil)
     notify_completed(message)
   rescue SpeechService::Error, StorageService::Error => error
@@ -45,7 +46,7 @@ class Speech::ProcessTtsJob < ApplicationJob
   def upload_audio!(message, result)
     storage_key = AssetConstants::AssetName.tts_for_message(message.id)
 
-    Tempfile.create([ "tts-#{message.id}", ".mp3" ]) do |file|
+    upload = Tempfile.create([ "tts-#{message.id}", ".mp3" ]) do |file|
       file.binmode
       file.write(result[:bytes])
       file.rewind
@@ -54,27 +55,41 @@ class Speech::ProcessTtsJob < ApplicationJob
         file,
         storage_key: storage_key,
         folder: SpeechConstants::Tts::STORAGE_FOLDER,
-        resource_type: SpeechConstants::Tts::STORAGE_RESOURCE_TYPE,
+        resource_type: AssetConstants::AssetFormat.storage_resource_type(MediaConstants::AUDIO_EXT_MP3),
         overwrite: true
       )
     end
+
+    [ upload, storage_key ]
   end
 
-  def persist_asset!(message, upload)
+  def persist_asset!(message, upload, asset_name:)
     asset = message.tts_asset
     asset.assign_attributes(
-      name: AssetConstants::AssetName.tts_for_message(message.id),
+      name: asset_name,
       url: upload[:url],
-      type: AssetConstants::AssetType::AUDIO,
+      type: AssetConstants::AssetType::TTS,
       format: AssetConstants::AssetFormat::AUDIO,
       size_bytes: upload[:bytes],
       source: AssetConstants::AssetSource::UPLOAD,
       storage_key: upload[:storage_key],
       extension: upload[:format].presence || "mp3",
+      status: media_processing_enabled? ? MediaConstants::Status::PENDING : MediaConstants::Status::READY,
       assetable: message
     )
     asset.save!
+    asset.clear_compression_count!
     asset
+  end
+
+  def enqueue_media_processing(asset)
+    return unless asset.pending?
+
+    Media::CompressAudioJob.perform_later(asset_id: asset.id)
+  end
+
+  def media_processing_enabled?
+    MediaConstants::MEDIA_CONTAINER_ENABLED
   end
 
   def notify_completed(message)

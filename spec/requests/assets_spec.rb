@@ -142,18 +142,18 @@ RSpec.describe "Asset uploads", type: :request do
     end
 
     it "filters assets by type" do
-      create(:asset, type: "video", format: "video", extension: "mp4")
+      create(:asset, type: "attachment", format: "video", extension: "mp4")
       create(:asset, type: "avatar")
 
-      get "/v1/assets", params: { type: "video" }
+      get "/v1/assets", params: { type: "attachment" }
 
       expect(response).to have_http_status(:ok)
       expect(response_data.size).to eq(1)
-      expect(response_data.first.dig("attributes", "type")).to eq("video")
+      expect(response_data.first.dig("attributes", "type")).to eq("attachment")
     end
 
     it "filters subtitle assets by type" do
-      parent = create(:asset, type: "video", format: "video", extension: "mp4")
+      parent = create(:asset, type: "general", format: "video", extension: "mp4")
       create(:asset, type: "subtitle", format: "subtitle", extension: "srt", parent_asset: parent)
       create(:asset, type: "avatar")
 

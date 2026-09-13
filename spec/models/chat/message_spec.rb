@@ -65,7 +65,7 @@ RSpec.describe Chat::Message, type: :model do
     message = create(:chat_message, role: "assistant", content: "Speak this")
     asset = create(
       :asset,
-      type: "audio",
+      type: "tts",
       format: "audio",
       source: "upload",
       url: "https://cdn.example.com/speech.mp3",

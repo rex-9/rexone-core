@@ -25,7 +25,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
 
     it "filters assets by status, type, and format" do
       create(:asset, status: "pending", type: "thumbnail", format: "image")
-      create(:asset, status: "ready", type: "video", format: "video")
+      create(:asset, status: "ready", type: "general", format: "video")
 
       get "/v1/admin/assets", params: { status: "pending", type: "thumbnail", format: "image" }, headers: headers
 
@@ -168,7 +168,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
   describe "POST /v1/admin/assets/:id/compress" do
     let(:image_asset) { create(:asset, extension: "png", status: "ready") }
     let(:video_asset) { create(:asset, extension: "mp4", status: "ready") }
-    let(:audio_asset) { create(:asset, extension: "wav", format: "audio", type: "audio", status: "ready") }
+    let(:audio_asset) { create(:asset, extension: "wav", format: "audio", type: "general", status: "ready") }
     let(:pdf_asset) { create(:asset, extension: "pdf", status: "ready") }
 
     before do
@@ -390,7 +390,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
     end
 
     it "attaches a thumbnail to a type=audio parent" do
-      audio_asset = create(:asset, type: "audio", format: "audio", extension: "wav")
+      audio_asset = create(:asset, type: "general", format: "audio", extension: "wav")
 
       post "/v1/admin/assets/#{audio_asset.id}/thumbnail/upload",
            params: { file: image_file },
@@ -452,7 +452,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
     end
 
     it "replaces an existing audio thumbnail with SVG using the same record" do
-      audio_asset = create(:asset, type: "audio", format: "audio", extension: "amr")
+      audio_asset = create(:asset, type: "general", format: "audio", extension: "amr")
       previous = create(
         :asset,
         type: "thumbnail",
@@ -569,7 +569,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
     end
 
     it "attaches a subtitle to a type=audio parent" do
-      audio_asset = create(:asset, type: "audio", format: "audio", extension: "wav")
+      audio_asset = create(:asset, type: "general", format: "audio", extension: "wav")
 
       post "/v1/admin/assets/#{audio_asset.id}/subtitle/upload",
            params: { file: srt_file },
@@ -716,13 +716,13 @@ RSpec.describe "V1 Admin Assets API", type: :request do
         source: AssetConstants::AssetSource::UPLOAD
       )
       allow(StorageService::Client).to receive(:move)
-      allow(StorageService::Client).to receive(:url).and_return("http://localhost:3100/rexone/admin/video_sayadaw-kelasa_1788540008.png")
+      allow(StorageService::Client).to receive(:url).and_return("http://localhost:3100/rexone/admin/attachment_sayadaw-kelasa_1788540008.png")
 
       patch "/v1/admin/assets/#{asset.id}",
             params: {
               asset: {
                 name: "admin/general_sayadaw-kelasa_1788540008.png",
-                type: "video"
+                type: "attachment"
               }
             },
             headers: headers
@@ -730,11 +730,11 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(response).to have_http_status(:ok)
       expect(StorageService::Client).to have_received(:move).with(
         "admin/general_sayadaw-kelasa_1788540008.png",
-        "admin/video_sayadaw-kelasa_1788540008.png"
+        "admin/attachment_sayadaw-kelasa_1788540008.png"
       )
-      expect(asset.reload.type).to eq("video")
-      expect(asset.storage_key).to eq("admin/video_sayadaw-kelasa_1788540008.png")
-      expect(asset.name).to eq("admin/video_sayadaw-kelasa_1788540008.png")
+      expect(asset.reload.type).to eq("attachment")
+      expect(asset.storage_key).to eq("admin/attachment_sayadaw-kelasa_1788540008.png")
+      expect(asset.name).to eq("admin/attachment_sayadaw-kelasa_1788540008.png")
     end
   end
 

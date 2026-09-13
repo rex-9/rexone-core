@@ -53,7 +53,7 @@ module Chat
 
     def tts_asset
       assets.find_or_initialize_by(
-        type: AssetConstants::AssetType::AUDIO,
+        type: AssetConstants::AssetType::TTS,
         source: AssetConstants::AssetSource::UPLOAD
       )
     end

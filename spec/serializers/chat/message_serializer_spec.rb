@@ -28,7 +28,7 @@ RSpec.describe Chat::MessageSerializer do
     message = create(:chat_message, role: "assistant", content: "Speak this")
     asset = create(
       :asset,
-      type: "audio",
+      type: "tts",
       format: "audio",
       source: "upload",
       url: "https://cdn.example.com/speech.mp3",
@@ -44,7 +44,7 @@ RSpec.describe Chat::MessageSerializer do
       hash_including(
         id: asset.id,
         url: "https://cdn.example.com/speech.mp3",
-        type: "audio",
+        type: "tts",
         format: "audio",
         assetable_type: "Chat::Message",
         assetable_id: message.id
