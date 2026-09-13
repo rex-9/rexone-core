@@ -6,15 +6,7 @@ RSpec.describe "Google authentication", type: :request do
     allow(NotificationService::Center).to receive(:welcome)
     allow(CacheService).to receive(:write)
     allow(CacheService).to receive(:delete)
-    allow(StorageService::Client).to receive(:upload) do |_file, options|
-      {
-        storage_key: "avatar/#{options[:storage_key]}",
-        url: "https://cdn.example.com/#{options[:storage_key]}.jpg",
-        bytes: 1234,
-        format: "jpg",
-        resource_type: "image"
-      }
-    end
+    allow(Media::ImportRemoteImageJob).to receive(:perform_later)
   end
 
   describe "POST /signin/google" do
@@ -28,7 +20,7 @@ RSpec.describe "Google authentication", type: :request do
       expect(NotificationService::Center).to have_received(:sign_in_alert)
     end
 
-    it "uploads a Google avatar when the existing account only has a Google image URL" do
+    it "queues a Google avatar import when the existing account only has an unstored image URL" do
       user = create(:user, :google_provider, email: "google@example.com")
       create(
         :asset,
@@ -44,13 +36,10 @@ RSpec.describe "Google authentication", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(user.reload.get_avatar_url).to eq("https://example.com/avatar.jpg")
-      expect(StorageService::Client).to have_received(:upload).with(
-        "https://example.com/avatar.jpg",
-        hash_including(
-          storage_key: a_string_starting_with("user/#{user.id}/avatar_google_"),
-          folder: "user_uploads/#{AssetConstants::AssetType::AVATAR}",
-          resource_type: AssetConstants::AssetFormat::IMAGE
-        )
+      expect(Media::ImportRemoteImageJob).to have_received(:perform_later).with(
+        asset_id: user.assets.find_by!(type: AssetConstants::AssetType::AVATAR).id,
+        source_url: "https://example.com/avatar.jpg",
+        storage_key: a_string_starting_with("user/#{user.id}/avatar_google_")
       )
     end
 
@@ -130,15 +119,13 @@ RSpec.describe "Google authentication", type: :request do
         name: a_string_starting_with("user/#{user.id}/avatar_google_"),
         url: "https://example.com/avatar.jpg",
         format: AssetConstants::AssetFormat::IMAGE,
-        source: AssetConstants::AssetSource::GOOGLE
+        source: AssetConstants::AssetSource::GOOGLE,
+        status: MediaConstants::Status::PENDING
       )
-      expect(StorageService::Client).to have_received(:upload).with(
-        "https://example.com/avatar.jpg",
-        hash_including(
-          storage_key: a_string_starting_with("user/#{user.id}/avatar_google_"),
-          folder: "user_uploads/#{AssetConstants::AssetType::AVATAR}",
-          resource_type: AssetConstants::AssetFormat::IMAGE
-        )
+      expect(Media::ImportRemoteImageJob).to have_received(:perform_later).with(
+        asset_id: user.assets.find_by!(type: AssetConstants::AssetType::AVATAR).id,
+        source_url: "https://example.com/avatar.jpg",
+        storage_key: a_string_starting_with("user/#{user.id}/avatar_google_")
       )
       expect(NotificationService::Center).to have_received(:welcome).with(user_id: user.id, name: user.name)
       expect(CacheService).to have_received(:delete).with("google_signin:challenge:challenge")

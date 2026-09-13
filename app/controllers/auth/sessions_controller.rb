@@ -448,46 +448,31 @@ class Auth::SessionsController < Devise::SessionsController
 
   def save_google_profile_picture_if_missing(user, picture_url)
     return if picture_url.blank?
-    return if user.assets.exists?(type: AssetConstants::AssetType::AVATAR)
+    return if user.assets.where(type: AssetConstants::AssetType::AVATAR).where.not(storage_key: nil).exists?
 
-    storage_result = StorageService::Client.upload(
-      picture_url,
-      storage_key: AssetConstants::AssetName.google_profile(user.id),
-      folder: "user_uploads/#{AssetConstants::AssetType::AVATAR}",
-      resource_type: AssetConstants::AssetFormat::IMAGE,
-      metadata: {
-        user_id: user.id.to_s,
-        source: AssetConstants::AssetSource::GOOGLE
-      }
-    )
-
-    asset = user.assets.find_or_initialize_by(storage_key: storage_result[:storage_key])
+    asset = user.assets.find_or_initialize_by(type: AssetConstants::AssetType::AVATAR)
+    storage_key = AssetConstants::AssetName.google_profile(user.id)
     asset.assign_attributes(
-      name: AssetConstants::AssetName.google_profile(user.id),
+      name: storage_key,
       url: picture_url,
       type: AssetConstants::AssetType::AVATAR,
       format: AssetConstants::AssetFormat::IMAGE,
-      extension: storage_result[:format],
-      size_bytes: storage_result[:bytes],
       source: AssetConstants::AssetSource::GOOGLE,
-      assetable: user
+      assetable: user,
+      status: MediaConstants::Status::PENDING
     )
 
     if asset.save
       old_avatars = user.assets.where(type: AssetConstants::AssetType::AVATAR).where.not(id: asset.id)
       Asset.purge_and_destroy_all!(old_avatars)
       user.assets.reset
+      Media::ImportRemoteImageJob.perform_later(asset_id: asset.id, source_url: picture_url, storage_key: storage_key)
       return
     end
 
     Rails.logger.warn(
       "#{LOG_PREFIX} Failed to save Google profile picture " \
       "for user #{user.id}: #{asset.errors.full_messages}"
-    )
-  rescue StorageService::Error => e
-    Rails.logger.warn(
-      "#{LOG_PREFIX} Failed to upload Google profile picture " \
-      "for user #{user.id}: #{e.message}"
     )
   rescue StandardError => e
     Rails.logger.warn(

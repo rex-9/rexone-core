@@ -25,6 +25,7 @@ RSpec.describe Media::ConvertImageJob, type: :job do
       resource_type: "image"
     )
     allow(StorageService::Client).to receive(:delete)
+    allow(Media::CompressImageJob).to receive(:perform_later)
   end
 
   it "converts an SVG in the media queue, persists the PNG contract, and removes the SVG object" do
@@ -37,13 +38,18 @@ RSpec.describe Media::ConvertImageJob, type: :job do
       extension: "png",
       format: "image",
       size_bytes: 512,
-      status: "optimal"
+      status: "pending"
     )
     expect(StorageService::Client).to have_received(:upload).with(
       "/tmp/input.png",
       hash_including(storage_key: "admin/general_icon.png", resource_type: "image")
     )
     expect(StorageService::Client).to have_received(:delete).with("admin/general_icon.svg", resource_type: "image")
+    expect(Media::CompressImageJob).to have_received(:perform_later).with(
+      asset_id: asset.id,
+      notification_user_id: asset.created_by_id,
+      operation_id: start_with("asset_compression:#{asset.id}:")
+    )
   end
 
   it "does not process a non-SVG asset" do

@@ -27,7 +27,7 @@ module Media
       output_path = MediaService::ImageConversion.encode_png(input_path)
       upload_converted(output_path)
       persist_conversion(output_path)
-      broadcast_status_change(MediaConstants::Status::OPTIMAL)
+      enqueue_image_compression
     rescue MediaService::ConversionError, StorageService::Error
       raise
     rescue StandardError => error
@@ -69,12 +69,21 @@ module Media
         extension: MediaConstants::IMAGE_EXT_PNG,
         format: AssetConstants::AssetFormat::IMAGE,
         size_bytes: @upload_result[:bytes] || File.size(output_path),
-        status: MediaConstants::Status::OPTIMAL
+        status: MediaConstants::Status::PENDING
       )
       delete_previous_object
     rescue StandardError
       StorageService::Client.delete(@upload_result[:storage_key], resource_type: "image") if @upload_result&.dig(:storage_key)
       raise
+    end
+
+    def enqueue_image_compression
+      Media::CompressImageJob.perform_later(
+        asset_id: @asset.id,
+        notification_user_id: @notification_user_id,
+        operation_id: @operation_id
+      )
+      Rails.logger.info("[ConvertImageJob] Enqueued PNG compression for converted asset #{@asset.id}")
     end
 
     def delete_previous_object

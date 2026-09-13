@@ -159,7 +159,7 @@ The foundation currently queues work where it benefits from durability, isolatio
 | -------------------------------- | --------------- | --------------------------------------------------------------- |
 | Stripe webhook processing        | `payments`      | Durable ingestion, idempotency, retries, and concurrency safety |
 | Socket, push, and email delivery | `notifications` | Provider latency must not delay the originating request         |
-| Image, video & audio compression | `media`         | Dedicated worker (libvips/FFmpeg) isolating heavy media compute |
+| Media processing                 | `media`         | Isolated compression, conversion, thumbnail, and remote-image ingestion work |
 
 Production workers are separated by workload in [`config/queue.yml`](config/queue.yml), and recurring maintenance lives in [`config/recurring.yml`](config/recurring.yml).
 
