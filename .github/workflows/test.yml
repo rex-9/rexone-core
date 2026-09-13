@@ -19,7 +19,6 @@ jobs:
       RAILS_SECRET_KEY_BASE: ci-secret-key-base
       RAILS_JWT_SECRET_KEY: ci-jwt-secret-key
       STORAGE_PROVIDER: local
-      MEDIA_CONTAINER_ENABLED: "false"
     services:
       postgres:
         image: postgres:18-alpine
