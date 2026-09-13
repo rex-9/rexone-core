@@ -36,6 +36,9 @@ module MediaConstants
   # Maximum compression passes allowed (e.g., 1st pass on upload, 2nd manual pass by admin)
   MAX_COMPRESSION_PASSES = AppConfig::MEDIA_MAX_COMPRESSION_PASSES
 
+  # Progressive playback
+  PLAYBACK_URL_TTL = AppConfig::MEDIA_PLAYBACK_URL_TTL
+
   # Image format extensions
   IMAGE_EXT_JPG = "jpg".freeze
   IMAGE_EXT_JPEG = "jpeg".freeze
@@ -71,6 +74,18 @@ module MediaConstants
     OPTIMAL = "optimal".freeze
     FAILED = "failed".freeze
     ALL = [ PENDING, PROCESSING, READY, OPTIMAL, FAILED ].freeze
+  end
+
+  module Playback
+    DELIVERY_TYPE_PROGRESSIVE = "progressive".freeze
+    PLAYABLE_FORMATS = [
+      AssetConstants::AssetFormat::AUDIO,
+      AssetConstants::AssetFormat::VIDEO
+    ].freeze
+    PLAYABLE_STATUSES = [
+      Status::READY,
+      Status::OPTIMAL
+    ].freeze
   end
 
   # Socket event notification types

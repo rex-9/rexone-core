@@ -13,12 +13,12 @@ RSpec.describe "Asset uploads", type: :request do
   let(:file) { fixture_file_upload("avatar.png", "image/png") }
 
   it "requires authentication" do
-    post "/v1/media/upload", params: { file: file }
+    post "/v1/assets/upload", params: { file: file }
     expect(response).to have_http_status(:unauthorized)
   end
 
   it "requires a file" do
-    post "/v1/media/upload", headers: headers
+    post "/v1/assets/upload", headers: headers
     expect(response).to have_http_status(:unprocessable_content)
     expect(response_status["success"]).to be(false)
   end
@@ -33,7 +33,7 @@ RSpec.describe "Asset uploads", type: :request do
     )
 
     expect do
-      post "/v1/media/upload", params: { file: file, type: "avatar", assetable_type: "user", assetable_id: user.id }, headers: headers
+      post "/v1/assets/upload", params: { file: file, type: "avatar", assetable_type: "user", assetable_id: user.id }, headers: headers
     end.to change(Asset, :count).by(1)
 
     expect(response).to have_http_status(:created)
@@ -59,7 +59,7 @@ RSpec.describe "Asset uploads", type: :request do
     )
     document = fixture_file_upload("report.pdf", "application/pdf")
 
-    post "/v1/media/upload", params: { file: document }, headers: headers
+    post "/v1/assets/upload", params: { file: document }, headers: headers
     expect(response).to have_http_status(:created)
     expect(Asset.last.format).to eq("doc")
     expect(StorageService::Client).to have_received(:upload).with(anything, hash_including(resource_type: "raw"))
@@ -73,7 +73,7 @@ RSpec.describe "Asset uploads", type: :request do
     allow(StorageService::Client).to receive(:delete)
 
     expect do
-      post "/v1/media/upload", params: { file: file }, headers: headers
+      post "/v1/assets/upload", params: { file: file }, headers: headers
     end.not_to change(Asset, :count)
 
     expect(response).to have_http_status(:unprocessable_content)
@@ -84,7 +84,7 @@ RSpec.describe "Asset uploads", type: :request do
     allow(StorageService::Client).to receive(:upload).and_raise(StorageService::Error, "storage offline")
 
     expect do
-      post "/v1/media/upload", params: { file: file }, headers: headers
+      post "/v1/assets/upload", params: { file: file }, headers: headers
     end.not_to change(Asset, :count)
     expect(response).to have_http_status(:internal_server_error)
     expect(response_status["error"]).to eq("Storage upload failed")
@@ -93,7 +93,7 @@ RSpec.describe "Asset uploads", type: :request do
   it "rejects files exceeding maximum size with localized error message" do
     allow_any_instance_of(ActionDispatch::Http::UploadedFile).to receive(:size).and_return(MediaConstants::MAX_IMAGE_SIZE_MB.megabytes + 1)
 
-    post "/v1/media/upload", params: { file: file }, headers: headers
+    post "/v1/assets/upload", params: { file: file }, headers: headers
 
     expect(response).to have_http_status(:unprocessable_content)
     expect(response_status["error"]).to eq("File size exceeds maximum allowed limit (#{MediaConstants::MAX_IMAGE_SIZE_MB}MB)")
@@ -102,7 +102,7 @@ RSpec.describe "Asset uploads", type: :request do
   it "returns localized error message in Burmese when X-Locale is my" do
     allow_any_instance_of(ActionDispatch::Http::UploadedFile).to receive(:size).and_return(MediaConstants::MAX_IMAGE_SIZE_MB.megabytes + 1)
 
-    post "/v1/media/upload", params: { file: file }, headers: headers.merge("X-Locale" => "my")
+    post "/v1/assets/upload", params: { file: file }, headers: headers.merge("X-Locale" => "my")
 
     expect(response).to have_http_status(:unprocessable_content)
     expect(response_status["error"]).to eq("ဖိုင်အရွယ်အစားသည် သတ်မှတ်ထားသော ကန့်သတ်ချက်ထက် ကျော်လွန်နေပါသည် (#{MediaConstants::MAX_IMAGE_SIZE_MB}MB)")
@@ -119,7 +119,7 @@ RSpec.describe "Asset uploads", type: :request do
       resource_type: "image"
     )
 
-    post "/v1/media/upload", params: { file: svg_file }, headers: headers
+    post "/v1/assets/upload", params: { file: svg_file }, headers: headers
 
     expect(response).to have_http_status(:created)
     expect(Asset.last).to have_attributes(extension: "svg", format: "image", status: "pending")
@@ -162,6 +162,114 @@ RSpec.describe "Asset uploads", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response_data.size).to eq(1)
       expect(response_data.first.dig("attributes", "type")).to eq("subtitle")
+    end
+  end
+
+  describe "GET /v1/assets/:id/playback" do
+    before do
+      grant_permissions(user, "assets", :read)
+    end
+
+    it "returns progressive playback delivery for ready video" do
+      asset = create(:asset, type: "general", format: "video", extension: "mp4", status: "ready", storage_key: "user/#{user.id}/video.mp4")
+      thumbnail = create(:asset, type: "thumbnail", format: "image", extension: "webp", parent_asset: asset, storage_key: "user/#{user.id}/thumbnail.webp")
+      subtitle = create(:asset, type: "subtitle", format: "subtitle", extension: "srt", parent_asset: asset, storage_key: "user/#{user.id}/subtitle.srt")
+      expires_at = 1.hour.from_now
+      allow(StorageService::Client).to receive(:playback_url).and_return(
+        type: "progressive",
+        url: "https://media.example.com/video.mp4?signature=secret",
+        expires_at: expires_at
+      )
+
+      get "/v1/assets/#{asset.id}/playback", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include(
+        "asset_id" => asset.id,
+        "delivery" => {
+          "type" => "progressive",
+          "url" => "https://media.example.com/video.mp4?signature=secret",
+          "expires_at" => expires_at.iso8601
+        }
+      )
+      expect(response_data.dig("media", "content_type")).to eq("video/mp4")
+      expect(response_data.dig("media", "thumbnail", "id")).to eq(thumbnail.id)
+      expect(response_data.dig("media", "subtitles").first["id"]).to eq(subtitle.id)
+      expect(StorageService::Client).to have_received(:playback_url).with(
+        asset,
+        expires_in: MediaConstants::PLAYBACK_URL_TTL
+      )
+    end
+
+    it "returns progressive playback delivery for optimal audio" do
+      asset = create(:asset, type: "general", format: "audio", extension: "mp3", status: "optimal", storage_key: "user/#{user.id}/audio.mp3")
+      allow(StorageService::Client).to receive(:playback_url).and_return(
+        type: "progressive",
+        url: "https://media.example.com/audio.mp3?signature=secret",
+        expires_at: 1.hour.from_now
+      )
+
+      get "/v1/assets/#{asset.id}/playback", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.dig("media", "content_type")).to eq("audio/mpeg")
+    end
+
+    it "requires authentication" do
+      asset = create(:asset, type: "general", format: "video", extension: "mp4", status: "ready")
+
+      get "/v1/assets/#{asset.id}/playback"
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "requires read asset permission" do
+      unauthorized_user = create(:user)
+      unauthorized_token = jwt_for(unauthorized_user)
+      allow(CacheService).to receive(:read).and_return(unauthorized_token)
+      asset = create(:asset, type: "general", format: "video", extension: "mp4", status: "ready")
+
+      get "/v1/assets/#{asset.id}/playback", headers: authorization_headers(unauthorized_token)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "rejects pending assets" do
+      asset = create(:asset, type: "general", format: "video", extension: "mp4", status: "pending")
+
+      get "/v1/assets/#{asset.id}/playback", headers: headers
+
+      expect(response).to have_http_status(:conflict)
+      expect(response_status["error"]).to eq("Asset is not ready for playback")
+    end
+
+    it "rejects unsupported assets" do
+      asset = create(:asset, type: "general", format: "image", extension: "png", status: "ready")
+
+      get "/v1/assets/#{asset.id}/playback", headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response_status["error"]).to eq("Asset format is not supported for playback")
+    end
+
+    it "rejects assets without storage keys" do
+      asset = create(:asset, type: "general", format: "video", extension: "mp4", status: "ready", storage_key: nil, source: "google")
+
+      get "/v1/assets/#{asset.id}/playback", headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response_status["error"]).to eq("Asset storage file is missing")
+    end
+
+    it "does not expose storage provider errors" do
+      asset = create(:asset, type: "general", format: "video", extension: "mp4", status: "ready")
+      allow(StorageService::Client).to receive(:playback_url).and_raise(StorageService::Error, "secret provider failure")
+
+      get "/v1/assets/#{asset.id}/playback", headers: headers
+
+      expect(response).to have_http_status(:service_unavailable)
+      expect(response_status["error"]).to eq("Failed to prepare playback URL")
+      expect(response.body).not_to include("secret provider failure")
     end
   end
 

@@ -11,6 +11,7 @@ module StorageService
                :exists?,
                :list,
                :download,
+               :playback_url,
                :storage_stats,
                to: :provider
 

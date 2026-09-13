@@ -19,5 +19,10 @@ module MessageService
     STORAGE_LIST_FAILED = "asset.storage_list_failed"
     NOT_FOUND = "asset.not_found"
     FILE_SIZE_EXCEEDED = "asset.file_size_exceeded"
+    PLAYBACK_READY = "asset.playback_ready"
+    PLAYBACK_NOT_READY = "asset.playback_not_ready"
+    PLAYBACK_UNSUPPORTED = "asset.playback_unsupported"
+    PLAYBACK_STORAGE_FAILED = "asset.playback_storage_failed"
+    PLAYBACK_STORAGE_MISSING = "asset.playback_storage_missing"
   end
 end

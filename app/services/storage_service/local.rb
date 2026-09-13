@@ -126,6 +126,14 @@ module StorageService
       raise Error, e.message
     end
 
+    def playback_url(asset, expires_in:)
+      {
+        type: MediaConstants::Playback::DELIVERY_TYPE_PROGRESSIVE,
+        url: url(asset.storage_key),
+        expires_at: Time.current + expires_in.seconds
+      }
+    end
+
     def storage_stats
       bytes = Dir.exist?(@storage_path) ? Dir.glob(File.join(@storage_path, "**", "*")).select { |f| File.file?(f) }.sum { |f| File.size(f) } : 0
       objects = Dir.exist?(@storage_path) ? Dir.glob(File.join(@storage_path, "**", "*")).count { |f| File.file?(f) } : 0

@@ -681,6 +681,32 @@ module Openapi
           link: { type: :string }
         )
       ),
+      asset_playback_response: object(
+        required: %i[status data],
+        status: ref(:response_status),
+        data: object(
+          required: %i[asset_id delivery media],
+          asset_id: UUID,
+          delivery: object(
+            required: %i[type url expires_at],
+            type: { type: :string, enum: [ MediaConstants::Playback::DELIVERY_TYPE_PROGRESSIVE ] },
+            url: { type: :string, format: :uri },
+            expires_at: DATE_TIME
+          ),
+          media: object(
+            required: %i[content_type format size_bytes duration_secs thumbnail subtitles],
+            content_type: { type: :string },
+            format: { type: :string, nullable: true },
+            size_bytes: { type: :integer, nullable: true },
+            duration_secs: { type: :number, nullable: true },
+            thumbnail: { nullable: true, oneOf: [ ref(:asset) ] },
+            subtitles: {
+              type: :array,
+              items: ref(:asset)
+            }
+          )
+        )
+      ),
       ai_chat_response: object(
         required: %i[status data],
         status: ref(:response_status),
@@ -1406,13 +1432,13 @@ module Openapi
         }
       end
 
-      paths["/v1/media/upload"] = {
+      paths["/v1/assets/upload"] = {
         post: operation(tags: "Media", summary: "Upload and persist an asset",
                         description: "Stores the upload immediately. Compressible media and SVG-to-PNG conversion are processed asynchronously by the dedicated media queue. Upload limits are selected independently for video, audio, image, and other formats.",
                         success: 201,
                         body: ref(:asset_upload_request), errors: [ 401, 422, 500 ])
       }
-      paths["/v1/media/upload"][:post][:requestBody] = {
+      paths["/v1/assets/upload"][:post][:requestBody] = {
         required: true,
         content: {
           "multipart/form-data" => {
@@ -1725,6 +1751,13 @@ module Openapi
                          parameters: [ path_parameter(:id) ], body: ref(:asset_update_request), errors: [ 401, 403, 404, 422 ]),
         delete: operation(tags: "Assets", summary: "Delete asset record",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+      paths["/v1/assets/{id}/playback"] = {
+        get: operation(tags: "Assets", summary: "Get progressive playback delivery URL",
+                       description: "Authorizes the logical asset and returns a short-lived provider-backed playback URL. Core does not proxy media bytes for the Garage production path.",
+                       parameters: [ path_parameter(:id) ],
+                       errors: [ 401, 403, 404, 409, 422, 503 ],
+                       success_schema: ref(:asset_playback_response))
       }
 
       paths["/v1/notifications"] = {

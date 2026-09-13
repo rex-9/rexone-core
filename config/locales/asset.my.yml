@@ -28,3 +28,8 @@ my:
     storage_list_failed: "ဖိုင်များ ရယူ၍ မရပါ"
     not_found: "ဖိုင် ရှာမတွေ့ပါ"
     file_size_exceeded: "ဖိုင်အရွယ်အစားသည် သတ်မှတ်ထားသော ကန့်သတ်ချက်ထက် ကျော်လွန်နေပါသည် (%{limit}MB)"
+    playback_ready: "ဖွင့်ကြည့်ရန် အသင့်ဖြစ်ပါပြီ"
+    playback_not_ready: "ဖိုင်သည် ဖွင့်ကြည့်ရန် အသင့်မဖြစ်သေးပါ"
+    playback_unsupported: "ဤဖိုင်အမျိုးအစားကို ဖွင့်ကြည့်ရန် မထောက်ပံ့ပါ"
+    playback_storage_failed: "ဖွင့်ကြည့်ရန် URL ပြင်ဆင်၍ မရပါ"
+    playback_storage_missing: "ဖိုင်သိမ်းဆည်းမှုကို ရှာမတွေ့ပါ"

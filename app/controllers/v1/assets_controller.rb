@@ -1,7 +1,7 @@
 # app/controllers/v1/assets_controller.rb
 class V1::AssetsController < V1::ApplicationController
   skip_before_action :authenticate_user!, only: [ :index, :show ]
-  before_action :set_asset, only: [ :show, :update, :destroy ]
+  before_action :set_asset, only: [ :show, :update, :destroy, :read_playback ]
 
   # GET /v1/assets?type=video&page=1&limit=10
   def index
@@ -27,6 +27,42 @@ class V1::AssetsController < V1::ApplicationController
         asset: AssetSerializer.new(@asset).serializable_hash[:data][:attributes]
       }
     )
+  end
+
+  # GET /v1/assets/:id/playback
+  def read_playback
+    unless @asset.playable_format?
+      message = asset_message(MessageService::Asset::PLAYBACK_UNSUPPORTED)
+      render_json_response(status_code: 422, message: message, error: message)
+      return
+    end
+
+    unless @asset.storage_key.present?
+      message = asset_message(MessageService::Asset::PLAYBACK_STORAGE_MISSING)
+      render_json_response(status_code: 422, message: message, error: message)
+      return
+    end
+
+    unless @asset.playable_status?
+      message = asset_message(MessageService::Asset::PLAYBACK_NOT_READY)
+      render_json_response(status_code: 409, message: message, error: message)
+      return
+    end
+
+    delivery = StorageService::Client.playback_url(
+      @asset,
+      expires_in: MediaConstants::PLAYBACK_URL_TTL
+    )
+
+    render_json_response(
+      status_code: 200,
+      message: asset_message(MessageService::Asset::PLAYBACK_READY),
+      data: playback_payload(@asset, delivery)
+    )
+  rescue StorageService::Error => e
+    Rails.logger.error("[AssetsController] Playback URL failed for asset #{@asset&.id}: #{e.class}")
+    message = asset_message(MessageService::Asset::PLAYBACK_STORAGE_FAILED)
+    render_json_response(status_code: 503, message: message, error: message)
   end
 
   # POST /assets/upload
@@ -256,6 +292,25 @@ class V1::AssetsController < V1::ApplicationController
     else
       scope.where(parent_asset_id: nil)
     end
+  end
+
+  def playback_payload(asset, delivery)
+    {
+      asset_id: asset.id,
+      delivery: {
+        type: delivery.fetch(:type),
+        url: delivery.fetch(:url),
+        expires_at: delivery.fetch(:expires_at).iso8601
+      },
+      media: {
+        content_type: asset.mime_type,
+        format: asset.extension,
+        size_bytes: asset.size_bytes,
+        duration_secs: asset.duration_secs,
+        thumbnail: asset.thumbnail ? AssetSerializer.new(asset.thumbnail).serializable_hash[:data][:attributes] : nil,
+        subtitles: asset.subtitles.map { |subtitle| AssetSerializer.new(subtitle).serializable_hash[:data][:attributes] }
+      }
+    }
   end
 
   def filename_for(file_or_name)

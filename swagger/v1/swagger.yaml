@@ -1408,6 +1408,71 @@ components:
       required:
         - status
         - data
+    asset_playback_response:
+      type: object
+      properties:
+        status:
+          "$ref": "#/components/schemas/response_status"
+        data:
+          type: object
+          properties:
+            asset_id:
+              type: string
+              format: uuid
+            delivery:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - progressive
+                url:
+                  type: string
+                  format: uri
+                expires_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+              required:
+                - type
+                - url
+                - expires_at
+            media:
+              type: object
+              properties:
+                content_type:
+                  type: string
+                format:
+                  type: string
+                  nullable: true
+                size_bytes:
+                  type: integer
+                  nullable: true
+                duration_secs:
+                  type: number
+                  nullable: true
+                thumbnail:
+                  nullable: true
+                  oneOf:
+                    - "$ref": "#/components/schemas/asset"
+                subtitles:
+                  type: array
+                  items:
+                    "$ref": "#/components/schemas/asset"
+              required:
+                - content_type
+                - format
+                - size_bytes
+                - duration_secs
+                - thumbnail
+                - subtitles
+          required:
+            - asset_id
+            - delivery
+            - media
+      required:
+        - status
+        - data
     ai_chat_response:
       type: object
       properties:
@@ -7372,7 +7437,7 @@ paths:
                 "$ref": "#/components/schemas/error_response"
       security:
         - bearerAuth: []
-  "/v1/media/upload":
+  "/v1/assets/upload":
     post:
       tags:
         - Media
@@ -11052,6 +11117,87 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+  "/v1/assets/{id}/playback":
+    get:
+      tags:
+        - Assets
+      summary: Get progressive playback delivery URL
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/asset_playback_response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "422":
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      description:
+        Authorizes the logical asset and returns a short-lived provider-backed
+        playback URL. Core does not proxy media bytes for the Garage production path.
       security:
         - bearerAuth: []
   "/v1/notifications":

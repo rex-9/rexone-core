@@ -34,6 +34,10 @@ module StorageService
       raise NotImplementedError, "#{self.class} must implement #download"
     end
 
+    def playback_url(asset, expires_in:)
+      raise NotImplementedError, "#{self.class} must implement #playback_url"
+    end
+
     def storage_stats
       raise NotImplementedError, "#{self.class} must implement #storage_stats"
     end

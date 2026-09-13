@@ -271,8 +271,15 @@ Rails.application.routes.draw do
     end
 
     # ===== ASSETS / MEDIA =====
-    post "media/upload", to: "assets#create_upload"
-    resources :assets, only: %i[index show create update destroy]
+    resources :assets, only: %i[index show create update destroy] do
+      collection do
+        post :create_upload, path: "upload"
+      end
+
+      member do
+        get :read_playback, path: "playback"
+      end
+    end
 
     # ===== PAYMENTS - CLIENT =====
     namespace :payment do

@@ -124,6 +124,22 @@ class Asset < ApplicationRecord
     compressible_video? || compressible_audio?
   end
 
+  def playable?
+    playable_format? && playable_status? && storage_key.present?
+  end
+
+  def playable_format?
+    MediaConstants::Playback::PLAYABLE_FORMATS.include?(format)
+  end
+
+  def playable_status?
+    MediaConstants::Playback::PLAYABLE_STATUSES.include?(status)
+  end
+
+  def mime_type
+    Rack::Mime.mime_type(".#{extension}", "application/octet-stream")
+  end
+
   def pending?
     status == MediaConstants::Status::PENDING
   end

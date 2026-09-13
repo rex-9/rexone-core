@@ -28,3 +28,8 @@ en:
     storage_list_failed: "Failed to list storage assets"
     not_found: "Asset not found"
     file_size_exceeded: "File size exceeds maximum allowed limit (%{limit}MB)"
+    playback_ready: "Playback ready"
+    playback_not_ready: "Asset is not ready for playback"
+    playback_unsupported: "Asset format is not supported for playback"
+    playback_storage_failed: "Failed to prepare playback URL"
+    playback_storage_missing: "Asset storage file is missing"

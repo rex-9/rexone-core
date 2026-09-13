@@ -201,7 +201,7 @@ WebSocket upgrades, uploads, and health checks still work.
 Important: a global 5 MB body limit would break media uploads. Ideally use two routers:
 
 - General API: 1–5 MB maximum
-- `/v1/media/upload` and admin asset uploads: slightly above your actual maximum supported media size
+- `/v1/assets/upload` and admin asset uploads: slightly above your actual maximum supported media size
 
 Your videos currently permit large files, so avoid a buffering middleware that makes Traefik spool hundreds of megabytes through memory/disk. The best long-term design is direct presigned uploads to Garage, followed by a lightweight Rails request that registers the completed asset.
 

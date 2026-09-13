@@ -127,6 +127,7 @@ module AppConfig
   MEDIA_IMAGE_MAX_WIDTH = env_or.call("MEDIA_IMAGE_MAX_WIDTH", "1920").to_i
   MEDIA_IMAGE_MAX_HEIGHT = env_or.call("MEDIA_IMAGE_MAX_HEIGHT", "1080").to_i
   MEDIA_MAX_COMPRESSION_PASSES = env_or.call("MEDIA_MAX_COMPRESSION_PASSES", "2").to_i
+  MEDIA_PLAYBACK_URL_TTL = env_or.call("MEDIA_PLAYBACK_URL_TTL", "3600").to_i
 
   # Telemetry & Observability (Rails Error Dashboard)
   DASHBOARD_BASE_URL = env_or.call("DASHBOARD_BASE_URL", nil)

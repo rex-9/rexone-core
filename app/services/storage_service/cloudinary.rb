@@ -168,6 +168,17 @@ module StorageService
       }
     end
 
+    def playback_url(asset, expires_in:)
+      {
+        type: MediaConstants::Playback::DELIVERY_TYPE_PROGRESSIVE,
+        url: url(
+          asset.storage_key,
+          resource_type: AssetConstants::AssetFormat.storage_resource_type(asset.extension)
+        ),
+        expires_at: Time.current + expires_in.seconds
+      }
+    end
+
     def download(identifier, destination_path = nil)
       require "open-uri"
       download_url = url(identifier)

@@ -198,6 +198,30 @@ module StorageService
       raise Error, e.message
     end
 
+    def playback_url(asset, expires_in:)
+      key = apply_prefix(asset.storage_key)
+      content_type = Rack::Mime.mime_type(".#{asset.extension}", "application/octet-stream")
+
+      signer = Aws::S3::Presigner.new(client: @public_client)
+      signed_url = signer.presigned_url(
+        :get_object,
+        bucket: @bucket,
+        key: key,
+        expires_in: expires_in,
+        response_content_type: content_type,
+        response_content_disposition: "inline"
+      )
+
+      {
+        type: MediaConstants::Playback::DELIVERY_TYPE_PROGRESSIVE,
+        url: signed_url,
+        expires_at: Time.current + expires_in.seconds
+      }
+    rescue Aws::S3::Errors::ServiceError, ArgumentError => e
+      Rails.logger.error("#{LOG_PREFIX} Playback URL Error: #{e.message}")
+      raise Error, e.message
+    end
+
     def download(identifier, destination_path = nil)
       key = apply_prefix(identifier)
       if destination_path
