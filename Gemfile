@@ -6,7 +6,7 @@ source "https://rubygems.org"
 
 gem "psych", "~> 5.5.0"
 # json 3.0 made JSON.parse keyword-only; Rails 8.1.3 still passes a positional options hash.
-gem "json", "< 3.0" # Don't update this one here, it's for JSON.parse compat with Rails 8.1.3.1
+gem "json", "< 4.0" # Don't update this one here, it's for JSON.parse compat with Rails 8.1.3.1
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3"
 # Use postgresql as the database for Active Record
