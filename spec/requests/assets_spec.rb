@@ -157,7 +157,7 @@ RSpec.describe "Asset uploads", type: :request do
       create(:asset, type: "subtitle", format: "subtitle", extension: "srt", parent_asset: parent)
       create(:asset, type: "avatar")
 
-      get "/v1/assets", params: { type: "subtitle" }
+      get "/v1/assets", params: { type: "subtitle", record_scope: "children" }
 
       expect(response).to have_http_status(:ok)
       expect(response_data.size).to eq(1)
