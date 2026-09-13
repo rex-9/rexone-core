@@ -162,7 +162,7 @@ module Media
         compressed_path,
         storage_key: @asset.storage_key,
         folder: File.dirname(@asset.storage_key.to_s).presence || "admin_uploads/video",
-        resource_type: "video",
+        resource_type: AssetConstants::AssetFormat.storage_resource_type(@asset.extension),
         overwrite: true
       )
 
