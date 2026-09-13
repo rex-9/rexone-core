@@ -7,6 +7,7 @@ class V1::AssetsController < V1::ApplicationController
   def index
     assets = Asset.includes(:thumbnail, :subtitles)
     assets = assets.where(type: params[:type]) if params[:type].present?
+    assets = filter_asset_record_scope(assets)
     pagy, records = pagy(:offset, assets, limit: params[:limit])
 
     render_json_response(
@@ -244,6 +245,17 @@ class V1::AssetsController < V1::ApplicationController
 
   def asset_params
     params.require(:asset).permit(:name, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :assetable_type, :assetable_id)
+  end
+
+  def filter_asset_record_scope(scope)
+    case params[:record_scope].presence
+    when AssetConstants::RecordScope::CHILDREN
+      scope.where.not(parent_asset_id: nil)
+    when AssetConstants::RecordScope::ALL
+      scope
+    else
+      scope.where(parent_asset_id: nil)
+    end
   end
 
   def filename_for(file_or_name)

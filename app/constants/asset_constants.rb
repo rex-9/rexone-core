@@ -148,6 +148,13 @@ module AssetConstants
     GOOGLE = "google".freeze
   end
 
+  module RecordScope
+    PARENTS = "parents".freeze
+    CHILDREN = "children".freeze
+    ALL = "all".freeze
+    VALUES = [ PARENTS, CHILDREN, ALL ].freeze
+  end
+
   module AssetType
     AVATAR     = "avatar".freeze
     THUMBNAIL  = "thumbnail".freeze

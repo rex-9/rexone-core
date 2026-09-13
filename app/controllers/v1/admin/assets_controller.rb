@@ -659,7 +659,18 @@ class V1::Admin::AssetsController < V1::ApplicationController
     scope = scope.where(format: params[:format]) if params[:format].present?
     scope = scope.where(source: params[:source]) if params[:source].present?
     scope = scope.where(status: params[:status]) if params[:status].present?
-    scope
+    filter_asset_record_scope(scope)
+  end
+
+  def filter_asset_record_scope(scope)
+    case params[:record_scope].presence
+    when AssetConstants::RecordScope::CHILDREN
+      scope.where.not(parent_asset_id: nil)
+    when AssetConstants::RecordScope::ALL
+      scope
+    else
+      scope.where(parent_asset_id: nil)
+    end
   end
 
   def filename_for(file_or_name)

@@ -1,4 +1,13 @@
 my:
+  activerecord:
+    errors:
+      models:
+        asset:
+          attributes:
+            type:
+              thumbnail_exists_for_parent: "ဤပင်မမီဒီယာအတွက် ပုံငယ် ရှိပြီးသားဖြစ်ပါသည်"
+            url:
+              invalid_url: "မှန်ကန်သော URL ဖြစ်ရပါမည်"
   asset:
     fetched: "ဖိုင်များ ရယူပြီးပါပြီ"
     fetched_one: "ဖိုင် အချက်အလက် ရယူပြီးပါပြီ"

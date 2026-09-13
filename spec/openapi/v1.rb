@@ -1612,6 +1612,8 @@ module Openapi
       paths["/v1/admin/assets"] = {
         get: operation(tags: "Admin / Assets", summary: "List and filter assets for admins",
                        parameters: asset_filters + [
+                         query_parameter(:record_scope, enum: AssetConstants::RecordScope::VALUES,
+                                                        description: "parents returns only top-level assets, children returns thumbnails/subtitles, all returns both."),
                          query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer),
                          query_parameter(:discarded, type: :boolean)
@@ -1707,6 +1709,8 @@ module Openapi
                        description: "Optional type filter matches AssetType (#{AssetConstants::AssetType::ALL.join(', ')}).",
                        parameters: [
                          query_parameter(:type, enum: AssetConstants::AssetType::ALL, description: "Filter by asset type"),
+                         query_parameter(:record_scope, enum: AssetConstants::RecordScope::VALUES,
+                                                        description: "parents returns only top-level assets, children returns thumbnails/subtitles, all returns both."),
                          query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer)
                        ],

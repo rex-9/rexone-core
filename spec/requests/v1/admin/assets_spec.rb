@@ -35,6 +35,26 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(response_data.first.dig("attributes", "type")).to eq("thumbnail")
     end
 
+    it "defaults to parent assets and can include child assets by record scope" do
+      parent = create(:asset, type: "general", format: "video")
+      child = create(:asset, type: "subtitle", format: "subtitle", parent_asset: parent)
+
+      get "/v1/admin/assets", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.map { |asset| asset.dig("attributes", "id") }).to contain_exactly(parent.id)
+
+      get "/v1/admin/assets", params: { record_scope: "children" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.map { |asset| asset.dig("attributes", "id") }).to contain_exactly(child.id)
+
+      get "/v1/admin/assets", params: { record_scope: "all" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.map { |asset| asset.dig("attributes", "id") }).to contain_exactly(parent.id, child.id)
+    end
+
     it "searches assets by name or storage_key" do
       needle = create(:asset, name: "Special Needle Asset", storage_key: "keys/special")
       create(:asset, name: "Other Asset", storage_key: "keys/other")

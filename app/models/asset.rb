@@ -192,7 +192,7 @@ class Asset < ApplicationRecord
 
     duplicate = Asset.where(parent_asset_id: parent_asset_id, type: AssetConstants::AssetType::THUMBNAIL)
     duplicate = duplicate.where.not(id: id) if persisted?
-    errors.add(:type, "thumbnail already exists for this parent asset") if duplicate.exists?
+    errors.add(:type, :thumbnail_exists_for_parent) if duplicate.exists?
   end
 
   def storage_resource_type
@@ -205,10 +205,10 @@ class Asset < ApplicationRecord
     uri = URI.parse(url)
 
     unless uri.is_a?(URI::HTTP) && uri.host.present?
-      errors.add(:url, "must be a valid URL")
+      errors.add(:url, :invalid_url)
     end
   rescue URI::InvalidURIError
-    errors.add(:url, "must be a valid URL")
+    errors.add(:url, :invalid_url)
   end
 
   def set_extension_and_format

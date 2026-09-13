@@ -1,4 +1,13 @@
 en:
+  activerecord:
+    errors:
+      models:
+        asset:
+          attributes:
+            type:
+              thumbnail_exists_for_parent: "thumbnail already exists for this parent asset"
+            url:
+              invalid_url: "must be a valid URL"
   asset:
     fetched: "Assets fetched successfully"
     fetched_one: "Asset fetched successfully"
