@@ -69,9 +69,10 @@ The asset system supports:
 - SVG-to-PNG conversion in the dedicated `media` queue after the original upload is stored.
 - Canonical video thumbnails and administrator-supplied video/audio covers.
 - Replaceable SRT subtitle assets attached to video and audio parents.
+- Progressive audio/video playback through Core-authorized short-lived storage URLs.
 - Real-time processing status and operation notifications.
 
-See the [Garage Guide](GARAGE.md) for storage topology, configuration, backups, and operational tooling.
+See the [Garage Guide](GARAGE.md) for storage topology, configuration, backups, and operational tooling. See [Media Playback](MEDIA_PLAYBACK.md) for the implemented playback contract and client boundary.
 
 ## AI and speech
 

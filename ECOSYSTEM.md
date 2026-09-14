@@ -24,6 +24,8 @@ Across all three repositories, the architecture adheres to one uncompromising do
 
 > 🛡️ **Production Operations**: Use the **[Production Deployment Guide](docs/DEPLOYMENT.md)** together with **[DDoS and API Abuse Protection](docs/DDOS.md)**. Cloudflare, origin isolation, proxy limits, Rack Attack, and bounded application resources form one defense system.
 
+> 🎞️ **Media Playback**: Stored audio/video delivery uses Core-authorized short-lived provider URLs. See **[Media Playback](docs/MEDIA_PLAYBACK.md)**; future HLS/adaptive work stays in **[Media Streaming Roadmap](docs/roadmaps/MEDIA_STREAMING.md)**.
+
 The Rexone platform provides a unified, battle-tested foundation where **any modern digital product** can be rapidly developed on top of ready-made capabilities: Identity & IAM, Commerce & Subscriptions, Background Queues, Asset Management, Real-Time WebSockets, Queued AI, Push Notifications, Product Analytics, Client Telemetry, In-App Upgrades, and Multi-Language Localization.
 
 ---
