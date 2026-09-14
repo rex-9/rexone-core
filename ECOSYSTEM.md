@@ -58,7 +58,8 @@ flowchart TB
         Stripe["Stripe (Checkout, Subscriptions, Webhooks)"]
         DeepSeek["DeepSeek AI API"]
         Speech["Azure & Nova Speech (TTS / STT)"]
-        OneSignal["OneSignal (Push & Email)"]
+        OneSignal["OneSignal (Push)"]
+        Brevo["Brevo (Email)"]
         Firebase["Firebase Analytics (Web & Mobile Telemetry)"]
     end
 
@@ -80,6 +81,7 @@ flowchart TB
     Services --> DeepSeek
     Services --> Speech
     Services --> OneSignal
+    Services --> Brevo
     Services --> Garage
     Web -.-> Firebase
     Mobile -.-> Firebase
@@ -240,7 +242,8 @@ Rexone Mobile has a strictly governed design system accessible via `lib/design/d
 ### 🧩 Mobile Domain Capabilities
 
 - **Auth Flow**: Complete parity with Web & Core (email check, 6-digit password, OTP verification, Google OAuth challenge, session replacement). Zero hardcoded string literals.
-- **Push Notifications**: Powered by OneSignal (`PushNotiService`). Automatically syncs user IDs and tags on login/session restore and clears state on logout.
+- **Push Notifications**: Powered by OneSignal (`PushNotiService`). Automatically syncs user IDs and tags on sign-in/session restore and clears state on sign-out.
+- **Email Delivery**: Powered by Brevo by default (`EmailService`).
 - **Product Analytics**: Web and Mobile use separate Firebase streams in one GA4 property. Both emit the constantized `action_noun` contract `sign_up`, `sign_in`, `sign_out`, `begin_onboarding`, `complete_onboarding`, `view_page`, `view_product`, `purchase_product`, and `open_notification`, distinguished by `platform` (`web`, `android`, or `ios`). Core remains the source of authoritative business metrics and does not ingest raw behavioral events.
 - **Purchase & Notification Identity**: `purchase_product` uses `purchase_id` (a Core transaction ID for one-time payments or Core subscription ID for subscription creation) and integer-minor-unit `unit_amount`. `open_notification.notification_id` is always the persisted Core `UserNotification` ID; every push is also persisted and delivered in-app.
 - **In-App Upgrader**: Powered by `upgrader`. Wraps root app builder with `UpgradeAlert` to notify users of critical or optional Play Store / App Store updates.

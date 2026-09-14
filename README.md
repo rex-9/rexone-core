@@ -104,22 +104,22 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 ## Feature map
 
-| Foundation     | What is ready                                                                                                                   | Details                                                                               |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                                          | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
-| Authorization  | Roles, permissions, user-role and role-permission assignments                                                                   | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
-| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                                                           | [Payments & entitlements](docs/FOUNDATION.md#payments-and-entitlements)               |
-| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                                 | [Background processing](#background-processing)                                       |
-| Notifications  | Socket, push, and email coordination through OneSignal and Action Cable                                                         | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
-| Media          | Provider-neutral storage, media optimization, SVG conversion, thumbnails, SRT subtitles, and progressive playback              | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
-| Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                                     | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| AI             | Durable queued chat, persisted history, completion alerts, and language tools                                                   | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| Localization   | Request-scoped English and Myanmar responses with modular domain translations                                                   | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                                  | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                                           | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
-| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications, app versions               | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
-| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                               | [Deployment](#deployment)                                                             |
-| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                               | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
+| Foundation     | What is ready                                                                                                     | Details                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                            | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
+| Authorization  | Roles, permissions, user-role and role-permission assignments                                                     | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
+| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                                             | [Payments & entitlements](docs/FOUNDATION.md#payments-and-entitlements)               |
+| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                   | [Background processing](#background-processing)                                       |
+| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo                                   | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
+| Media          | Provider-neutral storage, media optimization, SVG conversion, thumbnails, SRT subtitles, and progressive playback | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
+| Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                       | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
+| AI             | Durable queued chat, persisted history, completion alerts, and language tools                                     | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
+| Localization   | Request-scoped English and Myanmar responses with modular domain translations                                     | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
+| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                    | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
+| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                             | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
+| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications, app versions | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
+| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                 | [Deployment](#deployment)                                                             |
+| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                 | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
 
 ## Architecture
 
@@ -142,7 +142,8 @@ flowchart LR
     Jobs --> PostgreSQL
 
     Services --> Stripe[Stripe]
-    Services --> OneSignal[OneSignal]
+    Services --> OneSignal[Push]
+    Services --> Brevo[Email]
     Services --> Storage[Garage S3 · Cloudinary]
     Services --> DeepSeek[DeepSeek]
     Services --> Speech[Nova · Azure Speech]

@@ -42,7 +42,7 @@ The main configuration groups are:
 - Storage provider selection and Garage S3, Cloudinary, or local-storage settings.
 - Media enablement, upload limits, and image, video, and audio processing profiles.
 - Stripe credentials, webhook signing secret, and checkout redirect URLs.
-- OneSignal push and email delivery settings.
+- Brevo email delivery settings and OneSignal push delivery settings.
 - DeepSeek AI and Nova/Azure speech provider settings.
 - Solid Queue process and shutdown behavior.
 - Client-version store URLs and observability metadata.
@@ -194,7 +194,7 @@ Confirm both the HTTP API URL and Action Cable URL point to the running Core env
 
 ### An optional provider fails
 
-Stripe, OneSignal, Google, DeepSeek, Cloudinary, Nova, and Azure require valid provider credentials for their respective flows. A provider-specific failure does not imply that the base Core stack failed to start.
+Stripe, Brevo, OneSignal, Google, DeepSeek, Cloudinary, Nova, and Azure require valid provider credentials for their respective flows. A provider-specific failure does not imply that the base Core stack failed to start.
 
 ## Next reading
 

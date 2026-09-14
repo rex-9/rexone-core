@@ -258,7 +258,7 @@ For your current setup:
 - Start with one Puma process and 5–7 threads on a small VPS.
 - Give API, normal jobs, and media workers separate CPU/memory limits.
 - Keep media work in the dedicated `media` worker.
-- Add timeouts around Stripe, OneSignal, DeepSeek, Garage, and other outbound calls.
+- Add timeouts around Stripe, Brevo, OneSignal, DeepSeek, Garage, and other outbound calls.
 - Limit queue concurrency so a flood cannot start unlimited FFmpeg processes.
 - Alert on elevated `429`, `413`, `5xx`, queue depth, memory, CPU, and database connections.
 

@@ -42,7 +42,7 @@ module EmailService
     end
 
     # Send using a template created in OneSignal Dashboard
-    def send_template(to:, template_id:, template_data:, from: nil)
+    def send_template(to:, template_id:, template_data: {}, from: nil)
       # Fetch template from OneSignal (or use cached version)
       template = fetch_template(template_id)
 

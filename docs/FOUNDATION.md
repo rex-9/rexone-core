@@ -43,7 +43,7 @@ Customer-facing checkout stays responsive while fulfillment and reconciliation r
 
 ## Notifications and real-time delivery
 
-`NotificationService` coordinates independent socket, push, and email delivery. Each channel has its own retry boundary, so one provider failure does not repeat successful channels or roll back the originating business action.
+`NotificationService` coordinates independent socket, push, and email delivery. Socket delivery uses Action Cable, push delivery uses OneSignal, and email delivery uses `EmailService` with Brevo as the default provider. Each channel has its own retry boundary, so one provider failure does not repeat successful channels or roll back the originating business action.
 
 Persistent `UserNotification` records provide the in-app inbox, immutable delivery snapshots, read state, and cumulative delivery metrics. Client-visible asynchronous work follows the stable lifecycle:
 

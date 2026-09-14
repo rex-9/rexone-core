@@ -5,7 +5,7 @@ module EmailService
       raise NotImplementedError, "#{self.class} must implement #send_email"
     end
 
-    def send_template(to:, template_id:, template_data:, from: nil)
+    def send_template(to:, template_id:, template_data: {}, from: nil)
       raise NotImplementedError, "#{self.class} must implement #send_template"
     end
   end
