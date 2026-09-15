@@ -17,7 +17,7 @@ module Ai
         @default_model = AppConfig::GEMINI_MODEL
       end
 
-      def chat(messages:, model: nil, temperature: 0.7, max_tokens: 2000, timeout_seconds: nil)
+      def chat(messages:, model: nil, temperature: AiConstants::Defaults::TEMPERATURE, max_tokens: AiConstants::Defaults::MAX_OUTPUT_TOKENS, timeout_seconds: nil)
         payload = {
           model: model || @default_model,
           messages: messages,
@@ -45,12 +45,15 @@ module Ai
           Rails.logger.error("#{LOG_PREFIX} API Error (#{response.code}): #{response.body}")
           { error: provider_error_message }
         end
-      rescue => e
-        Rails.logger.error("#{LOG_PREFIX} Error: #{e.message}")
+      rescue Net::OpenTimeout, Net::ReadTimeout, SocketError => e
+        Rails.logger.error("[Ai::Providers::Gemini] Network error: #{e.message}")
+        { error: "AI provider timeout or connection error" }
+      rescue StandardError => e
+        Rails.logger.error("[Ai::Providers::Gemini] Unexpected error: #{e.message}")
         { error: provider_error_message }
       end
 
-      def stream_chat(messages:, model: nil, temperature: 0.7, max_tokens: 2000, timeout_seconds: nil, &block)
+      def stream_chat(messages:, model: nil, temperature: AiConstants::Defaults::TEMPERATURE, max_tokens: AiConstants::Defaults::MAX_OUTPUT_TOKENS, timeout_seconds: nil, &block)
         payload = {
           model: model || @default_model,
           messages: messages,

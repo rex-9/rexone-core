@@ -132,7 +132,9 @@ module Chat
 
         raise Ai::Providers::Error, result[:error] if result[:error].present?
 
-        response = result.dig("choices", 0, "message", "content")
+        choice = result.dig("choices", 0) || {}
+        message_obj = choice["message"] || {}
+        response = message_obj["content"].presence || message_obj["reasoning_content"]
         raise Ai::Providers::Error, ::MessageService::Ai.t(::MessageService::Ai::NO_RESPONSE) if response.blank?
 
         assistant_message = persist_response!(message, response, result)

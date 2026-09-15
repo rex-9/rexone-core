@@ -37,6 +37,8 @@ Recommended crops:
 ## Contents
 
 1. [Ecosystem at a glance](#1-ecosystem-at-a-glance)
+   - [1.1 Landing Page — Modular Presentation & Rapid Rebranding](#11-landing-page--modular-presentation--rapid-rebranding)
+   - [1.2 Home Page — Minimal Business Hub & Protected Portals](#12-home-page--minimal-business-hub--protected-portals)
 2. [Smart Authentication — Zero Decision Fatigue](#2-smart-authentication--zero-decision-fatigue)
 3. [Profile and account identity](#3-profile-and-account-identity)
 4. [IAM and RBAC](#4-iam-and-rbac)
@@ -120,27 +122,53 @@ flowchart TB
 
 Core deliberately keeps responsibilities conventional: controllers define HTTP contracts, models hold data rules, services isolate business/provider boundaries, jobs own deferred work, and serializers own response representation. Web follows pages/components → controllers → domain services → Axios; Mobile follows module pages → GetX controllers → feature/shared services → Core.
 
+## 1.1 Landing Page — Modular Presentation & Rapid Rebranding
+
+The public front door demonstrates how the visual layer is decoupled from business logic. Located in `rexone-web/src/modules/landing`, the landing page is composed of modular, plug-and-play sections: Hero, Greetings, Skills, Projects, Testimonials, and Contact.
+
+<!-- SCREENSHOT:LND01 — Landing Page -->
+<p align="center">
+  <img src="./images/walkthrough/landing/landing-web.jpg" alt="Rexone Landing Page" width="100%">
+</p>
+
+All visual elements, colors, and typography hook into the reusable design system in `rexone-web/src/design/`. Product teams can completely rebrand the application by modifying `brand.config.json` and running `./scripts/rebrand.sh`, instantly updating logos, typography, metadata, and color themes across Web, Mobile, and Core without touching domain code.
+
+## 1.2 Home Page — Minimal Business Hub & Protected Portals
+
+Upon authentication, the user lands on the Home dashboard hub (`rexone-web/src/design/pages/home/`).
+
+<!-- SCREENSHOT:HOM01 — Home Page -->
+<p align="center">
+  <img src="./images/walkthrough/home/home-web.png" alt="Rexone Home Page Hub" width="100%">
+</p>
+
+Designed as a clean, flexible launchpad ready to adapt to any business requirements:
+- **Admin Dashboard**: Strictly role-guarded and accessible only to administrative roles (`admin`, `super_admin`, or scoped `*_admin`). Unauthorized users never see administrative entry points.
+- **Plans & Pricing**: Direct navigation to commercial tiers, active subscriptions, and one-time purchases.
+- **AI Assistant**: Persistent workspace for real-time and background AI conversations.
+- **Test Lab**: System diagnostics, progressive media streaming, and client error telemetry.
+
 ---
 
 # 2. Smart Authentication — Zero Decision Fatigue
 
 Authentication is the first system worth showing because it demonstrates the ecosystem philosophy clearly: **the user should not have to understand the account state before the software does**.
 
-Instead of beginning with separate “Sign in” and “Sign up” decisions, the flow starts from one identifier entry. Core inspects the account state and the clients move to the correct next step: existing-account passcode, new-account passcode creation, email confirmation, dropped-registration recovery, Google challenge completion, or a security cooldown.
+Instead of beginning with separate “Sign in” and “Sign up” decisions, or forcing the user to remember whether they previously used Google SSO or email/passcode, the flow starts from a single unified entry point. Core inspects the account state and the clients seamlessly move to the correct next step: existing-account passcode, new-account passcode creation, email confirmation, dropped-registration recovery, Google challenge completion, or a security cooldown.
 
 ## 2.1 One entry point, state-driven next step
 
 <!-- SCREENSHOT:A01 — Web Initial/Auth dialog + Mobile initial email/identifier screen -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="A01 Web — initial identifier entry" width="73%">
+<p align="center">
+  <img src="./images/walkthrough/auth/a01-web.png" alt="A01 Web — initial identifier entry" width="73%">
   <img src="./images/walkthrough/_placeholders/mobile.svg" alt="A01 Mobile — initial identifier entry" width="25%">
 </p>
 
 **Capture A01**
 
-- **Web:** initial authentication dialog before submitting the identifier.
+- **Web:** initial authentication dialog before submitting the identifier. Users simply enter their email or select Google SSO without needing to know if they have an account yet.
 - **Mobile:** corresponding first authentication screen.
-- Prefer a clean empty state or safe demo account. Do not expose personal addresses.
+- High security: server-side passcode rate limiting protects against brute-force attacks with progressive cooldown delays.
 
 The client asks Core for account state before deciding whether the user is signing in or registering. On Mobile this is explicitly handled through `GET /peek`; the Web flow follows the same state-driven identity contract. The result is a single front door instead of duplicate login/registration decision trees.
 
@@ -166,8 +194,8 @@ flowchart TD
 ## 2.2 Existing account — six-digit passcode
 
 <!-- SCREENSHOT:A02 — existing user passcode -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="A02 Web — six-digit sign-in passcode" width="73%">
+<p align="center">
+  <img src="./images/walkthrough/auth/a02-web.png" alt="A02 Web — six-digit sign-in passcode" width="73%">
   <img src="./images/walkthrough/_placeholders/mobile.svg" alt="A02 Mobile — six-digit sign-in passcode" width="25%">
 </p>
 
@@ -251,8 +279,8 @@ This keeps native and browser use independent without allowing an unlimited coll
 # 3. Profile and account identity
 
 <!-- SCREENSHOT:P01 — profile -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="P01 Web — profile/account settings" width="73%">
+<p align="center">
+  <img src="./images/walkthrough/profile/p01-web.png" alt="P01 Web — profile/account settings" width="73%">
   <img src="./images/walkthrough/_placeholders/mobile.svg" alt="P01 Mobile — profile/account screen" width="25%">
 </p>
 
@@ -288,20 +316,20 @@ A single IAM introspection request returns role and permission groupings so clie
 ## 4.1 Permission-aware admin navigation
 
 <!-- SCREENSHOT:I01 — Web admin sidebar showing scoped navigation -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="I01 — permission-aware Web admin sidebar" width="100%">
-
-**Capture I01:** sign in as a deliberately scoped partial admin so the screenshot visibly proves that unrelated sections are hidden.
+<p align="center">
+  <img src="./images/walkthrough/admin/ad01-web.png" alt="I01 — permission-aware Web admin navigation" width="100%">
+</p>
 
 Web evaluates admin permissions through `usePermissions` and protects both routes and actions. Read permission controls page access; create/update/delete permissions control their corresponding actions. A normal `user` role cannot leak permissions into `/admin/*`.
 
 ## 4.2 Role and permission management
-
+ 
 <!-- SCREENSHOT:I02 — role edit / permissions matrix -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="I02 — role and permission management" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-role-detail-web.png" alt="I02 — role details and granular permission matrix" width="100%">
+</p>
 
-**Capture I02:** `/admin/roles/:id/edit` with a safe demo role and a representative permission matrix.
-
-The screenshot should make the RBAC model understandable at a glance: a role is not merely a label; it is a collection of explicit resource/action permissions enforced again by Core.
+The screenshot makes the RBAC model understandable at a glance: a role is not merely a label; it is a collection of explicit resource/action permissions enforced again by Core.
 
 ---
 
@@ -309,37 +337,47 @@ The screenshot should make the RBAC model understandable at a glance: a role is 
 
 Rexone connects product presentation, Stripe Checkout, durable webhook processing, subscriptions, transactions, and access grants into one commercial loop.
 
-## 5.1 Product catalogue
+## 5.1 Product catalogue & pricing plans
 
 <!-- SCREENSHOT:C01 — products -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="C01 Web — product catalogue" width="73%">
+<p align="center">
+  <img src="./images/walkthrough/commerce/c01-web.png" alt="C01 Web — product catalogue" width="73%">
   <img src="./images/walkthrough/_placeholders/mobile.svg" alt="C01 Mobile — product catalogue" width="25%">
 </p>
 
-Web and Mobile retrieve the same Core product catalogue and distinguish one-time and recurring pricing. Firebase can observe product interaction, but Core remains the source of authoritative product, transaction, subscription, and entitlement truth.
+Web and Mobile retrieve the same Core product catalogue and distinguish one-time payments, monthly subscriptions, and free tiers. Products are created and managed directly in the client admin portal and synced with Stripe via automated webhooks.
+
+### Active Entitlements & Purchased Products State
+
+<!-- SCREENSHOT:C03 — active entitlements & purchased products -->
+<p align="center">
+  <img src="./images/walkthrough/commerce/c03-web.png" alt="C03 Web — Active Entitlements and Purchased Products" width="73%">
+</p>
+
+Once checkout webhooks are fulfilled, the client pricing and plan selection interface dynamically transitions to reflect the user's real-time entitlements and subscription lifecycle:
+- **Active Subscriptions**: Displays the verified `Active Subscription` badge, explicit next billing date (`10/15/2026`), and a self-serve "Cancel Subscription" action.
+- **One-Time Purchases**: Indicates durable `Lifetime Access Active`, records the purchase tally (`Purchased 1 time`), and provides a secondary "Buy Again" option.
+- **Free Entitlements**: Reflects confirmed access (`Free Access Claimed`) with one-click claiming disabled.
 
 ## 5.2 Stripe Checkout handoff
 
 <!-- SCREENSHOT:C02 — checkout handoff -->
-<p>
+<p align="center">
   <img src="./images/walkthrough/_placeholders/web.svg" alt="C02 Web — Stripe Checkout handoff" width="73%">
   <img src="./images/walkthrough/_placeholders/mobile.svg" alt="C02 Mobile — Stripe Checkout WebView" width="25%">
 </p>
 
-Web redirects into Stripe Checkout; Mobile opens Checkout inside a WebView. Neither client owns Stripe secrets or webhook fulfillment.
+Web redirects into Stripe Checkout; Mobile opens Checkout inside a WebView. Neither client owns Stripe secrets or webhook fulfillment. Core creates/reuses Stripe customers, creates Checkout Sessions, persists payment state, and processes supported Stripe webhooks asynchronously.
 
-Core creates/reuses Stripe customers, creates Checkout Sessions, persists payment state, and processes supported Stripe webhooks asynchronously.
+## 5.3 Administrative Transactions and Subscriptions
 
-## 5.3 Subscription lifecycle
-
-<!-- SCREENSHOT:C03 — subscription active / scheduled cancellation -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="C03 Web — subscription state and actions" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="C03 Mobile — subscription state and actions" width="25%">
+<!-- SCREENSHOT:C04 — Admin Transactions & Subscriptions -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-transactions-web.png" alt="Admin Transactions Dashboard" width="49%">
+  <img src="./images/walkthrough/admin/ad-subscriptions-web.png" alt="Admin Subscriptions Dashboard" width="49%">
 </p>
 
-Subscription cancellation is safely scheduled for the end of the paid period and can be resumed where allowed. Clients communicate intent; Core remains authoritative over subscription state and access.
+Full administrative visibility into commercial records: completed charges, pending invoices, refund workflows, active subscription lifecycles, and scheduled cancellations. Subscription cancellation is safely scheduled for the end of the paid period and can be resumed where allowed. Clients communicate intent; Core remains authoritative over subscription state and access.
 
 ## 5.4 Durable webhook fulfillment
 
@@ -374,15 +412,18 @@ sequenceDiagram
 
 AI is intentionally non-blocking. A user message can be persisted immediately, processed in a background queue, and completed later through a real-time event without requiring the user to keep one HTTP request open.
 
-## 6.1 Persistent multi-room AI chat
+## 6.1 Persistent multi-room AI chat & Asynchronous Background Execution
 
 <!-- SCREENSHOT:AI01 — AI chat -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="AI01 Web — AI workspace" width="73%">
+<p align="center">
+  <img src="./images/walkthrough/ai/ai01-web.png" alt="AI01 Web — AI workspace" width="73%">
   <img src="./images/walkthrough/_placeholders/mobile.svg" alt="AI01 Mobile — AI assistant" width="25%">
 </p>
 
-Both clients support persistent rooms/history and a visible queued/thinking state. Core stores `Chat::Room` and `Chat::Message`, including AI lifecycle state such as `queued`, `processing`, `completed`, and `failed`.
+Both clients support persistent rooms/history, multi-provider model profiles (DeepSeek, Google Gemini), and a visible queued/processing state:
+- **Asynchronous Queue**: When a prompt is submitted, Core enqueues a background `Chat::ProcessMessageJob` into Solid Queue (`ai` queue).
+- **Zero Loss on Navigation**: Users can leave the page anytime, browse other modules, or sign out without losing state. Work is performed durably in the background.
+- **Real-Time Delivery**: Action Cable (`NotificationChannel`) broadcasts completion directly to the client with `ai_response_ready` payloads, dynamically rendering the assistant response.
 
 ## 6.2 Real-time AI completion
 
@@ -437,14 +478,14 @@ Core coordinates:
 ## 7.1 In-app notification experience
 
 <!-- SCREENSHOT:N01 — notification inbox / center if currently exposed on both clients -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="N01 Web — notification inbox" width="73%">
+<p align="center">
+  <img src="./images/walkthrough/notifications/n01-web.png" alt="N01 Web — Topbar Notification Center Popover" width="73%">
   <img src="./images/walkthrough/_placeholders/mobile.svg" alt="N01 Mobile — notification inbox" width="25%">
 </p>
 
 If one client does not currently expose a dedicated inbox screen, keep only the implemented screenshot and document the Core capability below it rather than fabricating parity.
 
-Each persisted `UserNotification` is an immutable receipt of what the user actually received, so later edits to an admin template do not rewrite history.
+Each persisted `UserNotification` is an immutable receipt of what the user actually received, so later edits to an admin template do not rewrite history. In Web, clicking the topbar notification bell triggers the notification center popover, presenting real-time unread counts, status filters (All, Unread, Read), bulk "Mark all as read" actions, and interactive deep-link navigation directly into the target operational or chat room resource.
 
 ## 7.2 Native push notification
 
@@ -458,7 +499,9 @@ Mobile identifies the signed-in user to OneSignal, syncs tags, clears provider i
 ## 7.3 Admin notification dispatch
 
 <!-- SCREENSHOT:N03 — Web admin notification dispatch/create -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="N03 — notification broadcast administration" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad06-web.png" alt="N03 — notification broadcast administration" width="100%">
+</p>
 
 Admin notifications can target roles, specific users, or the confirmed audience and fan out across enabled in-app, push, and email channels. Each resulting delivery keeps an independent retry boundary.
 
@@ -471,8 +514,8 @@ Rexone’s feedback system follows the same “remove unnecessary decisions from
 ## 8.1 In-place feedback
 
 <!-- SCREENSHOT:F01 — feedback modal / bottom sheet -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="F01 Web — in-place feedback" width="73%">
+<p align="center">
+  <img src="./images/walkthrough/feedback/f01-web.png" alt="F01 Web — In-Place Dark Mode Feedback Dialog" width="73%">
   <img src="./images/walkthrough/_placeholders/mobile.svg" alt="F01 Mobile — in-place feedback" width="25%">
 </p>
 
@@ -483,7 +526,9 @@ Core can classify feedback into categories such as bug, feature request, improve
 ## 8.2 Feedback triage
 
 <!-- SCREENSHOT:F02 — feedback admin -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="F02 — feedback triage in Web admin" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad09-web.png" alt="F02 — feedback triage in Web admin" width="100%">
+</p>
 
 The admin view turns lightweight user input into an actionable operational stream with classification, priority, status, and captured context.
 
@@ -496,9 +541,9 @@ Core provides a unified asset model over Garage S3, Cloudinary, or local storage
 ## 9.1 Asset Control Center
 
 <!-- SCREENSHOT:M01 — asset table -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="M01 — Asset Control Center" width="100%">
-
-**Capture M01:** `/admin/assets` with a safe mix of images/video and visible status badges.
+<p align="center">
+  <img src="./images/walkthrough/media/m01-web.png" alt="M01 — Asset Control Center" width="100%">
+</p>
 
 The Web admin client supports batch upload, filtering, recycle-bin workflows, edit, discard/restore, permanent purge, and real-time status updates.
 
@@ -533,56 +578,20 @@ flowchart LR
 
 Heavy image/video/audio processing runs in an isolated media worker so API requests and general transactional jobs are not forced to share the same compute path.
 
-## 9.4 Audio/video streaming — newest Core media-delivery layer
+## 9.4 Audio/video streaming — Test Lab diagnostics & Core media delivery
 
-Until this branch, the visual story of media was strongest on the **ingest and processing** side: upload an asset,
-persist its metadata, optimize it in the isolated media worker, generate thumbnails/subtitles where relevant, and
-surface live processing state to administrators.
+Until this branch, the visual story of media was strongest on the **ingest and processing** side: upload an asset, persist its metadata, optimize it in the isolated media worker, generate thumbnails/subtitles where relevant, and surface live processing state to administrators.
 
 The streaming work closes the other half of that lifecycle: **delivery**.
 
-```mermaid
-flowchart LR
-    Upload["Upload"] --> Asset["Persisted Asset"]
-    Asset --> Optimize["Media worker<br/>optimize / thumbnail / metadata"]
-    Optimize --> Stored["Provider-neutral storage"]
-    Stored --> Delivery["Core media-delivery boundary<br/>audio / video streaming"]
-    Delivery --> WebPlayer["Web media consumer"]
-    Delivery --> MobilePlayer["Mobile media consumer"]
-```
-
-That distinction matters. Rexone should not make application clients understand the physical storage layout merely
-because they need to play media. The same provider-boundary principle used during upload and optimization should
-continue through playback: the product asks Core for an asset/media experience; Core owns how the backing object is
-resolved and delivered.
-
-### One media lifecycle, end to end
-
-```text
-ingest → persist → optimize → observe → deliver → consume
-```
-
-This makes the media subsystem easier to explain as one coherent foundation rather than a collection of upload tools.
-The asset record remains the stable product-level identity while storage and media-processing details stay behind Core.
-
-### Stored media streaming is not live speech streaming
-
-Rexone now has two different concepts that are easy to confuse in documentation:
-
-| Capability                   | Purpose                                                   | Existing architectural area                        |
-| ---------------------------- | --------------------------------------------------------- | -------------------------------------------------- |
-| Live speech streaming        | Real-time microphone/STT interaction and generated speech | `SpeechLiveChannel`, Speech service, AI/speech UX  |
-| Stored audio/video streaming | Playback delivery of persisted media assets               | Asset + Storage service + Core media-delivery path |
-
-Keeping these names separate is important in screenshots, diagrams, issue titles, and future API documentation.
-
-### Visual proof after client wiring
-
-<!-- SCREENSHOT:M03 — Core-backed stored audio/video playback. Capture only on clients actually wired to the merged contract. -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="M03 Web — Core-backed stored audio or video playback" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="M03 Mobile — Core-backed stored audio or video playback" width="25%">
+<!-- SCREENSHOT:M03 — Test Lab with Core-backed stored audio/video playback and telemetry -->
+<p align="center">
+  <img src="./images/walkthrough/media/m03-web.png" alt="M03 Web — Test Lab diagnostics and Core-backed stored audio/video playback" width="100%">
 </p>
+
+The **Test Lab** (`/test`) showcases:
+- **Progressive Video & Audio Streaming**: Native HTML5 media elements streaming MP4 video and MP3 audio directly through Core's streaming routes, supporting range headers, seekability, and buffer optimization.
+- **Diagnostics & Error Telemetry**: Interactive error generation buttons testing uncaught runtime errors, Promise rejections, and network failures, verifying that structured client logs are dispatched to Core and captured in the telemetry subsystem.
 
 **Capture M03 only where the merged feature is actually consumed.** If the first merge is Core-only, remove the
 unused client placeholder(s) rather than implying feature parity. A strong capture should make playback visible
@@ -609,82 +618,178 @@ semantics before the branch is merged.
 
 # 10. Client administration portal
 
-Rexone Web includes a permission-aware operational admin client under `/admin/*`. This is separate from the server-rendered Administrate dashboard and is the recommended visual surface for product operations.
+Rexone Web includes a comprehensive, permission-aware operational admin client under `/admin/*`. This is separate from the server-rendered Administrate dashboard and is the primary visual surface for product operations.
 
-## 10.1 Admin home / navigation
+## 10.1 Admin Overview & Analytics (`/admin/analytics`)
 
 <!-- SCREENSHOT:AD01 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD01 — Web client admin home" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad01-web.png" alt="AD01 — Web Client Admin Analytics Overview" width="100%">
+</p>
 
-The sidebar and route guards are generated from the current user’s admin roles and permissions rather than a static “is admin” boolean.
+The admin dashboard aggregates high-level metrics, active user registrations, commercial revenue, system health, and activity trends. Route guards and navigation sidebars are dynamically built from the logged-in user's explicit IAM permissions rather than hardcoded client roles.
 
-## 10.2 User management
+## 10.2 User Management (`/admin/users`)
 
 <!-- SCREENSHOT:AD02 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD02 — user management" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad02-web.png" alt="AD02 — User Management" width="100%">
+</p>
 
-User administration includes create/edit workflows, lifecycle protections, role assignment, and server-side safeguards such as protecting the final super-admin.
+User administration provides full lifecycle management: email/identifier discovery, role assignment, account status, soft deletion (recycle bin), permanent destruction safeguards, and protection of system super-admins.
 
-## 10.3 Roles and permissions
+## 10.3 Roles & Permissions (`/admin/roles`)
 
 <!-- SCREENSHOT:AD03 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD03 — roles and permissions" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad03-web.png" alt="AD03 — Roles and Permissions" width="100%">
+</p>
 
-Roles and permissions expose Rexone’s authorization structure directly rather than hiding it inside code.
+Exposes the granular RBAC model directly: system roles (`super_admin`, `admin`, `user`), scoped departmental admins, and fine-grained CRUD permission toggles across all domain resources.
 
-## 10.4 Products
+### Role Detail & Granular IAM Permission Matrix (`/admin/roles/:id`)
+
+<!-- SCREENSHOT:AD03_DETAIL -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-role-detail-web.png" alt="AD03 Detail — Granular Role Permission Matrix" width="100%">
+</p>
+
+Inspect effective permission coverage per role: granular matrices for each domain resource (Accesses, AI Profiles, AI Runs, Analytics, Assets, Chat Messages, Chat Rooms, Feedback, Logs, Notifications, Products, Roles, Subscriptions, Transactions, Users, Versions) with distinct Read, Create, Update, and Delete toggles.
+
+## 10.4 Products & Commercial Catalogue (`/admin/products`)
 
 <!-- SCREENSHOT:AD04 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD04 — product administration" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad04-web.png" alt="AD04 — Product Administration" width="100%">
+</p>
 
-Product administration coordinates Rexone product records and Stripe-backed commercial configuration.
+Administer recurring subscription tiers and one-time purchases with metadata, pricing, trial periods, and currency settings synchronized with Stripe.
 
-## 10.5 Access / entitlements
+### Product Recycle Bin & Soft-Deletion Lifecycle (`/admin/products/bin`)
+
+<!-- SCREENSHOT:AD04_BIN -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-products-bin-web.png" alt="AD04 Bin — Product Recycle Bin and Soft-Deletion Management" width="100%">
+</p>
+
+Rexone implements a universal soft-deletion paradigm across all core domain resources (`User`, `Payment::Product`, `Iam::Role`, `Asset`, `Client::Log`, `Client::Version`, `Chat::Room`, `Chat::Message`, `Feedback`) backed by the `discard` gem in Core and dedicated `/bin` tabbed routes in Web. Discarded items are safely quarantined in a dedicated Recycle Bin tab, preventing accidental data loss while allowing privileged administrators to inspect discarded records, restore (`undiscard`) them back to active service, or permanently purge them with explicit safety confirmations.
+
+## 10.5 Transactions (`/admin/transactions`)
+
+<!-- SCREENSHOT:AD_TX -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-transactions-web.png" alt="Admin Transactions Dashboard" width="100%">
+</p>
+
+Inspect completed charges, pending invoices, payment provider references, customer identifiers, amount breakdowns, and refund audit trails.
+
+## 10.6 Subscriptions (`/admin/subscriptions`)
+
+<!-- SCREENSHOT:AD_SUB -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-subscriptions-web.png" alt="Admin Subscriptions Dashboard" width="100%">
+</p>
+
+Operational visibility into recurring subscriptions: current period start/end, auto-renewal flags, cancellation schedules, billing intervals, and associated Stripe customer entities.
+
+## 10.7 Accesses & Entitlements (`/admin/accesses`)
 
 <!-- SCREENSHOT:AD05 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD05 — access and entitlement administration" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad05-web.png" alt="AD05 — Access and Entitlement Administration" width="100%">
+</p>
 
-Admins can inspect/grant relevant access records and extend validity through explicit workflows.
+Manage durable entitlement grants across users and products. Administrators can manually grant access, revoke entitlements, or extend expiration windows independently of payment provider state.
 
-## 10.6 Notifications
+## 10.8 Assets Control Center (`/admin/assets`)
+
+<!-- SCREENSHOT:AD_ASSETS -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-assets-web.png" alt="Admin Assets Control Center" width="100%">
+</p>
+
+Unified asset governance over images, video, and audio. Features batch drag-and-drop uploads, storage key inspection, optimization badges, libvips/FFmpeg processing status, recycle-bin recovery, and permanent deletion.
+
+## 10.9 Notifications & Broadcasts (`/admin/notifications`)
 
 <!-- SCREENSHOT:AD06 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD06 — notification templates and dispatch" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad06-web.png" alt="AD06 — Notification Templates and Dispatch" width="100%">
+</p>
 
-Notification administration manages reusable content, audience selection, channel configuration, dispatch, and cumulative delivery/read telemetry.
+Draft and dispatch push, in-app socket, and email broadcasts. Filter target audiences by role or individual recipient, track open/read rates, and manage system alert templates.
 
-## 10.7 App versions and user versions
-
-<!-- SCREENSHOT:AD07 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD07 — version administration" width="100%">
-
-Version governance is super-admin only. Published/yanked state, install counts, force-update behavior, and user platform snapshots make mobile rollout state inspectable from the same operational portal.
-
-## 10.8 Chat moderation
-
-<!-- SCREENSHOT:AD08 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD08 — chat moderation" width="100%">
-
-Admin chat tooling provides operational visibility into rooms/messages without turning the client UI into the data authority.
-
-## 10.9 Feedback and client logs
+## 10.10 Intelligent Feedback Triage (`/admin/feedback`)
 
 <!-- SCREENSHOT:AD09 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD09 — feedback or client log administration" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad09-web.png" alt="AD09 — Feedback Triage in Web Admin" width="100%">
+</p>
 
-Capture either the feedback list or client-log view here; show the other later in the telemetry chapter if both deserve screenshots.
+Triage user-submitted ratings and messages with automatically attached client telemetry (platform, app version, screen route, user context) and operational priority ranking.
 
-## 10.10 AI Control Panel (Profiles & Runs Telemetry)
+## 10.11 Client Logs & Error Telemetry (`/admin/logs`)
+
+<!-- SCREENSHOT:AD_LOGS -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-logs-web.png" alt="Client Runtime Error Logs" width="100%">
+</p>
+
+Centralized error observability capturing uncaught browser exceptions, React boundary errors, mobile Flutter stack traces, network timeouts, and device context directly in Core.
+
+## 10.12 Chat Rooms Moderation (`/admin/chat/rooms`)
+
+<!-- SCREENSHOT:AD08 -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad08-web.png" alt="AD08 — Chat Rooms Moderation" width="100%">
+</p>
+
+Moderate user AI and community chat rooms, inspect room ownership, review conversation titles, and manage room lifecycle state.
+
+## 10.13 Chat Messages Moderation (`/admin/chat/messages`)
+
+<!-- SCREENSHOT:AD_CHAT_MSG -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-chat-messages-web.png" alt="Chat Messages Moderation" width="100%">
+</p>
+
+Audit individual chat messages, distinguish user prompts from assistant completions, inspect AI model and token usage metadata, and moderate flagged dialogue.
+
+## 10.14 App Versions (`/admin/versions`)
+
+<!-- SCREENSHOT:AD07 -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad07-web.png" alt="AD07 — App Version Governance" width="100%">
+</p>
+
+Govern mobile app releases (Android and iOS). Control version numbers, build numbers, release notes, download URLs, and trigger optional or mandatory force-upgrade policies without republishing to app stores.
+
+## 10.15 User Platform Versions (`/admin/user-versions`)
+
+<!-- SCREENSHOT:AD_USER_VER -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-user-versions-web.png" alt="User Platform Version Snapshots" width="100%">
+</p>
+
+Real-time telemetry showing which app versions and platforms each active user is running, ensuring smooth progressive rollouts and deprecation tracking.
+
+## 10.16 AI Profiles & Multi-Provider Configuration (`/admin/ai/profiles`)
 
 <!-- SCREENSHOT:AD10 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD10 — AI Profiles & Configuration" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad10-web.png" alt="AD10 — AI Profiles & Configuration" width="100%">
+</p>
 
-AI Profile administration enables operational governance over system prompts, temperature, token limits, context windows, model selection, and multi-provider configurations (DeepSeek, Gemini, OpenAI) with fine-grained RBAC permission controls (`ai_profiles:read`, `ai_profiles:create`, `ai_profiles:update`). Includes row-click navigation to detail views and dedicated creation forms.
+Operational governance over AI models and system prompts: configure DeepSeek and Google Gemini providers, temperature parameters, context token limits, output token limits, and role prompts with full RBAC protection.
+
+## 10.17 AI Runs & Execution Telemetry (`/admin/ai/runs`)
 
 <!-- SCREENSHOT:AD11 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD11 — AI Runs & Execution Telemetry" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad11-web.png" alt="AD11 — AI Runs & Execution Telemetry" width="100%">
+</p>
 
-AI Runs provide end-to-end telemetry and observability into generative execution runs: latency timing, prompt/completion token consumption, input message sizes, error tracing, user/chat associations, and raw request metadata. Interactive row clicks drill directly into panoramic diagnostic inspect views.
+Deep observability into every generative execution: end-to-end latency timing, prompt and completion token counts, input characters, error messages, user associations, and diagnostic inspect views.
 
 ---
 
@@ -741,10 +846,12 @@ Every event includes a platform dimension (`web`, `android`, `ios`). Authenticat
 
 Web captures React boundary failures and global browser/runtime errors. Mobile captures uncaught Flutter and platform errors. Both send structured diagnostics to Core’s client log endpoint.
 
-Captured context can include message, stack trace, platform/device/browser context, app version, route/URL, severity, and safe storage metadata.
+Captured context includes message, stack trace, platform/device/browser context, app version, route/URL, severity, and safe storage metadata.
 
 <!-- SCREENSHOT:T02 — client logs -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="T02 — client error logs in admin" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-logs-web.png" alt="T02 — client error logs in admin" width="100%">
+</p>
 
 This gives the backend one place to inspect failures originating outside Rails itself.
 
@@ -754,7 +861,7 @@ This gives the backend one place to inspect failures originating outside Rails i
 
 The Operations Center is where Rexone visibly demonstrates that “observable” is an architectural property, not a marketing word.
 
-Core mounts multiple protected operational surfaces:
+Accessible on `http://localhost:3000` via Super Admin credentials (`username: superadmin`, `passcode: 111111`), Core mounts multiple protected operational surfaces:
 
 | Path           | Surface                     | Purpose                                         |
 | -------------- | --------------------------- | ----------------------------------------------- |
@@ -770,7 +877,9 @@ Core mounts multiple protected operational surfaces:
 ## 13.1 Administrate — server back office
 
 <!-- SCREENSHOT:O01 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="O01 — Administrate dashboard" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/operations/o01-administrate.png" alt="O01 — Administrate dashboard" width="100%">
+</p>
 
 Administrate provides a conventional server-rendered administrative surface close to Rails and the data model. It complements the richer React admin portal: one is a server-side operational back office; the other is the client-facing administration experience built on `/v1/admin/*`.
 
@@ -779,7 +888,9 @@ Administrate provides a conventional server-rendered administrative surface clos
 ## 13.2 Rails Pulse — performance visibility
 
 <!-- SCREENSHOT:O02 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="O02 — Rails Pulse dashboard" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/operations/o02-pulse.png" alt="O02 — Rails Pulse dashboard" width="100%">
+</p>
 
 Rails Pulse is self-hosted inside the Rails application and is used for performance visibility such as slow requests, SQL/query behavior, background jobs, and related performance debugging.
 
@@ -788,7 +899,9 @@ Rails Pulse is self-hosted inside the Rails application and is used for performa
 ## 13.3 RED — Rails Error Dashboard
 
 <!-- SCREENSHOT:O03 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="O03 — Rails Error Dashboard" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/operations/o03-red.png" alt="O03 — Rails Error Dashboard" width="100%">
+</p>
 
 RED gives Rexone a self-hosted Rails failure-investigation surface rather than requiring production error context to leave the application infrastructure. It groups and investigates exceptions with Rails-specific context.
 
@@ -797,21 +910,27 @@ RED gives Rexone a self-hosted Rails failure-investigation surface rather than r
 ## 13.4 Solid Web UI — Queue
 
 <!-- SCREENSHOT:O04 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="O04 — Solid Web UI Queue dashboard" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/operations/o04-solid-queue.png" alt="O04 — Solid Web UI Queue dashboard" width="100%">
+</p>
 
 The queue dashboard exposes Solid Queue jobs, statuses, processes, recurring tasks, and operational controls such as retry/discard and queue pause/resume where supported.
 
 ## 13.5 Solid Web UI — Cache
 
 <!-- SCREENSHOT:O05 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="O05 — Solid Web UI Cache dashboard" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/operations/o05-solid-cache.png" alt="O05 — Solid Web UI Cache dashboard" width="100%">
+</p>
 
 The cache dashboard exposes entry/size statistics, entry browsing, and cache clearing for Solid Cache.
 
 ## 13.6 Solid Web UI — Cable
 
 <!-- SCREENSHOT:O06 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="O06 — Solid Web UI Cable dashboard" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/operations/o06-solid-cable.png" alt="O06 — Solid Web UI Cable dashboard" width="100%">
+</p>
 
 The cable dashboard exposes message/channel activity, volume, and retention behavior for Solid Cable.
 
@@ -820,7 +939,9 @@ The cable dashboard exposes message/channel activity, volume, and retention beha
 ## 13.7 Interactive OpenAPI documentation
 
 <!-- SCREENSHOT:O07 -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="O07 — Swagger/OpenAPI API docs" width="100%">
+<p align="center">
+  <img src="./images/walkthrough/operations/o07-swagger.png" alt="O07 — Swagger/OpenAPI API docs" width="100%">
+</p>
 
 `/api-docs` makes the HTTP contract inspectable and testable instead of requiring developers to reverse-engineer routes from client code.
 
@@ -1002,17 +1123,26 @@ Core includes scripts for PostgreSQL backup, Garage metadata/block backup, and c
 
 ---
 
-# 20. Rebranding
+# 20. Rebranding & Modular Design System
 
-Core acts as the master rebranding entry point for the ecosystem. The repository includes brand configuration and scripts designed to propagate a new product identity across Core, Web, and Mobile rather than requiring a manual search-and-replace campaign in three codebases.
+Rexone is built from the ground up to be completely rebranded and adjusted to any product or business requirements in minutes.
 
-```bash
-./scripts/rebrand.sh brand.config.json
-```
+The UI architecture is strictly decoupled from business contracts:
 
-Product-specific application code can then build on the same foundation while changing names, visual identity, environment configuration, mail sender identity, and other brand-level settings.
+1. **Master Rebranding Script (`rexone-core`)**:
+   Core acts as the master rebranding authority for the ecosystem. The repository includes brand configuration and an automated propagation script:
+   ```bash
+   ./scripts/rebrand.sh brand.config.json
+   ```
+   This script reads the master `brand.config.json` (app name, organization, domain, database names, bundle identifiers, email sender identity, repository URLs) and safely synchronizes the brand identity across `rexone-core`, `rexone-web`, and `rexone-mobile` simultaneously.
 
-This is one of the features that needs **explanation more than a screenshot**.
+2. **Web Design System (`rexone-web/src/design`)**:
+   All UI elements, widgets, dialogs, typography, and theme tokens live under `src/design/`:
+   - **Reusable Components**: `Button`, `Input`, `Dialog`, `Table`, `Badge`, `Card`, `Sidebar`, `Navbar`.
+   - **Modular Layout**: Easily swapped or restyled without modifying domain modules (`modules/auth`, `modules/payment`, `modules/ai`, `modules/admin`).
+   - **Design Guidelines**: To apply a new corporate brand guideline, developers simply adjust the design tokens and components in the `design/` folder.
+
+Basically, just touch the **rebrand script** and the **design folder** — the entire multi-platform product can be rebranded easily.
 
 ---
 
@@ -1055,58 +1185,54 @@ For major operational dependencies displayed in screenshots, keep the upstream p
 
 # 22. Screenshot capture manifest
 
-Use this as the working checklist while building the visual documentation.
+Working checklist and file index of all visual assets integrated across this walkthrough:
 
-| ID   | Area            | Capture                                 | Layout                                 |
-| ---- | --------------- | --------------------------------------- | -------------------------------------- |
-| A01  | Auth            | Initial identifier/account discovery    | Web + Mobile                           |
-| A02  | Auth            | Existing account six-digit passcode     | Web + Mobile                           |
-| A03  | Auth            | New account passcode create/confirm     | Web + Mobile                           |
-| A04  | Auth            | Email confirmation OTP + resend state   | Web + Mobile                           |
-| A05  | Auth            | Google sign-in / challenge state        | Web + Mobile                           |
-| A06  | Auth            | Forgot/reset passcode                   | Web + Mobile                           |
-| P01  | Profile         | Profile/account identity screen         | Web + Mobile                           |
-| I01  | IAM             | Scoped admin sidebar                    | Web full                               |
-| I02  | IAM             | Role/permission edit                    | Web full                               |
-| C01  | Commerce        | Product catalogue                       | Web + Mobile                           |
-| C02  | Commerce        | Stripe Checkout handoff                 | Web + Mobile                           |
-| C03  | Commerce        | Subscription lifecycle                  | Web + Mobile                           |
-| AI01 | AI              | AI workspace/chat room                  | Web + Mobile                           |
-| AI02 | Speech          | Voice/TTS/STT state                     | Web + Mobile                           |
-| N01  | Notifications   | In-app inbox if exposed                 | Web + Mobile / implemented client only |
-| N02  | Notifications   | Native push                             | Mobile                                 |
-| N03  | Notifications   | Admin broadcast                         | Web full                               |
-| F01  | Feedback        | In-place feedback                       | Web + Mobile                           |
-| F02  | Feedback        | Admin triage                            | Web full                               |
-| M01  | Media           | Asset Control Center                    | Web full                               |
-| M02  | Media           | Garage/VPS capacity                     | Web full                               |
-| M03  | Media streaming | Core-backed stored audio/video playback | Implemented client(s) only             |
-| M04  | Media streaming | Final merged streaming contract proof   | Optional full                          |
-| AD01 | Admin           | Admin home/sidebar                      | Web full                               |
-| AD02 | Admin           | Users                                   | Web full                               |
-| AD03 | Admin           | Roles/permissions                       | Web full                               |
-| AD04 | Admin           | Products                                | Web full                               |
-| AD05 | Admin           | Accesses                                | Web full                               |
-| AD06 | Admin           | Notifications                           | Web full                               |
-| AD07 | Admin           | Versions/user versions                  | Web full                               |
-| AD08 | Admin           | Chat moderation                         | Web full                               |
-| AD09 | Admin           | Feedback or client logs                 | Web full                               |
-| AD10 | Admin           | AI Profiles & Configuration             | Web full                               |
-| AD11 | Admin           | AI Runs & Telemetry                     | Web full                               |
-| V01  | Versions        | Optional update                         | Mobile                                 |
-| V02  | Versions        | Forced update                           | Mobile                                 |
-| T01  | Analytics       | GA4 cross-platform report               | Optional full                          |
-| T02  | Telemetry       | Client logs                             | Web full                               |
-| L01  | Localization    | Alternate language                      | Web + Mobile                           |
-| L02  | Design          | Representative design-system state      | Web + Mobile                           |
-| O01  | Ops             | Administrate                            | Full                                   |
-| O02  | Ops             | Rails Pulse                             | Full                                   |
-| O03  | Ops             | Rails Error Dashboard                   | Full                                   |
-| O04  | Ops             | Solid Web UI — Queue                    | Full                                   |
-| O05  | Ops             | Solid Web UI — Cache                    | Full                                   |
-| O06  | Ops             | Solid Web UI — Cable                    | Full                                   |
-| O07  | Ops             | Swagger/OpenAPI                         | Full                                   |
-| Q01  | Quality         | CI/test evidence                        | Optional full                          |
+| ID     | Area            | File Path                                        | Description                             | Status    |
+| ------ | --------------- | ------------------------------------------------ | --------------------------------------- | --------- |
+| LND01  | Landing         | `docs/images/walkthrough/landing/landing-web.jpg` | Rexone Landing Page (Modular sections)  | Captured  |
+| HOM01  | Home            | `docs/images/walkthrough/home/home-web.png`       | Home Dashboard Hub & Role Guards        | Captured  |
+| A01    | Auth            | `docs/images/walkthrough/auth/a01-web.png`        | Initial Identifier Discovery (Zero DT)  | Captured  |
+| A02    | Auth            | `docs/images/walkthrough/auth/a02-web.png`        | 6-Digit Passcode Entry & Security State  | Captured  |
+| P01    | Profile         | `docs/images/walkthrough/profile/p01-web.png`     | User Profile & Account Settings         | Captured  |
+| I01    | IAM             | `docs/images/walkthrough/admin/ad01-web.png`      | Permission-Aware Admin Navigation       | Captured  |
+| I02    | IAM             | `docs/images/walkthrough/admin/ad-role-detail-web.png` | Role Details & Granular Permission Matrix | Captured |
+| C01    | Commerce        | `docs/images/walkthrough/commerce/c01-web.png`    | Product Catalogue & Pricing Plans       | Captured  |
+| C03    | Commerce        | `docs/images/walkthrough/commerce/c03-web.png`    | Active Entitlements & Purchased Products | Captured  |
+| C04    | Commerce        | `docs/images/walkthrough/admin/ad-transactions-web.png` | Admin Transactions Audit          | Captured  |
+| C05    | Commerce        | `docs/images/walkthrough/admin/ad-subscriptions-web.png` | Admin Subscriptions Lifecycle    | Captured  |
+| AI01   | AI              | `docs/images/walkthrough/ai/ai01-web.png`         | Persistent AI Workspace & Background Q  | Captured  |
+| N01    | Notifications   | `docs/images/walkthrough/notifications/n01-web.png` | Notification Center Popover & Unread Drawer | Captured |
+| N03    | Notifications   | `docs/images/walkthrough/admin/ad06-web.png`      | Admin Broadcast Dispatch                | Captured  |
+| F01    | Feedback        | `docs/images/walkthrough/feedback/f01-web.png`    | In-Place Feedback Dialog & Rating       | Captured  |
+| F02    | Feedback        | `docs/images/walkthrough/admin/ad09-web.png`      | Feedback Triage & Telemetry             | Captured  |
+| M01    | Media           | `docs/images/walkthrough/media/m01-web.png`       | Asset Control Center                    | Captured  |
+| M03    | Media Delivery  | `docs/images/walkthrough/media/m03-web.png`       | Test Lab Video/Audio Streaming          | Captured  |
+| AD01   | Admin           | `docs/images/walkthrough/admin/ad01-web.png`      | Admin Home Overview & Analytics         | Captured  |
+| AD02   | Admin           | `docs/images/walkthrough/admin/ad02-web.png`      | User Management                         | Captured  |
+| AD03   | Admin           | `docs/images/walkthrough/admin/ad03-web.png`      | Roles & Permissions                     | Captured  |
+| AD03_D | Admin           | `docs/images/walkthrough/admin/ad-role-detail-web.png` | Role Details & Granular Permission Matrix | Captured |
+| AD04   | Admin           | `docs/images/walkthrough/admin/ad04-web.png`      | Products Catalogue Administration       | Captured  |
+| AD04_B | Admin           | `docs/images/walkthrough/admin/ad-products-bin-web.png` | Product Recycle Bin & Soft Deletion | Captured  |
+| AD05   | Admin           | `docs/images/walkthrough/admin/ad05-web.png`      | Access & Entitlements Management        | Captured  |
+| AD06   | Admin           | `docs/images/walkthrough/admin/ad06-web.png`      | Notification Dispatch & Templates       | Captured  |
+| AD07   | Admin           | `docs/images/walkthrough/admin/ad07-web.png`      | App Version Governance                  | Captured  |
+| AD_UV  | Admin           | `docs/images/walkthrough/admin/ad-user-versions-web.png` | User Platform Versions Snapshots | Captured  |
+| AD08   | Admin           | `docs/images/walkthrough/admin/ad08-web.png`      | Chat Rooms Moderation                   | Captured  |
+| AD_CM  | Admin           | `docs/images/walkthrough/admin/ad-chat-messages-web.png` | Chat Messages Moderation         | Captured  |
+| AD09   | Admin           | `docs/images/walkthrough/admin/ad09-web.png`      | Feedback Triage                         | Captured  |
+| AD_LOG | Admin           | `docs/images/walkthrough/admin/ad-logs-web.png`   | Client Error Logs & Telemetry           | Captured  |
+| AD10   | Admin           | `docs/images/walkthrough/admin/ad10-web.png`      | AI Profiles & Configuration             | Captured  |
+| AD11   | Admin           | `docs/images/walkthrough/admin/ad11-web.png`      | AI Runs & Telemetry                     | Captured  |
+| T02    | Telemetry       | `docs/images/walkthrough/admin/ad-logs-web.png`   | Client Error Telemetry                  | Captured  |
+| O01    | Operations      | `docs/images/walkthrough/operations/o01-administrate.png` | Rails Administrate Back Office   | Captured  |
+| O02    | Operations      | `docs/images/walkthrough/operations/o02-pulse.png`        | Rails Pulse Performance Monitor  | Captured  |
+| O03    | Operations      | `docs/images/walkthrough/operations/o03-red.png`          | Rails Error Dashboard (RED)      | Captured  |
+| O04    | Operations      | `docs/images/walkthrough/operations/o04-solid-queue.png`  | Solid Web UI — Queue             | Captured  |
+| O05    | Operations      | `docs/images/walkthrough/operations/o05-solid-cache.png`  | Solid Web UI — Cache             | Captured  |
+| O06    | Operations      | `docs/images/walkthrough/operations/o06-solid-cable.png`  | Solid Web UI — Cable             | Captured  |
+| O07    | Operations      | `docs/images/walkthrough/operations/o07-swagger.png`      | Rswag OpenAPI Documentation      | Captured  |
+
+All 37 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
 
 ## Suggested file naming
 
