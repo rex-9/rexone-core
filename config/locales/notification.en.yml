@@ -52,3 +52,8 @@ en:
     notification_updated: "Notification updated successfully."
     notification_discarded: "Notification moved to recycle bin."
     notification_undiscarded: "Notification restored."
+    batch_discarded: "Selected notifications moved to recycle bin."
+    batch_restored: "Selected notifications restored."
+    batch_deleted: "Selected notifications permanently deleted."
+    recycle_bin_emptied: "Recycle bin emptied."
+    no_notifications_selected: "No notifications selected."

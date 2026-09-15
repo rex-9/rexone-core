@@ -109,11 +109,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.string "assetable_type"
     t.datetime "created_at", null: false
     t.uuid "created_by_id"
+    t.text "description"
     t.datetime "discarded_at"
     t.uuid "discarded_by_id"
+    t.string "display_name"
     t.integer "duration_secs"
     t.string "extension"
     t.string "format"
+    t.jsonb "metadata", default: {}, null: false
     t.string "name", null: false
     t.uuid "parent_asset_id"
     t.bigint "size_bytes"
@@ -130,6 +133,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.index ["created_by_id"], name: "index_assets_on_created_by_id"
     t.index ["discarded_at"], name: "index_assets_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_assets_on_discarded_by_id"
+    t.index ["display_name"], name: "index_assets_on_display_name"
     t.index ["name"], name: "index_assets_on_name"
     t.index ["parent_asset_id"], name: "index_assets_on_parent_asset_id"
     t.index ["status"], name: "index_assets_on_status"
@@ -1137,11 +1141,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.string "clients", default: ["web", "mobile"], null: false, array: true
     t.datetime "created_at", null: false
     t.uuid "created_by_id"
-    t.jsonb "data", default: {}, null: false
     t.datetime "discarded_at"
     t.uuid "discarded_by_id"
     t.string "link"
     t.text "message", null: false
+    t.jsonb "metadata", default: {}, null: false
     t.uuid "notification_id"
     t.string "operation_id"
     t.string "operation_status"

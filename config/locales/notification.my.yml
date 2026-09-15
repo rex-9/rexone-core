@@ -52,3 +52,8 @@ my:
     notification_updated: "Notification အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။"
     notification_discarded: "Notification ကို အမှိုက်ပုံးသို့ ရွှေ့ပြီးပါပြီ။"
     notification_undiscarded: "Notification ကို ပြန်လည်ရယူပြီးပါပြီ။"
+    batch_discarded: "ရွေးချယ်ထားသော အသိပေးချက်များကို အမှိုက်ပုံးသို့ ရွှေ့ပြီးပါပြီ။"
+    batch_restored: "ရွေးချယ်ထားသော အသိပေးချက်များကို ပြန်လည်ရယူပြီးပါပြီ။"
+    batch_deleted: "ရွေးချယ်ထားသော အသိပေးချက်များကို အပြီးတိုင် ပယ်ဖျက်ပြီးပါပြီ။"
+    recycle_bin_emptied: "အမှိုက်ပုံးကို ရှင်းလင်းပြီးပါပြီ။"
+    no_notifications_selected: "မည်သည့် အသိပေးချက်မျှ ရွေးချယ်မထားပါ။"

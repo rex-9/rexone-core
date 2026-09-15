@@ -22,6 +22,7 @@ module SortConstants
     USER_VERSION = %w[last_seen_at number platform created_at].freeze
     CLIENT_LOG  = %w[created_at occurrence_count resolved_at].freeze
     NOTIF       = %w[created_at event].freeze
+    USER_NOTIFICATION = %w[created_at read_at title discarded_at].freeze
     ASSET       = %w[created_at name type format size_bytes duration_secs source discarded_at].freeze
     AI_PROFILE  = %w[created_at key name temperature provider model enabled discarded_at].freeze
     AI_RUN      = %w[created_at latency_ms total_tokens feature status model provider].freeze

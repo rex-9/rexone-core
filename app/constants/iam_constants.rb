@@ -51,9 +51,10 @@ module IamConstants
     PAYMENT_PAYMENTS      = "payment_payments".freeze
     PAYMENT_SUBSCRIPTIONS = "payment_subscriptions".freeze
     PAYMENT_TRANSACTIONS  = "payment_transactions".freeze
+    USER_NOTIFICATIONS    = "user_notifications".freeze
 
     ALL = [
-      USERS, ACCESSES, ASSETS, NOTIFICATIONS, FEEDBACKS, ANALYTICS, SPEECH,
+      USERS, ACCESSES, ASSETS, NOTIFICATIONS, USER_NOTIFICATIONS, FEEDBACKS, ANALYTICS, SPEECH,
       AI_PROFILES, AI_RUNS, CHAT_ROOMS, CHAT_MESSAGES,
       CLIENT_LOGS, CLIENT_VERSIONS, CLIENT_USER_VERSIONS,
       IAM_ROLES, IAM_PERMISSIONS, IAM_USER_ROLES,
@@ -88,6 +89,7 @@ module IamConstants
       { resource: Resource::SPEECH, actions: Action::ALL },
       { resource: Resource::FEEDBACKS, actions: [ Action::CREATE, Action::READ ] },
       { resource: Resource::NOTIFICATIONS, actions: [ Action::READ, Action::UPDATE, Action::DELETE ] },
+      { resource: Resource::USER_NOTIFICATIONS, actions: [ Action::READ, Action::DELETE ] },
       { resource: Resource::CLIENT_VERSIONS, actions: [ Action::READ ] },
       { resource: Resource::CLIENT_USER_VERSIONS, actions: [ Action::CREATE ] }
     ].freeze

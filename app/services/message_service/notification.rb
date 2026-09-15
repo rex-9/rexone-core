@@ -39,5 +39,10 @@ module MessageService
     NOTIFICATION_UPDATED = "notification.notification_updated"
     NOTIFICATION_DISCARDED = "notification.notification_discarded"
     NOTIFICATION_UNDISCARDED = "notification.notification_undiscarded"
+    BATCH_DISCARDED = "notification.batch_discarded"
+    BATCH_RESTORED = "notification.batch_restored"
+    BATCH_DELETED = "notification.batch_deleted"
+    RECYCLE_BIN_EMPTIED = "notification.recycle_bin_emptied"
+    NO_NOTIFICATIONS_SELECTED = "notification.no_notifications_selected"
   end
 end

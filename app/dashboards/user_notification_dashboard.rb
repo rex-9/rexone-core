@@ -12,7 +12,7 @@ class UserNotificationDashboard < Administrate::BaseDashboard
     clients: Field::String,
     created_by_id: Field::String,
     creator: Field::BelongsTo,
-    data: Field::String.with_options(searchable: false),
+    metadata: Field::String.with_options(searchable: false),
     discarded_at: Field::DateTime,
     discarded_by_id: Field::String,
     discarder: Field::BelongsTo,
@@ -43,7 +43,7 @@ class UserNotificationDashboard < Administrate::BaseDashboard
     link
     message
     clients
-    data
+    metadata
     creator
   ].freeze
 
@@ -54,7 +54,7 @@ class UserNotificationDashboard < Administrate::BaseDashboard
     clients
     created_by_id
     creator
-    data
+    metadata
     discarded_at
     discarded_by_id
     discarder
@@ -83,7 +83,7 @@ class UserNotificationDashboard < Administrate::BaseDashboard
     clients
     created_by_id
     creator
-    data
+    metadata
     discarded_at
     discarded_by_id
     discarder

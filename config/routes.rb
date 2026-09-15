@@ -222,6 +222,19 @@ Rails.application.routes.draw do
         end
       end
 
+      resources :user_notifications, only: %i[index show destroy] do
+        collection do
+          delete :destroy_bin, path: "bin"
+          post :discard_batch
+          post :undiscard_batch
+          post :destroy_batch
+        end
+        member do
+          post :discard
+          post :undiscard
+        end
+      end
+
       resources :accesses, only: %i[index show create update destroy]
 
       resources :feedbacks, only: %i[index show update destroy]

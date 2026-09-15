@@ -248,7 +248,7 @@ That's it for Core and Web! The **only** optional terminal you ever need during 
 ./scripts/listen_webhook.sh
 ```
 
-After the API starts, seed the development IAM roles and accounts:
+After the API starts, seed the development IAM roles, accounts, and initial client version (`1.0.0`):
 
 ```bash
 docker compose -f docker-compose.dev.yaml exec api bin/rails db:seed
@@ -273,7 +273,7 @@ The API is broader than a starter CRUD demo. Its main route families are:
 | Payments         | `/v1/payment/*`, `/webhooks/stripe`                                                                                                                                 |
 | Entitlements     | `/v1/access/*`                                                                                                                                                      |
 | Media            | `/v1/assets/upload`, `/v1/assets`, `/v1/assets/:id/playback`                                                                                                        |
-| Notifications    | `/v1/admin/notifications`                                                                                                                                           |
+| Notifications    | `/v1/admin/notifications`, `/v1/admin/user_notifications` (lifecycle CRUD: active, recycle bin, discard, undiscard, destroy, batch operations) |
 | Chat             | `/v1/chat/rooms`, `/v1/chat/messages`, `/v1/chat/messages/destroy_all` (RESTful CRUD + message purge)                                                               |
 | Admin Chat       | `/v1/admin/chat/rooms`, `/v1/admin/chat/messages` (moderation CRUD: discard, undiscard, destroy)                                                                    |
 | Admin AI         | `/v1/admin/ai/profiles` (index, show, create, update with provider & model filters), `/v1/admin/ai/runs` (execution audit log & diagnostics with sorting/filters)   |

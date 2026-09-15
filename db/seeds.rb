@@ -100,6 +100,20 @@ puts "🌱 Seeding AI profiles..."
 Ai::ProfileService.create_defaults!
 puts "✅ #{Ai::Profile.count} AI profiles ready"
 
+# ===== INITIAL CLIENT VERSION =====
+puts "🌱 Seeding initial client version..."
+initial_version = Client::Version.find_or_initialize_by(number: "1.0.0")
+initial_version.assign_attributes(
+  title: "Initial Release",
+  status: VersionConstants::Status::PUBLISHED,
+  released_at: Time.current,
+  ios_build_number: 1,
+  android_build_number: 1,
+  is_force_update: false
+)
+initial_version.save!
+puts "✅ Client version #{initial_version.number} (#{initial_version.status}) ready"
+
 puts "✅ Seeding complete!"
 
 puts "\n📋 Summary:"
@@ -109,3 +123,4 @@ puts "  - #{Iam::RolePermission.count} role-permission assignments"
 puts "  - #{Iam::UserRole.count} user-role assignments"
 puts "  - #{User.count} users"
 puts "  - #{Ai::Profile.count} AI profiles"
+puts "  - #{Client::Version.count} client versions"
