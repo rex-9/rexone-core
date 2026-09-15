@@ -81,7 +81,7 @@ module Ai
         usage = result["usage"] || {}
         choice = result.dig("choices", 0) || {}
         message_obj = choice["message"] || {}
-        output = (message_obj["content"].presence || message_obj["reasoning_content"]).to_s
+        output = message_obj["content"].to_s
         run.update!(
           status: AiConstants::RunStatus::COMPLETED,
           output_chars: output.length,

@@ -220,9 +220,8 @@ module Media
       delete_uploaded_replacement(out_ext)
       raise
     end
-
     def delete_uploaded_replacement(out_ext)
-      return if @upload_result&.dig(:storage_key).blank? || @upload_result[:storage_key] == @previous_storage_key
+      return if @upload_result.blank? || @upload_result[:storage_key].blank? || @upload_result[:storage_key] == @previous_storage_key
 
       StorageService::Client.delete(
         @upload_result[:storage_key],

@@ -39,8 +39,8 @@ RSpec.describe "V1 Admin User Notifications API", type: :request do
       expect(titles).not_to include("Archived Notice")
     end
 
-    it "lists discarded notifications when view=discarded" do
-      get "/v1/admin/user_notifications?view=discarded", headers: headers
+    it "lists discarded notifications when discarded=true" do
+      get "/v1/admin/user_notifications?discarded=true", headers: headers
 
       expect(response).to have_http_status(:ok)
       expect(response_data.size).to eq(1)
@@ -69,6 +69,14 @@ RSpec.describe "V1 Admin User Notifications API", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response_data.size).to eq(1)
       expect(response_data.first.dig("attributes", "title")).to eq("Special Alert")
+    end
+
+    it "sorts notifications by title" do
+      get "/v1/admin/user_notifications?sort_by=title&sort_order=asc", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      titles = response_data.map { |item| item.dig("attributes", "title") }
+      expect(titles).to eq(titles.sort)
     end
 
     it "forbids non-admin users" do

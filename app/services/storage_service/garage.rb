@@ -87,11 +87,10 @@ module StorageService
         expires_in: expiry
       }
 
-      content_type = options[:response_content_type] || options[:content_type]
-      content_type ||= Rack::Mime.mime_type(File.extname(key.to_s), nil)
+      content_type = options[:response_content_type].presence || Rack::Mime.mime_type(File.extname(key.to_s), nil)
       presign_params[:response_content_type] = content_type if content_type.present?
 
-      disposition = options[:response_content_disposition] || options[:disposition]
+      disposition = options[:response_content_disposition]
       presign_params[:response_content_disposition] = disposition if disposition.present?
 
       signer = Aws::S3::Presigner.new(client: @public_client)

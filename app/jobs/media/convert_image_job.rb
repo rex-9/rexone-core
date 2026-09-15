@@ -73,7 +73,7 @@ module Media
       )
       delete_previous_object
     rescue StandardError
-      StorageService::Client.delete(@upload_result[:storage_key], resource_type: "image") if @upload_result&.dig(:storage_key)
+      StorageService::Client.delete(@upload_result[:storage_key], resource_type: "image") if @upload_result.present? && @upload_result[:storage_key].present?
       raise
     end
 

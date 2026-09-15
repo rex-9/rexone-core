@@ -92,7 +92,7 @@ class FeedbackService
         os: params[:os],
         device: params[:device],
         browser: params[:browser],
-        page: params[:page] || params[:screen_name],
+        page: params[:page],
         metadata: params[:metadata] || {}
       )
 

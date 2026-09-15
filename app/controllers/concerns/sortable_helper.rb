@@ -3,8 +3,8 @@
 module SortableHelper
   def sort(scope, columns:, default_column: columns.first, default_direction: SortConstants::Order::DESC)
     sort_params = params.permit(:sort_by, :sort_order)
-    sort_by = sort_params[:sort_by].to_s.presence
-    sort_order = sort_params[:sort_order].to_s.downcase
+    sort_by = (sort_params[:sort_by].presence).to_s.presence
+    sort_order = (sort_params[:sort_order].presence).to_s.downcase
     direction = sort_order == SortConstants::Order::ASC ? :asc : :desc
 
     if sort_by.present? && columns.map(&:to_s).include?(sort_by)
@@ -13,6 +13,10 @@ module SortableHelper
         scope.left_joins(:user).order(
           User.arel_table[:name].public_send(direction),
           User.arel_table[:username].public_send(direction)
+        )
+      when "user_email"
+        scope.left_joins(:user).order(
+          User.arel_table[:email].public_send(direction)
         )
       when "product_name"
         scope.left_joins(:product).order(

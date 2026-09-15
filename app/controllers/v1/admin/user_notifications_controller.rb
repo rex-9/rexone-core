@@ -7,11 +7,10 @@ class V1::Admin::UserNotificationsController < V1::ApplicationController
 
   # GET /v1/admin/user_notifications
   def index
-    is_discarded = params[:discarded].to_s == "true" || params[:view] == "discarded"
-    scope = is_discarded ? UserNotification.with_discarded.discarded : UserNotification.kept
-    scope = scope.includes(:user, :notification)
-
     filters = filter_params
+    discarded = filters[:discarded].to_s == "true"
+    scope = discarded ? UserNotification.with_discarded.discarded : UserNotification.kept
+    scope = scope.includes(:user, :notification)
 
     scope = scope.where(user_id: filters[:user_id]) if filters[:user_id].present?
     scope = scope.for_client(filters[:client]) if filters[:client].present?
@@ -25,13 +24,13 @@ class V1::Admin::UserNotificationsController < V1::ApplicationController
 
     if filters[:search].present?
       q = "%#{filters[:search]}%"
-      scope = scope.joins(:user).where(
-        "user_notifications.title ILIKE :q OR user_notifications.message ILIKE :q OR users.email ILIKE :q OR users.username ILIKE :q",
+      scope = scope.left_joins(:user).where(
+        "user_notifications.title ILIKE :q OR user_notifications.message ILIKE :q OR user_notifications.link ILIKE :q OR users.email ILIKE :q OR users.username ILIKE :q OR users.name ILIKE :q",
         q: q
       )
     end
 
-    default_sort = is_discarded ? :discarded_at : :created_at
+    default_sort = discarded ? :discarded_at : :created_at
     scope = sort(scope, columns: SortConstants::Columns::USER_NOTIFICATION, default_column: default_sort)
 
     limit = filters[:limit].presence || 20
@@ -203,7 +202,7 @@ class V1::Admin::UserNotificationsController < V1::ApplicationController
   end
 
   def filter_params
-    params.permit(:page, :limit, :user_id, :client, :status, :filter, :search, :sort, :order, :view, :discarded)
+    params.permit(:page, :limit, :user_id, :client, :status, :filter, :search, :sort_by, :sort_order, :discarded)
   end
 
   def batch_params
