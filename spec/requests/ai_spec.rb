@@ -74,7 +74,7 @@ RSpec.describe "Queued AI chat", type: :request do
       format: "audio",
       source: "upload",
       url: "https://cdn.example.com/speech.mp3",
-      storage_key: "speech/tts/tts_message_#{assistant_message.id}",
+      storage_key: "dev/user/tts/tts_message_#{assistant_message.id}_of_#{room.user_id}.mp3",
       assetable_type: "Chat::Message",
       assetable_id: assistant_message.id
     )

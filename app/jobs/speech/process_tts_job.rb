@@ -28,8 +28,8 @@ class Speech::ProcessTtsJob < ApplicationJob
     result = SpeechService::Client.text_to_speech(text: message.content)
     raise SpeechService::Error, result[:error] if result[:error].present?
 
-    upload, asset_name = upload_audio!(message, result)
-    asset = persist_asset!(message, upload, asset_name: asset_name)
+    upload = upload_audio!(message, result)
+    asset = persist_asset!(message, upload)
     enqueue_media_processing(asset)
     update_tts!(message, Chat::Message::STATUSES[:completed], tts_error: nil)
     notify_completed(message)
@@ -44,29 +44,29 @@ class Speech::ProcessTtsJob < ApplicationJob
   private
 
   def upload_audio!(message, result)
-    storage_key = AssetConstants::AssetName.tts_for_message(message.id)
+    storage_key = AssetConstants::AssetName.tts_for_message(
+      message.id,
+      user_id: message.room.user_id
+    )
 
-    upload = Tempfile.create([ "tts-#{message.id}", ".mp3" ]) do |file|
+    Tempfile.create([ "tts-#{message.id}", ".mp3" ]) do |file|
       file.binmode
       file.write(result[:bytes])
       file.rewind
 
       StorageService::Client.upload(
-        file,
+        file.path,
         storage_key: storage_key,
-        folder: SpeechConstants::Tts::STORAGE_FOLDER,
         resource_type: AssetConstants::AssetFormat.storage_resource_type(MediaConstants::AUDIO_EXT_MP3),
         overwrite: true
       )
     end
-
-    [ upload, storage_key ]
   end
 
-  def persist_asset!(message, upload, asset_name:)
+  def persist_asset!(message, upload)
     asset = message.tts_asset
     asset.assign_attributes(
-      name: asset_name,
+      name: upload[:storage_key],
       url: upload[:url],
       type: AssetConstants::AssetType::TTS,
       format: AssetConstants::AssetFormat::AUDIO,

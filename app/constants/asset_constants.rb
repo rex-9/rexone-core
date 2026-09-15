@@ -67,6 +67,7 @@ module AssetConstants
 
   module AssetName
     TTS_MESSAGE_PREFIX = "tts_message_".freeze
+    TTS_FOLDER = "tts".freeze
     ADMIN_NAMESPACE = "admin".freeze
     USER_NAMESPACE = "user".freeze
 
@@ -74,8 +75,8 @@ module AssetConstants
       "#{USER_NAMESPACE}/#{user_id}/avatar_google_#{Time.now.to_i}".freeze
     end
 
-    def self.tts_for_message(message_id)
-      "#{ADMIN_NAMESPACE}/#{TTS_MESSAGE_PREFIX}#{message_id}_#{Time.now.to_i}.mp3".freeze
+    def self.tts_for_message(message_id, user_id:)
+      "#{USER_NAMESPACE}/#{TTS_FOLDER}/#{TTS_MESSAGE_PREFIX}#{message_id}_of_#{user_id}.mp3".freeze
     end
 
     def self.for_admin(type:, original_filename:)

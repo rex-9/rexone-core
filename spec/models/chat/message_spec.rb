@@ -69,7 +69,7 @@ RSpec.describe Chat::Message, type: :model do
       format: "audio",
       source: "upload",
       url: "https://cdn.example.com/speech.mp3",
-      storage_key: "speech/tts/tts_message_#{message.id}",
+      storage_key: "dev/user/tts/tts_message_#{message.id}_of_#{message.room.user_id}.mp3",
       assetable_type: "Chat::Message",
       assetable_id: message.id
     )

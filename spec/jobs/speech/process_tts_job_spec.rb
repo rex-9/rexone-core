@@ -3,7 +3,8 @@ require "rails_helper"
 RSpec.describe Speech::ProcessTtsJob, type: :job do
   let(:room) { create(:chat_room) }
   let(:message) { create(:chat_message, room: room, role: "assistant", content: "Hello there") }
-  let(:storage_key) { "speech/tts/#{AssetConstants::AssetName.tts_for_message(message.id)}" }
+  let(:logical_key) { "user/tts/tts_message_#{message.id}_of_#{room.user_id}.mp3" }
+  let(:storage_key) { "dev/#{logical_key}" }
 
   before do
     allow(NotificationService::Center).to receive(:notify)
@@ -12,8 +13,6 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
 
   it "synthesizes, uploads, persists a TTS Asset, queues audio processing, and notifies readiness" do
     stub_const("MediaConstants::MEDIA_CONTAINER_ENABLED", true)
-    asset_name = "admin/tts_message_#{message.id}_1789283588.mp3"
-    allow(AssetConstants::AssetName).to receive(:tts_for_message).with(message.id).and_return(asset_name)
     allow(SpeechService::Client).to receive(:text_to_speech).and_return(
       bytes: "ID3fake",
       content_type: "audio/mpeg",
@@ -32,7 +31,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
     message.reload
     asset = message.tts_asset
     expect(asset).to have_attributes(
-      name: asset_name,
+      name: storage_key,
       url: "https://cdn.example.com/speech.mp3",
       type: "tts",
       format: "audio",
@@ -52,8 +51,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
     expect(StorageService::Client).to have_received(:upload).with(
       anything,
       hash_including(
-        storage_key: asset_name,
-        folder: "speech/tts",
+        storage_key: logical_key,
         resource_type: AssetConstants::AssetFormat.storage_resource_type(MediaConstants::AUDIO_EXT_MP3),
         overwrite: true
       )
@@ -87,7 +85,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
       type: "tts",
       format: "audio",
       source: "upload",
-      name: AssetConstants::AssetName.tts_for_message(message.id),
+      name: storage_key,
       url: "https://cdn.example.com/old.mp3",
       storage_key: storage_key,
       assetable_type: "Chat::Message",
