@@ -41,6 +41,10 @@ RSpec.configure do |config|
           name: 'Admin / Notifications',
           description: 'Admin notification dispatch. Requires the admin role and create_notifications permission.'
         },
+        {
+          name: 'Admin / User Notifications',
+          description: 'Admin user notification management, status filtering, and soft deletion.'
+        },
         { name: 'Admin / Accesses', description: 'Admin entitlement and access management.' },
         { name: 'Admin / IAM Permissions', description: 'Admin IAM permission operations.' },
         { name: 'Admin / IAM Roles', description: 'Admin IAM role operations.' },

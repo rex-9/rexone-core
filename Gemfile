@@ -70,7 +70,7 @@ gem "solid_web_ui", "~> 0.4.0" # Alternatives: mission_control-jobs, solid_obser
 gem "bcrypt", "~> 3.1"
 gem "devise", "~> 5.0"
 gem "devise-jwt", "~> 0.13.0"
-gem "jwt", "~> 3.2"
+gem "jwt", "~> 3.3"
 
 # ============================================================
 # API / Serialization
@@ -95,7 +95,7 @@ gem "rack-attack", "~> 6.8"
 gem "cloudinary", "~> 2.4"
 gem "stripe", "~> 19.6"
 gem "websocket-client-simple", "~> 0.9"
-gem "aws-sdk-s3", "~> 1.231" # need only when STORAGE_PROVIDER=garage
+gem "aws-sdk-s3", "~> 1.232" # need only when STORAGE_PROVIDER=garage
 
 # ============================================================
 # Utilities

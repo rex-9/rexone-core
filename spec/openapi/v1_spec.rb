@@ -31,6 +31,7 @@ RSpec.describe "OpenAPI V1 document" do
       "/v1/speech/tts",
       "/v1/speech/stt",
       "/v1/admin/accesses",
+      "/v1/admin/user_notifications",
       "/v1/admin/feedbacks",
       "/v1/admin/analytics/overview",
       "/v1/admin/assets",

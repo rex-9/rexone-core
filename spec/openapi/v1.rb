@@ -1581,6 +1581,45 @@ module Openapi
           errors: [ 401, 403 ]
         )
       }
+
+      user_notification_filters = %i[status filter search client user_id].map { |name| query_parameter(name) }
+      paths["/v1/admin/user_notifications"] = {
+        get: operation(
+          tags: "Admin / User Notifications",
+          summary: "List and filter user notifications for admins",
+          parameters: user_notification_filters + [
+            query_parameter(:page, type: :integer),
+            query_parameter(:limit, type: :integer),
+            query_parameter(:discarded, type: :boolean),
+            query_parameter(:sort_by, type: :string),
+            query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+          ],
+          errors: [ 401, 403 ]
+        )
+      }
+      paths["/v1/admin/user_notifications/bin"] = {
+        delete: operation(tags: "Admin / User Notifications", summary: "Permanently empty the user notifications recycle bin",
+                          errors: [ 401, 403, 422 ])
+      }
+      %w[discard_batch undiscard_batch destroy_batch].each do |action|
+        paths["/v1/admin/user_notifications/#{action}"] = {
+          post: operation(tags: "Admin / User Notifications", summary: "#{action.humanize} user notifications",
+                          body: ref(:id_batch_request), errors: [ 401, 403, 404, 422 ])
+        }
+      end
+      paths["/v1/admin/user_notifications/{id}"] = {
+        get: operation(tags: "Admin / User Notifications", summary: "Get user notification details",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        delete: operation(tags: "Admin / User Notifications", summary: "Permanently destroy a user notification",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+      %w[discard undiscard].each do |action|
+        paths["/v1/admin/user_notifications/{id}/#{action}"] = {
+          post: operation(tags: "Admin / User Notifications", summary: "#{action.capitalize} a user notification",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+        }
+      end
+
       paths["/v1/admin/analytics/overview"] = {
         get: operation(tags: "Admin / Analytics", summary: "Get admin analytics overview KPIs, time-series data, and breakdowns",
                        parameters: [
