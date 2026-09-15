@@ -7,7 +7,8 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
   # GET /v1/admin/assets
   def index
-    discarded = params[:discarded].to_s == "true"
+    filters = filter_params
+    discarded = filters[:discarded].to_s == "true"
     scope = discarded ? Asset.with_discarded.discarded : Asset.kept
     scope = scope.includes(:thumbnail, :subtitles)
     assets = search_assets(scope)
@@ -17,7 +18,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
     else
       sort(assets, columns: SortConstants::Columns::ASSET)
     end
-    pagy, records = pagy(:offset, assets, limit: params[:limit])
+    pagy, records = pagy(:offset, assets, limit: filters[:limit])
 
     render_json_response(
       status_code: 200,
@@ -45,7 +46,8 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
   # POST /v1/admin/assets/upload
   def create_upload
-    file = params[:file]
+    upload = upload_params
+    file = upload[:file]
 
     if file.blank?
       render_json_response(
@@ -70,10 +72,10 @@ class V1::Admin::AssetsController < V1::ApplicationController
       return
     end
 
-    asset_type = params[:type].presence || AssetConstants::AssetType::GENERAL
-    assetable_type = params[:assetable_type].presence
-    assetable_id = params[:assetable_id].presence
-    duration_secs = params[:duration_secs]
+    asset_type = upload[:type].presence || AssetConstants::AssetType::GENERAL
+    assetable_type = upload[:assetable_type].presence
+    assetable_id = upload[:assetable_id].presence
+    duration_secs = upload[:duration_secs]
 
     begin
       storage_key = AssetConstants::AssetName.for_admin(type: asset_type, original_filename: file.original_filename)
@@ -144,8 +146,9 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
   # PUT /v1/admin/assets/:id
   def update
-    new_type = params.dig(:asset, :type).presence
-    client_name = params.dig(:asset, :name).to_s.strip
+    update_params = admin_asset_params
+    new_type = update_params[:type].presence
+    client_name = update_params[:name].to_s.strip
     old_storage_key = @asset.storage_key
     old_name = @asset.name
     new_storage_key = nil
@@ -161,7 +164,6 @@ class V1::Admin::AssetsController < V1::ApplicationController
       end
     end
 
-    update_params = admin_asset_params
     if new_storage_key.present?
       if client_name.blank? ||
          client_name == old_name ||
@@ -280,7 +282,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
   # POST /v1/admin/assets/discard_batch
   def discard_batch
-    ids = Array(params[:ids]).compact_blank
+    ids = Array(batch_params[:ids]).compact_blank
     if ids.blank?
       render_json_response(
         status_code: 422,
@@ -305,7 +307,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
   # POST /v1/admin/assets/undiscard_batch
   def undiscard_batch
-    ids = Array(params[:ids]).compact_blank
+    ids = Array(batch_params[:ids]).compact_blank
     if ids.blank?
       render_json_response(
         status_code: 422,
@@ -330,7 +332,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
   # POST /v1/admin/assets/destroy_batch
   def destroy_batch
-    ids = Array(params[:ids]).compact_blank
+    ids = Array(batch_params[:ids]).compact_blank
     if ids.blank?
       render_json_response(
         status_code: 422,
@@ -470,7 +472,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def update_thumbnail_upload
-    file = params[:file]
+    file = upload_file_param[:file]
     unless @asset.thumbnail_attachable? && file.present? && file.content_type.to_s.start_with?("image/")
       message = admin_asset_message(MessageService::Admin::Asset::THUMBNAIL_IMAGE_REQUIRED)
       render_json_response(status_code: 422, message: message, error: message)
@@ -513,7 +515,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def update_subtitle_upload
-    file = params[:file]
+    file = upload_file_param[:file]
     unless @asset.subtitle_attachable?
       message = admin_asset_message(MessageService::Admin::Asset::SUBTITLE_PARENT_REQUIRED)
       render_json_response(status_code: 422, message: message, error: message)
@@ -622,7 +624,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def set_active_asset
-    @asset = Asset.kept.find(params[:id])
+    @asset = Asset.kept.find(params.permit(:id)[:id])
   rescue ActiveRecord::RecordNotFound
     render_json_response(
       status_code: 404,
@@ -631,7 +633,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def set_asset_including_discarded
-    @asset = Asset.with_discarded.find(params[:id])
+    @asset = Asset.with_discarded.find(params.permit(:id)[:id])
   rescue ActiveRecord::RecordNotFound
     render_json_response(
       status_code: 404,
@@ -639,12 +641,28 @@ class V1::Admin::AssetsController < V1::ApplicationController
     )
   end
 
+  def upload_params
+    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs)
+  end
+
+  def upload_file_param
+    params.permit(:file)
+  end
+
+  def batch_params
+    params.permit(ids: [])
+  end
+
   def admin_asset_params
     params.require(:asset).permit(:name, :type, :assetable_type, :assetable_id)
   end
 
+  def filter_params
+    params.permit(:search, :type, :format, :source, :status, :record_scope, :discarded, :limit, :page)
+  end
+
   def search_assets(scope)
-    search = params[:search].to_s.strip
+    search = filter_params[:search].to_s.strip
     return scope if search.blank?
 
     pattern = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"
@@ -655,15 +673,16 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def filter_assets(scope)
-    scope = scope.where(type: params[:type]) if params[:type].present?
-    scope = scope.where(format: params[:format]) if params[:format].present?
-    scope = scope.where(source: params[:source]) if params[:source].present?
-    scope = scope.where(status: params[:status]) if params[:status].present?
-    filter_asset_record_scope(scope)
+    filters = filter_params
+    scope = scope.where(type: filters[:type]) if filters[:type].present?
+    scope = scope.where(format: filters[:format]) if filters[:format].present?
+    scope = scope.where(source: filters[:source]) if filters[:source].present?
+    scope = scope.where(status: filters[:status]) if filters[:status].present?
+    filter_asset_record_scope(scope, filters[:record_scope])
   end
 
-  def filter_asset_record_scope(scope)
-    case params[:record_scope].presence
+  def filter_asset_record_scope(scope, record_scope = filter_params[:record_scope])
+    case record_scope.presence
     when AssetConstants::RecordScope::CHILDREN
       scope.where.not(parent_asset_id: nil)
     when AssetConstants::RecordScope::ALL

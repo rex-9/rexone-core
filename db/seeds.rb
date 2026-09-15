@@ -96,6 +96,10 @@ end
 
 puts "✅ #{Notification.count} notifications ready"
 
+puts "🌱 Seeding AI profiles..."
+Ai::ProfileService.create_defaults!
+puts "✅ #{Ai::Profile.count} AI profiles ready"
+
 puts "✅ Seeding complete!"
 
 puts "\n📋 Summary:"
@@ -104,3 +108,4 @@ puts "  - #{Iam::Role.count} roles"
 puts "  - #{Iam::RolePermission.count} role-permission assignments"
 puts "  - #{Iam::UserRole.count} user-role assignments"
 puts "  - #{User.count} users"
+puts "  - #{Ai::Profile.count} AI profiles"

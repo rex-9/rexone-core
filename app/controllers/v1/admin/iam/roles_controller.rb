@@ -6,13 +6,14 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
   # GET /v1/admin/iam/roles
   def index
-    roles = if params[:discarded].to_s == "true"
+    filters = index_params
+    roles = if filters[:discarded].to_s == "true"
       ::Iam::Role.with_discarded.discarded.includes(:permissions)
     else
       ::Iam::Role.kept.includes(:permissions)
     end
     roles = sort(roles, columns: SortConstants::Columns::ROLE)
-    pagy, records = pagy(roles)
+    pagy, records = pagy(roles, limit: filters[:limit])
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USER_ROLES_RETRIEVED),
@@ -32,7 +33,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
   # POST /v1/admin/iam/roles
   def create
-    role = ::Iam::Role.new(role_params)
+    role = ::Iam::Role.new(role_params.except(:permission_ids))
 
     if role.save
       assign_permissions(role) if permission_ids_param_provided?
@@ -53,7 +54,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
   # PATCH/PUT /v1/admin/iam/roles/:id
   def update
-    if @role.update(role_params)
+    if @role.update(role_params.except(:permission_ids))
       permissions_changed = begin
         permission_ids_param_provided? && assign_permissions(@role)
       rescue ActiveRecord::RecordNotDestroyed => error
@@ -131,24 +132,28 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
   private
 
+  def index_params
+    params.permit(:discarded, :limit, :page)
+  end
+
   def set_active_role
-    @role = ::Iam::Role.find(params[:id])
+    @role = ::Iam::Role.find(params.permit(:id)[:id])
   end
 
   def set_role_including_discarded
-    @role = ::Iam::Role.with_discarded.find(params[:id])
+    @role = ::Iam::Role.with_discarded.find(params.permit(:id)[:id])
   end
 
   def role_params
-    params.permit(:name, :description)
+    params.permit(:name, :description, permission_ids: [])
   end
 
   def permission_ids_param
-    params[:permission_ids]
+    role_params[:permission_ids]
   end
 
   def permission_ids_param_provided?
-    params.key?(:permission_ids)
+    role_params.key?(:permission_ids)
   end
 
   def assign_permissions(role)

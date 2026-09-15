@@ -674,6 +674,18 @@ Admin chat tooling provides operational visibility into rooms/messages without t
 
 Capture either the feedback list or client-log view here; show the other later in the telemetry chapter if both deserve screenshots.
 
+## 10.10 AI Control Panel (Profiles & Runs Telemetry)
+
+<!-- SCREENSHOT:AD10 -->
+<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD10 — AI Profiles & Configuration" width="100%">
+
+AI Profile administration enables operational governance over system prompts, temperature, token limits, context windows, model selection, and multi-provider configurations (DeepSeek, Gemini, OpenAI) with fine-grained RBAC permission controls (`ai_profiles:read`, `ai_profiles:create`, `ai_profiles:update`). Includes row-click navigation to detail views and dedicated creation forms.
+
+<!-- SCREENSHOT:AD11 -->
+<img src="./images/walkthrough/_placeholders/wide.svg" alt="AD11 — AI Runs & Execution Telemetry" width="100%">
+
+AI Runs provide end-to-end telemetry and observability into generative execution runs: latency timing, prompt/completion token consumption, input message sizes, error tracing, user/chat associations, and raw request metadata. Interactive row clicks drill directly into panoramic diagnostic inspect views.
+
 ---
 
 # 11. Application versions and upgrades
@@ -1079,6 +1091,8 @@ Use this as the working checklist while building the visual documentation.
 | AD07 | Admin           | Versions/user versions                  | Web full                               |
 | AD08 | Admin           | Chat moderation                         | Web full                               |
 | AD09 | Admin           | Feedback or client logs                 | Web full                               |
+| AD10 | Admin           | AI Profiles & Configuration             | Web full                               |
+| AD11 | Admin           | AI Runs & Telemetry                     | Web full                               |
 | V01  | Versions        | Optional update                         | Mobile                                 |
 | V02  | Versions        | Forced update                           | Mobile                                 |
 | T01  | Analytics       | GA4 cross-platform report               | Optional full                          |

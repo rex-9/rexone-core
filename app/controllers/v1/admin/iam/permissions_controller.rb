@@ -6,12 +6,13 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
 
   # GET /v1/admin/iam/permissions
   def index
-    permissions = if params[:discarded].to_s == "true"
+    filters = index_params
+    permissions = if filters[:discarded].to_s == "true"
       ::Iam::Permission.with_discarded.discarded.order(:resource, :action)
     else
       ::Iam::Permission.order(:resource, :action)
     end
-    pagy, records = pagy(permissions)
+    pagy, records = pagy(permissions, limit: filters[:limit])
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::PERMISSIONS_FETCHED),
@@ -115,12 +116,16 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
 
   private
 
+  def index_params
+    params.permit(:discarded, :limit, :page)
+  end
+
   def set_active_permission
-    @permission = ::Iam::Permission.find(params[:id])
+    @permission = ::Iam::Permission.find(params.permit(:id)[:id])
   end
 
   def set_permission_including_discarded
-    @permission = ::Iam::Permission.with_discarded.find(params[:id])
+    @permission = ::Iam::Permission.with_discarded.find(params.permit(:id)[:id])
   end
 
   def permission_params

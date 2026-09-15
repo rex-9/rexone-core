@@ -28,7 +28,8 @@ RSpec.describe "Admin chat", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("admin.chat.room_updated", locale: :my))
-    expect(response_data).to include("id" => room.id, "title" => "Updated support chat")
+    expect(response_data["id"]).to eq(room.id)
+    expect(response_data.dig("attributes", "title")).to eq("Updated support chat")
   end
 
   it "lists and updates chat messages with localized messages" do
@@ -46,7 +47,8 @@ RSpec.describe "Admin chat", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("admin.chat.message_updated", locale: :my))
-    expect(response_data).to include("id" => message.id, "content" => "Updated message")
+    expect(response_data["id"]).to eq(message.id)
+    expect(response_data.dig("attributes", "content")).to eq("Updated message")
   end
 
   it "discards, restores, and permanently deletes chat records through admin endpoints" do
@@ -106,7 +108,8 @@ RSpec.describe "Admin chat", type: :request do
       grant_admin_chat_permission(:read, "rooms")
       get "/v1/admin/chat/rooms/#{room.id}", headers: headers
       expect(response).to have_http_status(:ok)
-      expect(response_data).to include("id" => room.id, "title" => "Support chat")
+      expect(response_data["id"]).to eq(room.id)
+      expect(response_data.dig("attributes", "title")).to eq("Support chat")
     end
 
     it "returns 404 for non-existent room" do
@@ -121,7 +124,8 @@ RSpec.describe "Admin chat", type: :request do
       grant_admin_chat_permission(:read, "messages")
       get "/v1/admin/chat/messages/#{message.id}", headers: headers
       expect(response).to have_http_status(:ok)
-      expect(response_data).to include("id" => message.id, "content" => "Hello")
+      expect(response_data["id"]).to eq(message.id)
+      expect(response_data.dig("attributes", "content")).to eq("Hello")
     end
 
     it "returns 404 for non-existent message" do

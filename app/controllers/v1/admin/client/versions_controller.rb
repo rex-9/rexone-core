@@ -7,9 +7,10 @@ class V1::Admin::Client::VersionsController < V1::ApplicationController
 
   # GET /v1/admin/client/versions
   def index
-    discarded = params[:discarded].to_s == "true"
+    filters = filter_params
+    discarded = filters[:discarded].to_s == "true"
     versions = discarded ? Client::Version.with_discarded.discarded.with_install_counts : Client::Version.with_install_counts
-    versions = versions.where(status: params[:status]) if params[:status].present?
+    versions = versions.where(status: filters[:status]) if filters[:status].present?
     versions = if discarded
       sort(versions, columns: SortConstants::Columns::VERSION, default_column: :discarded_at)
     else
@@ -108,12 +109,16 @@ class V1::Admin::Client::VersionsController < V1::ApplicationController
 
   private
 
+  def filter_params
+    params.permit(:discarded, :status)
+  end
+
   def set_active_version
-    @version = Client::Version.find(params[:id])
+    @version = Client::Version.find(params.permit(:id)[:id])
   end
 
   def set_version_including_discarded
-    @version = Client::Version.with_discarded.find(params[:id])
+    @version = Client::Version.with_discarded.find(params.permit(:id)[:id])
   end
 
   def version_params

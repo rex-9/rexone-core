@@ -26,7 +26,9 @@ module Chat
     store_accessor :metadata, :tts_status, :tts_error
 
     belongs_to :room, class_name: "Chat::Room"
+    belongs_to :ai_profile, class_name: "Ai::Profile", optional: true
     has_many :assets, as: :assetable, dependent: :nullify
+    has_many :ai_runs, class_name: "Ai::Run", foreign_key: :chat_message_id, dependent: :nullify
 
     validates :role, presence: true, inclusion: { in: [ AiConstants::ChatRole::USER, AiConstants::ChatRole::ASSISTANT ] }
     validates :content, presence: true

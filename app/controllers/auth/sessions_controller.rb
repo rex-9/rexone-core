@@ -10,7 +10,7 @@ class Auth::SessionsController < Devise::SessionsController
 
   # GET /peek?email=user@example.com
   def peek_user
-    email = params[:email].to_s.strip.downcase
+    email = peek_params[:email].to_s.strip.downcase
 
     if email.blank?
       render_json_response(
@@ -37,8 +37,8 @@ class Auth::SessionsController < Devise::SessionsController
 
   # POST /signin
   def create
-    signin_key = params.dig(:user, :signin_key).to_s.strip
-    password = params.dig(:user, :password)
+    signin_key = sign_in_params[:signin_key].to_s.strip
+    password = sign_in_params[:password]
     user = User.with_discarded.find_by(
       "email = :signin_key OR username = :signin_key",
       signin_key: signin_key
@@ -124,15 +124,16 @@ class Auth::SessionsController < Devise::SessionsController
 
   # POST /signin/token
   def token_sign_in
+    token = token_params[:token]
     user = begin
-      Warden::JWTAuth::UserDecoder.new.call(params[:token], :user, nil)
+      Warden::JWTAuth::UserDecoder.new.call(token, :user, nil)
     rescue StandardError => e
       Rails.logger.warn("#{LOG_PREFIX} Token sign in decode failed: #{e.message}")
       nil
     end
 
     if user.nil?
-      discarded_user = User.with_discarded.discarded.find_by(jti: params[:token])
+      discarded_user = User.with_discarded.discarded.find_by(jti: token)
       return if reject_discarded_account!(discarded_user)
     end
 
@@ -162,7 +163,7 @@ class Auth::SessionsController < Devise::SessionsController
 
   # POST /signin/google
   def google_sign_in
-    token = params[:token]
+    token = token_params[:token]
     user_info = GoogleAuthService.fetch_user_info(token)
 
     if !user_info || user_info["email"].blank?
@@ -225,8 +226,8 @@ class Auth::SessionsController < Devise::SessionsController
 
   # POST /signin/google/complete
   def google_sign_in_complete
-    challenge_token = params[:challenge_token]
-    password = params[:password].presence
+    challenge_token = google_complete_params[:challenge_token]
+    password = google_complete_params[:password].presence
 
     if challenge_token.blank? || password.blank?
       render_json_response(
@@ -530,5 +531,21 @@ class Auth::SessionsController < Devise::SessionsController
     CacheService.delete(google_challenge_key(challenge_token))
   rescue => e
     Rails.logger.error("#{LOG_PREFIX} Failed to clear Google challenge: #{e.message}")
+  end
+
+  def sign_in_params
+    params.require(:user).permit(:signin_key, :password)
+  end
+
+  def peek_params
+    params.permit(:email)
+  end
+
+  def token_params
+    params.permit(:token)
+  end
+
+  def google_complete_params
+    params.permit(:challenge_token, :password)
   end
 end

@@ -3,7 +3,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
   # GET /payment/subscriptions?page=1&limit=10
   def index
     subscriptions = current_user.subscriptions.includes(:product).order(SortConstants::Columns::PRODUCT.first => SortConstants::Order::DESC)
-    pagy, records = pagy(:offset, subscriptions, limit: params[:limit])
+    pagy, records = pagy(:offset, subscriptions, limit: index_params[:limit])
 
     render_json_response(
       status_code: 200,
@@ -15,7 +15,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
 
   # GET /payment/subscriptions/:id
   def show
-    subscription = current_user.subscriptions.find(params[:id])
+    subscription = current_user.subscriptions.find(subscription_params[:id])
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::SUBSCRIPTION_FETCHED),
@@ -26,7 +26,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
   # POST /payment/subscriptions/:id/cancel
   # Schedule cancellation at the end of the current billing period.
   def create_cancel
-    subscription = current_user.subscriptions.find(params[:id])
+    subscription = current_user.subscriptions.find(subscription_params[:id])
 
     if subscription.scheduled_for_cancellation?
       render_json_response(
@@ -86,7 +86,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
   # POST /payment/subscriptions/:id/resume
   # Stop a pending end-of-period cancellation.
   def create_resume
-    subscription = current_user.subscriptions.find(params[:id])
+    subscription = current_user.subscriptions.find(subscription_params[:id])
 
     unless subscription.scheduled_for_cancellation?
       render_json_response(
@@ -131,7 +131,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
   # DELETE /payment/subscriptions/:id
   # Hide an already-ended subscription from the normal client listing.
   def destroy
-    subscription = current_user.subscriptions.find(params[:id])
+    subscription = current_user.subscriptions.find(subscription_params[:id])
 
     unless subscription.ended?
       render_json_response(
@@ -152,6 +152,10 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
   end
 
   private
+
+  def index_params
+    params.permit(:limit, :page)
+  end
 
   def payment_message(key, **options)
     MessageService::Payment.t(key, **options)

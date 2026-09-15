@@ -9,7 +9,7 @@ module PlatformSession
 
   def platform_session
     value = request.headers[AuthConstants::Headers::PLATFORM].presence ||
-            params[:platform].presence ||
+            params.permit(:platform)[:platform].presence ||
             AuthConstants::Platform::WEB
 
     case value.to_s.downcase

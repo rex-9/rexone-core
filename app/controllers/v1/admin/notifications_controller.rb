@@ -3,14 +3,16 @@ class V1::Admin::NotificationsController < V1::ApplicationController
   # GET /v1/admin/notifications
   def index
     scope = Notification.kept.order(created_at: :desc)
-    scope = scope.for_category(params[:category]) if params[:category].present?
+    filters = index_params
+    scope = scope.for_category(filters[:category]) if filters[:category].present?
 
-    if params[:search].present?
-      q = "%#{params[:search]}%"
+    if filters[:search].present?
+      q = "%#{filters[:search]}%"
       scope = scope.where("name ILIKE :q OR event ILIKE :q", q: q)
     end
 
-    pagy, records = pagy(:offset, scope, limit: params[:limit] || 20)
+    limit = filters[:limit].presence || 20
+    pagy, records = pagy(:offset, scope, limit: limit)
 
     render_json_response(
       status_code: 200,
@@ -22,7 +24,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
   # GET /v1/admin/notifications/:id
   def show
-    notification = Notification.kept.find(params[:id])
+    notification = Notification.kept.find(params.permit(:id)[:id])
 
     render_json_response(
       status_code: 200,
@@ -50,7 +52,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
   # PUT /v1/admin/notifications/:id
   def update
-    notification = Notification.kept.find(params[:id])
+    notification = Notification.kept.find(params.permit(:id)[:id])
     notification.update!(notification_params)
 
     render_json_response(
@@ -68,7 +70,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
   # DELETE /v1/admin/notifications/:id
   def destroy
-    notification = Notification.kept.find(params[:id])
+    notification = Notification.kept.find(params.permit(:id)[:id])
     notification.discard
 
     render_json_response(
@@ -80,7 +82,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
   # POST /v1/admin/notifications/:id/undiscard
   def undiscard
-    notification = Notification.with_discarded.find(params[:id])
+    notification = Notification.with_discarded.find(params.permit(:id)[:id])
     notification.undiscard
 
     render_json_response(
@@ -97,7 +99,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     job = Notification::DispatchJob.perform_later(
       audience: audience,
       channels: channels,
-      event: params[:event],
+      event: dispatch_params[:event],
       locale: I18n.locale.to_s
     )
 
@@ -122,9 +124,12 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
   private
 
+  def dispatch_params
+    params.permit(:event, channels: [], audience: [:type, user_ids: [], role_ids: []])
+  end
+
   def notification_params
-    payload = params[:notification] || params[:template] || params
-    payload.permit(
+    params.require(:notification).permit(
       :event,
       :name,
       :description,
@@ -147,8 +152,8 @@ class V1::Admin::NotificationsController < V1::ApplicationController
   def audience
     return @audience if defined?(@audience)
 
-    raw_audience = params[:audience]
-    @audience = if raw_audience.is_a?(ActionController::Parameters)
+    raw_audience = dispatch_params[:audience]
+    @audience = if raw_audience.present?
       value = { type: raw_audience[:type] }.compact
       value[:user_ids] = Array(raw_audience[:user_ids]).uniq if value[:type] == NotificationConstants::AudienceType::USERS
       value[:role_ids] = Array(raw_audience[:role_ids]).uniq if value[:type] == NotificationConstants::AudienceType::ROLES
@@ -159,12 +164,12 @@ class V1::Admin::NotificationsController < V1::ApplicationController
   end
 
   def channels
-    @channels ||= params[:channels].is_a?(Array) ? params[:channels].map(&:to_s).uniq : []
+    @channels ||= Array(dispatch_params[:channels]).map(&:to_s).uniq
   end
 
   def request_error
-    return MessageService::Notification::EVENT_REQUIRED if params[:event].blank?
-    return MessageService::Notification::INVALID_EVENT unless valid_event?(params[:event])
+    return MessageService::Notification::EVENT_REQUIRED if dispatch_params[:event].blank?
+    return MessageService::Notification::INVALID_EVENT unless valid_event?(dispatch_params[:event])
     return MessageService::Notification::CHANNEL_REQUIRED if channels.empty?
     return MessageService::Notification::INVALID_CHANNEL if (channels - NotificationService::Center::CHANNELS).any?
     return MessageService::Notification::INVALID_AUDIENCE unless audience[:type].in?(NotificationService::Center::AUDIENCES)
@@ -204,5 +209,9 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
   def notification_message(key, **options)
     MessageService::Notification.t(key, **options)
+  end
+
+  def index_params
+    params.permit(:category, :search, :limit, :page)
   end
 end

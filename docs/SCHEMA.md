@@ -1,7 +1,7 @@
 # Database Schema Documentation (`rexone-core`)
 
 > **Database Engine:** PostgreSQL 18
-> **Schema Version:** `2026_09_05_100002`
+> **Schema Version:** `2026_09_14_103000`
 > **Key Conventions:** UUID v4 Primary Keys (`gen_random_uuid()`), Soft Deletion (`discard` gem), Audit Tracking (`Auditable` concern).
 
 > [!IMPORTANT]
@@ -65,6 +65,10 @@ erDiagram
 
   users ||--o{ chat_rooms : "owns"
   chat_rooms ||--o{ chat_messages : "contains"
+  ai_profiles ||--o{ chat_messages : "controls"
+  ai_profiles ||--o{ ai_runs : "records"
+  users ||--o{ ai_runs : "executes"
+  chat_messages ||--o{ ai_runs : "traces"
 
   users ||--o{ feedbacks : "submits"
   users ||--o{ client_logs : "originates"
@@ -186,7 +190,7 @@ erDiagram
 | `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                      |
 | `name`              | `string`   |    ❌    | —                   | Unique identifier (e.g. `read_users`, `create_payments`)         |
 | `action`            | `string`   |    ❌    | —                   | Enum: `read`, `create`, `update`, `delete`                       |
-| `resource`          | `string`   |    ❌    | —                   | Resource key (e.g. `users`, `roles`, `products`, `assets`, etc.) |
+| `resource`          | `string`   |    ❌    | —                   | Enum of 21 canonical resources (`users`, `accesses`, `assets`, `notifications`, `feedbacks`, `analytics`, `speech`, `ai_profiles`, `ai_runs`, `chat_rooms`, `chat_messages`, `client_logs`, `client_versions`, `client_user_versions`, `iam_roles`, `iam_permissions`, `iam_user_roles`, `payment_products`, `payment_payments`, `payment_subscriptions`, `payment_transactions`) |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                               |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                              |
@@ -493,7 +497,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 ### 6.1. `chat_rooms`
 
 - **Model**: [`Chat::Room`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/room.rb)
-- **Description**: Conversation thread container for user AI interactions.
+- **Description**: Flexible conversation thread container supporting 1-on-1 direct user chats, group chats, AI interactions, or multi-user/multi-AI hybrid rooms without rigid type constraints.
 
 | Column              | Type       | Nullable | Default              | Description / Notes                 |
 | :------------------ | :--------- | :------: | :------------------- | :---------------------------------- |
@@ -528,6 +532,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | :------------------ | :--------- | :------: | :------------------ | :---------------------------------------------------------------------------------- |
 | `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                         |
 | `room_id`           | `uuid`     |    ❌    | —                   | FK to `chat_rooms.id`                                                               |
+| `ai_profile_id`     | `uuid`     |    ✔️    | `NULL`              | Optional FK to `ai_profiles.id` used for provider/model/prompt controls             |
 | `role`              | `string`   |    ❌    | —                   | Role: `user` or `assistant`                                                         |
 | `content`           | `text`     |    ❌    | —                   | Message text content                                                                |
 | `metadata`          | `jsonb`    |    ✔️    | `{}`                | Store accessor: `ai_status`, `model`, `usage`, `temperature`, `tts_status`, `error` |
@@ -544,8 +549,93 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 - `index_chat_messages_on_room_id_and_created_at` (`room_id`, `created_at`)
 - `index_chat_messages_on_room_id` (`room_id`)
+- `index_chat_messages_on_ai_profile_id` (`ai_profile_id`)
 - `index_chat_messages_on_discarded_at` (`discarded_at`)
 - FK to `chat_rooms(id)`.
+- FK to `ai_profiles(id)`.
+
+---
+
+### 6.3. `ai_profiles`
+
+- **Model**: [`Ai::Profile`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/profile.rb)
+- **Description**: Server-controlled AI behavior profiles for chat and utility tasks. Clients request a capability/profile key; provider, model, prompt, limits, and timeout stay in Core.
+
+| Column                 | Type       | Nullable | Default             | Description / Notes                        |
+| :--------------------- | :--------- | :------: | :------------------ | :----------------------------------------- |
+| `id`                   | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                |
+| `key`                  | `string`   |    ❌    | —                   | Stable profile key                         |
+| `name`                 | `string`   |    ❌    | —                   | Admin-readable profile name                |
+| `enabled`              | `boolean`  |    ❌    | `true`              | Profile kill switch                        |
+| `provider`             | `string`   |    ❌    | `"deepseek"`        | AI provider key                            |
+| `model`                | `string`   |    ❌    | —                   | Provider model name                        |
+| `temperature`          | `decimal`  |    ❌    | `0.7`               | Sampling control                           |
+| `max_output_tokens`    | `integer`  |    ❌    | `2000`              | Maximum provider output tokens             |
+| `context_max_tokens`   | `integer`  |    ❌    | `8000`              | Context budget for future context builders |
+| `history_max_messages` | `integer`  |    ❌    | `20`                | Chat history window                        |
+| `timeout_seconds`      | `integer`  |    ❌    | `30`                | Provider HTTP timeout                      |
+| `system_prompt`        | `text`     |    ✔️    | `NULL`              | Server-controlled instruction prompt       |
+| `settings`             | `jsonb`    |    ❌    | `{}`                | Reserved structured controls               |
+| `created_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                          |
+| `updated_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                         |
+| `discarded_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                        |
+| `undiscarded_by_id`    | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                         |
+| `discarded_at`         | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                      |
+| `undiscarded_at`       | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp          |
+| `created_at`           | `datetime` |    ❌    | —                   | Timestamp                                  |
+| `updated_at`           | `datetime` |    ❌    | —                   | Timestamp                                  |
+
+**Indexes & Foreign Keys**:
+
+- `index_ai_profiles_on_key` (`key`, unique)
+- `index_ai_profiles_on_enabled` (`enabled`)
+- `index_ai_profiles_on_discarded_at` (`discarded_at`)
+
+---
+
+### 6.4. `ai_runs`
+
+- **Model**: [`Ai::Run`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/run.rb)
+- **Description**: Lightweight AI execution telemetry for feature, profile, latency, token usage, status, and failures. Full prompts/responses remain in chat messages or request context, not duplicated here.
+
+| Column                 | Type       | Nullable | Default             | Description / Notes                    |
+| :--------------------- | :--------- | :------: | :------------------ | :------------------------------------- |
+| `id`                   | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                            |
+| `ai_profile_id`        | `uuid`     |    ❌    | —                   | FK to `ai_profiles.id`                 |
+| `user_id`              | `uuid`     |    ❌    | —                   | FK to `users.id`                       |
+| `chat_message_id`      | `uuid`     |    ✔️    | `NULL`              | Optional FK to `chat_messages.id`      |
+| `feature`              | `string`   |    ❌    | —                   | AI feature key                         |
+| `provider`             | `string`   |    ❌    | —                   | Provider used                          |
+| `model`                | `string`   |    ❌    | —                   | Provider model used                    |
+| `status`               | `string`   |    ❌    | —                   | `processing`, `completed`, or `failed` |
+| `input_messages_count` | `integer`  |    ✔️    | `NULL`              | Number of submitted messages           |
+| `input_chars`          | `integer`  |    ✔️    | `NULL`              | Input character count                  |
+| `output_chars`         | `integer`  |    ✔️    | `NULL`              | Output character count                 |
+| `prompt_tokens`        | `integer`  |    ✔️    | `NULL`              | Provider prompt token count            |
+| `completion_tokens`    | `integer`  |    ✔️    | `NULL`              | Provider completion token count        |
+| `total_tokens`         | `integer`  |    ✔️    | `NULL`              | Provider total token count             |
+| `latency_ms`           | `integer`  |    ✔️    | `NULL`              | End-to-end provider latency            |
+| `error`                | `text`     |    ✔️    | `NULL`              | Normalized failure message             |
+| `request_metadata`     | `jsonb`    |    ❌    | `{}`                | Lightweight context labels             |
+| `created_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                      |
+| `updated_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                     |
+| `discarded_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                    |
+| `undiscarded_by_id`    | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                     |
+| `discarded_at`         | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                  |
+| `undiscarded_at`       | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp      |
+| `created_at`           | `datetime` |    ❌    | —                   | Timestamp                              |
+| `updated_at`           | `datetime` |    ❌    | —                   | Timestamp                              |
+
+**Indexes & Foreign Keys**:
+
+- `index_ai_runs_on_ai_profile_id` (`ai_profile_id`)
+- `index_ai_runs_on_user_id` (`user_id`)
+- `index_ai_runs_on_chat_message_id` (`chat_message_id`)
+- `index_ai_runs_on_feature` (`feature`)
+- `index_ai_runs_on_status` (`status`)
+- `index_ai_runs_on_created_at` (`created_at`)
+- `index_ai_runs_on_discarded_at` (`discarded_at`)
+- FK to `ai_profiles(id)`, `users(id)`, and `chat_messages(id)`.
 
 ---
 
@@ -875,6 +965,8 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `accesses`               | [`Access`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/access.rb)                               | Access Control |      ✔️       |   ✔️    | —                                    |
 | `chat_rooms`             | [`Chat::Room`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/room.rb)                        | AI / Chat      |      ✔️       |   ✔️    | —                                    |
 | `chat_messages`          | [`Chat::Message`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/message.rb)                  | AI / Chat      |      ✔️       |   ✔️    | `assets` (`assetable`)               |
+| `ai_profiles`            | [`Ai::Profile`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/profile.rb)                      | AI / Chat      |      ✔️       |   ✔️    | —                                    |
+| `ai_runs`                | [`Ai::Run`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/run.rb)                              | AI / Chat      |      ✔️       |   ✔️    | —                                    |
 | `assets`                 | [`Asset`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset.rb)                                 | Media          |      ✔️       |   ✔️    | Belongs to `assetable` (Polymorphic) |
 | `feedbacks`              | [`Feedback`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/feedback.rb)                           | Support        |      ✔️       |   ✔️    | —                                    |
 | `client_logs`            | [`Client::Log`](app/models/client/log.rb)                                                                       | Diagnostics    |      ✔️       |   ✔️    | —                                    |

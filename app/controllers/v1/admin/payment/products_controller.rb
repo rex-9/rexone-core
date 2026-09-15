@@ -34,7 +34,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # POST /v1/admin/payment/products
   def create
-    result = PaymentService::Client.create_product(product_params)
+    result = PaymentService::Client.create_product(product_params.except(:thumbnail_asset_id))
     return render_service_error(MessageService::Payment::PRODUCT_CREATE_FAILED, result[:error]) if result[:error]
 
     product = result[:data]
@@ -54,7 +54,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # PATCH/PUT /v1/admin/payment/products/:id
   def update
-    result = PaymentService::Client.update_product(@product.id, product_params)
+    result = PaymentService::Client.update_product(@product.id, product_params.except(:thumbnail_asset_id))
     return render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, result[:error]) if result[:error]
 
     product = result[:data]
@@ -106,20 +106,18 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
   end
 
   def product_params
-    values = params.require(:product)
-                   .permit(:code, :name, :description, :unit_amount, :currency, :interval, :active)
-                   .to_h
-                   .symbolize_keys
-
-    values
+    params.require(:product)
+          .permit(:code, :name, :description, :unit_amount, :currency, :interval, :active, :thumbnail_asset_id)
+          .to_h
+          .symbolize_keys
   end
 
   def thumbnail_param_provided?
-    params[:product].respond_to?(:key?) && params[:product].key?(:thumbnail_asset_id)
+    product_params.key?(:thumbnail_asset_id)
   end
 
   def assign_thumbnail(product)
-    thumbnail_asset_id = params.dig(:product, :thumbnail_asset_id)
+    thumbnail_asset_id = product_params[:thumbnail_asset_id]
 
     if thumbnail_asset_id.present?
       asset = Asset.find(thumbnail_asset_id)

@@ -4,7 +4,7 @@ class Auth::PasswordsController < Devise::PasswordsController
 
   # POST /password/forgot
   def create
-    email = params[:email].to_s.strip.downcase
+    email = forgot_password_params[:email].to_s.strip.downcase
     user = User.with_discarded.find_by(email: email)
     if user
       return render_discarded_account if user.discarded?
@@ -50,7 +50,7 @@ class Auth::PasswordsController < Devise::PasswordsController
 
   # GET /password/edit?reset_password_token=abcdef
   def edit
-    redirect_to "#{AppConfig::CLIENT_BASE_URL}#{AuthConstants::ClientRoutes::PASSWORD_RESET}?reset_password_token=#{params[:reset_password_token]}", allow_other_host: true
+    redirect_to "#{AppConfig::CLIENT_BASE_URL}#{AuthConstants::ClientRoutes::PASSWORD_RESET}?reset_password_token=#{edit_password_params[:reset_password_token]}", allow_other_host: true
   end
 
   private
@@ -69,5 +69,13 @@ class Auth::PasswordsController < Devise::PasswordsController
 
   def reset_password_params
     params.require(:user).permit(:reset_password_token, :password, :password_confirmation)
+  end
+
+  def forgot_password_params
+    params.permit(:email)
+  end
+
+  def edit_password_params
+    params.permit(:reset_password_token)
   end
 end

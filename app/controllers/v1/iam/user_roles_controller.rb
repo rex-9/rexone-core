@@ -5,9 +5,9 @@ class V1::Iam::UserRolesController < V1::ApplicationController
   # GET /iam/user_roles?user_id=:user_id&page=1&limit=10
   # Returns all roles assigned to a specific user
   def index
-    user = User.find(params[:user_id])
+    user = User.find(index_params[:user_id])
     roles = user.roles
-    pagy, records = pagy(:offset, roles, limit: params[:limit])
+    pagy, records = pagy(:offset, roles, limit: index_params[:limit])
 
     render_json_response(
       status_code: 200,
@@ -20,8 +20,8 @@ class V1::Iam::UserRolesController < V1::ApplicationController
   # POST /iam/user_roles?user_id=:user_id&role_id=:role_id
   # Assigns a role to a user
   def create
-    user = User.find(params[:user_id])
-    role = Iam::Role.find(params[:role_id])
+    user = User.find(user_role_params[:user_id])
+    role = Iam::Role.find(user_role_params[:role_id])
 
     user_role = Iam::UserRole.find_or_initialize_by(user: user, role: role)
     role_changed = user_role.new_record?
@@ -40,8 +40,8 @@ class V1::Iam::UserRolesController < V1::ApplicationController
   # DELETE /iam/user_roles?user_id=:user_id&role_id=:role_id
   # Removes a role from a user
   def destroy
-    user = User.find(params[:user_id])
-    role = Iam::Role.find(params[:role_id])
+    user = User.find(user_role_params[:user_id])
+    role = Iam::Role.find(user_role_params[:role_id])
 
     user_role = Iam::UserRole.find_by(user: user, role: role)
 
@@ -79,6 +79,14 @@ class V1::Iam::UserRolesController < V1::ApplicationController
   end
 
   private
+
+  def index_params
+    params.permit(:user_id, :limit, :page)
+  end
+
+  def user_role_params
+    params.permit(:user_id, :role_id)
+  end
 
   def iam_message(key, **options)
     MessageService::Iam.t(key, **options)

@@ -3,15 +3,17 @@ class V1::NotificationsController < V1::ApplicationController
   # GET /v1/notifications
   def index
     scope = client_notifications.recent
+    filters = index_params
 
-    case params[:filter].to_s.downcase
+    case filters[:filter].to_s.downcase
     when "unread"
       scope = scope.unread
     when "read"
       scope = scope.read_scope
     end
 
-    pagy, records = pagy(:offset, scope, limit: params[:limit] || 20)
+    limit = filters[:limit].presence || 20
+    pagy, records = pagy(:offset, scope, limit: limit)
 
     render_json_response(
       status_code: 200,
@@ -34,7 +36,7 @@ class V1::NotificationsController < V1::ApplicationController
 
   # PUT /v1/notifications/:id/read
   def update_read
-    notification = client_notifications.find(params[:id])
+    notification = client_notifications.find(params.permit(:id)[:id])
     notification.mark_as_read!
 
     render_json_response(
@@ -63,7 +65,7 @@ class V1::NotificationsController < V1::ApplicationController
 
   # DELETE /v1/notifications/:id
   def destroy
-    notification = client_notifications.find(params[:id])
+    notification = client_notifications.find(params.permit(:id)[:id])
     notification.discard
 
     render_json_response(
@@ -87,5 +89,9 @@ class V1::NotificationsController < V1::ApplicationController
 
   def notification_message(key, **options)
     MessageService::Notification.t(key, **options)
+  end
+
+  def index_params
+    params.permit(:filter, :limit, :page)
   end
 end

@@ -30,6 +30,7 @@ RSpec.describe Chat::Room, type: :model do
     expect { room.update_title_from_first_message! }.not_to change(room, :title)
   end
 
+
   it "reports whether AI work is still pending" do
     room = create(:chat_room)
     message = create(:chat_message, room: room, metadata: { status: "processing" })

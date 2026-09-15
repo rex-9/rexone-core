@@ -18,7 +18,7 @@ Built under a simple creed: **clear in thought, exact in structure, simple in us
 
 **API-first · Modular · Observable · Queue-aware · Built to grow**
 
-[Quick Start](docs/QUICK_START.md) · [Explore the foundation](#feature-map) · [Foundation Guide](docs/FOUNDATION.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Visual Walkthrough](./docs/VISUAL_WALKTHRUOGH.md) · [Who it is for](#who-rexone-is-for) · [Development Law](LAW.md) · [Production Deployment](docs/DEPLOYMENT.md)
+[Quick Start](docs/QUICK_START.md) · [Explore the foundation](#feature-map) · [Foundation Guide](docs/FOUNDATION.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Visual Walkthrough](./docs/VISUAL_WALKTHROUGH.md) · [Who it is for](#who-rexone-is-for) · [Development Law](LAW.md) · [Production Deployment](docs/DEPLOYMENT.md)
 
 </div>
 
@@ -30,7 +30,7 @@ Built under a simple creed: **clear in thought, exact in structure, simple in us
 
 >
 
-> **🗺️ Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of Rexone across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHRUOGH.md](./docs/VISUAL_WALKTHRUOGH.md**)\*\*\*\*.
+> **🗺️ Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of Rexone across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**.
 
 >
 
@@ -145,7 +145,7 @@ flowchart LR
     Services --> OneSignal[Push]
     Services --> Brevo[Email]
     Services --> Storage[Garage S3 · Cloudinary]
-    Services --> DeepSeek[DeepSeek]
+    Services --> AI[DeepSeek · Google Gemini]
     Services --> Speech[Nova · Azure Speech]
 
     Jobs --> Services
@@ -153,9 +153,11 @@ flowchart LR
     API --> Observability[Pulse · RED · client logs]
 ```
 
-Provider-facing code lives behind focused clients such as `PaymentService::Client`, `StorageService::Client`, `AiService::Client`, `SpeechService::Client`, and the notification delivery services.
+Provider-facing code lives behind focused clients such as `PaymentService::Client`, `StorageService::Client`, `Ai::Providers::Client`, `SpeechService::Client`, and the notification delivery services.
 
 Swapping or extending a provider does not require spreading vendor logic across controllers.
+
+Chat workflow is handled by `V1::ChatController`, `ChatMessageService`, and `Chat::ProcessMessageJob`, while AI provider execution stays behind swappable provider clients (`Ai::Providers::Client` supporting DeepSeek and Google Gemini via OpenAI-compatible endpoint). AI behavior is controlled by database-backed `Ai::Profile` records and lightweight `Ai::Run` telemetry exposed through `V1::Admin::AiController`, so prompts, models, output limits, timeouts, and run health stay server-owned instead of being hardcoded in clients. For full details on provider architecture and setup, see [AI Manual](docs/AI_MANUAL.md).
 
 The same principle applies to product-specific functionality: the foundation provides the structure, while the product remains free to define its own domain, workflows, and experience.
 
@@ -169,6 +171,7 @@ The foundation currently queues work where it benefits from durability, isolatio
 | -------------------------------- | --------------- | ---------------------------------------------------------------------------- |
 | Stripe webhook processing        | `payments`      | Durable ingestion, idempotency, retries, and concurrency safety              |
 | Socket, push, and email delivery | `notifications` | Provider latency must not delay the originating request                      |
+| AI chat completion               | `ai`            | Durable processing, profile-controlled prompts/models, and run telemetry     |
 | Media processing                 | `media`         | Isolated compression, conversion, thumbnail, and remote-image ingestion work |
 
 Production workers are separated by workload in [`config/queue.yml`](config/queue.yml), and recurring maintenance lives in [`config/recurring.yml`](config/recurring.yml).
@@ -192,6 +195,8 @@ Operational dashboards are mounted in the application and protected by admin aut
 | Path                          | Purpose                             |
 | ----------------------------- | ----------------------------------- |
 | `/admin`                      | Administrate resource management    |
+| `/admin/ai/profiles`          | AI profile configurations           |
+| `/admin/ai/runs`              | AI telemetry & run diagnostics      |
 | `/admin/client/versions`      | App versions (super-admin only)     |
 | `/admin/client/user_versions` | User version snapshots (index/show) |
 | `/admin/pulse`                | Request, query, and job performance |
@@ -244,7 +249,9 @@ The API is broader than a starter CRUD demo. Its main route families are:
 | Entitlements     | `/v1/access/*`                                                                                                                                                      |
 | Media            | `/v1/assets/upload`, `/v1/assets`, `/v1/assets/:id/playback`                                                                                                        |
 | Notifications    | `/v1/admin/notifications`                                                                                                                                           |
-| AI               | `/v1/ai/*`                                                                                                                                                          |
+| Chat             | `/v1/chat/rooms`, `/v1/chat/messages`, `/v1/chat/messages/destroy_all` (RESTful CRUD + message purge)                              |
+| Admin Chat       | `/v1/admin/chat/rooms`, `/v1/admin/chat/messages` (moderation CRUD: discard, undiscard, destroy)                                   |
+| Admin AI         | `/v1/admin/ai/profiles` (index, show, create, update with provider & model filters), `/v1/admin/ai/runs` (execution audit log & diagnostics with sorting/filters) |
 | Speech           | `/v1/speech/*`, `SpeechLiveChannel` (WS)                                                                                                                            |
 | Client telemetry | `/v1/client/logs`                                                                                                                                                   |
 | App versions     | `/v1/client/versions/current`, `/v1/client/versions/user-version`, `/v1/admin/client/versions`, `/v1/admin/client/versions/user_versions`, `/admin/client/versions` |

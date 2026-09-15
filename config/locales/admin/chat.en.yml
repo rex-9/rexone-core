@@ -11,3 +11,4 @@ en:
       message_updated: "Chat message updated successfully."
       message_update_failed: "Failed to update chat message."
       message_deleted: "Chat message deleted successfully."
+      not_found: "Chat record not found."

@@ -1,21 +1,23 @@
+# frozen_string_literal: true
+
+# app/controllers/v1/admin/chat/messages_controller.rb
 class V1::Admin::Chat::MessagesController < V1::ApplicationController
-  before_action :set_active_message, only: %i[show update discard]
-  before_action :set_message_including_discarded, only: %i[undiscard destroy]
+  before_action :set_active_message, only: %i[show update discard destroy]
+  before_action :set_message_including_discarded, only: %i[undiscard]
+
+  def permission_resource_name
+    IamConstants::Resource::CHAT_MESSAGES
+  end
 
   # GET /v1/admin/chat/messages
   def index
-    messages = if params[:discarded].to_s == "true"
-      ::Chat::Message.with_discarded.discarded.includes(:room)
-    else
-      ::Chat::Message.kept.includes(:room)
-    end
-    messages = sort(messages, columns: SortConstants::Columns::CHAT_MSG)
-    pagy, records = pagy(messages)
+    messages = Chat::MessageService.admin_list(params)
+    pagy, records = pagy(:offset, messages, limit: params[:limit])
 
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGES_RETRIEVED),
-      data: ::Chat::MessageSerializer.paginated(records, pagy),
+      data: Chat::MessageSerializer.paginated(records, pagy),
       pagy: pagy
     )
   end
@@ -25,7 +27,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_RETRIEVED),
-      data: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
+      data: Chat::MessageSerializer.new(@message).serializable_hash[:data]
     )
   end
 
@@ -35,7 +37,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_UPDATED),
-        data: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
+        data: Chat::MessageSerializer.new(@message).serializable_hash[:data]
       )
     else
       render_json_response(
@@ -48,7 +50,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
 
   # POST /v1/admin/chat/messages/:id/discard
   def discard
-    @message.discard!
+    Chat::MessageService.discard!(@message)
 
     render_json_response(
       status_code: 200,
@@ -58,18 +60,18 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
 
   # POST /v1/admin/chat/messages/:id/undiscard
   def undiscard
-    @message.undiscard!
+    Chat::MessageService.undiscard!(@message)
 
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_UPDATED),
-      data: ::Chat::MessageSerializer.new(@message).serializable_hash[:data][:attributes]
+      data: Chat::MessageSerializer.new(@message).serializable_hash[:data]
     )
   end
 
   # DELETE /v1/admin/chat/messages/:id
   def destroy
-    @message.destroy
+    Chat::MessageService.destroy!(@message)
 
     render_json_response(
       status_code: 200,
@@ -80,15 +82,30 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
   private
 
   def set_active_message
-    @message = ::Chat::Message.find(params[:id])
+    @message = Chat::MessageService.find(params[:id], with_discarded: false)
+  rescue ActiveRecord::RecordNotFound
+    render_json_response(
+      status_code: 404,
+      message: admin_chat_message(MessageService::Admin::Chat::NOT_FOUND),
+      error: admin_chat_message(MessageService::Admin::Chat::NOT_FOUND)
+    )
   end
 
   def set_message_including_discarded
-    @message = ::Chat::Message.with_discarded.find(params[:id])
+    @message = Chat::MessageService.find(params[:id], with_discarded: true)
+  rescue ActiveRecord::RecordNotFound
+    render_json_response(
+      status_code: 404,
+      message: admin_chat_message(MessageService::Admin::Chat::NOT_FOUND),
+      error: admin_chat_message(MessageService::Admin::Chat::NOT_FOUND)
+    )
   end
 
   def message_params
-    params.require(:message).permit(:role, :content)
+    permitted = params.require(:message).permit(:content, :role)
+    valid_roles = AiConstants::ChatRole.constants.map { |c| AiConstants::ChatRole.const_get(c) }
+    permitted.delete(:role) unless permitted[:role].in?(valid_roles)
+    permitted
   end
 
   def admin_chat_message(key, **options)

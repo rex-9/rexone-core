@@ -22,7 +22,7 @@ class ApplicationController < ActionController::API
 
   def requested_locale
     candidates = [
-      params[:locale],
+      params.permit(:locale)[:locale],
       request.headers[AuthConstants::Headers::LOCALE],
       *request.headers[AuthConstants::Headers::ACCEPT_LANGUAGE].to_s.split(",")
     ]

@@ -110,7 +110,7 @@ RSpec.describe "Admin IAM permissions", type: :request do
   end
 
   it "returns all permissions as a single page with pagy metadata when no params are provided" do
-    [ "users", "roles", "notifications" ].each do |res|
+    [ "users", IamConstants::Resource::IAM_ROLES, "notifications" ].each do |res|
       create(:permission, action: "read", resource: res)
     end
 

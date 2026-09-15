@@ -52,6 +52,11 @@ module AppConfig
   DEEPSEEK_BASE_URL = env_or.call("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
   DEEPSEEK_MODEL = env_or.call("DEEPSEEK_MODEL", "deepseek-v4-flash")
 
+  # Gemini Keys
+  GEMINI_API_KEY = env_or.call("GEMINI_API_KEY", "")
+  GEMINI_BASE_URL = env_or.call("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
+  GEMINI_MODEL = env_or.call("GEMINI_MODEL", "gemini-2.5-flash")
+
   # Speech
   SPEECH_SERVICE_BASE_URL = env_or.call("SPEECH_SERVICE_BASE_URL", "")
   SPEECH_TTS_ENDPOINT_PATH = env_or.call("SPEECH_TTS_ENDPOINT_PATH", "/ssml-to-speech")
