@@ -3,14 +3,15 @@
 class V1::Admin::FeedbacksController < V1::ApplicationController
   # GET /v1/admin/feedbacks
   def index
-    feedbacks = Feedback.by_status(params[:status])
-                        .by_category(params[:category])
-                        .by_priority(params[:priority])
-                        .by_platform(params[:platform])
-                        .by_user(params[:user_id])
+    filters = filter_params
+    feedbacks = Feedback.by_status(filters[:status])
+                        .by_category(filters[:category])
+                        .by_priority(filters[:priority])
+                        .by_platform(filters[:platform])
+                        .by_user(filters[:user_id])
 
     feedbacks = sort(feedbacks, columns: SortConstants::Columns::FEEDBACK)
-    pagy, records = pagy(feedbacks)
+    pagy, records = pagy(feedbacks, limit: filters[:limit])
 
     render_json_response(
       status_code: 200,
@@ -22,7 +23,7 @@ class V1::Admin::FeedbacksController < V1::ApplicationController
 
   # GET /v1/admin/feedbacks/:id
   def show
-    feedback = Feedback.find(params[:id])
+    feedback = Feedback.find(params.permit(:id)[:id])
 
     render_json_response(
       status_code: 200,
@@ -39,7 +40,7 @@ class V1::Admin::FeedbacksController < V1::ApplicationController
 
   # PUT/PATCH /v1/admin/feedbacks/:id
   def update
-    feedback = Feedback.find(params[:id])
+    feedback = Feedback.find(params.permit(:id)[:id])
 
     if feedback.update(admin_feedback_params)
       render_json_response(
@@ -64,7 +65,7 @@ class V1::Admin::FeedbacksController < V1::ApplicationController
 
   # DELETE /v1/admin/feedbacks/:id
   def destroy
-    feedback = Feedback.find(params[:id])
+    feedback = Feedback.find(params.permit(:id)[:id])
     feedback.destroy!
 
     render_json_response(
@@ -80,6 +81,10 @@ class V1::Admin::FeedbacksController < V1::ApplicationController
   end
 
   private
+
+  def filter_params
+    params.permit(:status, :category, :priority, :platform, :user_id, :limit, :page)
+  end
 
   def admin_feedback_params
     params.require(:feedback).permit(

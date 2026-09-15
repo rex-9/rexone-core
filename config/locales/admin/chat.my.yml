@@ -11,3 +11,4 @@ my:
       message_updated: "မက်ဆေ့ခ်ျ ပြင်ဆင်ပြီးပါပြီ။"
       message_update_failed: "မက်ဆေ့ခ်ျ ပြင်၍ မရပါ။"
       message_deleted: "မက်ဆေ့ခ်ျ ဖျက်ပြီးပါပြီ။"
+      not_found: "ချက်တ် အချက်အလက် ရှာမတွေ့ပါ။"

@@ -528,17 +528,64 @@ module Openapi
         required: [ :message ],
         message: { type: :string, minLength: 1 },
         room_id: UUID.merge(description: "Existing owned room UUID. Omit to use or create the current room."),
-        system_prompt: { type: :string, nullable: true, description: "Optional instruction prepended to this request." },
-        temperature: { type: :number, format: :float, default: 0.7, minimum: 0 },
-        max_tokens: { type: :integer, default: 2000, minimum: 1 }
+        profile_key: {
+          type: :string,
+          nullable: true,
+          enum: AiConstants::ProfileKey::ALL,
+          default: AiConstants::ProfileKey::CHAT_DEFAULT,
+          description: "Server-controlled AI profile. Raw provider parameters are not accepted from clients."
+        }
       ),
       ai_rename_request: object(
         required: [ :title ],
         title: { type: :string, minLength: 1 },
         room_id: UUID.merge(description: "Owned room UUID. Omit to use the current room.")
       ),
+      ai_room_update_request: object(
+        required: [ :title ],
+        title: { type: :string, minLength: 1 }
+      ),
+      ai_message_update_request: object(
+        required: [ :content ],
+        content: { type: :string, minLength: 1 }
+      ),
       ai_room_request: object(
         title: { type: :string, minLength: 1, description: "Omit to use the translated default room title." }
+      ),
+      ai_profile_create_request: object(
+        required: [ :profile ],
+        profile: object(
+          required: %i[key name model],
+          key: { type: :string, minLength: 1 },
+          name: { type: :string, minLength: 1 },
+          provider: { type: :string, enum: %w[deepseek gemini openai] },
+          enabled: { type: :boolean },
+          model: { type: :string, minLength: 1 },
+          temperature: { type: :number, format: :float, minimum: 0, maximum: 2 },
+          max_output_tokens: { type: :integer, minimum: 1 },
+          context_max_tokens: { type: :integer, minimum: 1 },
+          history_max_messages: { type: :integer, minimum: 1 },
+          timeout_seconds: { type: :integer, minimum: 1 },
+          system_prompt: { type: :string, nullable: true },
+          settings: { type: :object, additionalProperties: true }
+        )
+      ),
+      ai_profile_update_request: object(
+        required: [ :profile ],
+        profile: object(
+          key: { type: :string, minLength: 1 },
+          provider: { type: :string, enum: %w[deepseek gemini openai] },
+          name: { type: :string, minLength: 1 },
+          enabled: { type: :boolean },
+          model: { type: :string, minLength: 1 },
+          temperature: { type: :number, format: :float, minimum: 0, maximum: 2 },
+          max_output_tokens: { type: :integer, minimum: 1 },
+          context_max_tokens: { type: :integer, minimum: 1 },
+          history_max_messages: { type: :integer, minimum: 1 },
+          timeout_seconds: { type: :integer, minimum: 1 },
+          system_prompt: { type: :string, nullable: true },
+          settings: { type: :object, additionalProperties: true }
+        )
       ),
       ai_text_request: object(
         required: [ :text ],
@@ -556,7 +603,7 @@ module Openapi
       ai_analyze_request: object(
         required: [ :text ],
         text: { type: :string, minLength: 1 },
-        type: { type: :string, enum: %w[sentiment entities keywords], default: "sentiment" }
+        type: { type: :string, enum: AiConstants::AnalysisType::ALL, default: AiConstants::AnalysisType::SENTIMENT }
       ),
       speech_tts_request: object(
         text: {
@@ -1204,6 +1251,7 @@ module Openapi
       paths["/v1/admin/users"] = {
         get: operation(tags: "Admin / Users", summary: "List users for the admin client",
                        parameters: [
+                         query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer, minimum: 1),
                          query_parameter(:search, type: :string),
                          query_parameter(:sort_by, type: :string),
@@ -1229,6 +1277,7 @@ module Openapi
       paths["/v1/admin/iam/roles"] = {
         get: operation(tags: "Admin / IAM Roles", summary: "List roles for the admin client",
                        parameters: [
+                         query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer, minimum: 1),
                          query_parameter(:sort_by, type: :string),
                          query_parameter(:sort_order, enum: SortConstants::Order::ALL),
@@ -1279,7 +1328,10 @@ module Openapi
       paths["/v1/admin/chat/rooms"] = {
         get: operation(tags: "Admin / Chat Rooms", summary: "List chat rooms for the admin client",
                        parameters: [
+                         query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:user_id, type: :string, format: :uuid),
+                         query_parameter(:discarded, type: :boolean),
                          query_parameter(:sort_by, type: :string),
                          query_parameter(:sort_order, enum: SortConstants::Order::ALL)
                        ], errors: [ 401, 403 ])
@@ -1296,7 +1348,12 @@ module Openapi
       paths["/v1/admin/chat/messages"] = {
         get: operation(tags: "Admin / Chat Messages", summary: "List chat messages for the admin client",
                        parameters: [
+                         query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:room_id, type: :string, format: :uuid),
+                         query_parameter(:user_id, type: :string, format: :uuid),
+                         query_parameter(:role, type: :string),
+                         query_parameter(:discarded, type: :boolean),
                          query_parameter(:sort_by, type: :string),
                          query_parameter(:sort_order, enum: SortConstants::Order::ALL)
                        ], errors: [ 401, 403 ])
@@ -1321,7 +1378,9 @@ module Openapi
       paths["/v1/admin/payment/products"] = {
         get: operation(tags: "Admin / Payment Products", summary: "List Stripe-backed products for the admin client",
                        parameters: [
+                         query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:discarded, type: :boolean),
                          query_parameter(:sort_by, type: :string),
                          query_parameter(:sort_order, enum: SortConstants::Order::ALL)
                        ], errors: [ 401, 403 ]),
@@ -1347,6 +1406,7 @@ module Openapi
         get: operation(
           tags: "Admin / Accesses", summary: "List and filter user entitlements",
           parameters: [
+            query_parameter(:page, type: :integer),
             query_parameter(:limit, type: :integer, minimum: 1),
             query_parameter(:status, enum: AccessConstants::AccessStatus::ALL + [ "expiring_soon" ]),
             query_parameter(:product_id, type: :string),
@@ -1401,6 +1461,7 @@ module Openapi
       paths["/v1/client/logs"] = {
         get: operation(tags: "Client Logs", summary: "List and filter client error reports",
                        parameters: log_filters + [
+                         query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer, minimum: 1),
                          query_parameter(:sort_by, type: :string),
                          query_parameter(:sort_order, enum: SortConstants::Order::ALL)
@@ -1784,41 +1845,99 @@ module Openapi
 
       room_parameter = query_parameter(:room_id, required: false, format: :uuid,
                                        description: "Uses or creates the current room when omitted")
-      paths["/v1/ai/chat"] = {
-        post: operation(tags: "AI", summary: "Persist and queue a message for an AI room",
+      paths["/v1/chat/messages"] = {
+        get: operation(tags: "Chat", summary: "Get room message history",
+                       parameters: [
+                         room_parameter,
+                         query_parameter(:page, type: :integer),
+                         query_parameter(:limit, type: :integer)
+                       ], errors: [ 401, 404 ]),
+        post: operation(tags: "Chat", summary: "Persist and queue a message for a chat room",
                         body: ref(:ai_chat_request), errors: [ 401, 422, 500, 503 ],
                         success_schema: ref(:ai_chat_response))
       }
-      paths["/v1/ai/history"] = {
-        get: operation(tags: "AI", summary: "Get room message history", parameters: [ room_parameter ], errors: [ 401, 404 ])
+      paths["/v1/chat/messages/destroy_all"] = {
+        delete: operation(tags: "Chat", summary: "Clear a room's messages", parameters: [ room_parameter ], errors: [ 401, 404 ])
       }
-      paths["/v1/ai/clear"] = {
-        delete: operation(tags: "AI", summary: "Clear a room's messages", parameters: [ room_parameter ], errors: [ 401, 404 ])
-      }
-      paths["/v1/ai/rename"] = {
-        put: operation(tags: "AI", summary: "Rename a room",
-                       body: ref(:ai_rename_request),
-                       errors: [ 401, 404, 422 ])
-      }
-      paths["/v1/ai/rooms"] = {
-        get: operation(tags: "AI", summary: "List AI rooms", errors: [ 401 ]),
-        post: operation(tags: "AI", summary: "Create an AI room", success: 201,
-                        body: ref(:ai_room_request), errors: [ 401, 422 ])
-      }
-      paths["/v1/ai/rooms/{id}"] = {
-        delete: operation(tags: "AI", summary: "Delete an AI room",
+      paths["/v1/chat/messages/{id}"] = {
+        get: operation(tags: "Chat", summary: "Get a chat message",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 404 ]),
+        put: operation(tags: "Chat", summary: "Update a chat message",
+                       parameters: [ path_parameter(:id) ], body: ref(:ai_message_update_request),
+                       errors: [ 401, 404, 422 ]),
+        delete: operation(tags: "Chat", summary: "Delete a chat message",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 404 ])
       }
-      {
-        summarize: ref(:ai_text_request),
-        translate: ref(:ai_translate_request),
-        analyze: ref(:ai_analyze_request)
-      }.each do |action, body|
-        paths["/v1/ai/#{action}"] = {
-          post: operation(tags: "AI", summary: "#{action.to_s.capitalize} text", body: body,
-                          errors: [ 401, 422, 500 ])
-        }
-      end
+      paths["/v1/chat/rooms"] = {
+        get: operation(tags: "Chat", summary: "List chat rooms",
+                       parameters: [
+                         query_parameter(:page, type: :integer),
+                         query_parameter(:limit, type: :integer)
+                       ], errors: [ 401 ]),
+        post: operation(tags: "Chat", summary: "Create a chat room", success: 201,
+                        body: ref(:ai_room_request), errors: [ 401, 422 ])
+      }
+      paths["/v1/chat/rooms/{id}"] = {
+        get: operation(tags: "Chat", summary: "Get a chat room",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 404 ]),
+        put: operation(tags: "Chat", summary: "Update a chat room",
+                       parameters: [ path_parameter(:id) ], body: ref(:ai_room_update_request),
+                       errors: [ 401, 404, 422 ]),
+        delete: operation(tags: "Chat", summary: "Delete a chat room",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 404 ])
+      }
+
+      paths["/v1/admin/ai/profiles"] = {
+        get: operation(
+          tags: "Admin / AI",
+          summary: "List AI profiles",
+          parameters: [
+            query_parameter(:search, type: :string),
+            query_parameter(:provider, enum: %w[deepseek gemini openai]),
+            query_parameter(:model, type: :string),
+            query_parameter(:status, type: :string),
+            query_parameter(:enabled, type: :boolean),
+            query_parameter(:page, type: :integer),
+            query_parameter(:limit, type: :integer),
+            query_parameter(:sort_by, type: :string),
+            query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+          ],
+          errors: [ 401, 403 ]
+        ),
+        post: operation(tags: "Admin / AI", summary: "Create an AI profile",
+                        body: ref(:ai_profile_create_request), success: 201, errors: [ 401, 403, 422 ])
+      }
+      paths["/v1/admin/ai/profiles/{id}"] = {
+        get: operation(tags: "Admin / AI", summary: "Get an AI profile",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        put: operation(tags: "Admin / AI", summary: "Update an AI profile",
+                       parameters: [ path_parameter(:id) ], body: ref(:ai_profile_update_request),
+                       errors: [ 401, 403, 404, 422 ])
+      }
+      paths["/v1/admin/ai/runs"] = {
+        get: operation(
+          tags: "Admin / AI",
+          summary: "List AI runs",
+          parameters: [
+            query_parameter(:feature, type: :string),
+            query_parameter(:status, type: :string),
+            query_parameter(:provider, enum: %w[deepseek gemini openai]),
+            query_parameter(:model, type: :string),
+            query_parameter(:profile_id, type: :string),
+            query_parameter(:user_id, type: :string),
+            query_parameter(:search, type: :string),
+            query_parameter(:page, type: :integer),
+            query_parameter(:limit, type: :integer),
+            query_parameter(:sort_by, type: :string),
+            query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+          ],
+          errors: [ 401, 403 ]
+        )
+      }
+      paths["/v1/admin/ai/runs/{id}"] = {
+        get: operation(tags: "Admin / AI", summary: "Get an AI run",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
 
       paths["/v1/speech/tts"] = {
         post: operation(

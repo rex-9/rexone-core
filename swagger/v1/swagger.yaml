@@ -45,6 +45,10 @@ tags:
     description: Super-admin only version CRUD with discard and restore.
   - name: Admin / User Versions
     description: Super-admin only current user version snapshots.
+  - name: Admin / AI
+    description:
+      Admin AI profile configuration, dynamic model routing, and execution
+      run telemetry.
   - name: IAM Permissions
     description: Super-admin permission management.
   - name: IAM Roles
@@ -63,6 +67,8 @@ tags:
     description: Asset records and management.
   - name: Media
     description: Synchronous multipart asset upload.
+  - name: Chat
+    description: User chat rooms and real-time LLM-assisted conversation messages.
   - name: AI
     description: Durable queued chat plus synchronous text utilities.
   - name: Speech
@@ -280,23 +286,26 @@ components:
           type: string
           enum:
             - users
-            - roles
-            - user_roles
-            - permissions
-            - products
-            - payments
-            - subscriptions
-            - transactions
             - accesses
             - assets
             - notifications
-            - ai
-            - speech
-            - logs
             - feedbacks
             - analytics
-            - versions
-            - user_versions
+            - speech
+            - ai_profiles
+            - ai_runs
+            - chat_rooms
+            - chat_messages
+            - client_logs
+            - client_versions
+            - client_user_versions
+            - iam_roles
+            - iam_permissions
+            - iam_user_roles
+            - payment_products
+            - payment_payments
+            - payment_subscriptions
+            - payment_transactions
           example: users
       required: []
     admin_user_request:
@@ -1046,19 +1055,18 @@ components:
           description:
             Existing owned room UUID. Omit to use or create the current
             room.
-        system_prompt:
+        profile_key:
           type: string
           nullable: true
-          description: Optional instruction prepended to this request.
-        temperature:
-          type: number
-          format: float
-          default: 0.7
-          minimum: 0
-        max_tokens:
-          type: integer
-          default: 2000
-          minimum: 1
+          enum:
+            - chat_default
+            - summarize
+            - translate
+            - analyze
+          default: chat_default
+          description:
+            Server-controlled AI profile. Raw provider parameters are not
+            accepted from clients.
       required:
         - message
     ai_rename_request:
@@ -1073,6 +1081,22 @@ components:
           description: Owned room UUID. Omit to use the current room.
       required:
         - title
+    ai_room_update_request:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+      required:
+        - title
+    ai_message_update_request:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+      required:
+        - content
     ai_room_request:
       type: object
       properties:
@@ -1081,6 +1105,107 @@ components:
           minLength: 1
           description: Omit to use the translated default room title.
       required: []
+    ai_profile_create_request:
+      type: object
+      properties:
+        profile:
+          type: object
+          properties:
+            key:
+              type: string
+              minLength: 1
+            name:
+              type: string
+              minLength: 1
+            provider:
+              type: string
+              enum:
+                - deepseek
+                - gemini
+                - openai
+            enabled:
+              type: boolean
+            model:
+              type: string
+              minLength: 1
+            temperature:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 2
+            max_output_tokens:
+              type: integer
+              minimum: 1
+            context_max_tokens:
+              type: integer
+              minimum: 1
+            history_max_messages:
+              type: integer
+              minimum: 1
+            timeout_seconds:
+              type: integer
+              minimum: 1
+            system_prompt:
+              type: string
+              nullable: true
+            settings:
+              type: object
+              additionalProperties: true
+          required:
+            - key
+            - name
+            - model
+      required:
+        - profile
+    ai_profile_update_request:
+      type: object
+      properties:
+        profile:
+          type: object
+          properties:
+            key:
+              type: string
+              minLength: 1
+            provider:
+              type: string
+              enum:
+                - deepseek
+                - gemini
+                - openai
+            name:
+              type: string
+              minLength: 1
+            enabled:
+              type: boolean
+            model:
+              type: string
+              minLength: 1
+            temperature:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 2
+            max_output_tokens:
+              type: integer
+              minimum: 1
+            context_max_tokens:
+              type: integer
+              minimum: 1
+            history_max_messages:
+              type: integer
+              minimum: 1
+            timeout_seconds:
+              type: integer
+              minimum: 1
+            system_prompt:
+              type: string
+              nullable: true
+            settings:
+              type: object
+              additionalProperties: true
+          required: []
+      required:
+        - profile
     ai_text_request:
       type: object
       properties:
@@ -3828,6 +3953,11 @@ paths:
               - web
               - mobile
             default: web
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
         - name: limit
           in: query
           required: false
@@ -4227,6 +4357,11 @@ paths:
               - web
               - mobile
             default: web
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
         - name: limit
           in: query
           required: false
@@ -5132,12 +5267,28 @@ paths:
               - web
               - mobile
             default: web
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
         - name: limit
           in: query
           required: false
           schema:
             type: integer
             minimum: 1
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: discarded
+          in: query
+          required: false
+          schema:
+            type: boolean
         - name: sort_by
           in: query
           required: false
@@ -5389,12 +5540,39 @@ paths:
               - web
               - mobile
             default: web
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
         - name: limit
           in: query
           required: false
           schema:
             type: integer
             minimum: 1
+        - name: room_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: role
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: discarded
+          in: query
+          required: false
+          schema:
+            type: boolean
         - name: sort_by
           in: query
           required: false
@@ -5910,12 +6088,22 @@ paths:
               - web
               - mobile
             default: web
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
         - name: limit
           in: query
           required: false
           schema:
             type: integer
             minimum: 1
+        - name: discarded
+          in: query
+          required: false
+          schema:
+            type: boolean
         - name: sort_by
           in: query
           required: false
@@ -6299,6 +6487,11 @@ paths:
               - web
               - mobile
             default: web
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
         - name: limit
           in: query
           required: false
@@ -6993,6 +7186,11 @@ paths:
           required: false
           schema:
             type: boolean
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
         - name: limit
           in: query
           required: false
@@ -11449,11 +11647,75 @@ paths:
                 "$ref": "#/components/schemas/error_response"
       security:
         - bearerAuth: []
-  "/v1/ai/chat":
+  "/v1/chat/messages":
+    get:
+      tags:
+        - Chat
+      summary: Get room message history
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: room_id
+          in: query
+          required: false
+          description: Uses or creates the current room when omitted
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
     post:
       tags:
-        - AI
-      summary: Persist and queue a message for an AI room
+        - Chat
+      summary: Persist and queue a message for a chat room
       parameters:
         - name: X-Locale
           in: header
@@ -11515,65 +11777,10 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/ai_chat_request"
-  "/v1/ai/history":
-    get:
-      tags:
-        - AI
-      summary: Get room message history
-      parameters:
-        - name: X-Locale
-          in: header
-          required: false
-          description:
-            Response language. Accepts en or my; Accept-Language is also
-            supported.
-          schema:
-            type: string
-            enum:
-              - en
-              - my
-        - name: X-Platform
-          in: header
-          required: false
-          description: Active-session namespace.
-          schema:
-            type: string
-            enum:
-              - web
-              - mobile
-            default: web
-        - name: room_id
-          in: query
-          required: false
-          description: Uses or creates the current room when omitted
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-        - bearerAuth: []
-  "/v1/ai/clear":
+  "/v1/chat/messages/destroy_all":
     delete:
       tags:
-        - AI
+        - Chat
       summary: Clear a room's messages
       parameters:
         - name: X-Locale
@@ -11625,166 +11832,11 @@ paths:
                 "$ref": "#/components/schemas/error_response"
       security:
         - bearerAuth: []
-  "/v1/ai/rename":
-    put:
-      tags:
-        - AI
-      summary: Rename a room
-      parameters:
-        - name: X-Locale
-          in: header
-          required: false
-          description:
-            Response language. Accepts en or my; Accept-Language is also
-            supported.
-          schema:
-            type: string
-            enum:
-              - en
-              - my
-        - name: X-Platform
-          in: header
-          required: false
-          description: Active-session namespace.
-          schema:
-            type: string
-            enum:
-              - web
-              - mobile
-            default: web
-      responses:
-        "200":
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        "422":
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/ai_rename_request"
-  "/v1/ai/rooms":
+  "/v1/chat/messages/{id}":
     get:
       tags:
-        - AI
-      summary: List AI rooms
-      parameters:
-        - name: X-Locale
-          in: header
-          required: false
-          description:
-            Response language. Accepts en or my; Accept-Language is also
-            supported.
-          schema:
-            type: string
-            enum:
-              - en
-              - my
-        - name: X-Platform
-          in: header
-          required: false
-          description: Active-session namespace.
-          schema:
-            type: string
-            enum:
-              - web
-              - mobile
-            default: web
-      responses:
-        "200":
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-        - bearerAuth: []
-    post:
-      tags:
-        - AI
-      summary: Create an AI room
-      parameters:
-        - name: X-Locale
-          in: header
-          required: false
-          description:
-            Response language. Accepts en or my; Accept-Language is also
-            supported.
-          schema:
-            type: string
-            enum:
-              - en
-              - my
-        - name: X-Platform
-          in: header
-          required: false
-          description: Active-session namespace.
-          schema:
-            type: string
-            enum:
-              - web
-              - mobile
-            default: web
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        "422":
-          description: Unprocessable Content
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/ai_room_request"
-  "/v1/ai/rooms/{id}":
-    delete:
-      tags:
-        - AI
-      summary: Delete an AI room
+        - Chat
+      summary: Get a chat message
       parameters:
         - name: X-Locale
           in: header
@@ -11834,11 +11886,180 @@ paths:
                 "$ref": "#/components/schemas/error_response"
       security:
         - bearerAuth: []
-  "/v1/ai/summarize":
+    put:
+      tags:
+        - Chat
+      summary: Update a chat message
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "422":
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ai_message_update_request"
+    delete:
+      tags:
+        - Chat
+      summary: Delete a chat message
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+  "/v1/chat/rooms":
+    get:
+      tags:
+        - Chat
+      summary: List chat rooms
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
     post:
       tags:
-        - AI
-      summary: Summarize text
+        - Chat
+      summary: Create a chat room
       parameters:
         - name: X-Locale
           in: header
@@ -11862,8 +12083,8 @@ paths:
               - mobile
             default: web
       responses:
-        "200":
-          description: Successful response
+        "201":
+          description: Created
           content:
             application/json:
               schema:
@@ -11880,8 +12101,121 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        "500":
-          description: Internal Server Error
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ai_room_request"
+  "/v1/chat/rooms/{id}":
+    get:
+      tags:
+        - Chat
+      summary: Get a chat room
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+    put:
+      tags:
+        - Chat
+      summary: Update a chat room
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "422":
+          description: Unprocessable Content
           content:
             application/json:
               schema:
@@ -11893,12 +12227,164 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/ai_text_request"
-  "/v1/ai/translate":
+              "$ref": "#/components/schemas/ai_room_update_request"
+    delete:
+      tags:
+        - Chat
+      summary: Delete a chat room
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+  "/v1/admin/ai/profiles":
+    get:
+      tags:
+        - Admin / AI
+      summary: List AI profiles
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: provider
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - deepseek
+              - gemini
+              - openai
+        - name: model
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: enabled
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
     post:
       tags:
-        - AI
-      summary: Translate text
+        - Admin / AI
+      summary: Create an AI profile
       parameters:
         - name: X-Locale
           in: header
@@ -11922,8 +12408,8 @@ paths:
               - mobile
             default: web
       responses:
-        "200":
-          description: Successful response
+        "201":
+          description: Created
           content:
             application/json:
               schema:
@@ -11934,14 +12420,14 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        "422":
-          description: Unprocessable Content
+        "403":
+          description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        "500":
-          description: Internal Server Error
+        "422":
+          description: Unprocessable Content
           content:
             application/json:
               schema:
@@ -11953,12 +12439,12 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/ai_translate_request"
-  "/v1/ai/analyze":
-    post:
+              "$ref": "#/components/schemas/ai_profile_create_request"
+  "/v1/admin/ai/profiles/{id}":
+    get:
       tags:
-        - AI
-      summary: Analyze text
+        - Admin / AI
+      summary: Get an AI profile
       parameters:
         - name: X-Locale
           in: header
@@ -11981,6 +12467,12 @@ paths:
               - web
               - mobile
             default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Successful response
@@ -11994,14 +12486,79 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        "422":
-          description: Unprocessable Content
+        "403":
+          description: Forbidden
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-        "500":
-          description: Internal Server Error
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+    put:
+      tags:
+        - Admin / AI
+      summary: Update an AI profile
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "422":
+          description: Unprocessable Content
           content:
             application/json:
               schema:
@@ -12013,7 +12570,177 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/ai_analyze_request"
+              "$ref": "#/components/schemas/ai_profile_update_request"
+  "/v1/admin/ai/runs":
+    get:
+      tags:
+        - Admin / AI
+      summary: List AI runs
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: feature
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: provider
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - deepseek
+              - gemini
+              - openai
+        - name: model
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: profile_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+  "/v1/admin/ai/runs/{id}":
+    get:
+      tags:
+        - Admin / AI
+      summary: Get an AI run
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
   "/v1/speech/tts":
     post:
       tags:

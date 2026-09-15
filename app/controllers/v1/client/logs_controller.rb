@@ -130,11 +130,11 @@ class V1::Client::LogsController < V1::ApplicationController
   end
 
   def set_log_client
-    @log_client = Client::Log.find(params[:id])
+    @log_client = Client::Log.find(params.permit(:id)[:id])
   end
 
   def set_log_client_including_discarded
-    @log_client = Client::Log.with_discarded.find(params[:id])
+    @log_client = Client::Log.with_discarded.find(params.permit(:id)[:id])
   end
 
   def log_client_params
@@ -151,33 +151,39 @@ class V1::Client::LogsController < V1::ApplicationController
   end
 
   def find_or_initialize_log
+    attrs = log_client_params
     conditions = {
-      message: params[:log][:message],
-      severity: params[:log][:severity] || "error",
-      platform: params[:log][:platform],
-      environment: params[:log][:environment],
-      os: params[:log][:os],
-      os_version: params[:log][:os_version],
-      browser: params[:log][:browser],
-      url: params[:log][:url],
-      method: params[:log][:method]
+      message: attrs[:message],
+      severity: attrs[:severity].presence || "error",
+      platform: attrs[:platform],
+      environment: attrs[:environment],
+      os: attrs[:os],
+      os_version: attrs[:os_version],
+      browser: attrs[:browser],
+      url: attrs[:url],
+      method: attrs[:method]
     }.compact
 
     Client::Log.find_or_initialize_by(conditions)
   end
 
+  def filter_params
+    params.permit(:discarded, :severity, :platform, :environment, :unresolved, :resolved, :storage_issues)
+  end
+
   def apply_filters(logs)
-    logs = if params[:discarded].to_s == "true"
+    filters = filter_params
+    logs = if filters[:discarded].to_s == "true"
       logs.with_discarded.discarded
     else
       logs.kept
     end
-    logs = logs.by_severity(params[:severity]) if params[:severity].present?
-    logs = logs.by_platform(params[:platform]) if params[:platform].present?
-    logs = logs.by_environment(params[:environment]) if params[:environment].present?
-    logs = logs.unresolved if params[:unresolved] == "true"
-    logs = logs.resolved if params[:resolved] == "true"
-    logs = logs.with_storage_issues if params[:storage_issues] == "true"
+    logs = logs.by_severity(filters[:severity]) if filters[:severity].present?
+    logs = logs.by_platform(filters[:platform]) if filters[:platform].present?
+    logs = logs.by_environment(filters[:environment]) if filters[:environment].present?
+    logs = logs.unresolved if filters[:unresolved] == "true"
+    logs = logs.resolved if filters[:resolved] == "true"
+    logs = logs.with_storage_issues if filters[:storage_issues] == "true"
     logs
   end
 end

@@ -212,7 +212,7 @@ RSpec.describe "Admin payment products", type: :request do
 
   def grant_admin_product_permission(action)
     role = admin.roles.find_by!(name: "admin")
-    permission = Iam::Permission.find_or_create_by!(action: action.to_s, resource: "products")
+    permission = Iam::Permission.find_or_create_by!(action: action.to_s, resource: IamConstants::Resource::PAYMENT_PRODUCTS)
 
     Iam::RolePermission.find_or_create_by!(role: role, permission: permission)
   end

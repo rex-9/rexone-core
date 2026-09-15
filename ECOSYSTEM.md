@@ -18,11 +18,13 @@ Across all three repositories, the architecture adheres to one uncompromising do
 
 >
 
-> 🗺️ **Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of the ecosystem across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHRUOGH.md](./docs/VISUAL_WALKTHRUOGH.md**)\*\*\*\*.
+> 🗺️ **Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of the ecosystem across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**.
 
 >
 
 > 🛡️ **Production Operations**: Use the **[Production Deployment Guide](docs/DEPLOYMENT.md)** together with **[DDoS and API Abuse Protection](docs/DDOS.md)**. Cloudflare, origin isolation, proxy limits, Rack Attack, and bounded application resources form one defense system.
+
+> 🎞️ **Media Playback**: Stored audio/video delivery uses Core-authorized short-lived provider URLs. See **[Media Playback](docs/MEDIA_PLAYBACK.md)**; future HLS/adaptive work stays in **[Media Streaming Roadmap](docs/roadmaps/MEDIA_STREAMING.md)**.
 
 The Rexone platform provides a unified, battle-tested foundation where **any modern digital product** can be rapidly developed on top of ready-made capabilities: Identity & IAM, Commerce & Subscriptions, Background Queues, Asset Management, Real-Time WebSockets, Queued AI, Push Notifications, Product Analytics, Client Telemetry, In-App Upgrades, and Multi-Language Localization.
 
@@ -54,9 +56,10 @@ flowchart TB
         Postgres[(PostgreSQL 18 - UUID, Discard, Audited)]
         Garage[(Garage S3 Storage / Cloudinary / Local)]
         Stripe["Stripe (Checkout, Subscriptions, Webhooks)"]
-        DeepSeek["DeepSeek AI API"]
+        AI["AI Providers (DeepSeek / Google Gemini)"]
         Speech["Azure & Nova Speech (TTS / STT)"]
-        OneSignal["OneSignal (Push & Email)"]
+        OneSignal["OneSignal (Push)"]
+        Brevo["Brevo (Email)"]
         Firebase["Firebase Analytics (Web & Mobile Telemetry)"]
     end
 
@@ -75,9 +78,10 @@ flowchart TB
     Media --> Services
 
     Services --> Stripe
-    Services --> DeepSeek
+    Services --> AI
     Services --> Speech
     Services --> OneSignal
+    Services --> Brevo
     Services --> Garage
     Web -.-> Firebase
     Mobile -.-> Firebase
@@ -109,7 +113,7 @@ All tables use **UUID** primary keys (`gen_random_uuid()`), utilize **Discard** 
 | **IAM (RBAC)**       | `Iam::Role`, `Iam::Permission`, `Iam::UserRole`, `Iam::RolePermission`                       | Granular resource-action permissions (`user.can?(action, resource)`). System roles (`super_admin`, `admin`, default `user`). Auto-assigned default role on signup.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | **Commerce**         | `Payment::Product`, `Payment::Subscription`, `Payment::Transaction`, `Payment::WebhookEvent` | Stripe synced products and prices; Stripe-version-aligned subscription item snapshots (`unit_amount`, currency, quantity, interval, and billing periods); cancellation/resumption; transactions with payment method details; and durable webhook processing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **Entitlements**     | `Access`                                                                                     | Granted/revoked/expired access records tied to `User` and `Product`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **AI / Chat**        | `Chat::Room`, `Chat::Message`                                                                | Conversational rooms, messages with roles (`user`, `assistant`), `ai_status` (`queued`, `processing`, `completed`, `failed`), system prompts, temperature, max tokens, metadata.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **AI / Chat**        | `Chat::Room`, `Chat::Message`, `Ai::Profile`, `Ai::Run`                                      | `V1::ChatController` owns open, flexible room/message endpoints (supporting 1-on-1 direct user chats, group chats, single-user/single-AI chats, or multi-user/multi-AI hybrid rooms without rigid type constraints) and delegates queueing, message processing, and notifications to `ChatMessageService` / `Chat::ProcessMessageJob`. `V1::Admin::AiController` owns AI profiles and run telemetry. `Ai::Providers::Client` stays the provider boundary. Core owns provider/model/prompt/output limits/timeouts; clients request profile keys, not raw provider parameters. |
 | **Media**            | `Asset`                                                                                      | Unified media metadata (`storage_key` for Garage/S3/Cloudinary/Local — user objects under `user/{user_id}/`, platform objects under `admin/`; format, size_bytes, original_size_bytes, compressed_size_bytes, compression_ratio, compression_passes, status enum: `pending`/`processing`/`ready`/`optimal`, duration_secs, type, polymorphic `assetable_type`/`assetable_id`), and `parent_asset_id` for generated video thumbnails, uploaded covers, and `.srt` subtitle children on compressible video or audio parents.                                                                                                                                                                                                                                                                                                        |
 | **Telemetry**        | `Client::Log`                                                                                | Frontend error ingest (stack traces, device, OS, browser, URL, severity, occurrences, local/session storage keys, cookies, resolution status). Ingest still sends `app_version`; Core stores nullable `version_id`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | **Feedback**         | `Feedback`                                                                                   | Intelligent in-place feedback (1-10 rating, auto-inferred category: `bug`/`feature_request`/`improvement`/`general`, priority: `low`/`normal`/`high`/`urgent`, status, automated device/route telemetry). Ingest still sends `app_version`; Core stores nullable `version_id`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -120,7 +124,7 @@ All tables use **UUID** primary keys (`gen_random_uuid()`), utilize **Discard** 
 
 Heavy or external provider operations sit behind clean service interfaces and execute in dedicated background queues (`config/queue.yml` & `config/queue.media.yml`):
 
-- **AI & Speech Queue (`ai`)**: `Ai::ProcessChatJob` communicates with DeepSeek (`AiService::Client`) for chat completion. `Speech::ProcessTtsJob` communicates with Azure/Nova (`SpeechService::Client`) to synthesize audio for chat messages, saves MP3 assets via `StorageService::Client`, and alerts the user over WebSocket (`NotificationChannel`).
+- **AI & Speech Queue (`ai`)**: `Chat::ProcessMessageJob` delegates chat workflow to `ChatMessageService`, which resolves an `Ai::Profile`, runs completion through swappable providers (`DeepSeek` or `Google Gemini` via OpenAI-compatible endpoint, governed by `AI_PROVIDER` and resolved via `Ai::Provider::Client`), records `Ai::Run` telemetry, and alerts the user over WebSocket (`NotificationChannel`). `Speech::ProcessTtsJob` communicates with Azure/Nova (`SpeechService::Client`) to synthesize audio for chat messages, saves MP3 assets via `StorageService::Client`, and alerts the user over WebSocket.
 - **Media Processing Queue (`media`)**: Dedicated `media` worker process running `Media::CompressMediaJob` for image/audio/video compression, `Media::ConvertImageJob` (SVG to PNG), `Media::ImportRemoteImageJob` (Google profile images), and video-thumbnail generation. The API and Waka processes only validate, persist metadata, and enqueue media; they never execute conversion, remote-image ingestion, or compression. Supported compression, thumbnail-generation, and image-conversion formats are centralized in `MediaConstants::Processing`. Every processor shares one per-asset concurrency lock and reports asset status as `processing` while file work is active. WAV, FLAC, OGG, and AMR compression writes a new M4A object/key before atomically updating asset metadata and retiring the original object. Upload limits are independently configurable for video, audio, image, and other formats. `.srt` subtitle children require no conversion and are stored as `ready`. Compression uses an **optimal-first pipeline**: if reduction is negligible (`< 3%`) or size does not decrease, the asset becomes `optimal`; otherwise the cache counter enforces the configured pass cap.
 - **Payments Queue (`payments`)**: `Payment::ProcessWebhookJob` asynchronously fulfills Stripe webhooks (checkout completed, invoice paid, subscription updated/deleted) with idempotency.
 - **Notifications Queue (`notifications`)**: `NotificationService` fans out work via `Notification::DispatchJob` to `Notification::DeliverJob` for Action Cable broadcasts (persisting `UserNotification` in-app receipts), push notifications, and transactional/broadcast emails.
@@ -172,7 +176,9 @@ The `/v1/admin/` namespace provides comprehensive management capabilities protec
 
 - **User Management**: `GET/POST /v1/admin/users` (CRUD + discard/undiscard, role assignment, self-lifecycle protection, last-super-admin guard).
 - **IAM Management**: `GET/PATCH/DELETE /v1/admin/iam/roles` and `GET/POST/PATCH/DELETE /v1/admin/iam/permissions` (auto-named).
-- **Chat Moderation**: `GET/PATCH/DELETE /v1/admin/chat/rooms` and `/messages`.
+- **Chat Endpoints**: User API: `GET/POST /v1/chat/rooms` (supporting room types: `ai`, `direct`, `group`), `GET/PUT/DELETE /v1/chat/rooms/:id`, `GET/POST /v1/chat/messages`, `GET/PUT/DELETE /v1/chat/messages/:id`, `DELETE /v1/chat/messages/destroy_all` (history purge). Admin Moderation: `GET/PATCH/DELETE /v1/admin/chat/rooms` (`discard`, `undiscard`, `destroy`) and `GET/PATCH/DELETE /v1/admin/chat/messages` (`discard`, `undiscard`, `destroy`).
+- **AI Control Plane**: `GET/PATCH /v1/admin/ai/profiles` (prompt templates, models, token limits, swappable provider selection with multi-attribute sorting on `key`, `name`, `temperature`, `provider`, `model`, `enabled`, `created_at` and filters on `status`, `provider`, `model`, `search`), `GET /v1/admin/ai/runs` (telemetry, token counts, execution latency with multi-attribute sorting on `latency_ms`, `total_tokens`, `created_at`, `model`, `feature`, `status`, `provider` and filters on `status`, `feature`, `provider`, `model`), and Rails Administrate dashboards under `/admin/ai/profiles` and `/admin/ai/runs`.
+- **Standardized Permissions Protocol**: Strictly 4 canonical CRUD actions (`read`, `create`, `update`, `delete`). Soft deletes use `discard` -> `:delete`, hard deletes use `destroy` -> `:delete`, restores use `undiscard` -> `:delete`. No custom `clear` or `purge` permissions. Permission resources strictly include module prefixes (`ai_profiles`, `ai_runs`, `chat_rooms`, `chat_messages`, `client_logs`, `client_versions`, `client_user_versions`, `iam_roles`, `iam_permissions`, `iam_user_roles`, `payment_products`, `payment_payments`, `payment_subscriptions`, `payment_transactions`) alongside top-level resources (`users`, `accesses`, `assets`, `notifications`, `feedbacks`, `analytics`, `speech`) to eliminate name collisions across distinct domain modules.
 - **Product Management**: `GET/POST/PATCH/DELETE /v1/admin/payment/products` (Stripe sync, discard/undiscard).
 - **App Versions**: Super-admin only. `GET/POST /v1/admin/client/versions`, `GET /v1/admin/client/versions?discarded=true`, `GET/PUT /v1/admin/client/versions/:id`, discard/undiscard, and `GET /v1/admin/client/versions/:id/user_versions`. Client::Version payloads include `install_count`.
 - **User Versions**: Super-admin only. `GET /v1/admin/client/versions/user_versions` lists all current user+platform snapshots (optional `platform` filter).
@@ -187,7 +193,7 @@ The `/v1/admin/` namespace provides comprehensive management capabilities protec
 
 ### 🛠️ Tech Stack
 
-- **Framework**: React `19`, TypeScript `6`, Vite `8`, Tailwind CSS `3`, DaisyUI, Headless UI, Heroicons, Lucide.
+- **Framework**: React `19`, TypeScript `6`, Vite `8`, Tailwind CSS `4`, DaisyUI, Headless UI, Heroicons, Lucide.
 - **State Management**: React Contexts (`AuthContext`, `LoadingContext`, `ToastContext`), Jotai atomic state.
 - **Networking**: Axios instance with centralized request/response interceptors; Action Cable JS client for WebSockets.
 - **Localization**: `i18next` with modular typed keys (`en`, `es`, `my`).
@@ -200,8 +206,8 @@ Defined under `src/design/`:
 - **Molecules & Overlays**:
   - Auth dialog suite (`AuthDialog`, `InitialDialog`, `SigninPasswordDialog`, `SignupPasswordCreateDialog`, `SignupPasswordConfirmDialog`, `SignupInfoDialog`, `ConfirmEmailDialog`, `ForgotPasswordDialog`).
   - Inputs (`TextInput`, `TextArea`, `PasswordInput`, `Dropdown`, `Toggle`).
-  - Overlays: Base `Dialog` molecule, `ConfirmDialog` (powered by `Dialog` underneath for destructive confirmations), `LoadingOverlay`, `Toast`.
-  - Buttons (`Button`, `GoogleButton`, `SignOutButton`).
+  - Overlays: Base `Dialog` molecule, `ConfirmDialog` (powered by `Dialog` underneath for destructive confirmations), `LoadingOverlay` (unified full-screen high-opacity backdrop blur for heavy page loads), `Toast`. Universal loading state managed via `LoadingContext` (`{ overlay: true }` for page loads/refreshes, `{ overlay: false }` for localized actions).
+  - Buttons (`Button`, `GoogleButton`, `SignOutButton`). `Button` is polymorphic and accepts `href`, `target`, and `rel` to render as semantic `<a>` with identical classes, sizes, variants, and running neon laser borders. Strictly zero raw `<a>` or raw `<button>` tags in domain pages.
   - Common & Media: `NavBar`, `HeadNavbar`, `Badge`, `ProfileAvatar`, `Typography`, `TextLink`, `Asset` / `Image`, `Video`. Strictly zero raw `<img>`, `<video>`, or `<a>` tags.
 
 ### 🧩 Domain Modules & Flows
@@ -211,6 +217,7 @@ Defined under `src/design/`:
 - **AI Workspace**: Non-blocking queued chat. Submits message, displays thinking state, receives completion or event over WebSocket (`useAiSocket`), auto-refreshes room history. Includes utilities for translation, summarization, and sentiment analysis.
 - **Speech & Audio**: Plays raw binary MP3 audio streams directly from `/v1/speech/tts` without base64 wrapper overhead, handles chat message TTS audio playback, and integrates live audio recognition.
 - **Asset Control Center**: Dedicated operational asset management under `/admin/assets`. Features a live Storage & VPS Capacity dashboard (`AdminAssetStorageStats`) showing real-time Garage bucket occupied space, object count, and host VPS disk capacity with low-disk alerts; a multi-file batch upload dialog with optimistic row prepending; out-of-order socket reconciliation (`pendingSocketUpdates`); real-time compression badges (`optimal`, `ready`, `processing`, `pending`); disabled action buttons during in-flight processing; and manual secondary compression pass triggers.
+- **Admin AI Control Panel**: Dedicated AI operations under `/admin/ai/profiles` and `/admin/ai/runs`. Governed by granular RBAC permissions (`ai_profiles:read`, `ai_profiles:create`, `ai_profiles:update`, `ai_runs:read`). Features AI profile creation and editing (`AdminAiProfileCreatePage`, `AdminAiProfileEditPage`) with type-safe dropdown selections for Provider (`deepseek`, `gemini`) and dynamic Model Identifier (with custom model fallback), profile key presets bar, list table with row-click navigation, multi-attribute sorting, and top filter toolbar (`status`, `provider`, `model`, `search`). Detail page exposes full configurations (model selection, temperature, token boundaries, context max tokens, history window, timeout, system prompt editor, and settings JSON viewer). Alongside profiles, an AI execution audit log (`AdminAiRunsPage`, `AdminAiRunDetailPage`) displays execution telemetry, latency, token breakdown (prompt/completion/total), error traces, request metadata, top filter toolbar (`status`, `provider`, `model`, `feature`), and multi-attribute sorting.
 - **Client Admin Panel & RBAC Governance**: Admin UI module under `src/modules/admin/` with sidebar navigation, route guards (`AdminRootRoute`, `AdminHomeRoute`), and client-side RBAC evaluation (`usePermissions`).
   - **Non-Admin Portal Isolation**: Users with only non-admin roles (`user`) cannot access `/admin/*` under any circumstance.
   - **Admin Role Scoping**: Capabilities within `/admin/*` evaluate only permissions mapped from active admin roles (`super_admin`, `admin`, `*_admin`). Base `user` permissions never leak into the admin portal.
@@ -238,12 +245,13 @@ Rexone Mobile has a strictly governed design system accessible via `lib/design/d
 ### 🧩 Mobile Domain Capabilities
 
 - **Auth Flow**: Complete parity with Web & Core (email check, 6-digit password, OTP verification, Google OAuth challenge, session replacement). Zero hardcoded string literals.
-- **Push Notifications**: Powered by OneSignal (`PushNotiService`). Automatically syncs user IDs and tags on login/session restore and clears state on logout.
+- **Push Notifications**: Powered by OneSignal (`PushNotiService`). Automatically syncs user IDs and tags on sign-in/session restore and clears state on sign-out. Destructive notification deletions (both swipe dismiss and button tap) are strictly confirmed via `AppDialog.confirm()`.
+- **Email Delivery**: Powered by Brevo by default (`EmailService`).
 - **Product Analytics**: Web and Mobile use separate Firebase streams in one GA4 property. Both emit the constantized `action_noun` contract `sign_up`, `sign_in`, `sign_out`, `begin_onboarding`, `complete_onboarding`, `view_page`, `view_product`, `purchase_product`, and `open_notification`, distinguished by `platform` (`web`, `android`, or `ios`). Core remains the source of authoritative business metrics and does not ingest raw behavioral events.
 - **Purchase & Notification Identity**: `purchase_product` uses `purchase_id` (a Core transaction ID for one-time payments or Core subscription ID for subscription creation) and integer-minor-unit `unit_amount`. `open_notification.notification_id` is always the persisted Core `UserNotification` ID; every push is also persisted and delivered in-app.
 - **In-App Upgrader**: Powered by `upgrader`. Wraps root app builder with `UpgradeAlert` to notify users of critical or optional Play Store / App Store updates.
 - **Stripe & Billing**: In-app Stripe Checkout WebView (`CheckoutPage`), subscription state cards, billing history, and confirmation-guarded cancellation/resumption.
-- **AI Assistant**: Persistent multi-room chat, background processing indicator, real-time completion toasts via WebSocket, and chat history management.
+- **AI Assistant**: Persistent multi-room conversational interface with dual-fallback JSON:API envelope parsing (`data.attributes`, root keys, and `ApiResponse.meta`), optimistic message reconciliation with server-assigned message IDs, top-level and meta `room_id` routing, room renaming (`renameRoom`), background processing indicators, real-time completion toasts via WebSocket, and chat history management.
 - **Real-Time WebSockets**: Action Cable client (`SocketService`) paired with `SocketController` for global notification dispatching and deduplication.
 - **Client Telemetry**: Automatic global capture of Flutter errors and platform dispatcher errors dispatched to Core's `POST /v1/client/logs`.
 - **Localization**: 100% translated in English (`en_US`), Spanish (`es_ES`), and Burmese (`my_MM`). Synchronizes `X-Locale` and `Accept-Language` headers on every HTTP request.
@@ -270,8 +278,8 @@ All three pillars of the Rexone platform are fully aligned at **100% feature par
 | **Stripe: Subscriptions & Cancellation/Resumption**                              |      ✅       |          ✅          |            ✅            |
 | **Stripe: Transaction History**                                                  |      ✅       |          ✅          |            ✅            |
 | **Intelligent Frictionless Feedback System (1-10)**                              |      ✅       |          ✅          |            ✅            |
-| **AI: Conversational Rooms & Message History**                                   |      ✅       |          ✅          |            ✅            |
-| **AI: Queued Background Execution (DeepSeek)**                                   |      ✅       |          ✅          |            ✅            |
+| **Chat: Conversational Rooms (AI, Direct, Group)**                               |      ✅       |          ✅          |            ✅            |
+| **AI: Queued Background Execution (DeepSeek / Gemini)**                           |      ✅       |          ✅          |            ✅            |
 | **AI: Real-Time WebSocket Completion Alerts**                                    |      ✅       |          ✅          |            ✅            |
 | **Speech: Text-to-Speech (Sync & Async Binary Streaming)**                       |      ✅       |          ✅          |            ✅            |
 | **Speech: Speech-to-Text (Sync Upload / URL)**                                   |      ✅       |          ✅          |            ✅            |
@@ -283,7 +291,8 @@ All three pillars of the Rexone platform are fully aligned at **100% feature par
 | **Media: Multi-Select Batch Actions & Empty Recycle Bin**                        |      ✅       |          ✅          |           N/A            |
 | **Push Notifications (OneSignal)**                                               |      ✅       |         N/A          |            ✅            |
 | **Product Analytics (Firebase)**                                                 |   Constants   |          ✅          |            ✅            |
-| **Client Admin Panel: User, IAM, Product, Chat, Asset, Notification Management** |      ✅       |          ✅          |           N/A            |
+| **Client Admin Panel: User, IAM, Product, Chat, AI, Asset, Notification**       |      ✅       |          ✅          |           N/A            |
+| **Admin AI Control Panel (Profiles & Runs Telemetry)**                           |      ✅       |          ✅          |           N/A            |
 | **In-App Client::Version Upgrader**                                              |      ✅       |          ✅          |            ✅            |
 | **Automated Localization Parity Test Suite**                                     |      N/A      |         N/A          |            ✅            |
 

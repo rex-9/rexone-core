@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_05_100002) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -42,6 +42,66 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_100002) do
     t.index ["user_id", "product_id"], name: "index_accesses_on_user_id_and_product_id", unique: true
     t.index ["user_id", "status"], name: "index_accesses_on_user_id_and_status"
     t.index ["user_id"], name: "index_accesses_on_user_id"
+  end
+
+  create_table "ai_profiles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.integer "context_max_tokens", default: 8000, null: false
+    t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
+    t.boolean "enabled", default: true, null: false
+    t.integer "history_max_messages", default: 20, null: false
+    t.string "key", null: false
+    t.integer "max_output_tokens", default: 2000, null: false
+    t.string "model", null: false
+    t.string "name", null: false
+    t.string "provider", default: "deepseek", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.text "system_prompt"
+    t.decimal "temperature", precision: 4, scale: 2, default: "0.7", null: false
+    t.integer "timeout_seconds", default: 30, null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
+    t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.index ["discarded_at"], name: "index_ai_profiles_on_discarded_at"
+    t.index ["enabled"], name: "index_ai_profiles_on_enabled"
+    t.index ["key"], name: "index_ai_profiles_on_key", unique: true
+  end
+
+  create_table "ai_runs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "ai_profile_id", null: false
+    t.uuid "chat_message_id"
+    t.integer "completion_tokens"
+    t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
+    t.text "error"
+    t.string "feature", null: false
+    t.integer "input_chars"
+    t.integer "input_messages_count"
+    t.integer "latency_ms"
+    t.string "model", null: false
+    t.integer "output_chars"
+    t.integer "prompt_tokens"
+    t.string "provider", null: false
+    t.jsonb "request_metadata", default: {}, null: false
+    t.string "status", null: false
+    t.integer "total_tokens"
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
+    t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.uuid "user_id", null: false
+    t.index ["ai_profile_id"], name: "index_ai_runs_on_ai_profile_id"
+    t.index ["chat_message_id"], name: "index_ai_runs_on_chat_message_id"
+    t.index ["created_at"], name: "index_ai_runs_on_created_at"
+    t.index ["discarded_at"], name: "index_ai_runs_on_discarded_at"
+    t.index ["feature"], name: "index_ai_runs_on_feature"
+    t.index ["status"], name: "index_ai_runs_on_status"
+    t.index ["user_id"], name: "index_ai_runs_on_user_id"
   end
 
   create_table "assets", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -80,6 +140,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_100002) do
   end
 
   create_table "chat_messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "ai_profile_id"
     t.text "content", null: false
     t.datetime "created_at", null: false
     t.uuid "created_by_id"
@@ -92,6 +153,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_100002) do
     t.uuid "undiscarded_by_id"
     t.datetime "updated_at", null: false
     t.uuid "updated_by_id"
+    t.index ["ai_profile_id"], name: "index_chat_messages_on_ai_profile_id"
     t.index ["created_by_id"], name: "index_chat_messages_on_created_by_id"
     t.index ["discarded_at"], name: "index_chat_messages_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_chat_messages_on_discarded_by_id"
@@ -1155,11 +1217,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_100002) do
   add_foreign_key "accesses", "users", column: "discarded_by_id"
   add_foreign_key "accesses", "users", column: "undiscarded_by_id"
   add_foreign_key "accesses", "users", column: "updated_by_id"
+  add_foreign_key "ai_profiles", "users", column: "created_by_id"
+  add_foreign_key "ai_profiles", "users", column: "discarded_by_id"
+  add_foreign_key "ai_profiles", "users", column: "undiscarded_by_id"
+  add_foreign_key "ai_profiles", "users", column: "updated_by_id"
+  add_foreign_key "ai_runs", "ai_profiles"
+  add_foreign_key "ai_runs", "chat_messages"
+  add_foreign_key "ai_runs", "users"
+  add_foreign_key "ai_runs", "users", column: "created_by_id"
+  add_foreign_key "ai_runs", "users", column: "discarded_by_id"
+  add_foreign_key "ai_runs", "users", column: "undiscarded_by_id"
+  add_foreign_key "ai_runs", "users", column: "updated_by_id"
   add_foreign_key "assets", "assets", column: "parent_asset_id"
   add_foreign_key "assets", "users", column: "created_by_id"
   add_foreign_key "assets", "users", column: "discarded_by_id"
   add_foreign_key "assets", "users", column: "undiscarded_by_id"
   add_foreign_key "assets", "users", column: "updated_by_id"
+  add_foreign_key "chat_messages", "ai_profiles"
   add_foreign_key "chat_messages", "chat_rooms", column: "room_id"
   add_foreign_key "chat_messages", "users", column: "created_by_id"
   add_foreign_key "chat_messages", "users", column: "discarded_by_id"

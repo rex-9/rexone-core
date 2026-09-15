@@ -1,21 +1,22 @@
 class V1::Admin::Payment::SubscriptionsController < V1::ApplicationController
   # GET /v1/admin/payment/subscriptions
   def index
+    filters = filter_params
     subscriptions = ::Payment::Subscription.includes(:user, :product)
-    subscriptions = subscriptions.where(status: params[:status]) if params[:status].present?
-    subscriptions = subscriptions.where(interval: params[:interval]) if params[:interval].present?
-    subscriptions = subscriptions.where(product_id: params[:product_id]) if params[:product_id].present?
-    subscriptions = subscriptions.where(user_id: params[:user_id]) if params[:user_id].present?
-    unless params[:cancel_at_period_end].nil?
-      subscriptions = subscriptions.where(cancel_at_period_end: ActiveModel::Type::Boolean.new.cast(params[:cancel_at_period_end]))
+    subscriptions = subscriptions.where(status: filters[:status]) if filters[:status].present?
+    subscriptions = subscriptions.where(interval: filters[:interval]) if filters[:interval].present?
+    subscriptions = subscriptions.where(product_id: filters[:product_id]) if filters[:product_id].present?
+    subscriptions = subscriptions.where(user_id: filters[:user_id]) if filters[:user_id].present?
+    unless filters[:cancel_at_period_end].nil?
+      subscriptions = subscriptions.where(cancel_at_period_end: ActiveModel::Type::Boolean.new.cast(filters[:cancel_at_period_end]))
     end
-    subscriptions = search(subscriptions)
+    subscriptions = search(subscriptions, search_term: filters[:search])
     subscriptions = sort(
       subscriptions,
       columns: SortConstants::Columns::SUBSCRIPTION,
       default_column: "created_at"
     )
-    pagy, records = pagy(:offset, subscriptions, limit: params[:limit])
+    pagy, records = pagy(:offset, subscriptions, limit: filters[:limit])
 
     render_json_response(
       status_code: 200,
@@ -27,7 +28,7 @@ class V1::Admin::Payment::SubscriptionsController < V1::ApplicationController
 
   # GET /v1/admin/payment/subscriptions/:id
   def show
-    subscription = ::Payment::Subscription.includes(:user, :product).find(params[:id])
+    subscription = ::Payment::Subscription.includes(:user, :product).find(params.permit(:id)[:id])
 
     render_json_response(
       status_code: 200,
@@ -38,10 +39,14 @@ class V1::Admin::Payment::SubscriptionsController < V1::ApplicationController
 
   private
 
-  def search(scope)
-    return scope if params[:search].blank?
+  def filter_params
+    params.permit(:status, :interval, :product_id, :user_id, :cancel_at_period_end, :search, :limit, :page)
+  end
 
-    term = "%#{ActiveRecord::Base.sanitize_sql_like(params[:search].strip)}%"
+  def search(scope, search_term: nil)
+    return scope if search_term.blank?
+
+    term = "%#{ActiveRecord::Base.sanitize_sql_like(search_term.strip)}%"
     scope.left_joins(:user, :product).where(
       "users.email ILIKE :term OR users.username ILIKE :term OR payment_products.name ILIKE :term " \
       "OR payment_subscriptions.stripe_subscription_id ILIKE :term",

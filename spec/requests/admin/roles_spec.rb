@@ -53,7 +53,7 @@ RSpec.describe "Admin IAM roles", type: :request do
     assigned_user = create(:user)
     create(:user_role, user: assigned_user, role: role)
     create(:user)
-    permission = create(:permission, action: "read", resource: "products")
+    permission = create(:permission, action: "read", resource: IamConstants::Resource::PAYMENT_PRODUCTS)
     allow(NotificationService::Center).to receive(:iam_updated)
 
     patch "/v1/admin/iam/roles/#{role.id}",
@@ -66,7 +66,7 @@ RSpec.describe "Admin IAM roles", type: :request do
   end
 
   it "does not notify assigned users when role permissions are unchanged" do
-    permission = create(:permission, action: "read", resource: "products")
+    permission = create(:permission, action: "read", resource: IamConstants::Resource::PAYMENT_PRODUCTS)
     role = create(:role, name: "product_admin")
     create(:role_permission, role: role, permission: permission)
     assigned_user = create(:user)

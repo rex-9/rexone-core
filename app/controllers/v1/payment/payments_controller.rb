@@ -69,7 +69,7 @@ class V1::Payment::PaymentsController < V1::ApplicationController
 
   # GET /payment/session/:session_id
   def read_status
-    result = PaymentService::Client.get_session(params[:session_id])
+    result = PaymentService::Client.get_session(status_params[:session_id])
 
     if result[:error]
       render_json_response(
@@ -94,5 +94,9 @@ class V1::Payment::PaymentsController < V1::ApplicationController
 
   def payment_params
     params.permit(:product_id, :success_url, :cancel_url)
+  end
+
+  def status_params
+    params.permit(:session_id)
   end
 end

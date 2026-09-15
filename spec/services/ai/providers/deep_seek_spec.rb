@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
-RSpec.describe AiService::DeepSeek do
+RSpec.describe Ai::Providers::DeepSeek do
   subject(:provider) { described_class.new }
 
   let(:http) { instance_double(Net::HTTP) }

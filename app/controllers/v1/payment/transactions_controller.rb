@@ -3,7 +3,7 @@ class V1::Payment::TransactionsController < V1::ApplicationController
   # GET /payment/transactions?page=1&limit=10
   def index
     transactions = current_user.transactions.includes(:product).order(SortConstants::Columns::PRODUCT.first => SortConstants::Order::DESC)
-    pagy, records = pagy(:offset, transactions, limit: params[:limit])
+    pagy, records = pagy(:offset, transactions, limit: index_params[:limit])
 
     render_json_response(
       status_code: 200,
@@ -15,7 +15,7 @@ class V1::Payment::TransactionsController < V1::ApplicationController
 
   # GET /payment/transactions/:id
   def show
-    transaction = current_user.transactions.find(params[:id])
+    transaction = current_user.transactions.find(transaction_params[:id])
 
     render_json_response(
       status_code: 200,
@@ -27,7 +27,7 @@ class V1::Payment::TransactionsController < V1::ApplicationController
   # GET /payment/transactions/recent?page=1&limit=10
   def read_recent
     transactions = current_user.transactions.includes(:product).successful.recent
-    pagy, records = pagy(:offset, transactions, limit: params[:limit])
+    pagy, records = pagy(:offset, transactions, limit: index_params[:limit])
 
     render_json_response(
       status_code: 200,
@@ -38,6 +38,10 @@ class V1::Payment::TransactionsController < V1::ApplicationController
   end
 
   private
+
+  def index_params
+    params.permit(:limit, :page)
+  end
 
   def payment_message(key, **options)
     MessageService::Payment.t(key, **options)

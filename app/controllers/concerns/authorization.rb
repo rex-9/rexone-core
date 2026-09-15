@@ -21,7 +21,8 @@ module Authorization
       return
     end
 
-    return if current_user.can?(permission_action, controller_name, admin_scope: admin_api_controller?)
+    resource = permission_resource
+    return if current_user.can?(permission_action, resource, admin_scope: admin_api_controller?)
 
     render_json_response(
       status_code: 403,
@@ -29,9 +30,21 @@ module Authorization
       error: common_message(
         MessageService::Common::PERMISSION_DENIED,
         action: permission_action,
-        resource: controller_name
+        resource: resource
       )
     )
+  end
+
+  def permission_resource
+    return permission_resource_name if respond_to?(:permission_resource_name, true)
+
+    parts = controller_path.sub(%r{\Av\d+/}, "").sub(%r{\Aadmin/}, "").split("/")
+    candidate = parts.join("_")
+    return candidate if IamConstants::Resource::ALL.include?(candidate)
+
+    return controller_name if IamConstants::Resource::ALL.include?(controller_name)
+
+    controller_name
   end
 
   def permission_action

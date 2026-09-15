@@ -11,7 +11,7 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   end
 
   def check_email_provider
-    email = params.dig(:user, :email).to_s.strip.downcase
+    email = sign_up_params[:email].to_s.strip.downcase
     return if email.blank?
 
     user = User.find_by(email: email)

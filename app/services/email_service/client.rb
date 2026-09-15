@@ -10,7 +10,14 @@ module EmailService
       private
 
       def provider
-        @provider ||= OneSignal.new
+        case AppConfig::EMAIL_PROVIDER.to_sym
+        when :brevo
+          Brevo.new
+        when :one_signal
+          OneSignal.new
+        else
+          raise Error, "Unknown email provider: #{AppConfig::EMAIL_PROVIDER}"
+        end
       end
     end
   end

@@ -7,7 +7,7 @@ class V1::Client::VersionsController < V1::ApplicationController
   # GET /v1/client/versions/current
   def read_current
     result = Client::VersionService.check(
-      version: params[:version],
+      version: current_params[:version],
       platform: platform_session
     )
 
@@ -19,6 +19,10 @@ class V1::Client::VersionsController < V1::ApplicationController
   end
 
   private
+
+  def current_params
+    params.permit(:version)
+  end
 
   def check_payload(result)
     extras = {

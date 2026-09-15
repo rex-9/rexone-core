@@ -25,7 +25,9 @@ RSpec.describe "OpenAPI V1 document" do
     expect(document[:paths]).to include(
       "/signup",
       "/v1/payment/session",
-      "/v1/ai/chat",
+      "/v1/chat/messages",
+      "/v1/admin/ai/profiles",
+      "/v1/admin/ai/runs",
       "/v1/speech/tts",
       "/v1/speech/stt",
       "/v1/admin/accesses",
@@ -126,7 +128,7 @@ RSpec.describe "OpenAPI V1 document" do
       [ "/v1/users/current", :put ] => :current_user_response,
       [ "/v1/admin/assets/{id}/compress", :post ] => :asset_operation_response,
       [ "/v1/admin/assets/{id}/thumbnail/regenerate", :post ] => :asset_operation_response,
-      [ "/v1/ai/chat", :post ] => :ai_chat_response
+      [ "/v1/chat/messages", :post ] => :ai_chat_response
     }
 
     expected.each do |(path, method), schema|
@@ -134,4 +136,58 @@ RSpec.describe "OpenAPI V1 document" do
       expect(success_response.dig(:content, Openapi::V1::JSON_CONTENT, :schema)).to eq(Openapi::V1.ref(schema))
     end
   end
+
+  it "documents query parameters for AI admin profiles and runs" do
+    profile_params = document.dig(:paths, "/v1/admin/ai/profiles", :get, :parameters).map { |p| p[:name].to_sym }
+    expect(profile_params).to include(:search, :provider, :model, :status, :enabled, :page, :limit, :sort_by, :sort_order)
+
+    run_params = document.dig(:paths, "/v1/admin/ai/runs", :get, :parameters).map { |p| p[:name].to_sym }
+    expect(run_params).to include(:search, :feature, :status, :provider, :model, :profile_id, :user_id, :page, :limit, :sort_by, :sort_order)
+
+    tag_names = document[:tags].map { |t| t[:name] }
+    expect(tag_names).to include("Admin / AI", "Chat")
+  end
+
+  it "documents sort and search parameters across all sortable and searchable endpoints" do
+    sortable_endpoints = [
+      "/v1/admin/users",
+      "/v1/admin/iam/roles",
+      "/v1/admin/payment/products",
+      "/v1/admin/payment/transactions",
+      "/v1/admin/payment/subscriptions",
+      "/v1/admin/accesses",
+      "/v1/admin/assets",
+      "/v1/admin/feedbacks",
+      "/v1/admin/client/versions",
+      "/v1/admin/client/versions/user_versions",
+      "/v1/admin/chat/rooms",
+      "/v1/admin/chat/messages",
+      "/v1/client/logs",
+      "/v1/admin/ai/profiles",
+      "/v1/admin/ai/runs"
+    ]
+
+    sortable_endpoints.each do |path|
+      params = document.dig(:paths, path, :get, :parameters)&.map { |p| p[:name].to_sym } || []
+      expect(params).to include(:sort_by, :sort_order), "#{path} is missing sort parameters in OpenAPI"
+    end
+
+    searchable_endpoints = [
+      "/v1/admin/users",
+      "/v1/admin/payment/transactions",
+      "/v1/admin/payment/subscriptions",
+      "/v1/admin/accesses",
+      "/v1/admin/assets",
+      "/v1/admin/feedbacks",
+      "/v1/admin/notifications",
+      "/v1/admin/ai/profiles",
+      "/v1/admin/ai/runs"
+    ]
+
+    searchable_endpoints.each do |path|
+      params = document.dig(:paths, path, :get, :parameters)&.map { |p| p[:name].to_sym } || []
+      expect(params).to include(:search), "#{path} is missing search parameter in OpenAPI"
+    end
+  end
 end
+

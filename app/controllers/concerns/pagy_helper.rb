@@ -7,8 +7,9 @@
 # the client omits both page and limit params.
 module PagyHelper
   def pagy(method = :offset, scope, **options)
-    page = options[:page] || params[:page]
-    limit = options[:limit] || params[:limit]
+    pagination_params = params.permit(:page, :limit)
+    page = options[:page] || pagination_params[:page]
+    limit = options[:limit] || pagination_params[:limit]
 
     if page.blank? && limit.blank?
       count = scope.count(:all)

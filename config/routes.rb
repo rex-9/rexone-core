@@ -64,6 +64,11 @@ Rails.application.routes.draw do
       resources :messages, only: %i[index show new create edit update destroy]
     end
 
+    namespace :ai do
+      resources :profiles, only: %i[index show new create edit update destroy]
+      resources :runs, only: %i[index show destroy]
+    end
+
     resources :notifications, only: %i[index show new create edit update destroy]
     resources :user_notifications, only: %i[index show new create edit update destroy]
 
@@ -188,6 +193,11 @@ Rails.application.routes.draw do
         end
       end
 
+      namespace :ai do
+        resources :profiles, only: %i[index show create update]
+        resources :runs, only: %i[index show]
+      end
+
       namespace :payment do
         resources :products, only: %i[index show create update] do
           collection do
@@ -310,19 +320,15 @@ Rails.application.routes.draw do
       end
     end
 
-    # ===== AI =====
-    post "ai/chat", to: "ai#create_chat"
-    get "ai/history", to: "ai#read_history"
-    delete "ai/clear", to: "ai#destroy_clear"
-    put "ai/rename", to: "ai#update_rename"
-
-    get "ai/rooms", to: "ai#read_rooms"
-    post "ai/rooms", to: "ai#create_room"
-    delete "ai/rooms/:id", to: "ai#destroy_room"
-
-    post "ai/summarize", to: "ai#create_summarize"
-    post "ai/translate", to: "ai#create_translate"
-    post "ai/analyze", to: "ai#create_analyze"
+    # ===== CHAT =====
+    namespace :chat do
+      resources :rooms, only: %i[index show create update destroy]
+      resources :messages, only: %i[index show create update destroy] do
+        collection do
+          delete :destroy_all
+        end
+      end
+    end
 
     # ===== SPEECH =====
     post "speech/tts", to: "speech#create_tts"

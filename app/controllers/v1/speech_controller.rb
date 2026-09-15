@@ -2,17 +2,19 @@
 class V1::SpeechController < V1::ApplicationController
   # POST /speech/tts
   def create_tts
-    if params[:message_id].present?
-      enqueue_message_tts
+    tts = tts_params
+    if tts[:message_id].present?
+      enqueue_message_tts(tts[:message_id])
     else
-      synthesize_tts
+      synthesize_tts(tts)
     end
   end
 
   # POST /speech/stt
   def create_stt
-    audio = params[:audio]
-    audio_url = params[:audio_url]
+    stt = stt_params
+    audio = stt[:audio]
+    audio_url = stt[:audio_url]
 
     if audio.present?
       result = SpeechService::Client.speech_to_text_from_file(audio: audio)
@@ -44,8 +46,8 @@ class V1::SpeechController < V1::ApplicationController
 
   private
 
-  def enqueue_message_tts
-    message = owned_chat_message(params[:message_id])
+  def enqueue_message_tts(message_id)
+    message = owned_chat_message(message_id)
     unless message
       render_json_response(
         status_code: 404,
@@ -76,8 +78,8 @@ class V1::SpeechController < V1::ApplicationController
     )
   end
 
-  def synthesize_tts
-    text = params[:text]
+  def synthesize_tts(tts)
+    text = tts[:text]
 
     if text.blank?
       render_json_response(
@@ -90,7 +92,7 @@ class V1::SpeechController < V1::ApplicationController
 
     result = SpeechService::Client.text_to_speech(
       text: text,
-      voice_name: params[:voice_name].presence
+      voice_name: tts[:voice_name].presence
     )
 
     if result[:error]
@@ -112,6 +114,14 @@ class V1::SpeechController < V1::ApplicationController
       .joins(:room)
       .merge(Chat::Room.for_user(current_user))
       .find_by(id: message_id)
+  end
+
+  def tts_params
+    params.permit(:message_id, :text, :voice_name)
+  end
+
+  def stt_params
+    params.permit(:audio, :audio_url)
   end
 
   def speech_message(key, **options)

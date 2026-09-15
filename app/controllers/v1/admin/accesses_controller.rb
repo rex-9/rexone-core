@@ -4,11 +4,12 @@ class V1::Admin::AccessesController < V1::ApplicationController
 
   # GET /v1/admin/accesses
   def index
+    filters = filter_params
     accesses = AccessService.list_for_admin(
-      status: params[:status],
-      product_id: params[:product_id],
-      user_id: params[:user_id],
-      search: params[:search]
+      status: filters[:status],
+      product_id: filters[:product_id],
+      user_id: filters[:user_id],
+      search: filters[:search]
     )
     accesses = sort(accesses, columns: SortConstants::Columns::ACCESS)
     pagy, records = pagy(accesses)
@@ -127,7 +128,7 @@ class V1::Admin::AccessesController < V1::ApplicationController
   private
 
   def set_access
-    @access = Access.find(params[:id])
+    @access = Access.find(params.permit(:id)[:id])
   end
 
   def find_product_for_grant!
@@ -175,6 +176,10 @@ class V1::Admin::AccessesController < V1::ApplicationController
     else
       raw.to_s.split(/[,\n]/).map(&:strip).reject(&:blank?)
     end
+  end
+
+  def filter_params
+    params.permit(:status, :product_id, :user_id, :search)
   end
 
   def access_params

@@ -11,6 +11,7 @@ module MessageService
       MESSAGE_UPDATED = "admin.chat.message_updated"
       MESSAGE_UPDATE_FAILED = "admin.chat.message_update_failed"
       MESSAGE_DELETED = "admin.chat.message_deleted"
+      NOT_FOUND = "admin.chat.not_found".freeze
     end
   end
 end

@@ -5,10 +5,11 @@ class V1::AssetsController < V1::ApplicationController
 
   # GET /v1/assets?type=video&page=1&limit=10
   def index
+    filters = filter_params
     assets = Asset.includes(:thumbnail, :subtitles)
-    assets = assets.where(type: params[:type]) if params[:type].present?
-    assets = filter_asset_record_scope(assets)
-    pagy, records = pagy(:offset, assets, limit: params[:limit])
+    assets = assets.where(type: filters[:type]) if filters[:type].present?
+    assets = filter_asset_record_scope(assets, filters[:record_scope])
+    pagy, records = pagy(:offset, assets, limit: filters[:limit])
 
     render_json_response(
       status_code: 200,
@@ -67,7 +68,8 @@ class V1::AssetsController < V1::ApplicationController
 
   # POST /assets/upload
   def create_upload
-    file = params[:file]
+    upload = upload_params
+    file = upload[:file]
 
     if file.blank?
       render_json_response(
@@ -92,10 +94,10 @@ class V1::AssetsController < V1::ApplicationController
       return
     end
 
-    asset_type = params[:type].presence || AssetConstants::AssetType::GENERAL
-    assetable_type = params[:assetable_type].presence
-    assetable_id = params[:assetable_id].presence
-    duration_secs = params[:duration_secs]
+    asset_type = upload[:type].presence || AssetConstants::AssetType::GENERAL
+    assetable_type = upload[:assetable_type].presence
+    assetable_id = upload[:assetable_id].presence
+    duration_secs = upload[:duration_secs]
 
     begin
       storage_key = AssetConstants::AssetName.for_user(user_id: current_user.id, type: asset_type, original_filename: file.original_filename)
@@ -128,7 +130,7 @@ class V1::AssetsController < V1::ApplicationController
 
       if asset.save
         enqueue_media_processing_if_needed(asset)
-        if asset.type == AssetConstants::AssetType::AVATAR && asset.assetable_type.to_s.downcase == "user" && asset.assetable_id.present?
+        if asset.type == AssetConstants::AssetType::AVATAR && asset.assetable_type.to_s.downcase == AssetConstants::AssetName::USER_NAMESPACE && asset.assetable_id.present?
           old_avatars = Asset.where(type: AssetConstants::AssetType::AVATAR, assetable_type: asset.assetable_type, assetable_id: asset.assetable_id)
                              .where.not(id: asset.id)
           Asset.purge_and_destroy_all!(old_avatars)
@@ -246,7 +248,7 @@ class V1::AssetsController < V1::ApplicationController
 
   # GET /assets/list
   def read_list
-    prefix = params[:prefix] || ""
+    prefix = list_params[:prefix].to_s
     assets = StorageService::Client.list(prefix)
 
     render_json_response(
@@ -266,12 +268,24 @@ class V1::AssetsController < V1::ApplicationController
 
   private
 
+  def filter_params
+    params.permit(:type, :limit, :record_scope)
+  end
+
+  def upload_params
+    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs)
+  end
+
+  def list_params
+    params.permit(:prefix)
+  end
+
   def asset_message(key, **options)
     MessageService::Asset.t(key, **options)
   end
 
   def set_asset
-    @asset = Asset.find(params[:id])
+    @asset = Asset.find(params.permit(:id)[:id])
   rescue ActiveRecord::RecordNotFound
     render_json_response(
       status_code: 404,
@@ -283,8 +297,8 @@ class V1::AssetsController < V1::ApplicationController
     params.require(:asset).permit(:name, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :assetable_type, :assetable_id)
   end
 
-  def filter_asset_record_scope(scope)
-    case params[:record_scope].presence
+  def filter_asset_record_scope(scope, record_scope = filter_params[:record_scope])
+    case record_scope.presence
     when AssetConstants::RecordScope::CHILDREN
       scope.where.not(parent_asset_id: nil)
     when AssetConstants::RecordScope::ALL

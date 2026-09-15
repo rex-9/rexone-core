@@ -24,13 +24,16 @@ module AppConfig
   CLIENT_BASE_URL = env_or.call("RAILS_CLIENT_BASE_URL", "http://localhost:4000")
   SERVER_BASE_URL = env_or.call("RAILS_SERVER_BASE_URL", "http://localhost:3000")
 
-  # Email / SMTP
+  # Email
+  EMAIL_PROVIDER = env_or.call("EMAIL_PROVIDER", "brevo")
   SMTP_ADDRESS = env_or.call("SMTP_ADDRESS", "smtp.gmail.com")
   SMTP_PORT = env_or.call("SMTP_PORT", "587").to_i
   SMTP_DOMAIN = env_or.call("SMTP_DOMAIN", "rexone.me")
   SMTP_USERNAME = env_or.call("SMTP_USERNAME", "")
   SMTP_PASSWORD = env_or.call("SMTP_PASSWORD", "")
   FROM_EMAIL = env_or.call("FROM_EMAIL", "support@rexone.me")
+  BREVO_API_KEY = env_or.call("BREVO_API_KEY", "")
+  BREVO_BASE_URL = env_or.call("BREVO_BASE_URL", "https://api.brevo.com/v3")
 
   # Stripe Keys
   STRIPE_SECRET_KEY = env_or.call("STRIPE_SECRET_KEY", "")
@@ -48,6 +51,11 @@ module AppConfig
   DEEPSEEK_API_KEY = env_or.call("DEEPSEEK_API_KEY", "")
   DEEPSEEK_BASE_URL = env_or.call("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
   DEEPSEEK_MODEL = env_or.call("DEEPSEEK_MODEL", "deepseek-v4-flash")
+
+  # Gemini Keys
+  GEMINI_API_KEY = env_or.call("GEMINI_API_KEY", "")
+  GEMINI_BASE_URL = env_or.call("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
+  GEMINI_MODEL = env_or.call("GEMINI_MODEL", "gemini-2.5-flash")
 
   # Speech
   SPEECH_SERVICE_BASE_URL = env_or.call("SPEECH_SERVICE_BASE_URL", "")

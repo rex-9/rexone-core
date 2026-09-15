@@ -5,9 +5,9 @@ class V1::Admin::AnalyticsController < V1::ApplicationController
   # GET /v1/admin/analytics/overview
   def read_overview
     result = AnalyticsService::Overview.call(
-      period: params[:period],
-      start_date: params[:start_date],
-      end_date: params[:end_date]
+      period: overview_params[:period],
+      start_date: overview_params[:start_date],
+      end_date: overview_params[:end_date]
     )
 
     render_json_response(
@@ -18,6 +18,10 @@ class V1::Admin::AnalyticsController < V1::ApplicationController
   end
 
   private
+
+  def overview_params
+    params.permit(:period, :start_date, :end_date)
+  end
 
   def analytics_message(key, **options)
     MessageService::Admin::Analytics.t(key, **options)
