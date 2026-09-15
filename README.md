@@ -2,18 +2,19 @@
 
 <div align="center">
 
-# Rexone Core
+# RexOne Core
 
-### A battle-hardened Rails foundation, forged so the product can wage the interesting war.
+### Start from One. Not from Zero. A battle-hardened Rails foundation, forged so the product can wage the interesting war.
 
 A production-minded API core for web and mobile products. Authentication, IAM, payments, access control, media, notifications, AI, real-time delivery, background work, administration, and observability stand ready—not as scattered trophies, but as one disciplined system.
 
-Built under a simple creed: **clear in thought, exact in structure, simple in use, and strong enough to endure what comes after launch.**
+Built under a simple creed: **Start from One. Not from Zero. Clear in thought, exact in structure, simple in use, and strong enough to endure what comes after launch.**
 
 [![Ruby](https://img.shields.io/badge/Ruby-4.0.4-CC342D?logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
 [![Rails](https://img.shields.io/badge/Rails-8.1-CC0000?logo=rubyonrails&logoColor=white)](https://rubyonrails.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Sponsor rex-9](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/rex-9)
 [![CI](https://github.com/rex-9/rexone-core/actions/workflows/test.yml/badge.svg)](https://github.com/rex-9/rexone-core/actions/workflows/test.yml)
 
 **API-first · Modular · Observable · Queue-aware · Built to grow**
@@ -30,7 +31,7 @@ Built under a simple creed: **clear in thought, exact in structure, simple in us
 
 >
 
-> **🗺️ Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of Rexone across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**.
+> **🗺️ Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of RexOne across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**.
 
 >
 
@@ -40,21 +41,25 @@ Built under a simple creed: **clear in thought, exact in structure, simple in us
 
 > **🛡️ Production Security**: Deployments must follow the origin-isolation, edge protection, rate limiting, and verification steps in **[Production DDoS and API Abuse Protection](docs/DDOS.md)**.
 
-## Why Rexone Core?
+## Why RexOne Core?
 
 Every product eventually meets the same old enemies: accounts, permissions, billing, uploads, jobs, notifications, dashboards, audit trails, failures, and the darkness between _“it works”_ and _“we know why it works.”_. Especially, the real challenge is _“it works on my machine.”_
 
-Rexone Core exists because this ground should not have to be conquered again for every product.
+RexOne Core exists because this ground should not have to be conquered again for every product.
 
-### The Purpose: Zero Spaghetti, Zero Hallucinated Debt
+### The Purpose: Start from One. Not from Zero.
 
-This foundation is built so that **AI coding assistants or human developers do not write spaghetti code, multi-layer hallucinated architectures, useless abstractions, unorganized code structures, or compounding technical debt**.
+Software has never been easier to generate, but more code does not automatically mean better systems. Human developers and AI coding agents can move fast, but speed without disciplined architecture burns money, AI compute, and human energy—wasting thousands of expensive tokens rewriting weak abstractions, fixing hallucinatory debt, or having to rebuild the exact same foundation again and again for every product.
 
-Instead of wasting engineering cycles inventing fragile ad-hoc plumbing:
+RexOne turns that repeated, expensive grind into a battle-tested, sovereign baseline.
 
-- **Focus 100% on the Business Model**: Everything around the domain is already built, integrated, and battle-tested—smart zero-decision-fatigue authentication, granular RBAC authorization, asynchronous job queues, durable Stripe billing and entitlements, provider-neutral media pipelines, real-time Action Cable WebSockets, and full-stack observability.
-- **Effortless Code Reviews**: Reviewing PRs is clean, fast, and predictable. When architectural patterns and boundaries are crystal clear, reviewers never have to read through unorganized garbage code or brittle one-off hacks.
-- **Automated Tests & CI - Across Server & Clients**: Robust, automated test suites & CI pipelines across Core (RSpec), Web, and Mobile ensure regressions are caught immediately and changes can be deployed with unshakeable confidence.
+**Start from One. Not from Zero.**
+
+- **Stop Burning Money on Repetitive Plumbing**: Avoid wasting expensive AI tokens and engineering hours rewriting authentication, IAM permissions, background queues, and storage bridges from scratch for every product.
+- **Zero Spaghetti, Zero Hallucinated Debt**: Explicit constitutional laws (`LAW.md`) keep human developers and AI coding agents strictly aligned on clean service boundaries, preventing architectural drift and compounding technical debt.
+- **Focus 100% on the Business Domain**: Everything around the domain is already built, integrated, and battle-tested—smart zero-decision-fatigue authentication, granular RBAC authorization, asynchronous job queues, durable Stripe billing and entitlements, provider-neutral media pipelines, real-time Action Cable WebSockets, and full-stack observability.
+- **Effortless Code Reviews**: Reviewing PRs is clean, fast, and predictable. When architectural patterns and boundaries are crystal clear, reviewers never have to wade through unorganized garbage code or brittle one-off hacks.
+- **Automated Tests & CI Across Server & Clients**: Robust, automated test suites & CI pipelines across Core (RSpec), Web (Playwright + Vitest), and Mobile ensure regressions are caught immediately and changes can be deployed with unshakeable confidence.
 
 The foundation is designed to **bend around the product**, never to make the product kneel before the framework.
 
@@ -64,11 +69,11 @@ And no—this was not vibe-coded into existence.
 
 The boundaries were reasoned about. Failure paths were traced. Immediate work was separated from deferred work. Retries, idempotency, observability, security, and data lifecycle were treated as engineering concerns, not decorations added after the demo survived.
 
-Rexone Core brings startup speed with battle-tested discipline—and fewer final-hour whispers of _“we should probably build that before launch.”_
+RexOne Core brings startup speed with battle-tested discipline—and fewer final-hour whispers of _“we should probably build that before launch.”_
 
-## Who Rexone is for
+## Who RexOne is for
 
-Rexone is built for Rails teams, founder-engineers, AI agents, and agencies creating API-first web or mobile products that need production infrastructure without rebuilding the same foundation for every launch.
+RexOne is built for Rails teams, founder-engineers, AI agents, and agencies creating API-first web or mobile products that need production infrastructure without rebuilding the same foundation for every launch.
 
 It is a particularly good fit when you want to:
 
@@ -85,21 +90,21 @@ It is a particularly good fit when you want to:
   - Operational dashboards, client telemetry, audit trails, and health checks.
   - Reference React and Flutter clients consuming the exact same contracts.
 
-Rexone is not a no-code application generator or a promise that every product domain is already modeled. It supplies the disciplined platform foundation; the product remains responsible for its own domain, workflows, interface, and operating decisions.
+RexOne is not a no-code application generator or a promise that every product domain is already modeled. It supplies the disciplined platform foundation; the product remains responsible for its own domain, workflows, interface, and operating decisions.
 
 ## What you get
 
 - **One coherent system:** identity, authorization, commerce, media, async work, notifications, and observability are designed to cooperate.
-- **Real client contracts:** [Rexone Web](https://github.com/rex-9/rexone-web) and [Rexone Mobile](https://github.com/rex-9/rexone_mobile) exercise the same versioned API and real-time events.
+- **Real client contracts:** [RexOne Web](https://github.com/rex-9/rexone-web) and [RexOne Mobile](https://github.com/rex-9/rexone_mobile) exercise the same versioned API and real-time events.
 - **Replaceable providers:** external services remain behind focused client and base contracts.
 - **Inspectable operations:** queues, cache, sockets, performance, backend errors, and frontend telemetry have explicit operational surfaces.
 - **A documented engineering standard:** architectural constraints, API conventions, lifecycle rules, and cross-client responsibilities are written down and tested.
 
-The public [open-source growth roadmap](docs/OPEN_SOURCE_GROWTH_ROADMAP.md) tracks how Rexone will improve evaluation, evidence, contribution readiness, and responsible distribution.
+The public [open-source growth roadmap](docs/OPEN_SOURCE_GROWTH_ROADMAP.md) tracks how RexOne will improve evaluation, evidence, contribution readiness, and responsible distribution.
 
 ## The philosophy
 
-Rexone Core follows a simple doctrine:
+RexOne Core follows a simple doctrine:
 
 > **Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle.**
 
@@ -136,7 +141,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 ## Architecture
 
-Rexone Core keeps framework concerns conventional and integrations replaceable.
+RexOne Core keeps framework concerns conventional and integrations replaceable.
 
 Controllers own HTTP contracts, models own data rules, services own business and provider boundaries, jobs own deferred work, and serializers own response representation.
 
@@ -197,7 +202,7 @@ The API and worker run as separate services in Docker, keeping request handling 
 
 ## Foundation capabilities
 
-Rexone Core integrates identity, IAM, payments and entitlements, notifications, media, AI, speech, version management, administration, and observability behind explicit service and provider boundaries.
+RexOne Core integrates identity, IAM, payments and entitlements, notifications, media, AI, speech, version management, administration, and observability behind explicit service and provider boundaries.
 
 Read the [Foundation Guide](docs/FOUNDATION.md) for the detailed capability map, lifecycle behavior, provider boundaries, and operational responsibilities. The [Ecosystem Architecture](ECOSYSTEM.md) defines how Core, Web, and Mobile divide ownership and communicate.
 
@@ -234,7 +239,7 @@ cp .env.example .env
 ./scripts/dev.sh
 ```
 
-For **Rexone Web**, run its container:
+For **RexOne Web**, run its container:
 
 ```bash
 cd ../rexone-web
@@ -273,7 +278,7 @@ The API is broader than a starter CRUD demo. Its main route families are:
 | Payments         | `/v1/payment/*`, `/webhooks/stripe`                                                                                                                                 |
 | Entitlements     | `/v1/access/*`                                                                                                                                                      |
 | Media            | `/v1/assets/upload`, `/v1/assets`, `/v1/assets/:id/playback`                                                                                                        |
-| Notifications    | `/v1/admin/notifications`, `/v1/admin/user_notifications` (lifecycle CRUD: active, recycle bin, discard, undiscard, destroy, batch operations) |
+| Notifications    | `/v1/admin/notifications`, `/v1/admin/user_notifications` (lifecycle CRUD: active, recycle bin, discard, undiscard, destroy, batch operations)                      |
 | Chat             | `/v1/chat/rooms`, `/v1/chat/messages`, `/v1/chat/messages/destroy_all` (RESTful CRUD + message purge)                                                               |
 | Admin Chat       | `/v1/admin/chat/rooms`, `/v1/admin/chat/messages` (moderation CRUD: discard, undiscard, destroy)                                                                    |
 | Admin AI         | `/v1/admin/ai/profiles` (index, show, create, update with provider & model filters), `/v1/admin/ai/runs` (execution audit log & diagnostics with sorting/filters)   |
@@ -301,14 +306,14 @@ Before production:
 6. Put TLS and a trusted reverse proxy in front of the application.
 7. Review retention, throttling, alerting, and backup policies for your product.
 
-## Clients in Rexone Ecosystem
+## Clients in RexOne Ecosystem
 
-- [Rexone Web](https://github.com/rex-9/rexone-web) — web client
-- [Rexone Mobile](https://github.com/rex-9/rexone_mobile) — mobile client
+- [RexOne Web](https://github.com/rex-9/rexone-web) — web client
+- [RexOne Mobile](https://github.com/rex-9/rexone_mobile) — mobile client
 
 ## 🎨 Rebranding
 
-Rexone Core serves as the master rebranding engine for the entire ecosystem:
+RexOne Core serves as the master rebranding engine for the entire ecosystem:
 
 ```bash
 # 1. Rebrand all 3 repositories from rexone-core:
@@ -323,18 +328,21 @@ DEFAULT_MAIL_SENDER="no-reply@mynewapp.com"
 
 ## 🏛️ Ecosystem Lineage & Attribution
 
-This API core is built on top of the **Rexone Ecosystem** (`rex-9`). When creating derivative products or white-label backends:
+This API core is built on top of the **RexOne Ecosystem** (`rex-9`). When creating derivative products or white-label backends:
 
 - Developers and creators are warmly encouraged to preserve ecosystem credit in documentation to support the project.
 - All development must strictly adhere to the constitutional engineering standards in **[LAW.md](LAW.md)** and **[ECOSYSTEM.md](ECOSYSTEM.md)**.
 
 ---
 
-## Support the project
+## 💖 Sponsor & Support RexOne
 
-If Rexone Core saves you a few weeks—or saves you from one memorable production incident—consider giving it a star. 🌟
+RexOne is built and maintained by Rex ([@rex-9](https://github.com/rex-9)). If RexOne saves you engineering weeks, AI tokens, or cloud compute costs, consider supporting the foundation!
 
+[![Sponsor rex-9](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/rex-9)
 [![GitHub Stars](https://img.shields.io/github/stars/rex-9/rexone-core.svg?style=social&label=Star)](https://github.com/rex-9/rexone-core)
+
+👉 **[Sponsor Rex on GitHub](https://github.com/sponsors/rex-9)**
 
 ## Author
 
@@ -348,6 +356,6 @@ I build systems the same way I approach the path itself: **with a clear mind, de
 - Portfolio: [rex9.me](https://rex9.me)
 - LinkedIn: [rex9](https://www.linkedin.com/in/rex9/)
 
-_Built with ❤️ by Rex9 on Rexone Ecosystem_
+_Built with ❤️ by Rex9 on RexOne Ecosystem_
 
 <p align="right"><a href="#readme-top">Back to top ↑</a></p>

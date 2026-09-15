@@ -1,6 +1,6 @@
-# 🏛️ The Rexone Ecosystem
+# 🏛️ The RexOne Ecosystem
 
-A unified, production-grade architectural blueprint spanning **Rexone Core** (Backend), **Rexone Web** (React SPA), and **Rexone Mobile** (Flutter App).
+A unified, production-grade architectural blueprint spanning **RexOne Core** (Backend), **RexOne Web** (React SPA), and **RexOne Mobile** (Flutter App).
 
 ---
 
@@ -9,24 +9,21 @@ A unified, production-grade architectural blueprint spanning **Rexone Core** (Ba
 Across all three repositories, the architecture adheres to one uncompromising doctrine:
 
 > [!IMPORTANT]
-
-> **"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."**
-
+> **Start from One. Not from Zero.**
 >
+> _"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."_
 
-> 📜 **Constitutional Law**: For strict repository-specific engineering constraints and architectural rules, see **[LAW.md](LAW.md)**. All applications and derivative products built upon the **Rexone Ecosystem** (`rex-9`) must strictly adhere to these rules and protocols without exception. Developers are warmly encouraged to preserve ecosystem credit to support the project.
-
+> 📜 **Constitutional Law**: For strict repository-specific engineering constraints and architectural rules, see **[LAW.md](LAW.md)**. All applications and derivative products built upon the **RexOne Ecosystem** (`rex-9`) must strictly adhere to these rules and protocols without exception. Developers are warmly encouraged to preserve ecosystem credit to support the project.
 >
-
 > 🗺️ **Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of the ecosystem across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**.
-
 >
-
 > 🛡️ **Production Operations**: Use the **[Production Deployment Guide](docs/DEPLOYMENT.md)** together with **[DDoS and API Abuse Protection](docs/DDOS.md)**. Cloudflare, origin isolation, proxy limits, Rack Attack, and bounded application resources form one defense system.
-
+>
 > 🎞️ **Media Playback**: Stored audio/video delivery uses Core-authorized short-lived provider URLs. See **[Media Playback](docs/MEDIA_PLAYBACK.md)**; future HLS/adaptive work stays in **[Media Streaming Roadmap](docs/roadmaps/MEDIA_STREAMING.md)**.
 
-The Rexone platform provides a unified, battle-tested foundation where **any modern digital product** can be rapidly developed on top of ready-made capabilities: Identity & IAM, Commerce & Subscriptions, Background Queues, Asset Management, Real-Time WebSockets, Queued AI, Push Notifications, Product Analytics, Client Telemetry, In-App Upgrades, and Multi-Language Localization.
+The RexOne platform provides a unified, battle-tested foundation where **any modern digital product** can be rapidly developed on top of ready-made capabilities: Identity & IAM, Commerce & Subscriptions, Background Queues, Asset Management, Real-Time WebSockets, Queued AI, Push Notifications, Product Analytics, Client Telemetry, In-App Upgrades, and Multi-Language Localization.
+
+Instead of burning money and compute wasting AI tokens on weak architecture or having to rebuild foundation plumbing again and again for every product, RexOne establishes a disciplined baseline: **Start from One. Not from Zero.**
 
 ---
 
@@ -35,8 +32,8 @@ The Rexone platform provides a unified, battle-tested foundation where **any mod
 ```mermaid
 flowchart TB
     subgraph Clients["Clients Layer"]
-        Web["Rexone Web (React 19 + Vite 8 + TS 6)"]
-        Mobile["Rexone Mobile (Flutter 3 + GetX MVC)"]
+        Web["RexOne Web (React 19 + Vite 8 + TS 6)"]
+        Mobile["RexOne Mobile (Flutter 3 + GetX MVC)"]
     end
 
     subgraph Transport["Transport Layer"]
@@ -44,7 +41,7 @@ flowchart TB
         WSS["WSS (Action Cable / Solid Cable Protocol)"]
     end
 
-    subgraph Core["Rexone Core (Rails 8.1 API + Ruby 4.0.4)"]
+    subgraph Core["RexOne Core (Rails 8.1 API + Ruby 4.0.4)"]
         API["Rails API Layer (Devise, Controllers, IAM, Pagy)"]
         Waka["Waka Worker (Solid Queue: payments, ai, notifications, storage)"]
         Media["Media Worker (Solid Queue: media compression via libvips / FFmpeg)"]
@@ -137,7 +134,7 @@ Heavy or external provider operations sit behind clean service interfaces and ex
 
 ### 🌟 The Revolutionary Smart Auth System (Zero Decision Fatigue)
 
-Unlike legacy systems that force users through frustrating decision trees ("Do you want to log in or sign up?", "Select SSO vs Email", "Enter password vs request magic link"), Rexone's authentication engine eliminates decision fatigue entirely:
+Unlike legacy systems that force users through frustrating decision trees ("Do you want to log in or sign up?", "Select SSO vs Email", "Enter password vs request magic link"), RexOne's authentication engine eliminates decision fatigue entirely:
 
 - **Unified Single-Field Entry**: The user simply enters their email or username. The system dynamically queries the account state (`/peek`) to infer whether to proceed with registration, prompt for their 6-digit passcode, route through email verification, or apply rate-limited security cooldowns.
 - **Frictionless Google SSO & Challenge Flows**: Seamlessly links OAuth accounts and requests password setup only when necessary, smoothly converting unconfirmed dropped registrations without jarring interruptions.
@@ -235,7 +232,7 @@ Defined under `src/design/`:
 
 ### 🎨 Mobile Design System (`lib/design/`)
 
-Rexone Mobile has a strictly governed design system accessible via `lib/design/design.dart`:
+RexOne Mobile has a strictly governed design system accessible via `lib/design/design.dart`:
 
 - **Elements**: `AppColors` (Neon Sunset Coral, Secondary Coral, Accent Crimson, Night/Day surfaces, text), `AppTypography`, `AppSpacing`, `AppStyles`, `AppIcons`, `AppMedia`, `AppTimers`, `AppTheme` (Light/Dark mode Material 3).
 - **Theme Extensions**: `context.colors.*` and `context.typo.*` for theme-aware reactive styling.
@@ -260,7 +257,7 @@ Rexone Mobile has a strictly governed design system accessible via `lib/design/d
 
 # 4. 📊 Ecosystem Feature Parity Matrix
 
-All three pillars of the Rexone platform are fully aligned at **100% feature parity**:
+All three pillars of the RexOne platform are fully aligned at **100% feature parity**:
 
 | Capability Area                                                           | `rexone-core` |     `rexone-web`     |     `rexone_mobile`      |
 | ------------------------------------------------------------------------- | :-----------: | :------------------: | :----------------------: |
@@ -347,7 +344,7 @@ All three pillars of the Rexone platform are fully aligned at **100% feature par
       - `payment_success`: `{ "type": "payment_success", "product_name": "Pro Plan", "amount": "$10.00" }`
       - `subscription_created` / `subscription_canceled` / `subscription_resumed`: `{ "type": "subscription_canceled", "product_name": "...", "active_until": "ISO8601" }`
       - `in_app_notification`: `{ "id": "UUID", "title": "...", "message": "...", "link": "/home", "read_at": null, "created_at": "ISO8601", "metadata": { ... } }`
-      - `link` is the single navigation target. Shared in-app destinations are `/home`, `/profile`, `/payment`, and `/ai`; an absolute `https://` URL represents an external destination. Web opens external destinations in a new tab. Mobile asks for confirmation before leaving Rexone and opening the system browser. Unsupported internal routes and IAM updates keep the current Mobile screen open and identify the Rexone Web admin portal through the shared confirmation dialog.
+      - `link` is the single navigation target. Shared in-app destinations are `/home`, `/profile`, `/payment`, and `/ai`; an absolute `https://` URL represents an external destination. Web opens external destinations in a new tab. Mobile asks for confirmation before leaving RexOne and opening the system browser. Unsupported internal routes and IAM updates keep the current Mobile screen open and identify the RexOne Web admin portal through the shared confirmation dialog.
       - `welcome`: Sent upon first successful Action Cable subscription.
   - **`SpeechLiveChannel`** (`speech_live_{user_id}`):
     - **Subscription Parameters**: `{ "channel": "SpeechLiveChannel", "language": "en-US" }`
@@ -390,7 +387,7 @@ Clients keep sending `"app_version": "1.0.0"`. Core looks up a kept `Client::Ver
 
 ### 4. Password Retry & Cooldown Escalation Protocol
 
-- Governed by Redis keys on Rexone Core:
+- Governed by Redis keys on RexOne Core:
   - `password:attempts:{user_id}`: Failed attempt counter (TTL 1 hour).
   - `password:cooldown:{user_id}`: Cooldown lock timestamp.
 - **Escalation Schedule**:
@@ -419,5 +416,5 @@ Clients keep sending `"app_version": "1.0.0"`. Core looks up a kept `Client::Ver
 ---
 
 <div align="center">
-  <sub>Built with discipline and care across the entire Rexone ecosystem.</sub>
+  <sub>Built with discipline and care across the entire RexOne ecosystem.</sub>
 </div>
