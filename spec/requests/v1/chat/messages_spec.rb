@@ -31,6 +31,40 @@ RSpec.describe "V1 Chat Messages API", type: :request do
       expect(response_data.size).to eq(3)
     end
 
+    it "returns TTS assets on assistant messages" do
+      allow(StorageService::Client).to receive(:url).and_return("https://cdn.example.com/speech.mp3")
+      assistant_message = create(:chat_message, room: room, role: "assistant", content: "Hello there")
+      create(
+        :asset,
+        type: "tts",
+        format: "audio",
+        source: "upload",
+        url: "https://cdn.example.com/speech.mp3",
+        storage_key: "dev/user/#{user.id}/tts/tts_message_#{assistant_message.id}_1789283588.mp3",
+        assetable_type: "Chat::Message",
+        assetable_id: assistant_message.id
+      )
+      assistant_message.update!(
+        metadata: assistant_message.metadata.merge(
+          "tts_status" => Chat::Message::STATUSES[:completed]
+        )
+      )
+
+      get "/v1/chat/messages", params: { room_id: room.id }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      message = response_data.find { |item| item.dig("attributes", "id") == assistant_message.id }
+      expect(message.dig("attributes", "metadata", "tts_status")).to eq("completed")
+      expect(message.dig("attributes", "assets")).to contain_exactly(
+        hash_including(
+          "url" => "https://cdn.example.com/speech.mp3",
+          "type" => "tts",
+          "assetable_type" => "Chat::Message",
+          "assetable_id" => assistant_message.id
+        )
+      )
+    end
+
     it "prevents accessing messages of another user's room" do
       other_user = create(:user)
       other_room = create(:chat_room, user: other_user)

@@ -3,12 +3,19 @@ require "rails_helper"
 RSpec.describe Speech::ProcessTtsJob, type: :job do
   let(:room) { create(:chat_room) }
   let(:message) { create(:chat_message, room: room, role: "assistant", content: "Hello there") }
-  let(:logical_key) { "user/tts/tts_message_#{message.id}_of_#{room.user_id}.mp3" }
+  let(:frozen_time) { Time.zone.local(2026, 9, 15, 12, 0, 0) }
+  let(:logical_key) do
+    "user/#{room.user_id}/tts/tts_message_#{message.id}_#{frozen_time.to_i}.mp3"
+  end
   let(:storage_key) { "dev/#{logical_key}" }
 
   before do
     allow(NotificationService::Center).to receive(:notify)
     allow(Media::CompressMediaJob).to receive(:perform_later)
+  end
+
+  around do |example|
+    travel_to(frozen_time) { example.run }
   end
 
   it "synthesizes, uploads, persists a TTS Asset, queues audio processing, and notifies readiness" do
