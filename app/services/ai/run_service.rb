@@ -79,7 +79,9 @@ module Ai
 
       def complete_run!(run, result, latency_ms)
         usage = result["usage"] || {}
-        output = result.dig("choices", 0, "message", "content").to_s
+        choice = result.dig("choices", 0) || {}
+        message_obj = choice["message"] || {}
+        output = (message_obj["content"].presence || message_obj["reasoning_content"]).to_s
         run.update!(
           status: AiConstants::RunStatus::COMPLETED,
           output_chars: output.length,

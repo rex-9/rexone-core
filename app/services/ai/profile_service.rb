@@ -8,17 +8,17 @@ module Ai
     DEFAULTS = {
       AiConstants::ProfileKey::CHAT_DEFAULT => {
         name: "Default Chat",
-        temperature: 0.7,
-        max_output_tokens: 2000,
-        context_max_tokens: 8000,
-        history_max_messages: 20,
+        temperature: AiConstants::Defaults::TEMPERATURE,
+        max_output_tokens: AiConstants::Defaults::MAX_OUTPUT_TOKENS,
+        context_max_tokens: AiConstants::Defaults::CONTEXT_MAX_TOKENS,
+        history_max_messages: AiConstants::Defaults::HISTORY_MAX_MESSAGES,
         system_prompt: nil
       },
       AiConstants::ProfileKey::SUMMARIZE => {
         name: "Summarize",
         temperature: 0.5,
         max_output_tokens: 500,
-        context_max_tokens: 4000,
+        context_max_tokens: AiConstants::Defaults::MAX_OUTPUT_TOKENS,
         history_max_messages: 1,
         system_prompt: "Summarize the following text concisely."
       },
@@ -26,7 +26,7 @@ module Ai
         name: "Translate",
         temperature: 0.3,
         max_output_tokens: 1000,
-        context_max_tokens: 4000,
+        context_max_tokens: AiConstants::Defaults::MAX_OUTPUT_TOKENS,
         history_max_messages: 1,
         system_prompt: "Translate the following text to %{language}. Return only the translation."
       },
@@ -34,7 +34,7 @@ module Ai
         name: "Analyze",
         temperature: 0.3,
         max_output_tokens: 500,
-        context_max_tokens: 4000,
+        context_max_tokens: AiConstants::Defaults::MAX_OUTPUT_TOKENS,
         history_max_messages: 1,
         system_prompt: "Analyze the following text and provide concise insights."
       }
@@ -71,10 +71,10 @@ module Ai
         attrs = attributes.to_h.symbolize_keys
         attrs[:provider] = attrs[:provider].presence || AiConstants::Provider::DEEPSEEK
         attrs[:model] = attrs[:model].presence || AppConfig::DEEPSEEK_MODEL
-        attrs[:temperature] ||= 0.7
-        attrs[:max_output_tokens] ||= 2000
-        attrs[:context_max_tokens] ||= 8000
-        attrs[:history_max_messages] ||= 20
+        attrs[:temperature] ||= AiConstants::Defaults::TEMPERATURE
+        attrs[:max_output_tokens] ||= AiConstants::Defaults::MAX_OUTPUT_TOKENS
+        attrs[:context_max_tokens] ||= AiConstants::Defaults::CONTEXT_MAX_TOKENS
+        attrs[:history_max_messages] ||= AiConstants::Defaults::HISTORY_MAX_MESSAGES
         attrs[:timeout_seconds] ||= AiConstants::Defaults::TIMEOUT_SECONDS
         attrs[:enabled] = true if attrs[:enabled].nil?
 
