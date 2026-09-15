@@ -139,7 +139,8 @@ Upon authentication, the user lands on the Home dashboard hub (`rexone-web/src/d
 
 <!-- SCREENSHOT:HOM01 — Home Page -->
 <p align="center">
-  <img src="./images/walkthrough/home/home-web.png" alt="Rexone Home Page Hub" width="100%">
+  <img src="./images/walkthrough/home/home-web.png" alt="Rexone Home Page Hub (Web)" width="73%">
+  <img src="./images/walkthrough/home/home-mobile.png" alt="Rexone Home Page Hub (Mobile)" width="25%">
 </p>
 
 Designed as a clean, flexible launchpad ready to adapt to any business requirements:
@@ -161,7 +162,7 @@ Instead of beginning with separate “Sign in” and “Sign up” decisions, or
 <!-- SCREENSHOT:A01 — Web Initial/Auth dialog + Mobile initial email/identifier screen -->
 <p align="center">
   <img src="./images/walkthrough/auth/a01-web.png" alt="A01 Web — initial identifier entry" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="A01 Mobile — initial identifier entry" width="25%">
+  <img src="./images/walkthrough/auth/a01-mobile.png" alt="A01 Mobile — initial identifier entry" width="25%">
 </p>
 
 **Capture A01**
@@ -196,7 +197,7 @@ flowchart TD
 <!-- SCREENSHOT:A02 — existing user passcode -->
 <p align="center">
   <img src="./images/walkthrough/auth/a02-web.png" alt="A02 Web — six-digit sign-in passcode" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="A02 Mobile — six-digit sign-in passcode" width="25%">
+  <img src="./images/walkthrough/auth/a02-mobile.png" alt="A02 Mobile — six-digit sign-in passcode" width="25%">
 </p>
 
 The credentials are intentionally kept out of persistent client storage and URL parameters. Web keeps sensitive passcode state in memory while still allowing the dialog step itself to be URL-addressable. Mobile likewise keeps credentials out of route arguments and persistent storage.
@@ -281,7 +282,7 @@ This keeps native and browser use independent without allowing an unlimited coll
 <!-- SCREENSHOT:P01 — profile -->
 <p align="center">
   <img src="./images/walkthrough/profile/p01-web.png" alt="P01 Web — profile/account settings" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="P01 Mobile — profile/account screen" width="25%">
+  <img src="./images/walkthrough/profile/p01-mobile.png" alt="P01 Mobile — profile/account screen" width="25%">
 </p>
 
 The account model stays shared while each client uses platform-appropriate interaction.
@@ -342,7 +343,7 @@ Rexone connects product presentation, Stripe Checkout, durable webhook processin
 <!-- SCREENSHOT:C01 — products -->
 <p align="center">
   <img src="./images/walkthrough/commerce/c01-web.png" alt="C01 Web — product catalogue" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="C01 Mobile — product catalogue" width="25%">
+  <img src="./images/walkthrough/commerce/c01-mobile.png" alt="C01 Mobile — product catalogue" width="25%">
 </p>
 
 Web and Mobile retrieve the same Core product catalogue and distinguish one-time payments, monthly subscriptions, and free tiers. Products are created and managed directly in the client admin portal and synced with Stripe via automated webhooks.
@@ -417,7 +418,7 @@ AI is intentionally non-blocking. A user message can be persisted immediately, p
 <!-- SCREENSHOT:AI01 — AI chat -->
 <p align="center">
   <img src="./images/walkthrough/ai/ai01-web.png" alt="AI01 Web — AI workspace" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="AI01 Mobile — AI assistant" width="25%">
+  <img src="./images/walkthrough/ai/ai01-mobile.png" alt="AI01 Mobile — AI assistant" width="25%">
 </p>
 
 Both clients support persistent rooms/history, multi-provider model profiles (DeepSeek, Google Gemini), and a visible queued/processing state:
@@ -480,7 +481,7 @@ Core coordinates:
 <!-- SCREENSHOT:N01 — notification inbox / center if currently exposed on both clients -->
 <p align="center">
   <img src="./images/walkthrough/notifications/n01-web.png" alt="N01 Web — Topbar Notification Center Popover" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="N01 Mobile — notification inbox" width="25%">
+  <img src="./images/walkthrough/notifications/n01-mobile.png" alt="N01 Mobile — notification inbox" width="25%">
 </p>
 
 If one client does not currently expose a dedicated inbox screen, keep only the implemented screenshot and document the Core capability below it rather than fabricating parity.
@@ -516,7 +517,7 @@ Rexone’s feedback system follows the same “remove unnecessary decisions from
 <!-- SCREENSHOT:F01 — feedback modal / bottom sheet -->
 <p align="center">
   <img src="./images/walkthrough/feedback/f01-web.png" alt="F01 Web — In-Place Dark Mode Feedback Dialog" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="F01 Mobile — in-place feedback" width="25%">
+  <img src="./images/walkthrough/feedback/f01-mobile.png" alt="F01 Mobile — in-place feedback" width="25%">
 </p>
 
 The user can give a short message and/or feeling score without navigating to a bureaucratic support form. Clients automatically attach contextual telemetry such as route/screen, platform, app version, and relevant device/browser information.
@@ -1190,20 +1191,28 @@ Working checklist and file index of all visual assets integrated across this wal
 | ID     | Area            | File Path                                        | Description                             | Status    |
 | ------ | --------------- | ------------------------------------------------ | --------------------------------------- | --------- |
 | LND01  | Landing         | `docs/images/walkthrough/landing/landing-web.jpg` | Rexone Landing Page (Modular sections)  | Captured  |
-| HOM01  | Home            | `docs/images/walkthrough/home/home-web.png`       | Home Dashboard Hub & Role Guards        | Captured  |
-| A01    | Auth            | `docs/images/walkthrough/auth/a01-web.png`        | Initial Identifier Discovery (Zero DT)  | Captured  |
-| A02    | Auth            | `docs/images/walkthrough/auth/a02-web.png`        | 6-Digit Passcode Entry & Security State  | Captured  |
-| P01    | Profile         | `docs/images/walkthrough/profile/p01-web.png`     | User Profile & Account Settings         | Captured  |
+| HOM01  | Home            | `docs/images/walkthrough/home/home-web.png`       | Home Dashboard Hub & Role Guards (Web)  | Captured  |
+| HOM01_M| Home            | `docs/images/walkthrough/home/home-mobile.png`    | Home Dashboard Hub (Mobile Native)      | Captured  |
+| A01    | Auth            | `docs/images/walkthrough/auth/a01-web.png`        | Initial Identifier Discovery (Zero DT Web) | Captured  |
+| A01_M  | Auth            | `docs/images/walkthrough/auth/a01-mobile.png`     | Initial Identifier Discovery (Mobile)   | Captured  |
+| A02    | Auth            | `docs/images/walkthrough/auth/a02-web.png`        | 6-Digit Passcode Entry (Web)            | Captured  |
+| A02_M  | Auth            | `docs/images/walkthrough/auth/a02-mobile.png`     | 6-Digit Passcode Entry (Mobile Native)  | Captured  |
+| P01    | Profile         | `docs/images/walkthrough/profile/p01-web.png`     | User Profile & Account Settings (Web)   | Captured  |
+| P01_M  | Profile         | `docs/images/walkthrough/profile/p01-mobile.png`  | User Profile & Account Settings (Mobile)| Captured  |
 | I01    | IAM             | `docs/images/walkthrough/admin/ad01-web.png`      | Permission-Aware Admin Navigation       | Captured  |
 | I02    | IAM             | `docs/images/walkthrough/admin/ad-role-detail-web.png` | Role Details & Granular Permission Matrix | Captured |
-| C01    | Commerce        | `docs/images/walkthrough/commerce/c01-web.png`    | Product Catalogue & Pricing Plans       | Captured  |
+| C01    | Commerce        | `docs/images/walkthrough/commerce/c01-web.png`    | Product Catalogue & Pricing Plans (Web) | Captured  |
+| C01_M  | Commerce        | `docs/images/walkthrough/commerce/c01-mobile.png` | Product Catalogue & Pricing Plans (Mobile) | Captured |
 | C03    | Commerce        | `docs/images/walkthrough/commerce/c03-web.png`    | Active Entitlements & Purchased Products | Captured  |
 | C04    | Commerce        | `docs/images/walkthrough/admin/ad-transactions-web.png` | Admin Transactions Audit          | Captured  |
 | C05    | Commerce        | `docs/images/walkthrough/admin/ad-subscriptions-web.png` | Admin Subscriptions Lifecycle    | Captured  |
 | AI01   | AI              | `docs/images/walkthrough/ai/ai01-web.png`         | Persistent AI Workspace & Background Q  | Captured  |
-| N01    | Notifications   | `docs/images/walkthrough/notifications/n01-web.png` | Notification Center Popover & Unread Drawer | Captured |
+| AI01_M | AI              | `docs/images/walkthrough/ai/ai01-mobile.png`      | Persistent AI Chat & Audio (Mobile)     | Captured  |
+| N01    | Notifications   | `docs/images/walkthrough/notifications/n01-web.png` | Notification Center Popover (Web)     | Captured |
+| N01_M  | Notifications   | `docs/images/walkthrough/notifications/n01-mobile.png` | Notification Inbox & Badges (Mobile)| Captured |
 | N03    | Notifications   | `docs/images/walkthrough/admin/ad06-web.png`      | Admin Broadcast Dispatch                | Captured  |
-| F01    | Feedback        | `docs/images/walkthrough/feedback/f01-web.png`    | In-Place Feedback Dialog & Rating       | Captured  |
+| F01    | Feedback        | `docs/images/walkthrough/feedback/f01-web.png`    | In-Place Feedback Dialog (Web)          | Captured  |
+| F01_M  | Feedback        | `docs/images/walkthrough/feedback/f01-mobile.png` | In-Place Feedback Sheet (Mobile)        | Captured  |
 | F02    | Feedback        | `docs/images/walkthrough/admin/ad09-web.png`      | Feedback Triage & Telemetry             | Captured  |
 | M01    | Media           | `docs/images/walkthrough/media/m01-web.png`       | Asset Control Center                    | Captured  |
 | M03    | Media Delivery  | `docs/images/walkthrough/media/m03-web.png`       | Test Lab Video/Audio Streaming          | Captured  |
@@ -1232,7 +1241,7 @@ Working checklist and file index of all visual assets integrated across this wal
 | O06    | Operations      | `docs/images/walkthrough/operations/o06-solid-cable.png`  | Solid Web UI — Cable             | Captured  |
 | O07    | Operations      | `docs/images/walkthrough/operations/o07-swagger.png`      | Rswag OpenAPI Documentation      | Captured  |
 
-All 37 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
+All 45 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
 
 ## Suggested file naming
 

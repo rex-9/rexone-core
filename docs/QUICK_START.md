@@ -49,16 +49,42 @@ The main configuration groups are:
 
 Development placeholders are acceptable for providers you are not exercising. They are not acceptable in a deployed environment. Keep production credentials in the deployment platform or an encrypted secret store rather than Git.
 
-Configuration determines which development terminals are necessary:
+Configuration determines which services are enabled:
 
-- `STORAGE_PROVIDER=garage` requires the Garage terminal.
-- Enabling Core media processing requires the media-worker terminal.
-- Local Stripe webhook handling requires the Stripe CLI forwarding terminal.
-- Alternative providers should run their own required local services instead.
+- `STORAGE_PROVIDER=garage` enables self-hosted Garage S3 storage.
+- Enabling Core media processing boots the dedicated media-worker.
+- Local Stripe webhook handling requires the Stripe CLI forwarding process.
+- Alternative storage/media providers should run their own required local services instead.
 
-## 2. Start Core in separate terminals
+## 2. Start Core with Docker (Recommended)
 
-Core intentionally provides one development script per responsibility. Start each enabled process in its own terminal so logs and failures remain easy to identify.
+When Docker is installed, you do **not** need six terminals. All Core services (PostgreSQL, Rails 8 API, Solid Queue workers, self-hosted Garage S3 storage, and media processor) boot together cleanly in a single script:
+
+```bash
+./scripts/dev.sh
+# (runs: docker compose -f docker-compose.dev.yaml up)
+```
+
+This automatically orchestrates:
+- **`db`**: PostgreSQL database with automated healthchecks.
+- **`api`**: Rails 8 API server on `http://localhost:3000` (auto-runs `db:prepare`).
+- **`waka`**: Solid Queue general background worker for asynchronous jobs.
+- **`garage`**: Self-hosted S3-compatible object storage on `http://localhost:3100`.
+- **`media`**: Dedicated media worker processing video/audio/image pipelines.
+
+### The Only Optional Terminal: Stripe Webhook Forwarding
+
+If you are developing or testing Stripe billing and subscriptions locally, open **one optional terminal** to run the Stripe CLI forwarder:
+
+```bash
+./scripts/listen_webhook.sh
+```
+
+---
+
+### Alternative: Granular Process Isolation (Advanced Debugging)
+
+For developers who require isolated stdout streams or individual service restarts during low-level engine debugging, Core also provides individual scripts for each responsibility:
 
 | Terminal | Command | Responsibility | When required |
 | --- | --- | --- | --- |
@@ -67,33 +93,11 @@ Core intentionally provides one development script per responsibility. Start eac
 | 3 | `./scripts/dev_waka.sh` | General Solid Queue worker | Always for queued application work |
 | 4 | `./scripts/dev_garage.sh` | Garage S3 storage at `http://localhost:3100` | When `STORAGE_PROVIDER=garage` |
 | 5 | `./scripts/dev_media.sh` | Image, video, audio, and thumbnail worker | When the media service is enabled |
-| 6 | `./scripts/listen_webhook.sh` | Stripe CLI webhook forwarding | When using Stripe locally |
-
-For the default Garage, media, and Stripe development configuration, open six Core terminals and run one command in each:
-
-```bash
-# Terminal 1
-./scripts/dev_db.sh
-
-# Terminal 2
-./scripts/dev_api.sh
-
-# Terminal 3
-./scripts/dev_waka.sh
-
-# Terminal 4 — optional with another storage provider
-./scripts/dev_garage.sh
-
-# Terminal 5 — optional when media processing is disabled
-./scripts/dev_media.sh
-
-# Terminal 6 — optional with another payment gateway or no local Stripe webhooks
-./scripts/listen_webhook.sh
-```
+| 6 (Optional) | `./scripts/listen_webhook.sh` | Stripe CLI webhook forwarding | When using Stripe locally |
 
 Garage and the media worker are not required when the application uses another file-storage provider without Core's media pipeline. Stripe CLI forwarding is not required when Stripe is disabled or another payment gateway is used.
 
-Start the database before the API. Core runs `db:prepare` when the API starts; wait until the API and database are ready before seeding.
+Start the database before the API when running scripts individually. Core runs `db:prepare` when the API starts; wait until the API and database are ready before seeding.
 
 ## 3. Seed IAM and development users
 
@@ -176,7 +180,7 @@ This verifies authentication, IAM, API transport, PostgreSQL, Garage, Solid Queu
 ./scripts/test_watch.sh
 ```
 
-The six-terminal development commands are `scripts/dev_db.sh`, `scripts/dev_api.sh`, `scripts/dev_waka.sh`, `scripts/dev_garage.sh`, `scripts/dev_media.sh`, and `scripts/listen_webhook.sh`.
+For developers using granular process isolation instead of Docker Compose, the development scripts are `scripts/dev_db.sh`, `scripts/dev_api.sh`, `scripts/dev_waka.sh`, `scripts/dev_garage.sh`, `scripts/dev_media.sh`, and `scripts/listen_webhook.sh`.
 
 ## Troubleshooting
 

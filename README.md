@@ -46,7 +46,15 @@ Every product eventually meets the same old enemies: accounts, permissions, bill
 
 Rexone Core exists because this ground should not have to be conquered again for every product.
 
-This is not a chest of disconnected examples wearing the armor of an architecture. It is a cohesive foundation whose parts answer to one another. Stripe payments grant access. Webhooks are durably recorded before background processing begins. Notifications divide into isolated delivery jobs. Asset cleanup retries without making the client wait. Administrators can inspect the realm, while performance, backend errors, frontend failures, queues, cache, and sockets each leave a trail.
+### The Purpose: Zero Spaghetti, Zero Hallucinated Debt
+
+This foundation is built so that **AI coding assistants or human developers do not write spaghetti code, multi-layer hallucinated architectures, useless abstractions, unorganized code structures, or compounding technical debt**.
+
+Instead of wasting engineering cycles inventing fragile ad-hoc plumbing:
+
+- **Focus 100% on the Business Model**: Everything around the domain is already built, integrated, and battle-tested—smart zero-decision-fatigue authentication, granular RBAC authorization, asynchronous job queues, durable Stripe billing and entitlements, provider-neutral media pipelines, real-time Action Cable WebSockets, and full-stack observability.
+- **Effortless Code Reviews**: Reviewing PRs is clean, fast, and predictable. When architectural patterns and boundaries are crystal clear, reviewers never have to read through unorganized garbage code or brittle one-off hacks.
+- **Automated Tests & CI - Across Server & Clients**: Robust, automated test suites & CI pipelines across Core (RSpec), Web, and Mobile ensure regressions are caught immediately and changes can be deployed with unshakeable confidence.
 
 The foundation is designed to **bend around the product**, never to make the product kneel before the framework.
 
@@ -60,17 +68,22 @@ Rexone Core brings startup speed with battle-tested discipline—and fewer final
 
 ## Who Rexone is for
 
-Rexone is built for Rails teams, founder-engineers, and agencies creating API-first web or mobile products that need production infrastructure without rebuilding the same foundation for every launch.
+Rexone is built for Rails teams, founder-engineers, AI agents, and agencies creating API-first web or mobile products that need production infrastructure without rebuilding the same foundation for every launch.
 
-It is a particularly good fit when a product needs several of these capabilities to work together:
+It is a particularly good fit when you want to:
 
-- Authentication and explicit role-based access control.
-- Stripe payments connected to durable entitlements.
-- Provider-neutral media storage and background optimization.
-- In-app, push, email, and real-time notification delivery.
-- Queued AI and speech workflows that survive client disconnection.
-- Operational dashboards, client telemetry, audit trails, and health checks.
-- Reference React and Flutter clients consuming the same contracts.
+- **Stop writing boilerplate infrastructure** and start shipping domain features on day one.
+- **Keep AI generation on rails**: prevent autonomous LLM coders from inventing haphazard abstractions, sprawling directories, or unmaintainable architectural debt.
+- **Have complete confidence in reviews**: clean boundaries mean reviewing code is effortless with zero garbage to wade through.
+- **Rely on automated tests**: end-to-end verification across both the backend server and client applications.
+- **Operate a unified ecosystem**:
+  - Authentication and explicit role-based access control.
+  - Stripe payments connected to durable entitlements.
+  - Provider-neutral media storage and background optimization.
+  - In-app, push, email, and real-time notification delivery.
+  - Queued AI and speech workflows that survive client disconnection.
+  - Operational dashboards, client telemetry, audit trails, and health checks.
+  - Reference React and Flutter clients consuming the exact same contracts.
 
 Rexone is not a no-code application generator or a promise that every product domain is already modeled. It supplies the disciplined platform foundation; the product remains responsible for its own domain, workflows, interface, and operating decisions.
 
@@ -211,17 +224,29 @@ Client-side errors are accepted at `POST /v1/client/logs` and managed from the a
 
 ## Quick start
 
-Core development runs each responsibility in its own terminal. After cloning and configuring `.env`, start the required database, API, and general worker:
+With Docker installed, you do **not** need multiple terminals. All Core services (PostgreSQL, Rails 8 API, Solid Queue workers, self-hosted Garage S3 storage, and media processor) run together in a single script:
 
 ```bash
 git clone https://github.com/rex-9/rexone-core.git
 cd rexone-core
 git switch dev
 cp .env.example .env
-./scripts/dev_db.sh
+./scripts/dev.sh
 ```
 
-Then run `./scripts/dev_api.sh` and `./scripts/dev_waka.sh` in two additional terminals. Garage storage, media processing, and Stripe webhook forwarding each have an optional dedicated terminal when those providers are enabled.
+For **Rexone Web**, run its container:
+
+```bash
+cd ../rexone-web
+docker compose -f docker-compose.dev.yaml up
+# or ./scripts/dev.sh
+```
+
+That's it for Core and Web! The **only** optional terminal you ever need during local development is for forwarding Stripe webhooks if testing payments:
+
+```bash
+./scripts/listen_webhook.sh
+```
 
 After the API starts, seed the development IAM roles and accounts:
 
@@ -229,7 +254,7 @@ After the API starts, seed the development IAM roles and accounts:
 docker compose -f docker-compose.dev.yaml exec api bin/rails db:seed
 ```
 
-The complete [Ecosystem Quick Start](docs/QUICK_START.md) lists all six terminals, explains which services are optional, covers Core/Web/Mobile compatibility, and provides client startup and troubleshooting guidance.
+The complete [Ecosystem Quick Start](docs/QUICK_START.md) explains which services are optional, covers Core/Web/Mobile compatibility, provides alternative granular process commands for advanced debugging, and guides client startup and troubleshooting.
 
 ## Configuration
 
@@ -249,9 +274,9 @@ The API is broader than a starter CRUD demo. Its main route families are:
 | Entitlements     | `/v1/access/*`                                                                                                                                                      |
 | Media            | `/v1/assets/upload`, `/v1/assets`, `/v1/assets/:id/playback`                                                                                                        |
 | Notifications    | `/v1/admin/notifications`                                                                                                                                           |
-| Chat             | `/v1/chat/rooms`, `/v1/chat/messages`, `/v1/chat/messages/destroy_all` (RESTful CRUD + message purge)                              |
-| Admin Chat       | `/v1/admin/chat/rooms`, `/v1/admin/chat/messages` (moderation CRUD: discard, undiscard, destroy)                                   |
-| Admin AI         | `/v1/admin/ai/profiles` (index, show, create, update with provider & model filters), `/v1/admin/ai/runs` (execution audit log & diagnostics with sorting/filters) |
+| Chat             | `/v1/chat/rooms`, `/v1/chat/messages`, `/v1/chat/messages/destroy_all` (RESTful CRUD + message purge)                                                               |
+| Admin Chat       | `/v1/admin/chat/rooms`, `/v1/admin/chat/messages` (moderation CRUD: discard, undiscard, destroy)                                                                    |
+| Admin AI         | `/v1/admin/ai/profiles` (index, show, create, update with provider & model filters), `/v1/admin/ai/runs` (execution audit log & diagnostics with sorting/filters)   |
 | Speech           | `/v1/speech/*`, `SpeechLiveChannel` (WS)                                                                                                                            |
 | Client telemetry | `/v1/client/logs`                                                                                                                                                   |
 | App versions     | `/v1/client/versions/current`, `/v1/client/versions/user-version`, `/v1/admin/client/versions`, `/v1/admin/client/versions/user_versions`, `/admin/client/versions` |
