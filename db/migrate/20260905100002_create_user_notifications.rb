@@ -9,7 +9,7 @@ class CreateUserNotifications < ActiveRecord::Migration[8.1]
       t.text :message, null: false
       t.string :link
       t.string :clients, array: true, null: false, default: %w[web mobile]
-      t.jsonb :data, default: {}, null: false
+      t.jsonb :metadata, default: {}, null: false
       t.string :operation_id
       t.string :operation_type
       t.string :operation_status

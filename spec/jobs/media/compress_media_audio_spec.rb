@@ -116,7 +116,7 @@ RSpec.describe Media::CompressMediaJob, type: :job do
       operation_status: NotificationConstants::OperationStatus::COMPLETED,
       link: "/admin/assets/#{asset.id}"
     )
-    expect(notification.data).to include("type" => MediaConstants::SocketEvent::ASSET_COMPRESSED, "status" => "ready")
+    expect(notification.metadata).to include("type" => MediaConstants::SocketEvent::ASSET_COMPRESSED, "status" => "ready")
   end
 
   it "retries without publishing a terminal failure on the first attempt" do

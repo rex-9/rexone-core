@@ -24,6 +24,7 @@ module Chat
                    prefix: :ai
 
     store_accessor :metadata, :tts_status, :tts_error
+    store_accessor :metadata, :chunk_index, :total_chunks, :split_id
 
     belongs_to :room, class_name: "Chat::Room"
     belongs_to :ai_profile, class_name: "Ai::Profile", optional: true
@@ -51,6 +52,10 @@ module Chat
 
     def ai_processing?
       user? && ai_status.in?(PROCESSING_STATUSES)
+    end
+
+    def chunked?
+      split_id.present?
     end
 
     def tts_asset

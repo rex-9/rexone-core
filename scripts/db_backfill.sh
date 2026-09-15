@@ -14,7 +14,7 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
     # ----------------------------------------------------
     # 1. PAYMENT PRODUCTS: Code Column & Unique Backfill
     # ----------------------------------------------------
-    puts '\n📦 [1/5] Synchronizing Payment Products...'
+    puts '\n📦 [1/7] Synchronizing Payment Products...'
     unless ActiveRecord::Base.connection.column_exists?(:payment_products, :code)
       puts '  -> Adding missing \"code\" column to payment_products table...'
       ActiveRecord::Base.connection.add_column :payment_products, :code, :string
@@ -44,7 +44,7 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
     # ----------------------------------------------------
     # 2. IAM: Permissions & System Roles Synchronization
     # ----------------------------------------------------
-    puts '\n🔐 [2/5] Synchronizing IAM Permissions & Roles...'
+    puts '\n🔐 [2/7] Synchronizing IAM Permissions & Roles...'
     perm_count = 0
     Iam::Permission::RESOURCES.each do |resource|
       Iam::Permission::ACTIONS.each do |action|
@@ -95,7 +95,7 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
     # ----------------------------------------------------
     # 3. USERS: Ensure Every User Has a Role
     # ----------------------------------------------------
-    puts '\n👥 [3/5] Ensuring All Users Have Roles Assigned...'
+    puts '\n👥 [3/7] Ensuring All Users Have Roles Assigned...'
     orphaned_user_count = 0
     User.find_each do |user|
       if user.user_roles.empty?
@@ -109,7 +109,7 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
     # ----------------------------------------------------
     # 4. ENTITLEMENT ACCESSES & LOGS: Backfill Timestamps
     # ----------------------------------------------------
-    puts '\n📋 [4/5] Sanitizing Accesses and System Telemetry...'
+    puts '\n📋 [4/7] Sanitizing Accesses and System Telemetry...'
     Access.where(granted_at: nil).find_each do |access|
       access.update_columns(granted_at: access.created_at || Time.current)
     end
@@ -127,7 +127,7 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
     # ----------------------------------------------------
     # 5. NOTIFICATIONS: Client Targeting
     # ----------------------------------------------------
-    puts '\n🔔 [5/5] Synchronizing notification client targeting...'
+    puts '\n🔔 [5/7] Synchronizing notification client targeting...'
     default_clients = NotificationConstants::Client::DEFAULT
 
     [ :notifications, :user_notifications ].each do |table|
@@ -148,6 +148,57 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
     UserNotification.where('link LIKE ?', '/admin/%')
                     .update_all(clients: NotificationConstants::Client::ADMIN_PORTAL)
     puts '  ✅ Existing notifications target both clients; admin routes target Web only.'
+
+    # ----------------------------------------------------
+    # 6. ASSETS: display_name and description
+    # ----------------------------------------------------
+    puts '\n📁 [6/7] Synchronizing Assets display_name & description...'
+    unless ActiveRecord::Base.connection.column_exists?(:assets, :display_name)
+      puts '  -> Adding missing \"display_name\" column to assets table...'
+      ActiveRecord::Base.connection.add_column :assets, :display_name, :string
+    end
+
+    unless ActiveRecord::Base.connection.column_exists?(:assets, :description)
+      puts '  -> Adding missing \"description\" column to assets table...'
+      ActiveRecord::Base.connection.add_column :assets, :description, :text
+    end
+
+    unless ActiveRecord::Base.connection.index_exists?(:assets, :display_name)
+      puts '  -> Adding index on assets(display_name)...'
+      ActiveRecord::Base.connection.add_index :assets, :display_name
+    end
+
+    backfilled_assets = 0
+    Asset.with_discarded.where(display_name: [nil, ""]).find_each do |asset|
+      asset.update_columns(display_name: asset.name)
+      backfilled_assets += 1
+    end
+    puts \"  -> Backfilled display_name for #{backfilled_assets} assets.\"
+    puts '  ✅ Assets display_name and description synchronized and backfilled.'
+
+    # ----------------------------------------------------
+    # 7. METADATA JSONB STANDARDIZATION
+    # ----------------------------------------------------
+    puts '\n📋 [7/7] Standardizing JSONB metadata columns...'
+    if ActiveRecord::Base.connection.column_exists?(:user_notifications, :data) &&
+       !ActiveRecord::Base.connection.column_exists?(:user_notifications, :metadata)
+      puts '  -> Renaming column data to metadata on user_notifications...'
+      ActiveRecord::Base.connection.rename_column :user_notifications, :data, :metadata
+    end
+
+    unless ActiveRecord::Base.connection.column_exists?(:assets, :metadata)
+      puts '  -> Adding missing \"metadata\" jsonb column to assets table...'
+      ActiveRecord::Base.connection.add_column :assets, :metadata, :jsonb, default: {}, null: false
+    end
+
+    ActiveRecord::Base.connection.execute(<<~SQL)
+      UPDATE assets SET metadata = '{}'::jsonb WHERE metadata IS NULL;
+    SQL
+
+    ActiveRecord::Base.connection.execute(<<~SQL)
+      UPDATE user_notifications SET metadata = '{}'::jsonb WHERE metadata IS NULL;
+    SQL
+    puts '  ✅ Metadata JSONB columns fully standardized.'
 
     puts '\n========================================================'
     puts '🎉 ALL DATABASE SYNCHRONIZATIONS & BACKFILLS COMPLETED!'

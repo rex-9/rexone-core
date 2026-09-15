@@ -32,7 +32,7 @@ FactoryBot.define do
     title { "Notification Title" }
     message { "Notification Message" }
     link { "/dashboard" }
-    data { { "source" => "system" } }
+    metadata { { "source" => "system" } }
 
     trait :read do
       read_at { Time.current }

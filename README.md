@@ -117,22 +117,22 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 ## Feature map
 
-| Foundation     | What is ready                                                                                                     | Details                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                            | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
-| Authorization  | Roles, permissions, user-role and role-permission assignments                                                     | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
-| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                                             | [Payments & entitlements](docs/FOUNDATION.md#payments-and-entitlements)               |
-| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                   | [Background processing](#background-processing)                                       |
-| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo                                   | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
-| Media          | Provider-neutral storage, media optimization, SVG conversion, thumbnails, SRT subtitles, and progressive playback | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
-| Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                       | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| AI             | Durable queued chat, persisted history, completion alerts, and language tools                                     | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| Localization   | Request-scoped English and Myanmar responses with modular domain translations                                     | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                    | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                             | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
-| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications, app versions | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
-| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                 | [Deployment](#deployment)                                                             |
-| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                 | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
+| Foundation     | What is ready                                                                                                        | Details                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                               | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
+| Authorization  | Roles, permissions, user-role and role-permission assignments                                                        | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
+| Commerce       | Stripe Checkout, products, transactions, subscriptions, access grants                                                | [Payments & entitlements](docs/FOUNDATION.md#payments-and-entitlements)               |
+| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                      | [Background processing](#background-processing)                                       |
+| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo                                      | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
+| Media          | Provider-neutral storage, media optimization, SVG conversion, thumbnails, SRT subtitles, and progressive playback    | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
+| Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                          | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
+| AI             | Durable queued chat, Telegram-style multi-message chunking, persisted history, completion alerts, and language tools | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
+| Localization   | Request-scoped English and Myanmar responses with modular domain translations                                        | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
+| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                       | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
+| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                                | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
+| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications, app versions    | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
+| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                    | [Deployment](#deployment)                                                             |
+| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                    | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
 
 ## Architecture
 
@@ -170,7 +170,7 @@ Provider-facing code lives behind focused clients such as `PaymentService::Clien
 
 Swapping or extending a provider does not require spreading vendor logic across controllers.
 
-Chat workflow is handled by `V1::ChatController`, `ChatMessageService`, and `Chat::ProcessMessageJob`, while AI provider execution stays behind swappable provider clients (`Ai::Providers::Client` supporting DeepSeek and Google Gemini via OpenAI-compatible endpoint). AI behavior is controlled by database-backed `Ai::Profile` records and lightweight `Ai::Run` telemetry exposed through `V1::Admin::AiController`, so prompts, models, output limits, timeouts, and run health stay server-owned instead of being hardcoded in clients. For full details on provider architecture and setup, see [AI Manual](docs/AI_MANUAL.md).
+Chat workflow is handled by `V1::ChatController`, `ChatMessageService`, and `Chat::ProcessMessageJob`, with `Chat::TextService` providing Telegram-style multi-message chunking for user prompts and assistant completions exceeding 2,000 characters while AI provider execution stays behind swappable provider clients (`Ai::Providers::Client` supporting DeepSeek and Google Gemini via OpenAI-compatible endpoint). AI behavior is controlled by database-backed `Ai::Profile` records and lightweight `Ai::Run` telemetry exposed through `V1::Admin::AiController`, so prompts, models, output limits, timeouts, and run health stay server-owned instead of being hardcoded in clients. For full details on provider architecture and setup, see [AI Manual](docs/AI_MANUAL.md).
 
 The same principle applies to product-specific functionality: the foundation provides the structure, while the product remains free to define its own domain, workflows, and experience.
 

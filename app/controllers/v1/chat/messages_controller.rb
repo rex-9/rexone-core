@@ -40,19 +40,24 @@ class V1::Chat::MessagesController < V1::ApplicationController
     end
 
     if create_params[:ai].to_s == "false"
-      message = Chat::MessageService.send_user_message!(
+      result = Chat::MessageService.send_user_message!(
         user: current_user,
         room: @room,
         content: content
       )
+      all_messages = Array.wrap(result)
+      primary_message = all_messages.first
+      serialized_messages = Chat::MessageSerializer.new(all_messages).serializable_hash[:data]
 
       render_json_response(
         status_code: 201,
         message: ai_message(MessageService::Ai::MESSAGE_SENT),
         data: {
-          data: Chat::MessageSerializer.new(message).serializable_hash[:data],
+          data: Chat::MessageSerializer.new(primary_message).serializable_hash[:data],
+          messages: serialized_messages,
           meta: {
-            room_id: @room.id
+            room_id: @room.id,
+            messages: serialized_messages
           }
         }
       )
@@ -63,19 +68,22 @@ class V1::Chat::MessagesController < V1::ApplicationController
         content: content,
         profile_key: create_params[:profile_key]
       )
+      serialized_messages = Chat::MessageSerializer.new(result.messages).serializable_hash[:data]
 
       render_json_response(
         status_code: 202,
         message: ai_message(MessageService::Ai::RESPONSE_QUEUED),
         data: {
           data: Chat::MessageSerializer.new(result.message).serializable_hash[:data],
+          messages: serialized_messages,
           meta: {
             room_id: @room.id,
             status: NotificationConstants::OperationStatus::QUEUED,
             operation_id: result.operation_id,
             operation_type: NotificationConstants::OperationType::AI_RESPONSE,
             link: result.link,
-            job_id: result.job&.job_id
+            job_id: result.job&.job_id,
+            messages: serialized_messages
           }
         }
       )

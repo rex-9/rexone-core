@@ -26,6 +26,7 @@ module NotificationService
 
       def notify(user_id:, user_email: nil, title: nil, message: nil, push_title: nil, push_body: nil, link: nil, clients: nil, data: {}, operation_id: nil, operation_type: nil, operation_status: nil, send_socket: false, send_push: false, send_email: false, email_template: nil, email_template_data: {}, template_id: nil, push_template_id: nil, **kwargs)
         results = {}
+        data = data.dup
         clients ||= Notification.find_by(id: template_id)&.clients if template_id.present?
         clients = notification_clients(clients, link)
         push_requested = send_push && clients.include?(NotificationConstants::Client::MOBILE) && (push_title.present? || title.present? || push_template_id.present?)
@@ -70,7 +71,7 @@ module NotificationService
                 message: message.presence || title.presence || "Notification",
                 link: link,
                 clients: clients,
-                data: data,
+                metadata: data,
                 read_at: nil
               )
               user_notification.save!
@@ -86,7 +87,7 @@ module NotificationService
                 message: user_notification.message,
                 link: user_notification.link,
                 clients: user_notification.clients,
-                data: user_notification.data,
+                data: user_notification.metadata,
                 read_at: user_notification.read_at,
                 created_at: user_notification.created_at.iso8601
               }.compact

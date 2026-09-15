@@ -657,6 +657,15 @@ components:
         asset:
           type: object
           properties:
+            name:
+              type: string
+              nullable: true
+            display_name:
+              type: string
+              nullable: true
+            description:
+              type: string
+              nullable: true
             storage_key:
               type: string
               nullable: true
@@ -684,6 +693,9 @@ components:
               nullable: true
             extension:
               type: string
+              nullable: true
+            metadata:
+              type: object
               nullable: true
           required: []
       required:
@@ -694,6 +706,15 @@ components:
         asset:
           type: object
           properties:
+            name:
+              type: string
+              nullable: true
+            display_name:
+              type: string
+              nullable: true
+            description:
+              type: string
+              nullable: true
             storage_key:
               type: string
               nullable: true
@@ -721,6 +742,9 @@ components:
               nullable: true
             extension:
               type: string
+              nullable: true
+            metadata:
+              type: object
               nullable: true
           required: []
       required:
@@ -979,6 +1003,12 @@ components:
         file:
           type: string
           format: binary
+        display_name:
+          type: string
+          description: Human-friendly display name (defaults to original filename).
+        description:
+          type: string
+          description: Optional description or notes for the asset.
         type:
           type: string
           default: general
@@ -1606,8 +1636,11 @@ components:
         data:
           type: object
           properties:
-            message:
-              "$ref": "#/components/schemas/message"
+            messages:
+              type: array
+              items:
+                "$ref": "#/components/schemas/message"
+              description: List of messages created in the room.
             room_id:
               type: string
               format: uuid
@@ -1633,7 +1666,7 @@ components:
             job_id:
               type: string
           required:
-            - message
+            - messages
             - room_id
             - status
             - operation_id
@@ -2197,6 +2230,12 @@ components:
           format: uuid
         name:
           type: string
+        display_name:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
         url:
           type: string
           format: uri
@@ -2241,6 +2280,9 @@ components:
             - ready
             - optimal
             - failed
+        metadata:
+          type: object
+          description: Arbitrary JSONB metadata
         assetable_type:
           type: string
           nullable: true
@@ -2265,6 +2307,15 @@ components:
                   format: uuid
                 name:
                   type: string
+                display_name:
+                  type: string
+                  nullable: true
+                description:
+                  type: string
+                  nullable: true
+                metadata:
+                  type: object
+                  description: Arbitrary JSONB metadata
                 url:
                   type: string
                   format: uri
@@ -2326,6 +2377,15 @@ components:
                     format: uuid
                   name:
                     type: string
+                  display_name:
+                    type: string
+                    nullable: true
+                  description:
+                    type: string
+                    nullable: true
+                  metadata:
+                    type: object
+                    description: Arbitrary JSONB metadata
                   url:
                     type: string
                     format: uri

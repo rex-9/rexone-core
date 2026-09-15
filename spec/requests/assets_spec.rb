@@ -52,6 +52,26 @@ RSpec.describe "Asset uploads", type: :request do
     )
   end
 
+  it "persists display_name and description on upload, defaulting display_name to original_filename" do
+    allow(StorageService::Client).to receive(:upload).and_return(
+      storage_key: "profile/avatar_custom",
+      url: "https://cdn.example.com/avatar_custom.png",
+      bytes: 11,
+      format: "png",
+      resource_type: "image"
+    )
+
+    post "/v1/assets/upload", params: { file: file, display_name: "My Avatar", description: "Profile photo description" }, headers: headers
+
+    expect(response).to have_http_status(:created)
+    expect(Asset.last).to have_attributes(
+      display_name: "My Avatar",
+      description: "Profile photo description"
+    )
+    expect(response_data.dig("asset", "display_name")).to eq("My Avatar")
+    expect(response_data.dig("asset", "description")).to eq("Profile photo description")
+  end
+
   it "maps documents and unknown extensions to their storage resource types" do
     allow(StorageService::Client).to receive(:upload).and_return(
       storage_key: "docs/report", url: "https://cdn.example.com/report.pdf", bytes: 4,
@@ -273,9 +293,31 @@ RSpec.describe "Asset uploads", type: :request do
     end
   end
 
+  describe "PUT /v1/assets/:id" do
+    it "updates display_name and description" do
+      grant_asset_update_permission(user)
+      asset = create(:asset, creator: user, name: "old_name.png", display_name: "old_name.png")
+
+      put "/v1/assets/#{asset.id}", params: { asset: { display_name: "Custom Display Name", description: "Updated description text" } }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(asset.reload.display_name).to eq("Custom Display Name")
+      expect(asset.description).to eq("Updated description text")
+      expect(response_data.dig("asset", "display_name")).to eq("Custom Display Name")
+      expect(response_data.dig("asset", "description")).to eq("Updated description text")
+    end
+  end
+
   def grant_asset_create_permission(account)
     role = create(:role, name: "asset_uploader")
     permission = create(:permission, action: "create", resource: "assets")
+    create(:role_permission, role: role, permission: permission)
+    create(:user_role, user: account, role: role)
+  end
+
+  def grant_asset_update_permission(account)
+    role = create(:role, name: "asset_updater")
+    permission = create(:permission, action: "update", resource: "assets")
     create(:role_permission, role: role, permission: permission)
     create(:user_role, user: account, role: role)
   end

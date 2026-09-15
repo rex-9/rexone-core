@@ -66,6 +66,17 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(response_data.first.dig("attributes", "id")).to eq(needle.id)
     end
 
+    it "searches assets by display_name" do
+      needle = create(:asset, name: "asset_key_123", display_name: "Special Meditation Guide", storage_key: "keys/guide")
+      create(:asset, name: "asset_key_456", display_name: "Routine File", storage_key: "keys/routine")
+
+      get "/v1/admin/assets", params: { search: "Meditation" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.size).to eq(1)
+      expect(response_data.first.dig("attributes", "id")).to eq(needle.id)
+    end
+
     it "lists assets from every storage partition" do
       stub_const("AppConfig::S3_FOLDER_PREFIX", "dev")
       dev_asset = create(:asset, storage_key: "dev/images/current.png")
@@ -140,6 +151,20 @@ RSpec.describe "V1 Admin Assets API", type: :request do
         anything,
         hash_including(storage_key: a_string_matching(/^admin\/thumbnail_avatar_\d+\.png$/))
       )
+    end
+
+    it "persists display_name and description on upload" do
+      post "/v1/admin/assets/upload",
+           params: { file: image_file, type: "thumbnail", display_name: "Admin Uploaded Avatar", description: "Admin photo" },
+           headers: headers
+
+      expect(response).to have_http_status(:created)
+      expect(Asset.last).to have_attributes(
+        display_name: "Admin Uploaded Avatar",
+        description: "Admin photo"
+      )
+      expect(response_data.dig("asset", "display_name")).to eq("Admin Uploaded Avatar")
+      expect(response_data.dig("asset", "description")).to eq("Admin photo")
     end
 
     it "rejects files exceeding maximum size with localized error message" do
@@ -702,6 +727,20 @@ RSpec.describe "V1 Admin Assets API", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(asset.reload.name).to eq("Updated Name")
+    end
+
+    it "updates display_name and description" do
+      asset = create(:asset, name: "admin/test.png", display_name: "Old Display", description: "Old description")
+
+      patch "/v1/admin/assets/#{asset.id}",
+            params: { asset: { display_name: "New Display Name", description: "New description" } },
+            headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(asset.reload.display_name).to eq("New Display Name")
+      expect(asset.description).to eq("New description")
+      expect(response_data.dig("asset", "display_name")).to eq("New Display Name")
+      expect(response_data.dig("asset", "description")).to eq("New description")
     end
 
     it "renames storage key and name when asset type changes" do

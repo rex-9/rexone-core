@@ -22,6 +22,30 @@ RSpec.describe Asset, type: :model do
     expect(build(:asset, source: "google", storage_key: nil)).to be_valid
   end
 
+  it "defaults display_name to name when display_name is not provided" do
+    asset = build(:asset, name: "my_recording.mp3", display_name: nil)
+    asset.validate
+    expect(asset.display_name).to eq("my_recording.mp3")
+  end
+
+  it "preserves custom display_name and allows optional description" do
+    asset = build(:asset, name: "system_generated_uuid.png", display_name: "Profile Photo", description: "User primary avatar")
+    asset.validate
+    expect(asset.display_name).to eq("Profile Photo")
+    expect(asset.description).to eq("User primary avatar")
+  end
+
+  it "falls back to name when display_name is updated to blank" do
+    asset = create(:asset, name: "document.pdf", display_name: "Original Display Name")
+    asset.update!(display_name: "")
+    expect(asset.display_name).to eq("document.pdf")
+  end
+
+  it "supports arbitrary jsonb metadata defaulting to empty hash" do
+    asset = create(:asset, metadata: { "width" => 1920, "height" => 1080 })
+    expect(asset.reload.metadata).to eq({ "width" => 1920, "height" => 1080 })
+  end
+
   it "infers extension and format from the URL and keeps unclassified as nil" do
     asset = build(:asset, url: "https://example.com/report.pdf", format: nil)
     asset.validate

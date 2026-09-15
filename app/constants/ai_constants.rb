@@ -71,11 +71,18 @@ module AiConstants
     ALL = [ PROCESSING, COMPLETED, FAILED ].freeze
   end
 
+  module ChunkMetadata
+    CHUNK_INDEX  = "chunk_index".freeze
+    TOTAL_CHUNKS = "total_chunks".freeze
+    SPLIT_ID     = "split_id".freeze
+  end
+
   module Defaults
     TEMPERATURE          = 0.7
     MAX_OUTPUT_TOKENS    = 4000
     CONTEXT_MAX_TOKENS   = 8000
     HISTORY_MAX_MESSAGES = 20
     TIMEOUT_SECONDS      = 60
+    MESSAGE_MAX_CHARS    = 2000
   end
 end

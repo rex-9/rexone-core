@@ -36,7 +36,7 @@ RSpec.describe Media::GenerateVideoThumbnailJob, type: :job do
       operation_status: NotificationConstants::OperationStatus::COMPLETED,
       link: "/admin/assets/#{video.id}"
     )
-    expect(notification.data).to include(
+    expect(notification.metadata).to include(
       "type" => MediaConstants::SocketEvent::ASSET_THUMBNAIL_GENERATED,
       "asset_id" => video.id
     )

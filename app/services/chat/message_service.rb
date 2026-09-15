@@ -4,7 +4,18 @@
 module Chat
   class MessageService
     Error = Class.new(StandardError)
-    Result = Data.define(:message, :job, :operation_id, :link)
+
+    class Result
+      attr_reader :message, :job, :operation_id, :link, :messages
+
+      def initialize(message:, job: nil, operation_id: nil, link: nil, messages: nil)
+        @message = message
+        @job = job
+        @operation_id = operation_id
+        @link = link
+        @messages = messages || [ message ].compact
+      end
+    end
 
     LOG_PREFIX = "[Chat]".freeze
 
@@ -57,19 +68,37 @@ module Chat
       end
 
       def send_user_message!(user:, room:, content:)
-        message = nil
+        chunks = Chat::TextService.chunk(content)
+        split_id = chunks.size > 1 ? SecureRandom.uuid : nil
+        messages = []
+
         room.with_lock do
-          message = room.messages.create!(
-            role: AiConstants::ChatRole::USER,
-            content: content
-          )
+          chunks.each_with_index do |chunk_text, index|
+            metadata = {}
+            if split_id
+              metadata[AiConstants::ChunkMetadata::SPLIT_ID] = split_id
+              metadata[AiConstants::ChunkMetadata::CHUNK_INDEX] = index
+              metadata[AiConstants::ChunkMetadata::TOTAL_CHUNKS] = chunks.size
+            end
+
+            msg = room.messages.create!(
+              role: AiConstants::ChatRole::USER,
+              content: chunk_text,
+              metadata: metadata
+            )
+            messages << msg
+          end
           room.update_title_from_first_message! if default_room_title?(room)
         end
-        message
+
+        messages.size > 1 ? messages : messages.first
       end
 
       def queue_ai_response!(user:, room:, content:, profile_key: nil)
         profile = Ai::ProfileService.resolve!(profile_key)
+        chunks = Chat::TextService.chunk(content)
+        split_id = chunks.size > 1 ? SecureRandom.uuid : nil
+        messages = []
         message = nil
         job = nil
         operation_id = nil
@@ -78,15 +107,36 @@ module Chat
         room.with_lock do
           raise Error, ::MessageService::Ai.t(::MessageService::Ai::ALREADY_PROCESSING) if room.processing?
 
-          message = room.messages.create!(
-            role: AiConstants::ChatRole::USER,
-            content: content,
-            ai_profile: profile,
-            ai_status: Chat::Message::STATUSES[:queued],
-            ai_system_prompt: profile.system_prompt,
-            ai_temperature: profile.temperature.to_f,
-            ai_max_tokens: profile.max_output_tokens
-          )
+          chunks.each_with_index do |chunk_text, index|
+            is_last = (index == chunks.size - 1)
+            metadata = {}
+            if split_id
+              metadata[AiConstants::ChunkMetadata::SPLIT_ID] = split_id
+              metadata[AiConstants::ChunkMetadata::CHUNK_INDEX] = index
+              metadata[AiConstants::ChunkMetadata::TOTAL_CHUNKS] = chunks.size
+            end
+
+            if is_last
+              metadata["status"] = Chat::Message::STATUSES[:queued]
+              metadata["system_prompt"] = profile.system_prompt
+              metadata["temperature"] = profile.temperature.to_f
+              metadata["max_tokens"] = profile.max_output_tokens
+
+              message = room.messages.create!(
+                role: AiConstants::ChatRole::USER,
+                content: chunk_text,
+                metadata: metadata,
+                ai_profile: profile
+              )
+            else
+              message = room.messages.create!(
+                role: AiConstants::ChatRole::USER,
+                content: chunk_text,
+                metadata: metadata
+              )
+            end
+            messages << message
+          end
 
           job = Chat::ProcessMessageJob.perform_later(message.id)
           operation_id = operation_id_for(message)
@@ -107,7 +157,7 @@ module Chat
           )
         end
 
-        Result.new(message: message, job: job, operation_id: operation_id, link: link)
+        Result.new(message: message, job: job, operation_id: operation_id, link: link, messages: messages)
       end
 
       def process_ai_response!(message_id)
@@ -197,21 +247,27 @@ module Chat
       def conversation_for(message)
         history_limit = message.ai_profile&.history_max_messages || AiConstants::Defaults::HISTORY_MAX_MESSAGES
         history = message.room.messages
-                         .where("created_at < ?", message.created_at)
+                         .where("created_at < :time OR (created_at = :time AND id < :id)", time: message.created_at, id: message.id)
                          .chronological
                          .last(history_limit)
 
-        payload = history.map do |msg|
-          {
-            role: msg.role,
-            content: msg.content
-          }
+        all_messages = history + [ message ]
+
+        grouped = []
+        all_messages.each do |msg|
+          split_id = msg.metadata&.dig(AiConstants::ChunkMetadata::SPLIT_ID)
+          if split_id.present? && grouped.last && grouped.last[:split_id] == split_id && grouped.last[:role] == msg.role
+            grouped.last[:content] = "#{grouped.last[:content]}\n\n#{msg.content}"
+          else
+            grouped << {
+              role: msg.role,
+              content: msg.content,
+              split_id: split_id
+            }
+          end
         end
 
-        payload << {
-          role: message.role,
-          content: message.content
-        }
+        payload = grouped.map { |item| { role: item[:role], content: item[:content] } }
 
         system_prompt = message.ai_system_prompt.presence || message.ai_profile&.system_prompt
         payload.unshift(role: AiConstants::ChatRole::SYSTEM, content: system_prompt) if system_prompt.present?
@@ -224,20 +280,35 @@ module Chat
       end
 
       def persist_response!(user_message, response_text, result)
-        assistant_message = nil
+        chunks = Chat::TextService.chunk(response_text)
+        split_id = chunks.size > 1 ? SecureRandom.uuid : nil
+        assistant_messages = []
         usage = result["usage"] || {}
+        model = result["model"] || user_message.ai_profile&.model
 
         Chat::Message.transaction do
-          assistant_message = user_message.room.messages.create!(
-            role: AiConstants::ChatRole::ASSISTANT,
-            content: response_text,
-            ai_profile: user_message.ai_profile,
-            ai_status: Chat::Message::STATUSES[:completed],
-            ai_model: result["model"] || user_message.ai_profile&.model,
-            ai_usage: usage
-          )
+          chunks.each_with_index do |chunk_text, index|
+            metadata = {
+              "status" => Chat::Message::STATUSES[:completed],
+              "model" => model
+            }
+            if split_id
+              metadata[AiConstants::ChunkMetadata::SPLIT_ID] = split_id
+              metadata[AiConstants::ChunkMetadata::CHUNK_INDEX] = index
+              metadata[AiConstants::ChunkMetadata::TOTAL_CHUNKS] = chunks.size
+            end
+            metadata["usage"] = usage if index == 0
 
-          user_message.ai_assistant_message_id = assistant_message.id
+            msg = user_message.room.messages.create!(
+              role: AiConstants::ChatRole::ASSISTANT,
+              content: chunk_text,
+              ai_profile: user_message.ai_profile,
+              metadata: metadata
+            )
+            assistant_messages << msg
+          end
+
+          user_message.ai_assistant_message_id = assistant_messages.first.id
           user_message.ai_status = Chat::Message::STATUSES[:completed]
           user_message.ai_error = nil
           user_message.save!
@@ -246,7 +317,7 @@ module Chat
           room.update_title_from_first_message! if default_room_title?(room)
         end
 
-        assistant_message
+        assistant_messages.size > 1 ? assistant_messages : assistant_messages.first
       end
 
       def notify_operation(message, status, text, error: nil)
@@ -267,13 +338,17 @@ module Chat
         )
       end
 
-      def notify_completed(user_message, assistant_message)
+      def notify_completed(user_message, assistant_response)
         room = user_message.room
         message_text = ::MessageService::Ai.t(::MessageService::Ai::RESPONSE_READY)
+        first_message = assistant_response.is_a?(Array) ? assistant_response.first : assistant_response
+        message_ids = assistant_response.is_a?(Array) ? assistant_response.map(&:id) : [ assistant_response.id ]
+
         data = {
           type: NotificationConstants::NotificationType::AI_RESPONSE_READY,
           room_id: room.id,
-          message_id: assistant_message.id
+          message_id: first_message.id,
+          message_ids: message_ids
         }
 
         ::NotificationService::Center.notify(

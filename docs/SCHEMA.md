@@ -535,7 +535,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `ai_profile_id`     | `uuid`     |    ✔️    | `NULL`              | Optional FK to `ai_profiles.id` used for provider/model/prompt controls             |
 | `role`              | `string`   |    ❌    | —                   | Role: `user` or `assistant`                                                         |
 | `content`           | `text`     |    ❌    | —                   | Message text content                                                                |
-| `metadata`          | `jsonb`    |    ✔️    | `{}`                | Store accessor: `ai_status`, `model`, `usage`, `temperature`, `tts_status`, `error` |
+| `metadata`          | `jsonb`    |    ✔️    | `{}`                | Store accessor: `ai_status`, `model`, `usage`, `temperature`, `tts_status`, `error`, `split_id`, `chunk_index`, `total_chunks` |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                   |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                  |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                 |
@@ -553,6 +553,10 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - `index_chat_messages_on_discarded_at` (`discarded_at`)
 - FK to `chat_rooms(id)`.
 - FK to `ai_profiles(id)`.
+
+**Chunking & Invariants**:
+- Long messages (> 2,000 chars) from users or assistant responses are split across sequential messages sharing `split_id` with `chunk_index` (0-based) and `total_chunks`.
+- Consecutive user message chunks sharing `split_id` are stitched before AI runner execution so LLM receives complete context.
 
 ---
 
@@ -649,7 +653,9 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | Column              | Type       | Nullable | Default             | Description / Notes                                                                             |
 | :------------------ | :--------- | :------: | :------------------ | :---------------------------------------------------------------------------------------------- |
 | `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                                     |
-| `name`              | `string`   |    ❌    | —                   | File original name                                                                              |
+| `name`              | `string`   |    ❌    | —                   | File original name / identifier                                                                 |
+| `display_name`      | `string`   |    ✔️    | `NULL`              | Human-friendly display name (defaults to name / original filename upon creation)                |
+| `description`       | `text`     |    ✔️    | `NULL`              | Optional asset description or caption                                                           |
 | `url`               | `string`   |    ❌    | —                   | Accessible CDN or storage URL                                                                   |
 | `storage_key`       | `string`   |    ✔️    | `NULL`              | Cloud bucket path (e.g. `user/{user_id}/avatar_profile_12345.png`)                              |
 | `type`              | `string`   |    ❌    | `"general"`         | Semantic role: `general`, `avatar`, `thumbnail`, `subtitle`, `tts`, `attachment` (STI disabled) |
@@ -659,6 +665,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `size_bytes`        | `bigint`   |    ✔️    | `NULL`              | File size in bytes                                                                              |
 | `duration_secs`     | `integer`  |    ✔️    | `NULL`              | Video/audio duration in seconds                                                                 |
 | `status`            | `string`   |    ❌    | `"pending"`         | Pipeline status: `pending`, `processing`, `ready`, `optimal`, `failed`                          |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Arbitrary JSONB metadata payload                                                                |
 | `assetable_type`    | `string`   |    ✔️    | `NULL`              | Polymorphic owner type (`User`, `Chat::Message`, etc.)                                          |
 | `assetable_id`      | `uuid`     |    ✔️    | `NULL`              | Polymorphic owner ID                                                                            |
 | `parent_asset_id`   | `uuid`     |    ✔️    | `NULL`              | Source asset for a thumbnail or subtitle child (compressible video or audio parent)             |
@@ -677,6 +684,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - `index_assets_on_assetable_type_and_assetable_id` (`assetable_type`, `assetable_id`)
 - `index_assets_on_parent_asset_id` (`parent_asset_id`)
 - `index_assets_on_name` (`name`)
+- `index_assets_on_display_name` (`display_name`)
 - `index_assets_on_status` (`status`)
 - `index_assets_on_type` (`type`)
 - `index_assets_on_discarded_at` (`discarded_at`)
@@ -852,7 +860,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `title`             | `string`   |    ❌    | —                   | Immutable rendered title                                              |
 | `message`           | `text`     |    ❌    | —                   | Immutable rendered body message                                       |
 | `link`              | `string`   |    ✔️    | `NULL`              | Deep link target URL or app route                                     |
-| `data`              | `jsonb`    |    ❌    | `{}`                | Custom payload / metadata                                             |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Custom payload / metadata                                             |
 | `read_at`           | `datetime` |    ✔️    | `NULL`              | Read status timestamp                                                 |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Creator FK (`users.id`)                                               |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Last updater FK (`users.id`)                                          |

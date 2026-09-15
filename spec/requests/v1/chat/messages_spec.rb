@@ -54,6 +54,20 @@ RSpec.describe "V1 Chat Messages API", type: :request do
       expect(response_meta["status"]).to eq("queued")
     end
 
+    it "returns messages array when prompt is long and split into chunks" do
+      long_prompt = "Alpha " * 400 + "\n\n" + "Beta " * 400
+
+      post "/v1/chat/messages",
+           params: { message: long_prompt, room_id: room.id },
+           headers: headers
+
+      expect(response).to have_http_status(:accepted)
+      expect(response_meta["messages"]).to be_an(Array)
+      expect(response_meta["messages"].size).to be > 1
+      expect(json_body["messages"]).to be_an(Array)
+      expect(json_body["messages"].size).to be > 1
+    end
+
     it "creates a message without queuing AI when ai is false" do
       chat_room = create(:chat_room, user: user)
 

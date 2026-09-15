@@ -362,6 +362,9 @@ module Openapi
       asset_request: object(
         required: [ :asset ],
         asset: object(
+          name: { type: :string, nullable: true },
+          display_name: { type: :string, nullable: true },
+          description: { type: :string, nullable: true },
           storage_key: { type: :string, nullable: true },
           type: { type: :string, nullable: true },
           format: { type: :string, nullable: true },
@@ -370,12 +373,16 @@ module Openapi
           assetable_id: UUID.merge(nullable: true),
           size_bytes: { type: :integer, nullable: true },
           duration_secs: { type: :integer, nullable: true },
-          extension: { type: :string, nullable: true }
+          extension: { type: :string, nullable: true },
+          metadata: { type: :object, nullable: true }
         )
       ),
       asset_update_request: object(
         required: [ :asset ],
         asset: object(
+          name: { type: :string, nullable: true },
+          display_name: { type: :string, nullable: true },
+          description: { type: :string, nullable: true },
           storage_key: { type: :string, nullable: true },
           type: { type: :string, nullable: true },
           format: { type: :string, nullable: true },
@@ -384,7 +391,8 @@ module Openapi
           assetable_id: UUID.merge(nullable: true),
           size_bytes: { type: :integer, nullable: true },
           duration_secs: { type: :integer, nullable: true },
-          extension: { type: :string, nullable: true }
+          extension: { type: :string, nullable: true },
+          metadata: { type: :object, nullable: true }
         )
       ),
       user_role_request: object(
@@ -496,6 +504,8 @@ module Openapi
       asset_upload_request: object(
         required: [ :file ],
         file: { type: :string, format: :binary },
+        display_name: { type: :string, description: "Human-friendly display name (defaults to original filename)." },
+        description: { type: :string, description: "Optional description or notes for the asset." },
         type: {
           type: :string,
           default: "general",
@@ -758,8 +768,12 @@ module Openapi
         required: %i[status data],
         status: ref(:response_status),
         data: object(
-          required: %i[message room_id status operation_id operation_type link job_id],
-          message: ref(:message),
+          required: %i[messages room_id status operation_id operation_type link job_id],
+          messages: {
+            type: :array,
+            items: ref(:message),
+            description: "List of messages created in the room."
+          },
           room_id: UUID,
           status: { type: :string, enum: NotificationConstants::OperationStatus::ALL },
           operation_id: { type: :string },
@@ -954,6 +968,8 @@ module Openapi
         required: %i[id name url type source status],
         id: UUID,
         name: { type: :string },
+        display_name: { type: :string, nullable: true },
+        description: { type: :string, nullable: true },
         url: { type: :string, format: :uri },
         type: { type: :string, enum: AssetConstants::AssetType::ALL },
         format: { type: :string, enum: AssetConstants::AssetFormat::ALL, nullable: true },
@@ -962,6 +978,7 @@ module Openapi
         duration_secs: { type: :integer, nullable: true },
         source: { type: :string, enum: [ AssetConstants::AssetSource::UPLOAD, AssetConstants::AssetSource::GOOGLE ] },
         status: { type: :string, enum: MediaConstants::Status::ALL },
+        metadata: { type: :object, description: "Arbitrary JSONB metadata" },
         assetable_type: { type: :string, nullable: true, description: "Polymorphic owner model, e.g. chat_message or user." },
         assetable_id: UUID.merge(nullable: true),
         parent_asset_id: UUID.merge(nullable: true),
@@ -974,6 +991,9 @@ module Openapi
               properties: {
                 id: UUID,
                 name: { type: :string },
+                display_name: { type: :string, nullable: true },
+                description: { type: :string, nullable: true },
+                metadata: { type: :object, description: "Arbitrary JSONB metadata" },
                 url: { type: :string, format: :uri },
                 type: { type: :string, enum: AssetConstants::AssetType::ALL },
                 format: { type: :string, enum: AssetConstants::AssetFormat::ALL, nullable: true },
@@ -993,6 +1013,9 @@ module Openapi
                 properties: {
                   id: UUID,
                   name: { type: :string },
+                  display_name: { type: :string, nullable: true },
+                  description: { type: :string, nullable: true },
+                  metadata: { type: :object, description: "Arbitrary JSONB metadata" },
                   url: { type: :string, format: :uri },
                   type: { type: :string, enum: AssetConstants::AssetType::ALL },
                   format: { type: :string, enum: AssetConstants::AssetFormat::ALL, nullable: true },

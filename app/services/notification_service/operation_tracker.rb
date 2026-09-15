@@ -14,6 +14,12 @@ module NotificationService
         else
           attributes[:clients] || notification.clients.presence || NotificationConstants::Client::DEFAULT
         end
+        metadata = (attributes[:data] || {}).merge(
+          operation_id: attributes.fetch(:operation_id),
+          operation_type: attributes.fetch(:operation_type),
+          operation_status: status,
+          link: attributes[:link]
+        ).compact
         notification.assign_attributes(
           title: attributes.fetch(:title),
           message: error.presence || attributes.fetch(:message),
@@ -21,12 +27,7 @@ module NotificationService
           clients: clients,
           operation_type: attributes.fetch(:operation_type),
           operation_status: status,
-          data: (attributes[:data] || {}).merge(
-            operation_id: attributes.fetch(:operation_id),
-            operation_type: attributes.fetch(:operation_type),
-            operation_status: status,
-            link: attributes[:link]
-          ).compact,
+          metadata: metadata,
           read_at: nil
         )
         notification.save!
@@ -39,7 +40,7 @@ module NotificationService
             message: notification.message,
             link: notification.link,
             clients: notification.clients,
-            data: notification.data,
+            data: notification.metadata,
             read_at: notification.read_at,
             created_at: notification.created_at.iso8601
           )

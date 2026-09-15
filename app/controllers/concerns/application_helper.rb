@@ -16,6 +16,7 @@ module ApplicationHelper
     if data.is_a?(Hash) && data.key?(:data)
       response[:data] = data[:data] # The serialized data array
       response[:meta] = data[:meta] if data[:meta].present? # The pagination meta
+      response[:messages] = data[:messages] if data[:messages].present?
     else
       response[:data] = data if data
     end

@@ -33,6 +33,7 @@ class Asset < ApplicationRecord
   validates :assetable_id, presence: true, if: -> { assetable_type.present? }
   validate :url_must_be_valid
   validate :only_one_thumbnail_per_parent
+  before_validation :set_default_display_name
   before_validation :set_extension_and_format
   after_destroy_commit :delete_from_storage, if: :uploaded_file?
 
@@ -252,5 +253,9 @@ class Asset < ApplicationRecord
 
   def image_type?
     AssetConstants::AssetType::IMAGE_TYPES.include?(type)
+  end
+
+  def set_default_display_name
+    self.display_name = name if display_name.blank? && name.present?
   end
 end
