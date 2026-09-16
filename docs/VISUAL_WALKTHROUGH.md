@@ -490,6 +490,15 @@ Mobile identifies the signed-in user to OneSignal, syncs tags, clears provider i
 
 Admin notifications can target roles, specific users, or the confirmed audience and fan out across enabled in-app, push, and email channels. Each resulting delivery keeps an independent retry boundary.
 
+## 7.4 Dispatched user notifications audit (`/admin/user-notifications`)
+
+<!-- SCREENSHOT:N04 — Dispatched user notifications across all users -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-user-notifications-web.png" alt="N04 — User Notifications Dispatch Audit and Management" width="100%">
+</p>
+
+Inspect and govern individual in-app notification receipts dispatched across all registered users. Administrators can monitor real-time delivery channels (Web, Mobile badges), filter by recipient, platform, or read status (Unread, Read), audit dispatch timestamps, and manage soft-deletion through the dedicated Recycle Bin tab.
+
 ---
 
 # 8. Intelligent feedback
@@ -697,7 +706,16 @@ Unified asset governance over images, video, and audio. Features batch drag-and-
 
 Draft and dispatch push, in-app socket, and email broadcasts. Filter target audiences by role or individual recipient, track open/read rates, and manage system alert templates.
 
-## 10.10 Intelligent Feedback Triage (`/admin/feedback`)
+## 10.10 User Notifications Management (`/admin/user-notifications`)
+
+<!-- SCREENSHOT:AD_USER_NOTIF -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-user-notifications-web.png" alt="AD User Notifications — Dispatched User Notifications Audit" width="100%">
+</p>
+
+Inspect and manage in-app notifications dispatched across all registered accounts. Filter receipts by recipient email, platform targets (Web, Mobile), and read status. Includes single-click soft deletion with complete Recycle Bin restoration lifecycle.
+
+## 10.11 Intelligent Feedback Triage (`/admin/feedback`)
 
 <!-- SCREENSHOT:AD09 -->
 <p align="center">
@@ -706,7 +724,7 @@ Draft and dispatch push, in-app socket, and email broadcasts. Filter target audi
 
 Triage user-submitted ratings and messages with automatically attached client telemetry (platform, app version, screen route, user context) and operational priority ranking.
 
-## 10.11 Client Logs & Error Telemetry (`/admin/logs`)
+## 10.12 Client Logs & Error Telemetry (`/admin/logs`)
 
 <!-- SCREENSHOT:AD_LOGS -->
 <p align="center">
@@ -715,7 +733,7 @@ Triage user-submitted ratings and messages with automatically attached client te
 
 Centralized error observability capturing uncaught browser exceptions, React boundary errors, mobile Flutter stack traces, network timeouts, and device context directly in Core.
 
-## 10.12 Chat Rooms Moderation (`/admin/chat/rooms`)
+## 10.13 Chat Rooms Moderation (`/admin/chat/rooms`)
 
 <!-- SCREENSHOT:AD08 -->
 <p align="center">
@@ -724,7 +742,7 @@ Centralized error observability capturing uncaught browser exceptions, React bou
 
 Moderate user AI and community chat rooms, inspect room ownership, review conversation titles, and manage room lifecycle state.
 
-## 10.13 Chat Messages Moderation (`/admin/chat/messages`)
+## 10.14 Chat Messages Moderation (`/admin/chat/messages`)
 
 <!-- SCREENSHOT:AD_CHAT_MSG -->
 <p align="center">
@@ -733,7 +751,7 @@ Moderate user AI and community chat rooms, inspect room ownership, review conver
 
 Audit individual chat messages, distinguish user prompts from assistant completions, inspect AI model and token usage metadata, and moderate flagged dialogue.
 
-## 10.14 App Versions (`/admin/versions`)
+## 10.15 App Versions (`/admin/versions`)
 
 <!-- SCREENSHOT:AD07 -->
 <p align="center">
@@ -742,7 +760,7 @@ Audit individual chat messages, distinguish user prompts from assistant completi
 
 Govern mobile app releases (Android and iOS). Control version numbers, build numbers, release notes, download URLs, and trigger optional or mandatory force-upgrade policies without republishing to app stores.
 
-## 10.15 User Platform Versions (`/admin/user-versions`)
+## 10.16 User Platform Versions (`/admin/user-versions`)
 
 <!-- SCREENSHOT:AD_USER_VER -->
 <p align="center">
@@ -751,7 +769,7 @@ Govern mobile app releases (Android and iOS). Control version numbers, build num
 
 Real-time telemetry showing which app versions and platforms each active user is running, ensuring smooth progressive rollouts and deprecation tracking.
 
-## 10.16 AI Profiles & Multi-Provider Configuration (`/admin/ai/profiles`)
+## 10.17 AI Profiles & Multi-Provider Configuration (`/admin/ai/profiles`)
 
 <!-- SCREENSHOT:AD10 -->
 <p align="center">
@@ -760,7 +778,7 @@ Real-time telemetry showing which app versions and platforms each active user is
 
 Operational governance over AI models and system prompts: configure DeepSeek and Google Gemini providers, temperature parameters, context token limits, output token limits, and role prompts with full RBAC protection.
 
-## 10.17 AI Runs & Execution Telemetry (`/admin/ai/runs`)
+## 10.18 AI Runs & Execution Telemetry (`/admin/ai/runs`)
 
 <!-- SCREENSHOT:AD11 -->
 <p align="center">
@@ -1207,6 +1225,7 @@ Working checklist and file index of all visual assets integrated across this wal
 | N01_M   | Notifications  | `docs/images/walkthrough/notifications/n01-mobile.png`    | Notification Inbox & Badges (Mobile)         | Captured |
 | N02_M   | Notifications  | `docs/images/walkthrough/notifications/n02-mobile.png`    | OneSignal Native Push Notification (Mobile)  | Captured |
 | N03     | Notifications  | `docs/images/walkthrough/admin/ad06-web.png`              | Admin Broadcast Dispatch                     | Captured |
+| N04     | Notifications  | `docs/images/walkthrough/admin/ad-user-notifications-web.png` | User Notifications Dispatch Audit        | Captured |
 | F01     | Feedback       | `docs/images/walkthrough/feedback/f01-web.png`            | In-Place Feedback Dialog (Web)               | Captured |
 | F01_M   | Feedback       | `docs/images/walkthrough/feedback/f01-mobile.png`         | In-Place Feedback Sheet (Mobile)             | Captured |
 | F02     | Feedback       | `docs/images/walkthrough/admin/ad09-web.png`              | Feedback Triage & Telemetry                  | Captured |
@@ -1230,6 +1249,7 @@ Working checklist and file index of all visual assets integrated across this wal
 | AD04_B  | Admin          | `docs/images/walkthrough/admin/ad-products-bin-web.png`   | Product Recycle Bin & Soft Deletion          | Captured |
 | AD05    | Admin          | `docs/images/walkthrough/admin/ad05-web.png`              | Access & Entitlements Management             | Captured |
 | AD06    | Admin          | `docs/images/walkthrough/admin/ad06-web.png`              | Notification Dispatch & Templates            | Captured |
+| AD_UN   | Admin          | `docs/images/walkthrough/admin/ad-user-notifications-web.png` | Dispatched User Notifications Audit       | Captured |
 | AD07    | Admin          | `docs/images/walkthrough/admin/ad07-web.png`              | App Version Governance                       | Captured |
 | AD_UV   | Admin          | `docs/images/walkthrough/admin/ad-user-versions-web.png`  | User Platform Versions Snapshots             | Captured |
 | AD08    | Admin          | `docs/images/walkthrough/admin/ad08-web.png`              | Chat Rooms Moderation                        | Captured |
@@ -1246,7 +1266,7 @@ Working checklist and file index of all visual assets integrated across this wal
 | O06     | Operations     | `docs/images/walkthrough/operations/o06-solid-cable.png`  | Solid Web UI — Cable                         | Captured |
 | O07     | Operations     | `docs/images/walkthrough/operations/o07-swagger.png`      | Rswag OpenAPI Documentation                  | Captured |
 
-All 70 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
+All 71 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
 
 ## Suggested file naming
 
