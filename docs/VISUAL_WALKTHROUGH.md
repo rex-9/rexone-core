@@ -1002,15 +1002,17 @@ Web currently organizes English, Spanish, and Burmese resources. Mobile provides
 
 ## 16.2 Shared design discipline
 
-<!-- SCREENSHOT:L02 — one representative polished screen in light/dark or desktop/mobile -->
+<!-- SCREENSHOT:L02 — Figma design system and token specification placeholder -->
 <p>
-  <img src="./images/walkthrough/design/l02-web.png" alt="L02 Web — design system example" width="73%">
-  <img src="./images/walkthrough/design/l02-mobile.png" alt="L02 Mobile — design system example" width="25%">
+  <img src="./images/walkthrough/design/l02-web.png" alt="L02 Web — Figma design system specification placeholder" width="73%">
+  <img src="./images/walkthrough/design/l02-mobile.png" alt="L02 Mobile — Figma design system specification placeholder" width="25%">
 </p>
 
-Rexone Web centralizes typography, color, spacing, radius, motion, inputs, dialogs, buttons, media primitives, navigation, and themes under its design layer.
+Rexone Web centralizes typography, color, spacing, radius, motion, inputs, dialogs, buttons, media primitives, navigation, and themes under its design layer (`src/design/`).
 
-Rexone Mobile centralizes Material 3 themes, spacing, typography, icons, timers, theme extensions, and reusable components such as `AppButton`, `AppInputField`, `AppPasswordField`, `AppDialog`, `AppPage`, and `AppSnackbar`.
+Rexone Mobile centralizes Material 3 themes, spacing, typography, icons, timers, theme extensions, and reusable components such as `AppButton`, `AppInputField`, `AppPasswordField`, `AppDialog`, `AppPage`, and `AppSnackbar` (`lib/design/`).
+
+The visual contract above serves as the design token specification placeholder anchored to Figma UI kits. Both clients map to identical primitive values (primary blue `#2563EB`, background `#0B0F17`, 8pt uniform spacing grid, and standard typography hierarchies).
 
 The goal is not pixel-identical Web and Mobile UI. The goal is **consistent product identity and behavior implemented with native platform ergonomics**.
 
