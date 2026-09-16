@@ -79,7 +79,7 @@ module AiConstants
 
   module Defaults
     TEMPERATURE          = 0.7
-    MAX_OUTPUT_TOKENS    = 4000
+    MAX_OUTPUT_TOKENS    = 10000
     CONTEXT_MAX_TOKENS   = 8000
     HISTORY_MAX_MESSAGES = 20
     TIMEOUT_SECONDS      = 60

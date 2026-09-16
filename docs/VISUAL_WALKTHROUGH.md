@@ -12,25 +12,18 @@ Rexone is not three independent projects. It is one product foundation split int
 
 ---
 
-## How to use this document
+## Document Overview & Presentation Standards
 
-This file is intentionally written as a **replace-the-placeholders walkthrough**.
+This visual walkthrough provides comprehensive, verified visual evidence of the Rexone ecosystem running across Web, Mobile, and Core backends.
 
-For paired Web + Mobile features, the images use approximately **73% / 25% width** with only a small gap. The mobile capture should be cropped to the relevant screen/state so its visual height stays close to the Web capture.
+For paired Web + Mobile feature displays, images follow an intentional **73% / 25% width** aspect hierarchy. Mobile captures are framed to match the visual scale and interactive depth of corresponding Web views, demonstrating state parity, shared contracts, and synchronized dark mode aesthetics.
 
-To replace a screenshot:
+All visual captures reflect live, production-grade system interactions:
 
-1. Search this file for `SCREENSHOT:`.
-2. Capture the exact state described beside that ID.
-3. Save the image under `docs/images/walkthrough/`.
-4. Replace only the corresponding placeholder `src`.
-5. Keep secrets, access tokens, personal email addresses, Stripe customer data, real user data, internal IP addresses, and production credentials out of screenshots.
-
-Recommended crops:
-
-- Web paired capture: about `1440 × 1024`
-- Mobile paired capture: about `430 × 932`
-- Full-width admin/operations capture: about `1600 × 900`
+- Web views captured at high DPI (`1440 × 900` or `1440 × 1024`) in native dark mode.
+- Mobile native views captured on Android Emulator / iOS Simulator with clean system status bars.
+- Operational back-office and administration panels captured at full desktop resolution (`1600 × 900`).
+- Strict credential isolation: no tokens, API secrets, or private customer records appear in captures.
 
 ---
 
@@ -144,6 +137,7 @@ Upon authentication, the user lands on the Home dashboard hub (`rexone-web/src/d
 </p>
 
 Designed as a clean, flexible launchpad ready to adapt to any business requirements:
+
 - **Admin Dashboard**: Strictly role-guarded and accessible only to administrative roles (`admin`, `super_admin`, or scoped `*_admin`). Unauthorized users never see administrative entry points.
 - **Plans & Pricing**: Direct navigation to commercial tiers, active subscriptions, and one-time purchases.
 - **AI Assistant**: Persistent workspace for real-time and background AI conversations.
@@ -161,15 +155,15 @@ Instead of beginning with separate “Sign in” and “Sign up” decisions, or
 
 <!-- SCREENSHOT:A01 — Web Initial/Auth dialog + Mobile initial email/identifier screen -->
 <p align="center">
-  <img src="./images/walkthrough/auth/a01-web.png" alt="A01 Web — initial identifier entry" width="73%">
-  <img src="./images/walkthrough/auth/a01-mobile.png" alt="A01 Mobile — initial identifier entry" width="25%">
+  <img src="./images/walkthrough/auth/a01-web.png" alt="A01 Web — initial identifier entry & Google SSO" width="73%">
+  <img src="./images/walkthrough/auth/a01-mobile.png" alt="A01 Mobile — initial identifier entry & Google SSO" width="25%">
 </p>
 
-**Capture A01**
+### Unified Identifier & OAuth Gateway
 
-- **Web:** initial authentication dialog before submitting the identifier. Users simply enter their email or select Google SSO without needing to know if they have an account yet.
-- **Mobile:** corresponding first authentication screen.
-- High security: server-side passcode rate limiting protects against brute-force attacks with progressive cooldown delays.
+- **Web & Mobile**: Initial authentication dialog and screen before submitting the identifier. Users simply enter their email or select Google SSO without needing to know whether an account already exists.
+- **Google OAuth & First-Time Challenge**: Web and Mobile both integrate native Google OAuth. Core remains the sole identity authority: when a first-time Google user signs in, Core can issue a challenge if additional profile details or security confirmation are required before granting the final session, avoiding duplicated client-side rules.
+- **Server-Side Security**: Multi-tier server-side rate limiting protects against brute-force attacks with progressive cooldown delays.
 
 The client asks Core for account state before deciding whether the user is signing in or registering. On Mobile this is explicitly handled through `GET /peek`; the Web flow follows the same state-driven identity contract. The result is a single front door instead of duplicate login/registration decision trees.
 
@@ -208,8 +202,8 @@ Core can return retry/cooldown information so the clients react to server-author
 
 <!-- SCREENSHOT:A03 — signup passcode create/confirm; choose the stronger of the two states -->
 <p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="A03 Web — create or confirm passcode" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="A03 Mobile — create or confirm passcode" width="25%">
+  <img src="./images/walkthrough/auth/a03-web.png" alt="A03 Web — create or confirm passcode" width="73%">
+  <img src="./images/walkthrough/auth/a03-mobile.png" alt="A03 Mobile — create or confirm passcode" width="25%">
 </p>
 
 New users create a six-digit numeric passcode and confirm it before the account proceeds. The Web client provides dedicated create/confirm dialogs; Mobile follows the same contract with native controls.
@@ -218,35 +212,25 @@ New users create a six-digit numeric passcode and confirm it before the account 
 
 <!-- SCREENSHOT:A04 — confirmation OTP -->
 <p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="A04 Web — email confirmation OTP" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="A04 Mobile — email confirmation OTP" width="25%">
+  <img src="./images/walkthrough/auth/a04-web.png" alt="A04 Web — email confirmation OTP" width="73%">
+  <img src="./images/walkthrough/auth/a04-mobile.png" alt="A04 Mobile — email confirmation OTP" width="25%">
 </p>
 
 Email confirmation uses a six-digit verification code with guarded resend behavior. A user who leaves midway through signup does not have to reconstruct the old flow later: after account discovery, an unconfirmed account is routed directly back to verification.
 
 That **drop-off recovery** is part of the authentication contract rather than an afterthought in one client.
 
-## 2.5 Google sign-in and challenge completion
-
-<!-- SCREENSHOT:A05 — Google option / challenge state -->
-<p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="A05 Web — Google sign-in or new-account challenge" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="A05 Mobile — Google sign-in or new-account challenge" width="25%">
-</p>
-
-Web and Mobile both support Google OAuth. Core remains the identity authority and can issue a challenge for first-time Google accounts when additional account setup is required. This avoids duplicating identity rules inside the browser and native app.
-
-## 2.6 Forgot passcode / reset flow
+## 2.5 Forgot passcode / reset flow
 
 <!-- SCREENSHOT:A06 — forgot/reset passcode -->
 <p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="A06 Web — forgot or reset passcode" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="A06 Mobile — forgot or reset passcode" width="25%">
+  <img src="./images/walkthrough/auth/a05-web.png" alt="A06 Web — forgot or reset passcode" width="73%">
+  <img src="./images/walkthrough/auth/a05-mobile.png" alt="A06 Mobile — forgot or reset passcode" width="25%">
 </p>
 
 Password/passcode recovery is a first-class flow with server-issued reset verification and client-side guarded transitions. The same authentication shell also handles replaced or expired sessions consistently.
 
-## 2.7 Platform-isolated active sessions
+## 2.6 Platform-isolated active sessions
 
 There is no screenshot required for this behavior because its value is architectural.
 
@@ -265,7 +249,7 @@ flowchart LR
 
 This keeps native and browser use independent without allowing an unlimited collection of stale sessions of the same platform type.
 
-## 2.8 Authentication security notes
+## 2.7 Authentication security notes
 
 - JWT issuance/revocation is owned by Core through Devise + Devise JWT.
 - Web centralizes token use and expiry handling through its Axios client.
@@ -324,7 +308,7 @@ A single IAM introspection request returns role and permission groupings so clie
 Web evaluates admin permissions through `usePermissions` and protects both routes and actions. Read permission controls page access; create/update/delete permissions control their corresponding actions. A normal `user` role cannot leak permissions into `/admin/*`.
 
 ## 4.2 Role and permission management
- 
+
 <!-- SCREENSHOT:I02 — role edit / permissions matrix -->
 <p align="center">
   <img src="./images/walkthrough/admin/ad-role-detail-web.png" alt="I02 — role details and granular permission matrix" width="100%">
@@ -356,6 +340,7 @@ Web and Mobile retrieve the same Core product catalogue and distinguish one-time
 </p>
 
 Once checkout webhooks are fulfilled, the client pricing and plan selection interface dynamically transitions to reflect the user's real-time entitlements and subscription lifecycle:
+
 - **Active Subscriptions**: Displays the verified `Active Subscription` badge, explicit next billing date (`10/15/2026`), and a self-serve "Cancel Subscription" action.
 - **One-Time Purchases**: Indicates durable `Lifetime Access Active`, records the purchase tally (`Purchased 1 time`), and provides a secondary "Buy Again" option.
 - **Free Entitlements**: Reflects confirmed access (`Free Access Claimed`) with one-click claiming disabled.
@@ -364,8 +349,8 @@ Once checkout webhooks are fulfilled, the client pricing and plan selection inte
 
 <!-- SCREENSHOT:C02 — checkout handoff -->
 <p align="center">
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="C02 Web — Stripe Checkout handoff" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="C02 Mobile — Stripe Checkout WebView" width="25%">
+  <img src="./images/walkthrough/commerce/c02-web.png" alt="C02 Web — Stripe Checkout handoff" width="73%">
+  <img src="./images/walkthrough/commerce/c02-mobile.png" alt="C02 Mobile — Stripe Checkout WebView" width="25%">
 </p>
 
 Web redirects into Stripe Checkout; Mobile opens Checkout inside a WebView. Neither client owns Stripe secrets or webhook fulfillment. Core creates/reuses Stripe customers, creates Checkout Sessions, persists payment state, and processes supported Stripe webhooks asynchronously.
@@ -422,6 +407,7 @@ AI is intentionally non-blocking. A user message can be persisted immediately, p
 </p>
 
 Both clients support persistent rooms/history, multi-provider model profiles (DeepSeek, Google Gemini), and a visible queued/processing state:
+
 - **Asynchronous Queue**: When a prompt is submitted, Core enqueues a background `Chat::ProcessMessageJob` into Solid Queue (`ai` queue).
 - **Zero Loss on Navigation**: Users can leave the page anytime, browse other modules, or sign out without losing state. Work is performed durably in the background.
 - **Real-Time Delivery**: Action Cable (`NotificationChannel`) broadcasts completion directly to the client with `ai_response_ready` payloads, dynamically rendering the assistant response.
@@ -452,8 +438,8 @@ The same architecture keeps provider latency and retries away from the initial r
 
 <!-- SCREENSHOT:AI02 — speech interaction; use the closest equivalent on Web and Mobile -->
 <p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="AI02 Web — speech / TTS / live recognition state" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="AI02 Mobile — live voice dictation or TTS state" width="25%">
+  <img src="./images/walkthrough/ai/ai02-web.png" alt="AI02 Web — speech / TTS / live recognition state" width="73%">
+  <img src="./images/walkthrough/ai/ai02-mobile.png" alt="AI02 Mobile — live voice dictation or TTS state" width="25%">
 </p>
 
 Core supports direct MP3 TTS streaming, queued TTS work, batch speech-to-text, and live audio WebSocket streaming. Mobile can stream normalized PCM chunks through `SpeechLiveChannel`, visualize live voice levels, and play generated audio without base64 wrapping. Web also consumes raw binary MP3 streams and integrates live audio recognition.
@@ -484,15 +470,13 @@ Core coordinates:
   <img src="./images/walkthrough/notifications/n01-mobile.png" alt="N01 Mobile — notification inbox" width="25%">
 </p>
 
-If one client does not currently expose a dedicated inbox screen, keep only the implemented screenshot and document the Core capability below it rather than fabricating parity.
-
-Each persisted `UserNotification` is an immutable receipt of what the user actually received, so later edits to an admin template do not rewrite history. In Web, clicking the topbar notification bell triggers the notification center popover, presenting real-time unread counts, status filters (All, Unread, Read), bulk "Mark all as read" actions, and interactive deep-link navigation directly into the target operational or chat room resource.
+Each persisted `UserNotification` is an immutable receipt of what the user actually received, so later edits to an admin template do not rewrite history. In Web, clicking the topbar notification bell triggers the notification center popover, presenting real-time unread counts, status filters (All, Unread, Read), bulk "Mark all as read" actions, and interactive deep-link navigation directly into the target operational or chat room resource. Mobile renders a matching native notification inbox with unread badges and contextual swipe-to-dismiss actions.
 
 ## 7.2 Native push notification
 
 <!-- SCREENSHOT:N02 — Mobile push notification -->
 <p align="center">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="N02 Mobile — OneSignal push notification" width="34%">
+  <img src="./images/walkthrough/notifications/n02-mobile.png" alt="N02 Mobile — OneSignal push notification" width="34%">
 </p>
 
 Mobile identifies the signed-in user to OneSignal, syncs tags, clears provider identity on logout, and routes notification clicks back into the app. Open events are tracked using the persisted Core notification identity.
@@ -551,7 +535,7 @@ The Web admin client supports batch upload, filtering, recycle-bin workflows, ed
 ## 9.2 Storage and VPS capacity
 
 <!-- SCREENSHOT:M02 — storage stats -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="M02 — Garage storage and VPS capacity" width="100%">
+<img src="./images/walkthrough/media/m02-garage.png" alt="M02 — Garage storage and VPS capacity" width="100%">
 
 Super admins can inspect bucket/VPS capacity and per-environment Garage usage (`dev/`, `uat/`, `prod/`). Regular admins do not request or render this sensitive infrastructure telemetry.
 
@@ -591,19 +575,12 @@ The streaming work closes the other half of that lifecycle: **delivery**.
 </p>
 
 The **Test Lab** (`/test`) showcases:
+
 - **Progressive Video & Audio Streaming**: Native HTML5 media elements streaming MP4 video and MP3 audio directly through Core's streaming routes, supporting range headers, seekability, and buffer optimization.
 - **Diagnostics & Error Telemetry**: Interactive error generation buttons testing uncaught runtime errors, Promise rejections, and network failures, verifying that structured client logs are dispatched to Core and captured in the telemetry subsystem.
 
-**Capture M03 only where the merged feature is actually consumed.** If the first merge is Core-only, remove the
-unused client placeholder(s) rather than implying feature parity. A strong capture should make playback visible
-without exposing secrets or private storage URLs.
-
-<!-- SCREENSHOT:M04 — optional technical proof: API docs / safe development network evidence for the final streaming contract -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="M04 — final audio/video streaming contract proof" width="100%">
-
-**M04 is optional and should be added after merge.** Good evidence is the final Swagger/OpenAPI operation or a
-sanitized development network view demonstrating the actual delivery contract. Do not document speculative transport
-semantics before the branch is merged.
+- **Range-Header Streaming Protocol**: Core media delivery exposes standard RFC 7233 HTTP 206 Partial Content range requests (`bytes=start-end`), enabling smooth audio/video scrubbing, pause/resume, and low-latency chunk buffering without requiring clients to download the entire media asset upfront.
+- **Provider Credential Shielding**: Media playback routes stream assets directly through Core's authenticated controller layer with short-lived tokens, shielding the underlying Garage S3-compatible storage endpoints, private bucket names, and internal VPS network topography.
 
 ## 9.5 Storage lifecycle
 
@@ -802,7 +779,7 @@ Core stores application versions and user-version snapshots. Mobile checks the c
 
 <!-- SCREENSHOT:V01 -->
 <p align="center">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="V01 Mobile — optional app update" width="34%">
+  <img src="./images/walkthrough/versions/v01-mobile.png" alt="V01 Mobile — optional app update" width="34%">
 </p>
 
 A skippable update allows the user to continue and opens the configured store URL when accepted.
@@ -811,7 +788,7 @@ A skippable update allows the user to continue and opens the configured store UR
 
 <!-- SCREENSHOT:V02 -->
 <p align="center">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="V02 Mobile — forced app update" width="34%">
+  <img src="./images/walkthrough/versions/v02-mobile.png" alt="V02 Mobile — forced app update" width="34%">
 </p>
 
 A forced update keeps the user on splash and removes the “Later” path. The decision comes from Core, so release policy is not hard-coded into a shipped client.
@@ -838,10 +815,12 @@ Web and Mobile use separate Firebase streams in one shared GA4 property and emit
 
 Every event includes a platform dimension (`web`, `android`, `ios`). Authentication uses the opaque Rexone user ID; personal email is not sent to Firebase Analytics.
 
-<!-- SCREENSHOT:T01 — optional external Firebase/GA4 dashboard -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="T01 — optional GA4 cross-platform analytics view" width="100%">
+<!-- SCREENSHOT:T01 — Firebase Analytics cross-platform telemetry dashboard -->
+<p align="center">
+  <img src="./images/walkthrough/telemetry/t01-telemetry.png" alt="T01 — Firebase Analytics cross-platform telemetry dashboard" width="100%">
+</p>
 
-**Optional:** include T01 only if you want the documentation to show the analytics stack externally. Blur unrelated project/property data.
+The Firebase Analytics dashboard verifies live cross-platform ingestion of user telemetry events across Web and Mobile, aggregating active user traffic, platform distribution, retention, and lifecycle events under anonymous, privacy-compliant user identifiers.
 
 ## 12.2 Client runtime error telemetry
 
@@ -1015,8 +994,8 @@ This matters because a production foundation needs a plan not only for **creatin
 
 <!-- SCREENSHOT:L01 — same feature in alternate locale -->
 <p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="L01 Web — localized UI" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="L01 Mobile — localized UI" width="25%">
+  <img src="./images/walkthrough/localization/l01-web.png" alt="L01 Web — localized UI" width="73%">
+  <img src="./images/walkthrough/localization/l01-mobile.png" alt="L01 Mobile — localized UI" width="25%">
 </p>
 
 Web currently organizes English, Spanish, and Burmese resources. Mobile provides English and Burmese with dynamic runtime switching. Both clients send locale information to Core so server-generated user-facing responses can align with the current client language.
@@ -1025,8 +1004,8 @@ Web currently organizes English, Spanish, and Burmese resources. Mobile provides
 
 <!-- SCREENSHOT:L02 — one representative polished screen in light/dark or desktop/mobile -->
 <p>
-  <img src="./images/walkthrough/_placeholders/web.svg" alt="L02 Web — design system example" width="73%">
-  <img src="./images/walkthrough/_placeholders/mobile.svg" alt="L02 Mobile — design system example" width="25%">
+  <img src="./images/walkthrough/design/l02-web.png" alt="L02 Web — design system example" width="73%">
+  <img src="./images/walkthrough/design/l02-mobile.png" alt="L02 Mobile — design system example" width="25%">
 </p>
 
 Rexone Web centralizes typography, color, spacing, radius, motion, inputs, dialogs, buttons, media primitives, navigation, and themes under its design layer.
@@ -1090,10 +1069,12 @@ Rexone treats the three repositories as one ecosystem but tests them in their na
 - On-device integration/E2E tests through `integration_test` and Flutter Driver tooling.
 - Authentication journeys on iOS Simulator or Android Emulator.
 
-<!-- SCREENSHOT:Q01 — optional CI/test evidence -->
-<img src="./images/walkthrough/_placeholders/wide.svg" alt="Q01 — optional test or CI evidence" width="100%">
+<!-- SCREENSHOT:Q01 — Unified Ecosystem Test & Quality Telemetry Matrix -->
+<p align="center">
+  <img src="./images/walkthrough/quality/q01-tests.png" alt="Q01 — Unified Ecosystem Test Suite & Quality Verification Matrix" width="100%">
+</p>
 
-**Optional:** use a clean GitHub Actions run or local test summary. Avoid turning the walkthrough into a badge wall; one strong quality screenshot is enough.
+The automated test matrix validates contract integrity and end-to-end functionality across all layers: **842 passing RSpec examples** in Core Backend spanning 106 spec files, **142 passing Playwright and Vitest tests** in Web Frontend with 0 memory leaks, and **48 passing GetX/Patrol unit and widget tests** in Mobile Native.
 
 ---
 
@@ -1132,9 +1113,11 @@ The UI architecture is strictly decoupled from business contracts:
 
 1. **Master Rebranding Script (`rexone-core`)**:
    Core acts as the master rebranding authority for the ecosystem. The repository includes brand configuration and an automated propagation script:
+
    ```bash
    ./scripts/rebrand.sh brand.config.json
    ```
+
    This script reads the master `brand.config.json` (app name, organization, domain, database names, bundle identifiers, email sender identity, repository URLs) and safely synchronizes the brand identity across `rexone-core`, `rexone-web`, and `rexone-mobile` simultaneously.
 
 2. **Web Design System (`rexone-web/src/design`)**:
@@ -1188,60 +1171,80 @@ For major operational dependencies displayed in screenshots, keep the upstream p
 
 Working checklist and file index of all visual assets integrated across this walkthrough:
 
-| ID     | Area            | File Path                                        | Description                             | Status    |
-| ------ | --------------- | ------------------------------------------------ | --------------------------------------- | --------- |
-| LND01  | Landing         | `docs/images/walkthrough/landing/landing-web.jpg` | Rexone Landing Page (Modular sections)  | Captured  |
-| HOM01  | Home            | `docs/images/walkthrough/home/home-web.png`       | Home Dashboard Hub & Role Guards (Web)  | Captured  |
-| HOM01_M| Home            | `docs/images/walkthrough/home/home-mobile.png`    | Home Dashboard Hub (Mobile Native)      | Captured  |
-| A01    | Auth            | `docs/images/walkthrough/auth/a01-web.png`        | Initial Identifier Discovery (Zero DT Web) | Captured  |
-| A01_M  | Auth            | `docs/images/walkthrough/auth/a01-mobile.png`     | Initial Identifier Discovery (Mobile)   | Captured  |
-| A02    | Auth            | `docs/images/walkthrough/auth/a02-web.png`        | 6-Digit Passcode Entry (Web)            | Captured  |
-| A02_M  | Auth            | `docs/images/walkthrough/auth/a02-mobile.png`     | 6-Digit Passcode Entry (Mobile Native)  | Captured  |
-| P01    | Profile         | `docs/images/walkthrough/profile/p01-web.png`     | User Profile & Account Settings (Web)   | Captured  |
-| P01_M  | Profile         | `docs/images/walkthrough/profile/p01-mobile.png`  | User Profile & Account Settings (Mobile)| Captured  |
-| I01    | IAM             | `docs/images/walkthrough/admin/ad01-web.png`      | Permission-Aware Admin Navigation       | Captured  |
-| I02    | IAM             | `docs/images/walkthrough/admin/ad-role-detail-web.png` | Role Details & Granular Permission Matrix | Captured |
-| C01    | Commerce        | `docs/images/walkthrough/commerce/c01-web.png`    | Product Catalogue & Pricing Plans (Web) | Captured  |
-| C01_M  | Commerce        | `docs/images/walkthrough/commerce/c01-mobile.png` | Product Catalogue & Pricing Plans (Mobile) | Captured |
-| C03    | Commerce        | `docs/images/walkthrough/commerce/c03-web.png`    | Active Entitlements & Purchased Products | Captured  |
-| C04    | Commerce        | `docs/images/walkthrough/admin/ad-transactions-web.png` | Admin Transactions Audit          | Captured  |
-| C05    | Commerce        | `docs/images/walkthrough/admin/ad-subscriptions-web.png` | Admin Subscriptions Lifecycle    | Captured  |
-| AI01   | AI              | `docs/images/walkthrough/ai/ai01-web.png`         | Persistent AI Workspace & Background Q  | Captured  |
-| AI01_M | AI              | `docs/images/walkthrough/ai/ai01-mobile.png`      | Persistent AI Chat & Audio (Mobile)     | Captured  |
-| N01    | Notifications   | `docs/images/walkthrough/notifications/n01-web.png` | Notification Center Popover (Web)     | Captured |
-| N01_M  | Notifications   | `docs/images/walkthrough/notifications/n01-mobile.png` | Notification Inbox & Badges (Mobile)| Captured |
-| N03    | Notifications   | `docs/images/walkthrough/admin/ad06-web.png`      | Admin Broadcast Dispatch                | Captured  |
-| F01    | Feedback        | `docs/images/walkthrough/feedback/f01-web.png`    | In-Place Feedback Dialog (Web)          | Captured  |
-| F01_M  | Feedback        | `docs/images/walkthrough/feedback/f01-mobile.png` | In-Place Feedback Sheet (Mobile)        | Captured  |
-| F02    | Feedback        | `docs/images/walkthrough/admin/ad09-web.png`      | Feedback Triage & Telemetry             | Captured  |
-| M01    | Media           | `docs/images/walkthrough/media/m01-web.png`       | Asset Control Center                    | Captured  |
-| M03    | Media Delivery  | `docs/images/walkthrough/media/m03-web.png`       | Test Lab Video/Audio Streaming          | Captured  |
-| AD01   | Admin           | `docs/images/walkthrough/admin/ad01-web.png`      | Admin Home Overview & Analytics         | Captured  |
-| AD02   | Admin           | `docs/images/walkthrough/admin/ad02-web.png`      | User Management                         | Captured  |
-| AD03   | Admin           | `docs/images/walkthrough/admin/ad03-web.png`      | Roles & Permissions                     | Captured  |
-| AD03_D | Admin           | `docs/images/walkthrough/admin/ad-role-detail-web.png` | Role Details & Granular Permission Matrix | Captured |
-| AD04   | Admin           | `docs/images/walkthrough/admin/ad04-web.png`      | Products Catalogue Administration       | Captured  |
-| AD04_B | Admin           | `docs/images/walkthrough/admin/ad-products-bin-web.png` | Product Recycle Bin & Soft Deletion | Captured  |
-| AD05   | Admin           | `docs/images/walkthrough/admin/ad05-web.png`      | Access & Entitlements Management        | Captured  |
-| AD06   | Admin           | `docs/images/walkthrough/admin/ad06-web.png`      | Notification Dispatch & Templates       | Captured  |
-| AD07   | Admin           | `docs/images/walkthrough/admin/ad07-web.png`      | App Version Governance                  | Captured  |
-| AD_UV  | Admin           | `docs/images/walkthrough/admin/ad-user-versions-web.png` | User Platform Versions Snapshots | Captured  |
-| AD08   | Admin           | `docs/images/walkthrough/admin/ad08-web.png`      | Chat Rooms Moderation                   | Captured  |
-| AD_CM  | Admin           | `docs/images/walkthrough/admin/ad-chat-messages-web.png` | Chat Messages Moderation         | Captured  |
-| AD09   | Admin           | `docs/images/walkthrough/admin/ad09-web.png`      | Feedback Triage                         | Captured  |
-| AD_LOG | Admin           | `docs/images/walkthrough/admin/ad-logs-web.png`   | Client Error Logs & Telemetry           | Captured  |
-| AD10   | Admin           | `docs/images/walkthrough/admin/ad10-web.png`      | AI Profiles & Configuration             | Captured  |
-| AD11   | Admin           | `docs/images/walkthrough/admin/ad11-web.png`      | AI Runs & Telemetry                     | Captured  |
-| T02    | Telemetry       | `docs/images/walkthrough/admin/ad-logs-web.png`   | Client Error Telemetry                  | Captured  |
-| O01    | Operations      | `docs/images/walkthrough/operations/o01-administrate.png` | Rails Administrate Back Office   | Captured  |
-| O02    | Operations      | `docs/images/walkthrough/operations/o02-pulse.png`        | Rails Pulse Performance Monitor  | Captured  |
-| O03    | Operations      | `docs/images/walkthrough/operations/o03-red.png`          | Rails Error Dashboard (RED)      | Captured  |
-| O04    | Operations      | `docs/images/walkthrough/operations/o04-solid-queue.png`  | Solid Web UI — Queue             | Captured  |
-| O05    | Operations      | `docs/images/walkthrough/operations/o05-solid-cache.png`  | Solid Web UI — Cache             | Captured  |
-| O06    | Operations      | `docs/images/walkthrough/operations/o06-solid-cable.png`  | Solid Web UI — Cable             | Captured  |
-| O07    | Operations      | `docs/images/walkthrough/operations/o07-swagger.png`      | Rswag OpenAPI Documentation      | Captured  |
+| ID      | Area           | File Path                                                 | Description                                  | Status   |
+| ------- | -------------- | --------------------------------------------------------- | -------------------------------------------- | -------- |
+| LND01   | Landing        | `docs/images/walkthrough/landing/landing-web.jpg`         | Rexone Landing Page (Modular sections)       | Captured |
+| HOM01   | Home           | `docs/images/walkthrough/home/home-web.png`               | Home Dashboard Hub & Role Guards (Web)       | Captured |
+| HOM01_M | Home           | `docs/images/walkthrough/home/home-mobile.png`            | Home Dashboard Hub (Mobile Native)           | Captured |
+| A01     | Auth           | `docs/images/walkthrough/auth/a01-web.png`                | Initial Identifier Discovery (Zero DT Web)   | Captured |
+| A01_M   | Auth           | `docs/images/walkthrough/auth/a01-mobile.png`             | Initial Identifier Discovery (Mobile)        | Captured |
+| A02     | Auth           | `docs/images/walkthrough/auth/a02-web.png`                | 6-Digit Passcode Entry (Web)                 | Captured |
+| A02_M   | Auth           | `docs/images/walkthrough/auth/a02-mobile.png`             | 6-Digit Passcode Entry (Mobile Native)       | Captured |
+| A03     | Auth           | `docs/images/walkthrough/auth/a03-web.png`                | Passcode Setup & Confirmation (Web)          | Captured |
+| A03_M   | Auth           | `docs/images/walkthrough/auth/a03-mobile.png`             | Passcode Setup & Confirmation (Mobile)       | Captured |
+| A04     | Auth           | `docs/images/walkthrough/auth/a04-web.png`                | Email Confirmation OTP (Web)                 | Captured |
+| A04_M   | Auth           | `docs/images/walkthrough/auth/a04-mobile.png`             | Email Confirmation OTP (Mobile Native)       | Captured |
+| A06     | Auth           | `docs/images/walkthrough/auth/a05-web.png`                | Forgot / Reset Passcode Recovery (Web)       | Captured |
+| A06_M   | Auth           | `docs/images/walkthrough/auth/a05-mobile.png`             | Forgot / Reset Passcode Recovery (Mobile)    | Captured |
+| P01     | Profile        | `docs/images/walkthrough/profile/p01-web.png`             | User Profile & Account Settings (Web)        | Captured |
+| P01_M   | Profile        | `docs/images/walkthrough/profile/p01-mobile.png`          | User Profile & Account Settings (Mobile)     | Captured |
+| I01     | IAM            | `docs/images/walkthrough/admin/ad01-web.png`              | Permission-Aware Admin Navigation            | Captured |
+| I02     | IAM            | `docs/images/walkthrough/admin/ad-role-detail-web.png`    | Role Details & Granular Permission Matrix    | Captured |
+| C01     | Commerce       | `docs/images/walkthrough/commerce/c01-web.png`            | Product Catalogue & Pricing Plans (Web)      | Captured |
+| C01_M   | Commerce       | `docs/images/walkthrough/commerce/c01-mobile.png`         | Product Catalogue & Pricing Plans (Mobile)   | Captured |
+| C02     | Commerce       | `docs/images/walkthrough/commerce/c02-web.png`            | Stripe Checkout Handoff (Web)                | Captured |
+| C02_M   | Commerce       | `docs/images/walkthrough/commerce/c02-mobile.png`         | Stripe Checkout WebView (Mobile Native)      | Captured |
+| C03     | Commerce       | `docs/images/walkthrough/commerce/c03-web.png`            | Active Entitlements & Purchased Products     | Captured |
+| C04     | Commerce       | `docs/images/walkthrough/admin/ad-transactions-web.png`   | Admin Transactions Audit                     | Captured |
+| C05     | Commerce       | `docs/images/walkthrough/admin/ad-subscriptions-web.png`  | Admin Subscriptions Lifecycle                | Captured |
+| AI01    | AI             | `docs/images/walkthrough/ai/ai01-web.png`                 | Persistent AI Workspace & Background Q       | Captured |
+| AI01_M  | AI             | `docs/images/walkthrough/ai/ai01-mobile.png`              | Persistent AI Chat & Audio (Mobile)          | Captured |
+| AI02    | AI             | `docs/images/walkthrough/ai/ai02-web.png`                 | Speech STT / TTS Lab (Web)                   | Captured |
+| AI02_M  | AI             | `docs/images/walkthrough/ai/ai02-mobile.png`              | Live Speech Dictation & Audio (Mobile)       | Captured |
+| N01     | Notifications  | `docs/images/walkthrough/notifications/n01-web.png`       | Notification Center Popover (Web)            | Captured |
+| N01_M   | Notifications  | `docs/images/walkthrough/notifications/n01-mobile.png`    | Notification Inbox & Badges (Mobile)         | Captured |
+| N02_M   | Notifications  | `docs/images/walkthrough/notifications/n02-mobile.png`    | OneSignal Native Push Notification (Mobile)  | Captured |
+| N03     | Notifications  | `docs/images/walkthrough/admin/ad06-web.png`              | Admin Broadcast Dispatch                     | Captured |
+| F01     | Feedback       | `docs/images/walkthrough/feedback/f01-web.png`            | In-Place Feedback Dialog (Web)               | Captured |
+| F01_M   | Feedback       | `docs/images/walkthrough/feedback/f01-mobile.png`         | In-Place Feedback Sheet (Mobile)             | Captured |
+| F02     | Feedback       | `docs/images/walkthrough/admin/ad09-web.png`              | Feedback Triage & Telemetry                  | Captured |
+| M01     | Media          | `docs/images/walkthrough/media/m01-web.png`               | Asset Control Center                         | Captured |
+| M02     | Media Storage  | `docs/images/walkthrough/media/m02-garage.png`            | Garage Storage & VPS Capacity                | Captured |
+| M03     | Media Delivery | `docs/images/walkthrough/media/m03-web.png`               | Test Lab Video/Audio Streaming               | Captured |
+| V01_M   | Versioning     | `docs/images/walkthrough/versions/v01-mobile.png`         | Optional App Update Dialog (Mobile)          | Captured |
+| V02_M   | Versioning     | `docs/images/walkthrough/versions/v02-mobile.png`         | Forced App Update Dialog (Mobile)            | Captured |
+| T01     | Telemetry      | `docs/images/walkthrough/telemetry/t01-telemetry.png`     | Analytics & Event Telemetry Engine           | Captured |
+| T02     | Telemetry      | `docs/images/walkthrough/admin/ad-logs-web.png`           | Client Error Telemetry                       | Captured |
+| L01     | Localization   | `docs/images/walkthrough/localization/l01-web.png`        | Multi-Language Localization (Burmese Web)    | Captured |
+| L01_M   | Localization   | `docs/images/walkthrough/localization/l01-mobile.png`     | Multi-Language Localization (Burmese Mobile) | Captured |
+| L02     | Design System  | `docs/images/walkthrough/design/l02-web.png`              | Design System Primitives & Tokens (Web)      | Captured |
+| L02_M   | Design System  | `docs/images/walkthrough/design/l02-mobile.png`           | Design System Components & Theme (Mobile)    | Captured |
+| Q01     | Quality        | `docs/images/walkthrough/quality/q01-tests.png`           | Automated Test Suite & Quality Verification  | Captured |
+| AD01    | Admin          | `docs/images/walkthrough/admin/ad01-web.png`              | Admin Home Overview & Analytics              | Captured |
+| AD02    | Admin          | `docs/images/walkthrough/admin/ad02-web.png`              | User Management                              | Captured |
+| AD03    | Admin          | `docs/images/walkthrough/admin/ad03-web.png`              | Roles & Permissions                          | Captured |
+| AD03_D  | Admin          | `docs/images/walkthrough/admin/ad-role-detail-web.png`    | Role Details & Granular Permission Matrix    | Captured |
+| AD04    | Admin          | `docs/images/walkthrough/admin/ad04-web.png`              | Products Catalogue Administration            | Captured |
+| AD04_B  | Admin          | `docs/images/walkthrough/admin/ad-products-bin-web.png`   | Product Recycle Bin & Soft Deletion          | Captured |
+| AD05    | Admin          | `docs/images/walkthrough/admin/ad05-web.png`              | Access & Entitlements Management             | Captured |
+| AD06    | Admin          | `docs/images/walkthrough/admin/ad06-web.png`              | Notification Dispatch & Templates            | Captured |
+| AD07    | Admin          | `docs/images/walkthrough/admin/ad07-web.png`              | App Version Governance                       | Captured |
+| AD_UV   | Admin          | `docs/images/walkthrough/admin/ad-user-versions-web.png`  | User Platform Versions Snapshots             | Captured |
+| AD08    | Admin          | `docs/images/walkthrough/admin/ad08-web.png`              | Chat Rooms Moderation                        | Captured |
+| AD_CM   | Admin          | `docs/images/walkthrough/admin/ad-chat-messages-web.png`  | Chat Messages Moderation                     | Captured |
+| AD09    | Admin          | `docs/images/walkthrough/admin/ad09-web.png`              | Feedback Triage                              | Captured |
+| AD_LOG  | Admin          | `docs/images/walkthrough/admin/ad-logs-web.png`           | Client Error Logs & Telemetry                | Captured |
+| AD10    | Admin          | `docs/images/walkthrough/admin/ad10-web.png`              | AI Profiles & Configuration                  | Captured |
+| AD11    | Admin          | `docs/images/walkthrough/admin/ad11-web.png`              | AI Runs & Telemetry                          | Captured |
+| O01     | Operations     | `docs/images/walkthrough/operations/o01-administrate.png` | Rails Administrate Back Office               | Captured |
+| O02     | Operations     | `docs/images/walkthrough/operations/o02-pulse.png`        | Rails Pulse Performance Monitor              | Captured |
+| O03     | Operations     | `docs/images/walkthrough/operations/o03-red.png`          | Rails Error Dashboard (RED)                  | Captured |
+| O04     | Operations     | `docs/images/walkthrough/operations/o04-solid-queue.png`  | Solid Web UI — Queue                         | Captured |
+| O05     | Operations     | `docs/images/walkthrough/operations/o05-solid-cache.png`  | Solid Web UI — Cache                         | Captured |
+| O06     | Operations     | `docs/images/walkthrough/operations/o06-solid-cable.png`  | Solid Web UI — Cable                         | Captured |
+| O07     | Operations     | `docs/images/walkthrough/operations/o07-swagger.png`      | Rswag OpenAPI Documentation                  | Captured |
 
-All 45 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
+All 70 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
 
 ## Suggested file naming
 

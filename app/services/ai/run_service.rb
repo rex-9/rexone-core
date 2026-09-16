@@ -40,8 +40,21 @@ module Ai
         )
 
         latency_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000).round
+        choice = result.dig("choices", 0) || {}
+        message_obj = choice["message"] || {}
+        output = message_obj["content"].to_s
+
         if result[:error].present?
-          fail_run!(run, result[:error], latency_ms)
+          fail_run!(run, result[:error], latency_ms, result)
+        elsif output.blank?
+          finish_reason = choice["finish_reason"]
+          error_msg = if finish_reason == "length"
+            "AI provider token limit exceeded during generation (finish_reason: length)"
+          else
+            ::MessageService::Ai.t(::MessageService::Ai::NO_RESPONSE)
+          end
+          fail_run!(run, error_msg, latency_ms, result)
+          result[:error] = error_msg
         else
           complete_run!(run, result, latency_ms)
         end
@@ -93,9 +106,14 @@ module Ai
         )
       end
 
-      def fail_run!(run, error, latency_ms)
+      def fail_run!(run, error, latency_ms, result = nil)
+        usage = result ? (result["usage"] || {}) : {}
         run.update!(
           status: AiConstants::RunStatus::FAILED,
+          output_chars: 0,
+          prompt_tokens: usage["prompt_tokens"],
+          completion_tokens: usage["completion_tokens"],
+          total_tokens: usage["total_tokens"],
           latency_ms: latency_ms,
           error: error
         )
