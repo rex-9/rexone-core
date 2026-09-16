@@ -1,6 +1,6 @@
 # Media Playback
 
-Rexone’s implemented stored-media playback path is progressive audio/video delivery through Core-authorized provider URLs.
+RexOne’s implemented stored-media playback path is progressive audio/video delivery through Core-authorized provider URLs.
 
 ## Current contract
 
@@ -9,7 +9,7 @@ Client
   ↓ authenticated request
 GET /v1/assets/:id/playback
   ↓
-Rexone Core authorizes the Asset
+RexOne Core authorizes the Asset
   ↓
 StorageService creates a short-lived playback URL
   ↓
@@ -54,4 +54,3 @@ Playable files should be optimized by the media queue before normal playback:
 - No storage credentials exposed to clients.
 - No HLS in the current version.
 - Future HLS/adaptive streaming belongs in [the roadmap](roadmaps/MEDIA_STREAMING.md).
-

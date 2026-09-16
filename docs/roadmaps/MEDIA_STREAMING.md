@@ -4,13 +4,13 @@
 > **Current shipped baseline:** progressive audio/video playback through Core-authorized provider URLs
 > **Future target:** HLS + CMAF / fragmented MP4 only when adaptive streaming is justified
 
-Rexone’s first stored-media playback version is intentionally not HLS. The current product path should stay simple: Core authorizes playback, storage serves bytes, and Web/Mobile consume a short-lived progressive URL.
+RexOne’s first stored-media playback version is intentionally not HLS. The current product path should stay simple: Core authorizes playback, storage serves bytes, and Web/Mobile consume a short-lived progressive URL.
 
 This roadmap now tracks the next streaming step only: adaptive delivery.
 
 ## When HLS becomes worth it
 
-Introduce HLS/CMAF only when Rexone has a real need for one or more of these:
+Introduce HLS/CMAF only when RexOne has a real need for one or more of these:
 
 - long-form video where startup time and seeking matter at scale,
 - adaptive bitrate for unstable mobile networks,

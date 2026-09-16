@@ -139,7 +139,7 @@ Garage generates unique, cryptographically random keys on-demand without requiri
 
 For browsing object storage, viewing thumbnails, and inspecting bucket hierarchies:
 
-#### 1. Rexone Web Admin (`/admin/assets`) — Built-In
+#### 1. RexOne Web Admin (`/admin/assets`) — Built-In
 
 - **URL**: [http://localhost:4000/admin/assets](http://localhost:4000/admin/assets) (Web) or [http://localhost:3000/admin/assets](http://localhost:3000/admin/assets) (API).
 - **Features**: Visual asset gallery, media player (audio/video), dimension and MIME metadata, underground compression metrics, and soft/hard delete lifecycle.
@@ -220,7 +220,7 @@ Here are the real-world issues you may encounter when setting up and running Gar
 - **Root Cause**: Garage's S3 API (`[s3_api]` on port 3100) is private by default. It requires AWS SigV4 authentication on every request and intentionally rejects unauthenticated/anonymous HTTP `GET` requests.
 - **Solution**:
   - Never use plain, unauthenticated S3 URLs in the frontend.
-  - Rexone Core automatically issues **AWS S3 Presigned URLs** via `Aws::S3::Presigner` on port 3100 with a 7-day expiration (`expires_in: 7.days.to_i`).
+  - RexOne Core automatically issues **AWS S3 Presigned URLs** via `Aws::S3::Presigner` on port 3100 with a 7-day expiration (`expires_in: 7.days.to_i`).
   - `AssetSerializer` and `Asset#storage_url` generate fully signed URLs (`?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...&X-Amz-Signature=...`) that web browsers, mobile apps, and video players can access seamlessly.
 
 ### 🔴 Problem 2: `Errno::ECONNREFUSED` on `localhost:3100` Inside Background Workers
@@ -262,7 +262,7 @@ Here are the real-world issues you may encounter when setting up and running Gar
 - **Symptom**: Starting Garage on port 5000 fails because the port is already in use by a macOS system process (`ControlCenter`).
 - **Root Cause**: macOS Monterey and newer bind port 5000 to the system **AirPlay Receiver**.
 - **Solution**:
-  - Rexone Core intentionally configures Garage on ports **`3100`** (S3 API) and **`3101`** (Admin API), avoiding any macOS AirPlay conflicts without requiring changes to macOS system settings.
+  - RexOne Core intentionally configures Garage on ports **`3100`** (S3 API) and **`3101`** (Admin API), avoiding any macOS AirPlay conflicts without requiring changes to macOS system settings.
 
 ### 🔴 Problem 6: Cyberduck Error: `Failed to parse XML document with handler class org.jets3t.service.impl.rest.XmlResponsesSaxParser$ListBucketHandler`
 

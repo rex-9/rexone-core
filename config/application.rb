@@ -8,7 +8,7 @@ Bundler.require(*Rails.groups)
 
 require_relative "app_config"
 
-module RexoneCore
+module RexOneCore
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1

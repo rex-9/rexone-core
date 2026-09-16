@@ -1,6 +1,6 @@
-# 🧠 Rexone AI Operations & Swapping Manual (`docs/AI_MANUAL.md`)
+# 🧠 RexOne AI Operations & Swapping Manual (`docs/AI_MANUAL.md`)
 
-> **Executive Standard**: AI capabilities in Rexone are completely server-governed, multi-provider, observable, and dynamically swappable without client code deployments or redeployments.
+> **Executive Standard**: AI capabilities in RexOne are completely server-governed, multi-provider, observable, and dynamically swappable without client code deployments or redeployments.
 
 ---
 
@@ -35,9 +35,10 @@ Ai::Providers::Client (Swappable Provider Gateway)
 
 ## 🔄 2. Swappable AI Providers
 
-Rexone natively supports multiple swappable AI providers:
+RexOne natively supports multiple swappable AI providers:
 
 ### 2.1 Google Gemini (`gemini`)
+
 - **API Endpoint**: `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` (OpenAI compatibility REST gateway).
 - **Environment Variables**:
   - `GEMINI_API_KEY`: API key generated from Google AI Studio.
@@ -45,6 +46,7 @@ Rexone natively supports multiple swappable AI providers:
   - `GEMINI_MODEL`: Default model (e.g. `gemini-2.5-flash`, `gemini-1.5-pro`, `gemini-1.5-flash`).
 
 ### 2.2 DeepSeek (`deepseek`)
+
 - **API Endpoint**: `https://api.deepseek.com/v1/chat/completions`.
 - **Environment Variables**:
   - `DEEPSEEK_API_KEY`: DeepSeek API key.
@@ -56,6 +58,7 @@ Rexone natively supports multiple swappable AI providers:
 ## 🧪 3. How to Test, Experiment & Swap Models
 
 ### 3.1 Creating an Experimental Profile via Admin Portal
+
 1. Navigate to `/admin/ai/profiles` in the Web Admin Portal.
 2. Click **Create Profile** (`/admin/ai/profiles/create`).
 3. Fill in the experimental profile parameters:
@@ -69,7 +72,9 @@ Rexone natively supports multiple swappable AI providers:
 4. Save the profile.
 
 ### 3.2 Swapping Active Models in Production
+
 To immediately swap the model or provider for all users:
+
 1. Open `/admin/ai/profiles` and select `chat_default` (or click row to view details).
 2. Click **Edit**.
 3. Change `provider` from `deepseek` to `gemini` (or vice versa).

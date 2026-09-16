@@ -2,6 +2,6 @@
 <rect width="1440" height="1024" fill="#160B11"/>
 <rect x="28" y="28" width="1384" height="968" rx="28" fill="none" stroke="#FF2238" stroke-width="4" stroke-dasharray="18 14"/>
 <text x="720" y="465" text-anchor="middle" fill="#F7F2F4" font-family="Arial, sans-serif" font-size="54" font-weight="700">WEB SCREENSHOT</text>
-<text x="720" y="535" text-anchor="middle" fill="#B8AEB3" font-family="Arial, sans-serif" font-size="28">Replace this src with the requested Rexone Web capture</text>
+<text x="720" y="535" text-anchor="middle" fill="#B8AEB3" font-family="Arial, sans-serif" font-size="28">Replace this src with the requested RexOne Web capture</text>
 <text x="720" y="585" text-anchor="middle" fill="#FF6B7A" font-family="Arial, sans-serif" font-size="24">Recommended crop: ~1440 × 1024</text>
 </svg>

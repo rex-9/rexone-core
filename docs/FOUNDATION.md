@@ -1,6 +1,6 @@
-# Rexone Foundation Guide
+# RexOne Foundation Guide
 
-This guide contains the detailed capability map for Rexone Core. For installation, use the [Ecosystem Quick Start](QUICK_START.md). For authoritative cross-client contracts and ownership boundaries, use [ECOSYSTEM.md](../ECOSYSTEM.md).
+This guide contains the detailed capability map for RexOne Core. For installation, use the [Ecosystem Quick Start](QUICK_START.md). For authoritative cross-client contracts and ownership boundaries, use [ECOSYSTEM.md](../ECOSYSTEM.md).
 
 ## Authentication and security
 
@@ -93,7 +93,7 @@ Speech capabilities include:
 - PostgreSQL with UUID application-record identifiers.
 - Global soft deletion through Discard.
 - Actor-aware creation, update, discard, and undiscard auditing.
-- JSON:API serializers inside the standard Rexone response envelope.
+- JSON:API serializers inside the standard RexOne response envelope.
 - Pagy offset pagination for every collection endpoint.
 - Versioned client routes under `/v1` and a separate `/v1/admin` namespace.
 - Request-scoped Rails I18n messages organized by domain.
@@ -118,10 +118,10 @@ Operational surfaces include:
 - Solid Web interfaces for queue, cache, and cable operations.
 - Container and load-balancer health checks at `/up`.
 - Administrate for super-admin infrastructure and record inspection.
-- A versioned JSON admin API consumed by Rexone Web's permission-aware portal.
+- A versioned JSON admin API consumed by RexOne Web's permission-aware portal.
 
 ## Quality toolchain
 
-Rexone Core uses RSpec, FactoryBot, Shoulda Matchers, Faker, Database Cleaner, RuboCop Rails Omakase, Brakeman, Bundler Audit, and Rswag contract tests. The canonical local entry point is `./scripts/ci.sh`.
+RexOne Core uses RSpec, FactoryBot, Shoulda Matchers, Faker, Database Cleaner, RuboCop Rails Omakase, Brakeman, Bundler Audit, and Rswag contract tests. The canonical local entry point is `./scripts/ci.sh`.
 
 Passing tests are a required baseline, not a substitute for production integration testing of external providers and infrastructure.

@@ -1,6 +1,6 @@
-# Rexone Ecosystem — Visual Walkthrough
+# RexOne Ecosystem — Visual Walkthrough
 
-> A visual, feature-by-feature tour of the Rexone ecosystem: **Rexone Core**, **Rexone Web**, and **Rexone Mobile**.
+> A visual, feature-by-feature tour of the RexOne ecosystem: **RexOne Core**, **RexOne Web**, and **RexOne Mobile**.
 
 **Live Demo & Repositories**
 
@@ -9,13 +9,13 @@
 - [rexone-web](https://github.com/rex-9/rexone-web) — React 19 + TypeScript 6 + Vite 8 browser client
 - [rexone-mobile](https://github.com/rex-9/rexone-mobile) — Flutter 3 + Dart mobile client
 
-Rexone is not three independent projects. It is one product foundation split into clear responsibilities: Core owns identity, authorization, business rules, persistence, providers, background work, and operational truth; Web and Mobile consume the same versioned contracts and real-time events while owning their platform-specific user experience.
+RexOne is not three independent projects. It is one product foundation split into clear responsibilities: Core owns identity, authorization, business rules, persistence, providers, background work, and operational truth; Web and Mobile consume the same versioned contracts and real-time events while owning their platform-specific user experience.
 
 ---
 
 ## Document Overview & Presentation Standards
 
-This visual walkthrough provides comprehensive, verified visual evidence of the Rexone ecosystem running across Web, Mobile, and Core backends.
+This visual walkthrough provides comprehensive, verified visual evidence of the RexOne ecosystem running across Web, Mobile, and Core backends.
 
 For paired Web + Mobile feature displays, images follow an intentional **73% / 25% width** aspect hierarchy. Mobile captures are framed to match the visual scale and interactive depth of corresponding Web views, demonstrating state parity, shared contracts, and synchronized dark mode aesthetics.
 
@@ -59,13 +59,13 @@ All visual captures reflect live, production-grade system interactions:
 
 # 1. Ecosystem at a glance
 
-Rexone is a unified API-first foundation spanning Web, Android, and iOS. Both clients speak to the same Rails Core over HTTPS and Action Cable-compatible WebSockets. Core isolates providers behind service boundaries so a product can evolve without scattering Stripe, storage, AI, speech, email, push, or media-delivery logic throughout controllers and clients.
+RexOne is a unified API-first foundation spanning Web, Android, and iOS. Both clients speak to the same Rails Core over HTTPS and Action Cable-compatible WebSockets. Core isolates providers behind service boundaries so a product can evolve without scattering Stripe, storage, AI, speech, email, push, or media-delivery logic throughout controllers and clients.
 
 ```mermaid
 flowchart TB
     subgraph Clients["Client Layer"]
-        Web["Rexone Web<br/>React 19 · TypeScript 6 · Vite 8"]
-        Mobile["Rexone Mobile<br/>Flutter 3 · Dart · GetX"]
+        Web["RexOne Web<br/>React 19 · TypeScript 6 · Vite 8"]
+        Mobile["RexOne Mobile<br/>Flutter 3 · Dart · GetX"]
     end
 
     subgraph Transport["Transport"]
@@ -73,7 +73,7 @@ flowchart TB
         WSS["WebSocket<br/>Action Cable / Solid Cable"]
     end
 
-    subgraph Core["Rexone Core · Rails 8.1"]
+    subgraph Core["RexOne Core · Rails 8.1"]
         API["API + Authentication + IAM"]
         Services["Provider / Domain Services"]
         Waka["Waka Worker<br/>Solid Queue"]
@@ -122,7 +122,7 @@ The public front door demonstrates how the visual layer is decoupled from busine
 
 <!-- SCREENSHOT:LND01 — Landing Page -->
 <p align="center">
-  <img src="./images/walkthrough/landing/landing-web.jpg" alt="Rexone Landing Page" width="100%">
+  <img src="./images/walkthrough/landing/landing-web.jpg" alt="RexOne Landing Page" width="100%">
 </p>
 
 All visual elements, colors, and typography hook into the reusable design system in `rexone-web/src/design/`. Product teams can completely rebrand the application by modifying `brand.config.json` and running `./scripts/rebrand.sh`, instantly updating logos, typography, metadata, and color themes across Web, Mobile, and Core without touching domain code.
@@ -133,8 +133,8 @@ Upon authentication, the user lands on the Home dashboard hub (`rexone-web/src/d
 
 <!-- SCREENSHOT:HOM01 — Home Page -->
 <p align="center">
-  <img src="./images/walkthrough/home/home-web.png" alt="Rexone Home Page Hub (Web)" width="73%">
-  <img src="./images/walkthrough/home/home-mobile.png" alt="Rexone Home Page Hub (Mobile)" width="25%">
+  <img src="./images/walkthrough/home/home-web.png" alt="RexOne Home Page Hub (Web)" width="73%">
+  <img src="./images/walkthrough/home/home-mobile.png" alt="RexOne Home Page Hub (Mobile)" width="25%">
 </p>
 
 Designed as a clean, flexible launchpad ready to adapt to any business requirements:
@@ -280,7 +280,7 @@ This is a useful paired screenshot because it shows **cross-platform parity with
 
 # 4. IAM and RBAC
 
-Rexone treats authorization as an explicit model, not scattered controller conditionals.
+RexOne treats authorization as an explicit model, not scattered controller conditionals.
 
 Core models:
 
@@ -321,7 +321,7 @@ The screenshot makes the RBAC model understandable at a glance: a role is not me
 
 # 5. Commerce, subscriptions and entitlements
 
-Rexone connects product presentation, Stripe Checkout, durable webhook processing, subscriptions, transactions, and access grants into one commercial loop.
+RexOne connects product presentation, Stripe Checkout, durable webhook processing, subscriptions, transactions, and access grants into one commercial loop.
 
 ## 5.1 Product catalogue & pricing plans
 
@@ -376,7 +376,7 @@ Stripe events are persisted with duplicate protection, processing state, attempt
 sequenceDiagram
     participant U as User
     participant Client as Web / Mobile
-    participant Core as Rexone Core
+    participant Core as RexOne Core
     participant Stripe as Stripe
     participant Q as Solid Queue
     participant DB as PostgreSQL
@@ -504,7 +504,7 @@ Inspect and govern individual in-app notification receipts dispatched across all
 
 # 8. Intelligent feedback
 
-Rexone’s feedback system follows the same “remove unnecessary decisions from the user” principle as authentication.
+RexOne’s feedback system follows the same “remove unnecessary decisions from the user” principle as authentication.
 
 ## 8.1 In-place feedback
 
@@ -606,7 +606,7 @@ The **Test Lab** (`/test`) showcases:
 
 # 10. Client administration portal
 
-Rexone Web includes a comprehensive, permission-aware operational admin client under `/admin/*`. This is separate from the server-rendered Administrate dashboard and is the primary visual surface for product operations.
+RexOne Web includes a comprehensive, permission-aware operational admin client under `/admin/*`. This is separate from the server-rendered Administrate dashboard and is the primary visual surface for product operations.
 
 ## 10.1 Admin Overview & Analytics (`/admin/analytics`)
 
@@ -660,7 +660,7 @@ Administer recurring subscription tiers and one-time purchases with metadata, pr
   <img src="./images/walkthrough/admin/ad-products-bin-web.png" alt="AD04 Bin — Product Recycle Bin and Soft-Deletion Management" width="100%">
 </p>
 
-Rexone implements a universal soft-deletion paradigm across all core domain resources (`User`, `Payment::Product`, `Iam::Role`, `Asset`, `Client::Log`, `Client::Version`, `Chat::Room`, `Chat::Message`, `Feedback`) backed by the `discard` gem in Core and dedicated `/bin` tabbed routes in Web. Discarded items are safely quarantined in a dedicated Recycle Bin tab, preventing accidental data loss while allowing privileged administrators to inspect discarded records, restore (`undiscard`) them back to active service, or permanently purge them with explicit safety confirmations.
+RexOne implements a universal soft-deletion paradigm across all core domain resources (`User`, `Payment::Product`, `Iam::Role`, `Asset`, `Client::Log`, `Client::Version`, `Chat::Room`, `Chat::Message`, `Feedback`) backed by the `discard` gem in Core and dedicated `/bin` tabbed routes in Web. Discarded items are safely quarantined in a dedicated Recycle Bin tab, preventing accidental data loss while allowing privileged administrators to inspect discarded records, restore (`undiscard`) them back to active service, or permanently purge them with explicit safety confirmations.
 
 ## 10.5 Transactions (`/admin/transactions`)
 
@@ -816,7 +816,7 @@ A forced update keeps the user on splash and removes the “Later” path. The d
 
 # 12. Analytics and client telemetry
 
-Rexone deliberately separates **behavioral product analytics** from **authoritative business data** and **error telemetry**.
+RexOne deliberately separates **behavioral product analytics** from **authoritative business data** and **error telemetry**.
 
 ## 12.1 Firebase / GA4 product analytics
 
@@ -832,7 +832,7 @@ Web and Mobile use separate Firebase streams in one shared GA4 property and emit
 - `purchase_product`
 - `open_notification`
 
-Every event includes a platform dimension (`web`, `android`, `ios`). Authentication uses the opaque Rexone user ID; personal email is not sent to Firebase Analytics.
+Every event includes a platform dimension (`web`, `android`, `ios`). Authentication uses the opaque RexOne user ID; personal email is not sent to Firebase Analytics.
 
 <!-- SCREENSHOT:T01 — Firebase Analytics cross-platform telemetry dashboard -->
 <p align="center">
@@ -858,7 +858,7 @@ This gives the backend one place to inspect failures originating outside Rails i
 
 # 13. Operations Center
 
-The Operations Center is where Rexone visibly demonstrates that “observable” is an architectural property, not a marketing word.
+The Operations Center is where RexOne visibly demonstrates that “observable” is an architectural property, not a marketing word.
 
 Accessible on `http://localhost:3000` via Super Admin credentials (`username: superadmin`, `passcode: 111111`), Core mounts multiple protected operational surfaces:
 
@@ -902,7 +902,7 @@ Rails Pulse is self-hosted inside the Rails application and is used for performa
   <img src="./images/walkthrough/operations/o03-red.png" alt="O03 — Rails Error Dashboard" width="100%">
 </p>
 
-RED gives Rexone a self-hosted Rails failure-investigation surface rather than requiring production error context to leave the application infrastructure. It groups and investigates exceptions with Rails-specific context.
+RED gives RexOne a self-hosted Rails failure-investigation surface rather than requiring production error context to leave the application infrastructure. It groups and investigates exceptions with Rails-specific context.
 
 **Open-source credit:** [AnjanJ/rails_error_dashboard](https://github.com/AnjanJ/rails_error_dashboard), created and maintained by Anjan Jagirdar with community contributors.
 
@@ -950,7 +950,7 @@ The cable dashboard exposes message/channel activity, volume, and retention beha
 
 # 14. Data lifecycle and API design
 
-Some of Rexone’s strongest capabilities are intentionally invisible to screenshots.
+Some of RexOne’s strongest capabilities are intentionally invisible to screenshots.
 
 ## PostgreSQL and UUID identity
 
@@ -970,7 +970,7 @@ Serializers keep API representation separate from persistence models, while pagi
 
 ## Provider-neutral persistence
 
-Assets, notification templates, client logs, subscriptions, webhook events, AI messages, versions, and other operational records retain the state Rexone needs even when the external provider is unavailable.
+Assets, notification templates, client logs, subscriptions, webhook events, AI messages, versions, and other operational records retain the state RexOne needs even when the external provider is unavailable.
 
 ---
 
@@ -1027,9 +1027,9 @@ Web currently organizes English, Spanish, and Burmese resources. Mobile provides
   <img src="./images/walkthrough/design/l02-mobile.png" alt="L02 Mobile — Figma design system specification placeholder" width="25%">
 </p>
 
-Rexone Web centralizes typography, color, spacing, radius, motion, inputs, dialogs, buttons, media primitives, navigation, and themes under its design layer (`src/design/`).
+RexOne Web centralizes typography, color, spacing, radius, motion, inputs, dialogs, buttons, media primitives, navigation, and themes under its design layer (`src/design/`).
 
-Rexone Mobile centralizes Material 3 themes, spacing, typography, icons, timers, theme extensions, and reusable components such as `AppButton`, `AppInputField`, `AppPasswordField`, `AppDialog`, `AppPage`, and `AppSnackbar` (`lib/design/`).
+RexOne Mobile centralizes Material 3 themes, spacing, typography, icons, timers, theme extensions, and reusable components such as `AppButton`, `AppInputField`, `AppPasswordField`, `AppDialog`, `AppPage`, and `AppSnackbar` (`lib/design/`).
 
 The visual contract above serves as the design token specification placeholder anchored to Figma UI kits. Both clients map to identical primitive values (primary blue `#2563EB`, background `#0B0F17`, 8pt uniform spacing grid, and standard typography hierarchies).
 
@@ -1041,7 +1041,7 @@ The goal is not pixel-identical Web and Mobile UI. The goal is **consistent prod
 
 Security is mostly best documented through architecture and behavior, not screenshots.
 
-Rexone’s production boundaries include:
+RexOne’s production boundaries include:
 
 - Devise + JWT authentication and revocation.
 - Platform-aware active-session enforcement.
@@ -1065,7 +1065,7 @@ The important pattern is defense in depth: edge controls, Rails controls, author
 
 # 18. Testing and quality
 
-Rexone treats the three repositories as one ecosystem but tests them in their native stacks.
+RexOne treats the three repositories as one ecosystem but tests them in their native stacks.
 
 ## Core
 
@@ -1101,7 +1101,7 @@ The automated test matrix validates contract integrity and end-to-end functional
 
 # 19. Deployment and provider boundaries
 
-Rexone Core’s current container topology separates API requests, general asynchronous work, heavy media processing, persistence, and S3-compatible storage.
+RexOne Core’s current container topology separates API requests, general asynchronous work, heavy media processing, persistence, and S3-compatible storage.
 
 ```mermaid
 flowchart LR
@@ -1128,7 +1128,7 @@ Core includes scripts for PostgreSQL backup, Garage metadata/block backup, and c
 
 # 20. Rebranding & Modular Design System
 
-Rexone is built from the ground up to be completely rebranded and adjusted to any product or business requirements in minutes.
+RexOne is built from the ground up to be completely rebranded and adjusted to any product or business requirements in minutes.
 
 The UI architecture is strictly decoupled from business contracts:
 
@@ -1153,11 +1153,11 @@ Basically, just touch the **rebrand script** and the **design folder** — the e
 
 # 21. Open-source acknowledgements
 
-Rexone is original ecosystem architecture built on the work of a much larger open-source community. This section should remain in the public visual documentation as both attribution and recognition.
+RexOne is original ecosystem architecture built on the work of a much larger open-source community. This section should remain in the public visual documentation as both attribution and recognition.
 
-> **Thank you to the maintainers and contributors of the open-source projects below.** Rexone integrates, configures, and extends these projects as part of its platform, but their upstream work remains theirs. Please refer to each project’s repository for its complete contributor history and license terms.
+> **Thank you to the maintainers and contributors of the open-source projects below.** RexOne integrates, configures, and extends these projects as part of its platform, but their upstream work remains theirs. Please refer to each project’s repository for its complete contributor history and license terms.
 
-| Project                     | Used in Rexone for                                                                           | Upstream                                                                                                          |
+| Project                     | Used in RexOne for                                                                           | Upstream                                                                                                          |
 | --------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Ruby on Rails               | Core application framework, Active Record, Active Job, Action Cable and platform conventions | [rails/rails](https://github.com/rails/rails)                                                                     |
 | Solid Queue                 | Database-backed background jobs                                                              | [rails/solid_queue](https://github.com/rails/solid_queue)                                                         |
@@ -1182,7 +1182,7 @@ Rexone is original ecosystem architecture built on the work of a much larger ope
 | Flutter                     | Cross-platform mobile framework                                                              | [flutter/flutter](https://github.com/flutter/flutter)                                                             |
 | GetX                        | Mobile routing/state/dependency primitives                                                   | [jonataslaw/getx](https://github.com/jonataslaw/getx)                                                             |
 
-For major operational dependencies displayed in screenshots, keep the upstream project name visible in the caption. This both credits the work and makes the stack understandable to engineers evaluating Rexone.
+For major operational dependencies displayed in screenshots, keep the upstream project name visible in the caption. This both credits the work and makes the stack understandable to engineers evaluating RexOne.
 
 **Licensing note:** this table is acknowledgement, not a substitute for the license files and notices required by each dependency. Keep repository-level license compliance authoritative.
 
@@ -1192,80 +1192,80 @@ For major operational dependencies displayed in screenshots, keep the upstream p
 
 Working checklist and file index of all visual assets integrated across this walkthrough:
 
-| ID      | Area           | File Path                                                 | Description                                  | Status   |
-| ------- | -------------- | --------------------------------------------------------- | -------------------------------------------- | -------- |
-| LND01   | Landing        | `docs/images/walkthrough/landing/landing-web.jpg`         | Rexone Landing Page (Modular sections)       | Captured |
-| HOM01   | Home           | `docs/images/walkthrough/home/home-web.png`               | Home Dashboard Hub & Role Guards (Web)       | Captured |
-| HOM01_M | Home           | `docs/images/walkthrough/home/home-mobile.png`            | Home Dashboard Hub (Mobile Native)           | Captured |
-| A01     | Auth           | `docs/images/walkthrough/auth/a01-web.png`                | Initial Identifier Discovery (Zero DT Web)   | Captured |
-| A01_M   | Auth           | `docs/images/walkthrough/auth/a01-mobile.png`             | Initial Identifier Discovery (Mobile)        | Captured |
-| A02     | Auth           | `docs/images/walkthrough/auth/a02-web.png`                | 6-Digit Passcode Entry (Web)                 | Captured |
-| A02_M   | Auth           | `docs/images/walkthrough/auth/a02-mobile.png`             | 6-Digit Passcode Entry (Mobile Native)       | Captured |
-| A03     | Auth           | `docs/images/walkthrough/auth/a03-web.png`                | Passcode Setup & Confirmation (Web)          | Captured |
-| A03_M   | Auth           | `docs/images/walkthrough/auth/a03-mobile.png`             | Passcode Setup & Confirmation (Mobile)       | Captured |
-| A04     | Auth           | `docs/images/walkthrough/auth/a04-web.png`                | Email Confirmation OTP (Web)                 | Captured |
-| A04_M   | Auth           | `docs/images/walkthrough/auth/a04-mobile.png`             | Email Confirmation OTP (Mobile Native)       | Captured |
-| A06     | Auth           | `docs/images/walkthrough/auth/a05-web.png`                | Forgot / Reset Passcode Recovery (Web)       | Captured |
-| A06_M   | Auth           | `docs/images/walkthrough/auth/a05-mobile.png`             | Forgot / Reset Passcode Recovery (Mobile)    | Captured |
-| P01     | Profile        | `docs/images/walkthrough/profile/p01-web.png`             | User Profile & Account Settings (Web)        | Captured |
-| P01_M   | Profile        | `docs/images/walkthrough/profile/p01-mobile.png`          | User Profile & Account Settings (Mobile)     | Captured |
-| I01     | IAM            | `docs/images/walkthrough/admin/ad01-web.png`              | Permission-Aware Admin Navigation            | Captured |
-| I02     | IAM            | `docs/images/walkthrough/admin/ad-role-detail-web.png`    | Role Details & Granular Permission Matrix    | Captured |
-| C01     | Commerce       | `docs/images/walkthrough/commerce/c01-web.png`            | Product Catalogue & Pricing Plans (Web)      | Captured |
-| C01_M   | Commerce       | `docs/images/walkthrough/commerce/c01-mobile.png`         | Product Catalogue & Pricing Plans (Mobile)   | Captured |
-| C02     | Commerce       | `docs/images/walkthrough/commerce/c02-web.png`            | Stripe Checkout Handoff (Web)                | Captured |
-| C02_M   | Commerce       | `docs/images/walkthrough/commerce/c02-mobile.png`         | Stripe Checkout WebView (Mobile Native)      | Captured |
-| C03     | Commerce       | `docs/images/walkthrough/commerce/c03-web.png`            | Active Entitlements & Purchased Products     | Captured |
-| C04     | Commerce       | `docs/images/walkthrough/admin/ad-transactions-web.png`   | Admin Transactions Audit                     | Captured |
-| C05     | Commerce       | `docs/images/walkthrough/admin/ad-subscriptions-web.png`  | Admin Subscriptions Lifecycle                | Captured |
-| AI01    | AI             | `docs/images/walkthrough/ai/ai01-web.png`                 | Persistent AI Workspace & Background Q       | Captured |
-| AI01_M  | AI             | `docs/images/walkthrough/ai/ai01-mobile.png`              | Persistent AI Chat & Audio (Mobile)          | Captured |
-| AI02    | AI             | `docs/images/walkthrough/ai/ai02-web.png`                 | Speech STT / TTS Lab (Web)                   | Captured |
-| AI02_M  | AI             | `docs/images/walkthrough/ai/ai02-mobile.png`              | Live Speech Dictation & Audio (Mobile)       | Captured |
-| N01     | Notifications  | `docs/images/walkthrough/notifications/n01-web.png`       | Notification Center Popover (Web)            | Captured |
-| N01_M   | Notifications  | `docs/images/walkthrough/notifications/n01-mobile.png`    | Notification Inbox & Badges (Mobile)         | Captured |
-| N02_M   | Notifications  | `docs/images/walkthrough/notifications/n02-mobile.png`    | OneSignal Native Push Notification (Mobile)  | Captured |
-| N03     | Notifications  | `docs/images/walkthrough/admin/ad06-web.png`              | Admin Broadcast Dispatch                     | Captured |
-| N04     | Notifications  | `docs/images/walkthrough/admin/ad-user-notifications-web.png` | User Notifications Dispatch Audit        | Captured |
-| F01     | Feedback       | `docs/images/walkthrough/feedback/f01-web.png`            | In-Place Feedback Dialog (Web)               | Captured |
-| F01_M   | Feedback       | `docs/images/walkthrough/feedback/f01-mobile.png`         | In-Place Feedback Sheet (Mobile)             | Captured |
-| F02     | Feedback       | `docs/images/walkthrough/admin/ad09-web.png`              | Feedback Triage & Telemetry                  | Captured |
-| M01     | Media          | `docs/images/walkthrough/media/m01-web.png`               | Asset Control Center                         | Captured |
-| M02     | Media Storage  | `docs/images/walkthrough/media/m02-garage.png`            | Garage Storage & VPS Capacity                | Captured |
-| M03     | Media Delivery | `docs/images/walkthrough/media/m03-web.png`               | Test Lab Video/Audio Streaming               | Captured |
-| V01_M   | Versioning     | `docs/images/walkthrough/versions/v01-mobile.png`         | Optional App Update Dialog (Mobile)          | Captured |
-| V02_M   | Versioning     | `docs/images/walkthrough/versions/v02-mobile.png`         | Forced App Update Dialog (Mobile)            | Captured |
-| T01     | Telemetry      | `docs/images/walkthrough/telemetry/t01-telemetry.png`     | Analytics & Event Telemetry Engine           | Captured |
-| T02     | Telemetry      | `docs/images/walkthrough/admin/ad-logs-web.png`           | Client Error Telemetry                       | Captured |
-| L01     | Localization   | `docs/images/walkthrough/localization/l01-web.png`        | Multi-Language Localization (Burmese Web)    | Captured |
-| L01_M   | Localization   | `docs/images/walkthrough/localization/l01-mobile.png`     | Multi-Language Localization (Burmese Mobile) | Captured |
-| L02     | Design System  | `docs/images/walkthrough/design/l02-web.png`              | Design System Primitives & Tokens (Web)      | Captured |
-| L02_M   | Design System  | `docs/images/walkthrough/design/l02-mobile.png`           | Design System Components & Theme (Mobile)    | Captured |
-| Q01     | Quality        | `docs/images/walkthrough/quality/q01-tests.png`           | Automated Test Suite & Quality Verification  | Captured |
-| AD01    | Admin          | `docs/images/walkthrough/admin/ad01-web.png`              | Admin Home Overview & Analytics              | Captured |
-| AD02    | Admin          | `docs/images/walkthrough/admin/ad02-web.png`              | User Management                              | Captured |
-| AD03    | Admin          | `docs/images/walkthrough/admin/ad03-web.png`              | Roles & Permissions                          | Captured |
-| AD03_D  | Admin          | `docs/images/walkthrough/admin/ad-role-detail-web.png`    | Role Details & Granular Permission Matrix    | Captured |
-| AD04    | Admin          | `docs/images/walkthrough/admin/ad04-web.png`              | Products Catalogue Administration            | Captured |
-| AD04_B  | Admin          | `docs/images/walkthrough/admin/ad-products-bin-web.png`   | Product Recycle Bin & Soft Deletion          | Captured |
-| AD05    | Admin          | `docs/images/walkthrough/admin/ad05-web.png`              | Access & Entitlements Management             | Captured |
-| AD06    | Admin          | `docs/images/walkthrough/admin/ad06-web.png`              | Notification Dispatch & Templates            | Captured |
-| AD_UN   | Admin          | `docs/images/walkthrough/admin/ad-user-notifications-web.png` | Dispatched User Notifications Audit       | Captured |
-| AD07    | Admin          | `docs/images/walkthrough/admin/ad07-web.png`              | App Version Governance                       | Captured |
-| AD_UV   | Admin          | `docs/images/walkthrough/admin/ad-user-versions-web.png`  | User Platform Versions Snapshots             | Captured |
-| AD08    | Admin          | `docs/images/walkthrough/admin/ad08-web.png`              | Chat Rooms Moderation                        | Captured |
-| AD_CM   | Admin          | `docs/images/walkthrough/admin/ad-chat-messages-web.png`  | Chat Messages Moderation                     | Captured |
-| AD09    | Admin          | `docs/images/walkthrough/admin/ad09-web.png`              | Feedback Triage                              | Captured |
-| AD_LOG  | Admin          | `docs/images/walkthrough/admin/ad-logs-web.png`           | Client Error Logs & Telemetry                | Captured |
-| AD10    | Admin          | `docs/images/walkthrough/admin/ad10-web.png`              | AI Profiles & Configuration                  | Captured |
-| AD11    | Admin          | `docs/images/walkthrough/admin/ad11-web.png`              | AI Runs & Telemetry                          | Captured |
-| O01     | Operations     | `docs/images/walkthrough/operations/o01-administrate.png` | Rails Administrate Back Office               | Captured |
-| O02     | Operations     | `docs/images/walkthrough/operations/o02-pulse.png`        | Rails Pulse Performance Monitor              | Captured |
-| O03     | Operations     | `docs/images/walkthrough/operations/o03-red.png`          | Rails Error Dashboard (RED)                  | Captured |
-| O04     | Operations     | `docs/images/walkthrough/operations/o04-solid-queue.png`  | Solid Web UI — Queue                         | Captured |
-| O05     | Operations     | `docs/images/walkthrough/operations/o05-solid-cache.png`  | Solid Web UI — Cache                         | Captured |
-| O06     | Operations     | `docs/images/walkthrough/operations/o06-solid-cable.png`  | Solid Web UI — Cable                         | Captured |
-| O07     | Operations     | `docs/images/walkthrough/operations/o07-swagger.png`      | Rswag OpenAPI Documentation                  | Captured |
+| ID      | Area           | File Path                                                     | Description                                  | Status   |
+| ------- | -------------- | ------------------------------------------------------------- | -------------------------------------------- | -------- |
+| LND01   | Landing        | `docs/images/walkthrough/landing/landing-web.jpg`             | RexOne Landing Page (Modular sections)       | Captured |
+| HOM01   | Home           | `docs/images/walkthrough/home/home-web.png`                   | Home Dashboard Hub & Role Guards (Web)       | Captured |
+| HOM01_M | Home           | `docs/images/walkthrough/home/home-mobile.png`                | Home Dashboard Hub (Mobile Native)           | Captured |
+| A01     | Auth           | `docs/images/walkthrough/auth/a01-web.png`                    | Initial Identifier Discovery (Zero DT Web)   | Captured |
+| A01_M   | Auth           | `docs/images/walkthrough/auth/a01-mobile.png`                 | Initial Identifier Discovery (Mobile)        | Captured |
+| A02     | Auth           | `docs/images/walkthrough/auth/a02-web.png`                    | 6-Digit Passcode Entry (Web)                 | Captured |
+| A02_M   | Auth           | `docs/images/walkthrough/auth/a02-mobile.png`                 | 6-Digit Passcode Entry (Mobile Native)       | Captured |
+| A03     | Auth           | `docs/images/walkthrough/auth/a03-web.png`                    | Passcode Setup & Confirmation (Web)          | Captured |
+| A03_M   | Auth           | `docs/images/walkthrough/auth/a03-mobile.png`                 | Passcode Setup & Confirmation (Mobile)       | Captured |
+| A04     | Auth           | `docs/images/walkthrough/auth/a04-web.png`                    | Email Confirmation OTP (Web)                 | Captured |
+| A04_M   | Auth           | `docs/images/walkthrough/auth/a04-mobile.png`                 | Email Confirmation OTP (Mobile Native)       | Captured |
+| A06     | Auth           | `docs/images/walkthrough/auth/a05-web.png`                    | Forgot / Reset Passcode Recovery (Web)       | Captured |
+| A06_M   | Auth           | `docs/images/walkthrough/auth/a05-mobile.png`                 | Forgot / Reset Passcode Recovery (Mobile)    | Captured |
+| P01     | Profile        | `docs/images/walkthrough/profile/p01-web.png`                 | User Profile & Account Settings (Web)        | Captured |
+| P01_M   | Profile        | `docs/images/walkthrough/profile/p01-mobile.png`              | User Profile & Account Settings (Mobile)     | Captured |
+| I01     | IAM            | `docs/images/walkthrough/admin/ad01-web.png`                  | Permission-Aware Admin Navigation            | Captured |
+| I02     | IAM            | `docs/images/walkthrough/admin/ad-role-detail-web.png`        | Role Details & Granular Permission Matrix    | Captured |
+| C01     | Commerce       | `docs/images/walkthrough/commerce/c01-web.png`                | Product Catalogue & Pricing Plans (Web)      | Captured |
+| C01_M   | Commerce       | `docs/images/walkthrough/commerce/c01-mobile.png`             | Product Catalogue & Pricing Plans (Mobile)   | Captured |
+| C02     | Commerce       | `docs/images/walkthrough/commerce/c02-web.png`                | Stripe Checkout Handoff (Web)                | Captured |
+| C02_M   | Commerce       | `docs/images/walkthrough/commerce/c02-mobile.png`             | Stripe Checkout WebView (Mobile Native)      | Captured |
+| C03     | Commerce       | `docs/images/walkthrough/commerce/c03-web.png`                | Active Entitlements & Purchased Products     | Captured |
+| C04     | Commerce       | `docs/images/walkthrough/admin/ad-transactions-web.png`       | Admin Transactions Audit                     | Captured |
+| C05     | Commerce       | `docs/images/walkthrough/admin/ad-subscriptions-web.png`      | Admin Subscriptions Lifecycle                | Captured |
+| AI01    | AI             | `docs/images/walkthrough/ai/ai01-web.png`                     | Persistent AI Workspace & Background Q       | Captured |
+| AI01_M  | AI             | `docs/images/walkthrough/ai/ai01-mobile.png`                  | Persistent AI Chat & Audio (Mobile)          | Captured |
+| AI02    | AI             | `docs/images/walkthrough/ai/ai02-web.png`                     | Speech STT / TTS Lab (Web)                   | Captured |
+| AI02_M  | AI             | `docs/images/walkthrough/ai/ai02-mobile.png`                  | Live Speech Dictation & Audio (Mobile)       | Captured |
+| N01     | Notifications  | `docs/images/walkthrough/notifications/n01-web.png`           | Notification Center Popover (Web)            | Captured |
+| N01_M   | Notifications  | `docs/images/walkthrough/notifications/n01-mobile.png`        | Notification Inbox & Badges (Mobile)         | Captured |
+| N02_M   | Notifications  | `docs/images/walkthrough/notifications/n02-mobile.png`        | OneSignal Native Push Notification (Mobile)  | Captured |
+| N03     | Notifications  | `docs/images/walkthrough/admin/ad06-web.png`                  | Admin Broadcast Dispatch                     | Captured |
+| N04     | Notifications  | `docs/images/walkthrough/admin/ad-user-notifications-web.png` | User Notifications Dispatch Audit            | Captured |
+| F01     | Feedback       | `docs/images/walkthrough/feedback/f01-web.png`                | In-Place Feedback Dialog (Web)               | Captured |
+| F01_M   | Feedback       | `docs/images/walkthrough/feedback/f01-mobile.png`             | In-Place Feedback Sheet (Mobile)             | Captured |
+| F02     | Feedback       | `docs/images/walkthrough/admin/ad09-web.png`                  | Feedback Triage & Telemetry                  | Captured |
+| M01     | Media          | `docs/images/walkthrough/media/m01-web.png`                   | Asset Control Center                         | Captured |
+| M02     | Media Storage  | `docs/images/walkthrough/media/m02-garage.png`                | Garage Storage & VPS Capacity                | Captured |
+| M03     | Media Delivery | `docs/images/walkthrough/media/m03-web.png`                   | Test Lab Video/Audio Streaming               | Captured |
+| V01_M   | Versioning     | `docs/images/walkthrough/versions/v01-mobile.png`             | Optional App Update Dialog (Mobile)          | Captured |
+| V02_M   | Versioning     | `docs/images/walkthrough/versions/v02-mobile.png`             | Forced App Update Dialog (Mobile)            | Captured |
+| T01     | Telemetry      | `docs/images/walkthrough/telemetry/t01-telemetry.png`         | Analytics & Event Telemetry Engine           | Captured |
+| T02     | Telemetry      | `docs/images/walkthrough/admin/ad-logs-web.png`               | Client Error Telemetry                       | Captured |
+| L01     | Localization   | `docs/images/walkthrough/localization/l01-web.png`            | Multi-Language Localization (Burmese Web)    | Captured |
+| L01_M   | Localization   | `docs/images/walkthrough/localization/l01-mobile.png`         | Multi-Language Localization (Burmese Mobile) | Captured |
+| L02     | Design System  | `docs/images/walkthrough/design/l02-web.png`                  | Design System Primitives & Tokens (Web)      | Captured |
+| L02_M   | Design System  | `docs/images/walkthrough/design/l02-mobile.png`               | Design System Components & Theme (Mobile)    | Captured |
+| Q01     | Quality        | `docs/images/walkthrough/quality/q01-tests.png`               | Automated Test Suite & Quality Verification  | Captured |
+| AD01    | Admin          | `docs/images/walkthrough/admin/ad01-web.png`                  | Admin Home Overview & Analytics              | Captured |
+| AD02    | Admin          | `docs/images/walkthrough/admin/ad02-web.png`                  | User Management                              | Captured |
+| AD03    | Admin          | `docs/images/walkthrough/admin/ad03-web.png`                  | Roles & Permissions                          | Captured |
+| AD03_D  | Admin          | `docs/images/walkthrough/admin/ad-role-detail-web.png`        | Role Details & Granular Permission Matrix    | Captured |
+| AD04    | Admin          | `docs/images/walkthrough/admin/ad04-web.png`                  | Products Catalogue Administration            | Captured |
+| AD04_B  | Admin          | `docs/images/walkthrough/admin/ad-products-bin-web.png`       | Product Recycle Bin & Soft Deletion          | Captured |
+| AD05    | Admin          | `docs/images/walkthrough/admin/ad05-web.png`                  | Access & Entitlements Management             | Captured |
+| AD06    | Admin          | `docs/images/walkthrough/admin/ad06-web.png`                  | Notification Dispatch & Templates            | Captured |
+| AD_UN   | Admin          | `docs/images/walkthrough/admin/ad-user-notifications-web.png` | Dispatched User Notifications Audit          | Captured |
+| AD07    | Admin          | `docs/images/walkthrough/admin/ad07-web.png`                  | App Version Governance                       | Captured |
+| AD_UV   | Admin          | `docs/images/walkthrough/admin/ad-user-versions-web.png`      | User Platform Versions Snapshots             | Captured |
+| AD08    | Admin          | `docs/images/walkthrough/admin/ad08-web.png`                  | Chat Rooms Moderation                        | Captured |
+| AD_CM   | Admin          | `docs/images/walkthrough/admin/ad-chat-messages-web.png`      | Chat Messages Moderation                     | Captured |
+| AD09    | Admin          | `docs/images/walkthrough/admin/ad09-web.png`                  | Feedback Triage                              | Captured |
+| AD_LOG  | Admin          | `docs/images/walkthrough/admin/ad-logs-web.png`               | Client Error Logs & Telemetry                | Captured |
+| AD10    | Admin          | `docs/images/walkthrough/admin/ad10-web.png`                  | AI Profiles & Configuration                  | Captured |
+| AD11    | Admin          | `docs/images/walkthrough/admin/ad11-web.png`                  | AI Runs & Telemetry                          | Captured |
+| O01     | Operations     | `docs/images/walkthrough/operations/o01-administrate.png`     | Rails Administrate Back Office               | Captured |
+| O02     | Operations     | `docs/images/walkthrough/operations/o02-pulse.png`            | Rails Pulse Performance Monitor              | Captured |
+| O03     | Operations     | `docs/images/walkthrough/operations/o03-red.png`              | Rails Error Dashboard (RED)                  | Captured |
+| O04     | Operations     | `docs/images/walkthrough/operations/o04-solid-queue.png`      | Solid Web UI — Queue                         | Captured |
+| O05     | Operations     | `docs/images/walkthrough/operations/o05-solid-cache.png`      | Solid Web UI — Cache                         | Captured |
+| O06     | Operations     | `docs/images/walkthrough/operations/o06-solid-cable.png`      | Solid Web UI — Cable                         | Captured |
+| O07     | Operations     | `docs/images/walkthrough/operations/o07-swagger.png`          | Rswag OpenAPI Documentation                  | Captured |
 
 All 71 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
 
@@ -1299,7 +1299,7 @@ Keep screenshots compressed enough for GitHub, but do not downscale text until i
 
 ## Final perspective
 
-Rexone’s value is not that it contains authentication, Stripe, queues, WebSockets, storage, AI, notifications, or dashboards individually. Many frameworks and libraries provide those pieces.
+RexOne’s value is not that it contains authentication, Stripe, queues, WebSockets, storage, AI, notifications, or dashboards individually. Many frameworks and libraries provide those pieces.
 
 The value is that these pieces are designed to **answer to one another**:
 

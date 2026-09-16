@@ -3,14 +3,14 @@ module EmailService
     TEMPLATE_ROOT = Rails.root.join("docs/email_templates").freeze
 
     SUBJECTS = {
-      "email_confirmation" => "Confirm your Rexone email",
-      "password_reset" => "Reset your Rexone passcode",
+      "email_confirmation" => "Confirm your RexOne email",
+      "password_reset" => "Reset your RexOne passcode",
       "payment_purchase_confirmation" => "Payment confirmation",
       "payment_failed" => "Payment failed - action required",
       "payment_subscription_confirmation" => "Subscription confirmation",
       "payment_subscription_canceled" => "Subscription canceled",
       "payment_subscription_resumed" => "Subscription resumed",
-      "welcome" => "Welcome to Rexone",
+      "welcome" => "Welcome to RexOne",
       "sign_in_alert" => "Security alert: new sign-in"
     }.freeze
 

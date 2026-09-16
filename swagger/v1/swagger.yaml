@@ -1,7 +1,7 @@
 ---
 openapi: 3.0.1
 info:
-  title: Rexone Core API
+  title: RexOne Core API
   version: v1
   description: |
     Production API foundation for authentication, IAM, payments, access,

@@ -19,7 +19,7 @@ RSpec.configure do |config|
     'v1/swagger.yaml' => {
       openapi: '3.0.1',
       info: {
-        title: 'Rexone Core API',
+        title: 'RexOne Core API',
         version: 'v1',
         description: <<~DESCRIPTION
           Production API foundation for authentication, IAM, payments, access,

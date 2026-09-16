@@ -84,17 +84,17 @@ module NotificationConstants
     ALL = [
       {
         event: NotificationType::WELCOME,
-        name: "Welcome to Rexone",
+        name: "Welcome to RexOne",
         description: "Sent when a new user joins the platform",
         category: Category::SYSTEM,
         link: Link::HOME,
         admin: true,
         in_app_title: "Welcome aboard! 🎉",
-        in_app_body: "Hey {{user_name}}, thanks for joining Rexone! We're excited to have you.",
+        in_app_body: "Hey {{user_name}}, thanks for joining RexOne! We're excited to have you.",
         push_title: "Welcome aboard! 🎉",
-        push_body: "Hey {{user_name}}, thanks for joining Rexone!",
-        email_subject: "Welcome to Rexone!",
-        email_body: "Welcome to Rexone, {{user_name}}!"
+        push_body: "Hey {{user_name}}, thanks for joining RexOne!",
+        email_subject: "Welcome to RexOne!",
+        email_body: "Welcome to RexOne, {{user_name}}!"
       }.freeze,
       {
         event: NotificationType::SIGN_IN_ALERT,

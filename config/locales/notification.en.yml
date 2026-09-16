@@ -6,10 +6,10 @@ en:
         body: "We have an important announcement for you."
       maintenance_notice:
         title: "Scheduled maintenance"
-        body: "Rexone will be temporarily unavailable during scheduled maintenance."
+        body: "RexOne will be temporarily unavailable during scheduled maintenance."
       feature_update:
         title: "New feature available"
-        body: "A new Rexone feature is now available."
+        body: "A new RexOne feature is now available."
     queued: "Notification delivery queued."
     recipients_fetched: "Notification recipients fetched."
     templates_fetched: "Notification templates fetched."

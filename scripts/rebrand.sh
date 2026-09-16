@@ -1,6 +1,6 @@
 #!/bin/bash
 # scripts/rebrand.sh
-# Master Rebranding Engine for the Rexone Ecosystem (Core, Web, Mobile)
+# Master Rebranding Engine for the RexOne Ecosystem (Core, Web, Mobile)
 # Implements Universal Ecosystem Naming Conventions (Single-word & Multi-word)
 # Usage: ./scripts/rebrand.sh [path/to/brand.config.json]
 
@@ -237,7 +237,7 @@ fi
 MOBILE_DIR="$WORKSPACE_DIR/rexone_mobile"
 if [ -d "$MOBILE_DIR" ]; then
   echo "📱 Rebranding Mobile Client ($MOBILE_DIR)..."
-  
+
   if [ -f "$MOBILE_DIR/scripts/rebrand.sh" ]; then
     bash "$MOBILE_DIR/scripts/rebrand.sh" "$MOBILE_APP_NAME" "$MOBILE_PACKAGE" "$RESOLVED_LOGO_PATH"
   fi
@@ -249,5 +249,5 @@ echo "============================================================"
 echo "🎉 REBRANDING COMPLETED SUCCESSFULLY FOR: $BRAND_NAME"
 echo "   Docker Kebab Slug:    $BRAND_SLUG_KEBAB"
 echo "   Database Snake Slug:  $BRAND_SLUG_SNAKE"
-echo "   Foundation: Built on top of the Rexone Ecosystem (rex-9)"
+echo "   Foundation: Built on top of the RexOne Ecosystem (rex-9)"
 echo "============================================================"

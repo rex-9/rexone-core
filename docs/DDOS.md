@@ -1,6 +1,6 @@
 # Production DDoS and API Abuse Protection
 
-This guide hardens Rexone Core's current Coolify, Traefik, Rails, Rack Attack,
+This guide hardens RexOne Core's current Coolify, Traefik, Rails, Rack Attack,
 Garage, and worker deployment. Apply changes gradually in UAT, observe normal
 traffic, and then promote the same configuration to production.
 
@@ -30,8 +30,8 @@ Rails/Puma — bounded threads, queues, timeouts, database pools
 
 Add your domain to Cloudflare and ensure these DNS records are proxied—the orange cloud:
 
-- `app.example.com` → Rexone Web
-- `api.example.com` → Rexone Core
+- `app.example.com` → RexOne Web
+- `api.example.com` → RexOne Core
 - Your public Garage download hostname, if appropriate
 
 Do not proxy Garage’s administration endpoint or PostgreSQL.

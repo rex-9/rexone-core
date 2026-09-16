@@ -1,16 +1,16 @@
-# Rexone Ecosystem Quick Start
+# RexOne Ecosystem Quick Start
 
-This is the shortest supported path from a clean checkout to a running Rexone Core API. Core can run independently; Rexone Web and Rexone Mobile are optional reference clients.
+This is the shortest supported path from a clean checkout to a running RexOne Core API. Core can run independently; RexOne Web and RexOne Mobile are optional reference clients.
 
 ## Compatibility
 
-Rexone is currently developed as a coordinated source ecosystem rather than a set of independently versioned stable releases.
+RexOne is currently developed as a coordinated source ecosystem rather than a set of independently versioned stable releases.
 
-| Component | Supported integration branch | Role | Contract authority |
-| --- | --- | --- | --- |
-| [Rexone Core](https://github.com/rex-9/rexone-core) | `dev` | API, business logic, persistence, queues, providers | OpenAPI, sockets, and server behavior |
-| [Rexone Web](https://github.com/rex-9/rexone-web) | `dev` | React reference client and admin portal | Core contracts plus Web `LAW.md` |
-| [Rexone Mobile](https://github.com/rex-9/rexone_mobile) | `dev` | Flutter reference client for Android and iOS | Core contracts plus Mobile `LAW.md` |
+| Component                                               | Supported integration branch | Role                                                | Contract authority                    |
+| ------------------------------------------------------- | ---------------------------- | --------------------------------------------------- | ------------------------------------- |
+| [RexOne Core](https://github.com/rex-9/rexone-core)     | `dev`                        | API, business logic, persistence, queues, providers | OpenAPI, sockets, and server behavior |
+| [RexOne Web](https://github.com/rex-9/rexone-web)       | `dev`                        | React reference client and admin portal             | Core contracts plus Web `LAW.md`      |
+| [RexOne Mobile](https://github.com/rex-9/rexone_mobile) | `dev`                        | Flutter reference client for Android and iOS        | Core contracts plus Mobile `LAW.md`   |
 
 Use the three `dev` branches together for the supported development integration line. A feature branch is provisional and may require corresponding client changes until it is merged into `dev`. Core's generated OpenAPI document is authoritative for HTTP operations; [ECOSYSTEM.md](../ECOSYSTEM.md) defines cross-platform ownership, socket events, and shared behavior.
 
@@ -66,6 +66,7 @@ When Docker is installed, you do **not** need six terminals. All Core services (
 ```
 
 This automatically orchestrates:
+
 - **`db`**: PostgreSQL database with automated healthchecks.
 - **`api`**: Rails 8 API server on `http://localhost:3000` (auto-runs `db:prepare`).
 - **`waka`**: Solid Queue general background worker for asynchronous jobs.
@@ -86,14 +87,14 @@ If you are developing or testing Stripe billing and subscriptions locally, open 
 
 For developers who require isolated stdout streams or individual service restarts during low-level engine debugging, Core also provides individual scripts for each responsibility:
 
-| Terminal | Command | Responsibility | When required |
-| --- | --- | --- | --- |
-| 1 | `./scripts/dev_db.sh` | PostgreSQL database | Always |
-| 2 | `./scripts/dev_api.sh` | Rails API at `http://localhost:3000` | Always |
-| 3 | `./scripts/dev_waka.sh` | General Solid Queue worker | Always for queued application work |
-| 4 | `./scripts/dev_garage.sh` | Garage S3 storage at `http://localhost:3100` | When `STORAGE_PROVIDER=garage` |
-| 5 | `./scripts/dev_media.sh` | Image, video, audio, and thumbnail worker | When the media service is enabled |
-| 6 (Optional) | `./scripts/listen_webhook.sh` | Stripe CLI webhook forwarding | When using Stripe locally |
+| Terminal     | Command                       | Responsibility                               | When required                      |
+| ------------ | ----------------------------- | -------------------------------------------- | ---------------------------------- |
+| 1            | `./scripts/dev_db.sh`         | PostgreSQL database                          | Always                             |
+| 2            | `./scripts/dev_api.sh`        | Rails API at `http://localhost:3000`         | Always                             |
+| 3            | `./scripts/dev_waka.sh`       | General Solid Queue worker                   | Always for queued application work |
+| 4            | `./scripts/dev_garage.sh`     | Garage S3 storage at `http://localhost:3100` | When `STORAGE_PROVIDER=garage`     |
+| 5            | `./scripts/dev_media.sh`      | Image, video, audio, and thumbnail worker    | When the media service is enabled  |
+| 6 (Optional) | `./scripts/listen_webhook.sh` | Stripe CLI webhook forwarding                | When using Stripe locally          |
 
 Garage and the media worker are not required when the application uses another file-storage provider without Core's media pipeline. Stripe CLI forwarding is not required when Stripe is disabled or another payment gateway is used.
 
@@ -117,7 +118,7 @@ Open:
 
 A successful `/up` response confirms the API process is reachable. It does not by itself verify every optional provider.
 
-## 5. Add Rexone Web
+## 5. Add RexOne Web
 
 In another terminal:
 
@@ -131,7 +132,7 @@ cp .env.example .env
 
 Configure the Web environment to use the local Core HTTP and Action Cable endpoints documented in its `.env.example`. The development script starts the Web Docker environment and prints the client URL.
 
-## 6. Add Rexone Mobile
+## 6. Add RexOne Mobile
 
 In another terminal:
 

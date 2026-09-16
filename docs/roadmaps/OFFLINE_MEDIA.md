@@ -1,15 +1,15 @@
 # Offline Audio & Video Roadmap
 
-> **Repositories:** `rexone-core` + `rexone-mobile`  
-> **Web:** Streaming-only for V1  
-> **Target:** Private, app-only offline audio/video playback on Flutter Mobile  
+> **Repositories:** `rexone-core` + `rexone-mobile`
+> **Web:** Streaming-only for V1
+> **Target:** Private, app-only offline audio/video playback on Flutter Mobile
 > **Suggested branch:** `feat/offline-media`
 
 ---
 
 ## 1. Decision
 
-Rexone will support offline audio/video **on Mobile only** for V1.
+RexOne will support offline audio/video **on Mobile only** for V1.
 
 Offline media is downloaded to the application's **private persistent sandbox** and never exported to:
 
@@ -23,7 +23,7 @@ MediaStore/
 shared/public storage
 ```
 
-The bytes still exist physically on the device — offline playback requires that — but the file remains application-private and is only surfaced through Rexone.
+The bytes still exist physically on the device — offline playback requires that — but the file remains application-private and is only surfaced through RexOne.
 
 ### Core rule
 
@@ -181,7 +181,7 @@ Authorization: Bearer <jwt>
 X-Platform: android | ios
 ```
 
-Use the existing Rexone naming conventions if the branch already has a better route.
+Use the existing RexOne naming conventions if the branch already has a better route.
 
 ---
 
@@ -295,7 +295,7 @@ processing
 failed
 ```
 
-unless an existing Rexone rule explicitly allows it.
+unless an existing RexOne rule explicitly allows it.
 
 ---
 
@@ -357,7 +357,7 @@ Not V1.
 
 ## 11. Error behavior
 
-Use the normal Rexone envelope.
+Use the normal RexOne envelope.
 
 Expected cases:
 
@@ -368,7 +368,7 @@ Expected cases:
 503 → temporary provider/storage failure
 ```
 
-Follow existing Rexone conventions if a domain already uses another status.
+Follow existing RexOne conventions if a domain already uses another status.
 
 Never expose raw provider exceptions or object keys.
 
@@ -512,7 +512,7 @@ Alternative:
 Context.noBackupFilesDir
 ```
 
-is also valid if Rexone already has a native helper for it.
+is also valid if RexOne already has a native helper for it.
 
 ### Chosen V1 approach
 
@@ -557,7 +557,7 @@ OfflineMediaRepository
 MediaPlaybackService
 ```
 
-Keep the existing Rexone Mobile module/controller/service conventions.
+Keep the existing RexOne Mobile module/controller/service conventions.
 
 Do not force this exact folder tree if the repository already has an established pattern.
 
@@ -657,7 +657,7 @@ Do not persist full provider URLs.
 
 ## 22. Local persistence
 
-Reuse the current Rexone Mobile persistence layer if it can safely store this small manifest.
+Reuse the current RexOne Mobile persistence layer if it can safely store this small manifest.
 
 Do not introduce a new database solely for V1.
 
@@ -750,7 +750,7 @@ Requirements:
 - status handling,
 - direct file streaming.
 
-Reuse Rexone Mobile's existing networking stack where possible.
+Reuse RexOne Mobile's existing networking stack where possible.
 
 ---
 
@@ -814,7 +814,7 @@ actual size == expected size
 
 when expected size is trustworthy.
 
-If Rexone already stores a canonical checksum, optionally verify it.
+If RexOne already stores a canonical checksum, optionally verify it.
 
 Do not add expensive hashing solely to create a new feature if no checksum contract currently exists.
 
@@ -885,7 +885,7 @@ For meaningful video sizes, implement Range resume.
 
 ## 32. Recommended Range resume
 
-Because Rexone's provider path supports byte ranges:
+Because RexOne's provider path supports byte ranges:
 
 ```text
 .partial exists
@@ -972,7 +972,7 @@ Never present incomplete media as ready.
 
 Do not add complex OS-level background download infrastructure in V1 unless required.
 
-Initial behavior may support downloading while Rexone remains in a normal active lifecycle.
+Initial behavior may support downloading while RexOne remains in a normal active lifecycle.
 
 If later required:
 
@@ -1490,21 +1490,21 @@ If resume is enabled:
 
 ## 60. Device matrix
 
-| Case | Android | iOS |
-|---|---:|---:|
-| Download video | ☐ | ☐ |
-| Download audio | ☐ | ☐ |
-| Airplane-mode playback | ☐ | ☐ |
-| Seek local video | ☐ | ☐ |
-| Relaunch app | ☐ | ☐ |
-| Cancel/retry | ☐ | ☐ |
-| Logout cleanup | ☐ | ☐ |
-| Expiry/renewal | ☐ | ☐ |
-| Low storage | ☐ | ☐ |
-| Not in Gallery | ☐ | ☐ |
-| Not in Downloads | ☐ | ☐ |
-| Not in Files | N/A | ☐ |
-| Backup excluded | ☐ | ☐ |
+| Case                   | Android | iOS |
+| ---------------------- | ------: | --: |
+| Download video         |       ☐ |   ☐ |
+| Download audio         |       ☐ |   ☐ |
+| Airplane-mode playback |       ☐ |   ☐ |
+| Seek local video       |       ☐ |   ☐ |
+| Relaunch app           |       ☐ |   ☐ |
+| Cancel/retry           |       ☐ |   ☐ |
+| Logout cleanup         |       ☐ |   ☐ |
+| Expiry/renewal         |       ☐ |   ☐ |
+| Low storage            |       ☐ |   ☐ |
+| Not in Gallery         |       ☐ |   ☐ |
+| Not in Downloads       |       ☐ |   ☐ |
+| Not in Files           |     N/A |   ☐ |
+| Backup excluded        |       ☐ |   ☐ |
 
 ---
 
@@ -1637,7 +1637,7 @@ Implement:
 - remove all,
 - storage usage.
 
-**Done when:** users can manage offline content completely inside Rexone.
+**Done when:** users can manage offline content completely inside RexOne.
 
 ---
 
@@ -1734,7 +1734,7 @@ Only when required:
 
 ## 64. Future HLS + CMAF
 
-Rexone's future adaptive pipeline should use:
+RexOne's future adaptive pipeline should use:
 
 ```text
 HLS
@@ -1790,7 +1790,7 @@ The requirement is not:
 
 The requirement is:
 
-> **“Keep the downloaded media private to Rexone and expose it as an in-app capability rather than a user-exported file.”**
+> **“Keep the downloaded media private to RexOne and expose it as an in-app capability rather than a user-exported file.”**
 
 For V1:
 
@@ -1808,7 +1808,7 @@ MediaPlaybackService prefers local
 offline expiry protects temporary access
 ```
 
-This gives Rexone a simple, smooth offline foundation without prematurely dragging in Web offline storage, HLS packaging, custom encryption, DRM, or unnecessary server state.
+This gives RexOne a simple, smooth offline foundation without prematurely dragging in Web offline storage, HLS packaging, custom encryption, DRM, or unnecessary server state.
 
 ---
 
