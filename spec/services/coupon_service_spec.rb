@@ -121,5 +121,22 @@ RSpec.describe CouponService, type: :service do
         )
       }.to raise_error(PaymentService::Error)
     end
+
+    it "raises an error if max_usage_per_user has already been reached for the user" do
+      coupon = create(:payment_coupon, max_usage: 10, max_usage_per_user: 1)
+      trx1 = create(:payment_transaction, user: user, product: product)
+      create(:payment_user_coupon, coupon: coupon, user: user, product: product, purchase_id: trx1.id, purchase_type: :trx)
+
+      trx2 = create(:payment_transaction, user: user, product: product)
+      expect {
+        described_class.apply_to_checkout!(
+          user: user,
+          product: product,
+          coupon: coupon,
+          purchase_id: trx2.id,
+          purchase_type: :trx
+        )
+      }.to raise_error(PaymentService::Error)
+    end
   end
 end

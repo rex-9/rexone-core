@@ -65,6 +65,16 @@ module AssetConstants
     end
   end
 
+  module StoragePartition
+    DEV  = "dev".freeze
+    UAT  = "uat".freeze
+    PROD = "prod".freeze
+    ALL  = [ DEV, UAT, PROD ].freeze
+  end
+
+  STORAGE_PARTITIONS = StoragePartition::ALL
+  ENVIRONMENT_PREFIXES = StoragePartition::ALL
+
   module AssetName
     TTS_MESSAGE_PREFIX = "tts_message_".freeze
     TTS_FOLDER = "tts".freeze
@@ -110,37 +120,27 @@ module AssetConstants
       current_extension.present? ? key.delete_suffix(current_extension) + target_extension : key + target_extension
     end
 
-    def self.rename_type(old_key, new_type, user_id = nil)
+    def self.rename_type(old_key, new_type, old_type = nil)
       return old_key if old_key.blank? || new_type.blank?
 
       key_str = old_key.to_s
-      if key_str.start_with?("#{ADMIN_NAMESPACE}/")
-        filename = key_str.delete_prefix("#{ADMIN_NAMESPACE}/")
-        parts = filename.split("_", 2)
-        new_filename = parts.length > 1 ? "#{new_type}_#{parts[1]}" : "#{new_type}_#{filename}"
-        "#{ADMIN_NAMESPACE}/#{new_filename}".freeze
-      elsif key_str.start_with?("#{USER_NAMESPACE}/")
-        segments = key_str.split("/", 3)
-        if segments.length == 3
-          uid = segments[1]
-          filename = segments[2]
-          parts = filename.split("_", 2)
-          new_filename = parts.length > 1 ? "#{new_type}_#{parts[1]}" : "#{new_type}_#{filename}"
-          "#{USER_NAMESPACE}/#{uid}/#{new_filename}".freeze
-        else
-          "#{USER_NAMESPACE}/#{user_id || 'general'}/#{new_type}_#{File.basename(key_str)}".freeze
-        end
+      dir = File.dirname(key_str)
+      filename = File.basename(key_str)
+
+      new_filename = if old_type.present? && filename.start_with?("#{old_type}_")
+        "#{new_type}_#{filename.delete_prefix("#{old_type}_")}"
+      elsif (matched_type = AssetConstants::AssetType::ALL.find { |t| filename.start_with?("#{t}_") })
+        "#{new_type}_#{filename.delete_prefix("#{matched_type}_")}"
       else
-        ext = File.extname(key_str)
-        base = File.basename(key_str, ext)
-        parts = base.split("_", 2)
-        rest = parts.length > 1 ? parts[1] : base
-        if user_id.present?
-          "#{USER_NAMESPACE}/#{user_id}/#{new_type}_#{rest}#{ext}".freeze
+        parts = filename.split("_", 2)
+        if parts.length > 1
+          "#{new_type}_#{parts[1]}"
         else
-          "#{ADMIN_NAMESPACE}/#{new_type}_#{rest}#{ext}".freeze
+          "#{new_type}_#{filename}"
         end
       end
+
+      (dir == "." ? new_filename : "#{dir}/#{new_filename}").freeze
     end
   end
 

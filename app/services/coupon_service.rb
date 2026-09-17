@@ -83,6 +83,17 @@ class CouponService
 
     def apply_to_checkout!(user:, product:, coupon:, purchase_id:, purchase_type:)
       ActiveRecord::Base.transaction do
+        # Acquire lock on user to serialize concurrent checkout requests for the same user
+        user.lock!
+
+        # Enforce per-user usage limit under transactional lock
+        if coupon.max_usage_per_user.to_i.positive?
+          user_redemption_count = Payment::UserCoupon.where(user_id: user.id, coupon_id: coupon.id).count
+          if user_redemption_count >= coupon.max_usage_per_user
+            raise PaymentService::Error, MessageService::Payment.t(MessageService::Payment::COUPON_USER_LIMIT_REACHED)
+          end
+        end
+
         # Atomic increment with race condition protection
         updated_rows = Payment::Coupon.where(id: coupon.id)
                                       .where("max_usage = 0 OR max_usage IS NULL OR used_count < max_usage")

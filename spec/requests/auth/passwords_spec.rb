@@ -1,7 +1,19 @@
 require "rails_helper"
 
 RSpec.describe "Password recovery", type: :request do
-  before { allow(NotificationService::Center).to receive(:password_reset_email) }
+  let(:memory_store) { ActiveSupport::Cache::MemoryStore.new }
+
+  before do
+    allow(NotificationService::Center).to receive(:password_reset_email)
+    allow(CacheService).to receive(:read) { |k| memory_store.read(k) }
+    allow(CacheService).to receive(:write) { |k, v, opts| memory_store.write(k, v, opts) }
+    allow(CacheService).to receive(:delete) { |k| memory_store.delete(k) }
+    allow(CacheService).to receive(:increment) do |k, amount, opts|
+      val = (memory_store.read(k) || 0) + amount
+      memory_store.write(k, val, opts)
+      val
+    end
+  end
 
   describe "POST /password/forgot" do
     it "creates a reset token and queues it for the account email" do
@@ -32,6 +44,17 @@ RSpec.describe "Password recovery", type: :request do
       expect(response_status["message"]).to eq(I18n.t("auth.account_discarded"))
       expect(response_status["error"]).to eq(I18n.t("auth.account_discarded"))
       expect(NotificationService::Center).not_to have_received(:password_reset_email)
+    end
+
+    it "enforces cooldown on consecutive password reset requests" do
+      user = create(:user)
+      post "/password/forgot", params: { email: user.email }
+      expect(response).to have_http_status(:ok)
+
+      post "/password/forgot", params: { email: user.email }
+      expect(response).to have_http_status(:too_many_requests)
+      expect(response_status["message"]).to include("We've sent an email. Please wait")
+      expect(response_data["cooldown_remaining"]).to be_present
     end
   end
 

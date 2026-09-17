@@ -30,6 +30,12 @@ RSpec.describe Payment::Coupon, type: :model do
     expect(build(:payment_coupon, code: "discount")).not_to be_valid
   end
 
+  it "validates max_usage_per_user cannot exceed max_usage" do
+    coupon = build(:payment_coupon, max_usage: 5, max_usage_per_user: 10)
+    expect(coupon).not_to be_valid
+    expect(coupon.errors[:max_usage_per_user]).to be_present
+  end
+
   it "calculates percentage discount accurately" do
     coupon = build(:payment_coupon, coupon_type: :percentage, amount: 25)
     result = coupon.calculate_discount(product)

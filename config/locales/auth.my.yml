@@ -28,5 +28,6 @@ my:
     user_existence_checked: "အသုံးပြုသူ စစ်ဆေးပြီးပါပြီ။"
     too_many_attempts: "ကြိုးစားမှု အကြိမ်များလွန်းပါသည်"
     too_many_attempts_with_wait: "အကြိမ်များလွန်းပါသည်။ %{seconds} စက္ကန့် စောင့်ပြီး ထပ်စမ်းပါ။"
+    password_reset_cooldown: "စကားဝှက်ပြန်လည်သတ်မှတ်ရန် အီးမေးလ် ပို့ပြီးပါပြီ။ ထပ်မံတောင်းဆိုရန် %{seconds} စက္ကန့် စောင့်ပါ။"
     set_password: "အကောင့်ဖွင့်ရန် စကားဝှက် သတ်မှတ်ပါ။"
     challenge_and_password_required: "Challenge token နှင့် စကားဝှက် လိုအပ်ပါသည်။"

@@ -6,6 +6,8 @@ class PasswordService
     @user_id = user_id
     @attempts_key = "password:attempts:#{user_id}"
     @cooldown_key = "password:cooldown:#{user_id}"
+    @reset_attempts_key = "password:reset_attempts:#{user_id}"
+    @reset_cooldown_key = "password:reset_cooldown:#{user_id}"
   end
 
   def allowed?
@@ -51,5 +53,41 @@ class PasswordService
     CacheService.delete(@cooldown_key)
   rescue => e
     Rails.logger.error("#{LOG_PREFIX} Failed to record success: #{e.message}")
+  end
+
+  def reset_allowed?
+    reset_cooldown_remaining <= 0
+  end
+
+  def reset_cooldown_remaining
+    cooldown_until = CacheService.read(@reset_cooldown_key).to_i
+    remaining = cooldown_until - Time.now.to_i
+    remaining > 0 ? remaining : 0
+  end
+
+  def record_reset_request
+    attempts = CacheService.increment(@reset_attempts_key, 1, expires_in: 1.hour) || 1
+
+    cooldown = case attempts
+    when 1 then 30
+    when 2 then 60
+    when 3 then 120
+    else        300
+    end
+
+    cooldown_until = Time.now.to_i + cooldown
+    CacheService.write(@reset_cooldown_key, cooldown_until, expires_in: cooldown + 5)
+
+    {
+      cooldown_remaining: cooldown,
+      attempts: attempts
+    }
+  end
+
+  def record_reset_success
+    CacheService.delete(@reset_attempts_key)
+    CacheService.delete(@reset_cooldown_key)
+  rescue => e
+    Rails.logger.error("#{LOG_PREFIX} Failed to record reset success: #{e.message}")
   end
 end

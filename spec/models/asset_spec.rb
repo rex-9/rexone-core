@@ -262,6 +262,22 @@ RSpec.describe Asset, type: :model do
       expect(another_subtitle).to be_valid
     end
 
+    it "prevents changing the type of a child asset on update" do
+      parent = create(:asset, type: "general", format: "video", extension: "mp4", url: "https://example.com/parent_video.mp4")
+      child = create(
+        :asset,
+        type: "thumbnail",
+        format: "image",
+        extension: "webp",
+        parent_asset: parent,
+        url: "https://example.com/parent_thumb_3.webp"
+      )
+
+      child.type = "general"
+      expect(child).not_to be_valid
+      expect(child.errors[:type]).to include("Child asset type cannot be changed")
+    end
+
     it "filters assets via ready, processing, optimal, and failed scopes" do
       ready_asset = create(:asset, status: "ready")
       proc_asset = create(:asset, status: "processing")

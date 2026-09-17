@@ -36,6 +36,7 @@ class Payment::Coupon < ApplicationRecord
   validates :used_count, numericality: { greater_than_or_equal_to: 0 }
   validate :validate_percentage_amount
   validate :validate_fixed_currency_presence
+  validate :validate_user_usage_within_max_usage
 
   # ===== CALLBACKS =====
   before_validation :normalize_code
@@ -143,6 +144,14 @@ class Payment::Coupon < ApplicationRecord
 
     if currency.blank?
       errors.add(:currency, "Currency must be specified for fixed amount coupons")
+    end
+  end
+
+  def validate_user_usage_within_max_usage
+    return unless max_usage_per_user.to_i.positive? && max_usage.to_i.positive?
+
+    if max_usage_per_user > max_usage
+      errors.add(:max_usage_per_user, "cannot exceed maximum total usage limit")
     end
   end
 

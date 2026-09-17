@@ -778,6 +778,10 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 - A compressible video or audio parent may own one thumbnail and one subtitle. That one-of-each rule is enforced on `Asset` (`type` unique per `parent_asset_id`), not by a unique database index. Thumbnail generation runs asynchronously on the `media` queue, stores a WebP object beside its source video, and preserves the original asset's polymorphic owner. Admin may also upload an image thumbnail for a compressible video or audio parent; uploaded SVG thumbnails remain `pending` while `Media::ConvertImageJob` stores the PNG replacement and then hands it to the normal image-compression pipeline. The automatic compression is pass one, so a meaningfully reduced PNG remains eligible for the configured manual second pass. `.srt` children are stored as `type`/`format` `subtitle` and are not compressed; admin attaches or replaces them with `POST /v1/admin/assets/:id/subtitle/upload`.
 
+**Child Asset Type Immutability**:
+
+- Child assets (assets with `parent_asset_id.present?`, such as thumbnails and subtitles) have immutable types. The `type` attribute cannot be updated or changed away from its designated child role (`thumbnail` or `subtitle`).
+
 **Audio Compression**:
 
 - Compressible audio extensions (`mp3`, `wav`, `m4a`, `aac`, `ogg`, `flac`, `amr`) follow the same optimal-first `media` queue pipeline as images and videos. WAV, FLAC, OGG, and AMR are normalized to `m4a` (AAC); the asset `extension` is updated to `m4a` while the original storage object is safely replaced.

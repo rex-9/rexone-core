@@ -33,6 +33,7 @@ class Asset < ApplicationRecord
   validates :assetable_id, presence: true, if: -> { assetable_type.present? }
   validate :url_must_be_valid
   validate :only_one_thumbnail_per_parent
+  validate :child_asset_type_immutable, on: :update
 
   before_validation :set_default_title
   before_validation :set_extension_and_format
@@ -211,6 +212,12 @@ class Asset < ApplicationRecord
     duplicate = Asset.where(parent_asset_id: parent_asset_id, type: AssetConstants::AssetType::THUMBNAIL)
     duplicate = duplicate.where.not(id: id) if persisted?
     errors.add(:type, :thumbnail_exists_for_parent) if duplicate.exists?
+  end
+
+  def child_asset_type_immutable
+    if parent_asset_id.present? && type_changed?
+      errors.add(:type, "Child asset type cannot be changed")
+    end
   end
 
   def storage_resource_type

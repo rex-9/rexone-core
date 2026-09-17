@@ -18,6 +18,16 @@ RSpec.describe AssetConstants do
     end
   end
 
+  describe "StoragePartition and ENVIRONMENT_PREFIXES" do
+    it "defines standard environment partitions as constants" do
+      expect(AssetConstants::StoragePartition::DEV).to eq("dev")
+      expect(AssetConstants::StoragePartition::UAT).to eq("uat")
+      expect(AssetConstants::StoragePartition::PROD).to eq("prod")
+      expect(AssetConstants::STORAGE_PARTITIONS).to eq(%w[dev uat prod])
+      expect(AssetConstants::ENVIRONMENT_PREFIXES).to eq(%w[dev uat prod])
+    end
+  end
+
   describe AssetConstants::AssetName do
     it "replaces an existing storage-key extension" do
       expect(described_class.with_extension("dev/user/id/audio.wav", "m4a"))
@@ -27,6 +37,38 @@ RSpec.describe AssetConstants do
     it "adds an extension when the provider key has none" do
       expect(described_class.with_extension("admin/general_audio", "m4a"))
         .to eq("admin/general_audio.m4a")
+    end
+
+    describe ".rename_type" do
+      it "replaces old type prefix while strictly preserving directory path in dev/admin" do
+        expect(described_class.rename_type("dev/admin/avatar_sample_123.png", "thumbnail", "avatar"))
+          .to eq("dev/admin/thumbnail_sample_123.png")
+      end
+
+      it "replaces old type prefix while strictly preserving directory path in uat/admin" do
+        expect(described_class.rename_type("uat/admin/general_doc_456.pdf", "attachment", "general"))
+          .to eq("uat/admin/attachment_doc_456.pdf")
+      end
+
+      it "replaces old type prefix while strictly preserving user partition path" do
+        expect(described_class.rename_type("dev/user/uuid-999/avatar_pic_1.jpg", "thumbnail", "avatar"))
+          .to eq("dev/user/uuid-999/thumbnail_pic_1.jpg")
+      end
+
+      it "replaces type prefix when no directory is present" do
+        expect(described_class.rename_type("avatar_pic_1.jpg", "thumbnail", "avatar"))
+          .to eq("thumbnail_pic_1.jpg")
+      end
+
+      it "infers old type from known AssetType when old_type argument is omitted" do
+        expect(described_class.rename_type("dev/admin/general_asset_789.png", "avatar"))
+          .to eq("dev/admin/avatar_asset_789.png")
+      end
+
+      it "returns original key if key or new_type is blank" do
+        expect(described_class.rename_type("", "thumbnail")).to eq("")
+        expect(described_class.rename_type("dev/admin/avatar_1.png", "")).to eq("dev/admin/avatar_1.png")
+      end
     end
   end
 end

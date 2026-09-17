@@ -332,16 +332,10 @@ components:
               type: string
               format: email
               example: admin-created@example.com
-            password:
+            avatar_asset_id:
               type: string
-              format: password
-              minLength: 6
-              writeOnly: true
-            password_confirmation:
-              type: string
-              format: password
-              minLength: 6
-              writeOnly: true
+              format: uuid
+              nullable: true
           required: []
       required:
       - user
@@ -1977,6 +1971,14 @@ components:
           type: string
           format: date-time
           nullable: true
+        discarded_at:
+          type: string
+          format: date-time
+          nullable: true
+        undiscarded_at:
+          type: string
+          format: date-time
+          nullable: true
       required:
       - id
       - email
@@ -2046,6 +2048,9 @@ components:
         id:
           type: string
           format: uuid
+        code:
+          type: string
+          nullable: true
         name:
           type: string
         description:
@@ -2079,11 +2084,27 @@ components:
           type: string
         stripe_price_id:
           type: string
+        thumbnail_url:
+          type: string
+          format: uri
+          nullable: true
+        thumbnail_asset_id:
+          type: string
+          format: uuid
+          nullable: true
         created_at:
           type: string
           format: date-time
           nullable: true
         updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        discarded_at:
+          type: string
+          format: date-time
+          nullable: true
+        undiscarded_at:
           type: string
           format: date-time
           nullable: true
@@ -8298,55 +8319,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/error_response"
-      security:
-      - bearerAuth: []
-  "/v1/admin/notifications/templates":
-    get:
-      tags:
-      - Admin / Notifications
-      summary: List notification events and their admin availability
-      parameters:
-      - name: X-Locale
-        in: header
-        required: false
-        description: Response language. Accepts en or my; Accept-Language is also
-          supported.
-        schema:
-          type: string
-          enum:
-          - en
-          - my
-      - name: X-Platform
-        in: header
-        required: false
-        description: Active-session namespace.
-        schema:
-          type: string
-          enum:
-          - web
-          - mobile
-          default: web
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/response"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/error_response"
-      description: Returns both selectable broadcast events and unavailable transactional
-        events for display.
       security:
       - bearerAuth: []
   "/v1/admin/user_notifications":

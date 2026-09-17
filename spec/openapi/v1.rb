@@ -210,8 +210,7 @@ module Openapi
           username: { type: :string, pattern: "^[a-z0-9_]+$", example: "admin_created" },
           name: { type: :string, maxLength: 50, example: "Admin Created" },
           email: { type: :string, format: :email, example: "admin-created@example.com" },
-          password: { type: :string, format: :password, minLength: 6, writeOnly: true },
-          password_confirmation: { type: :string, format: :password, minLength: 6, writeOnly: true }
+          avatar_asset_id: UUID.merge(nullable: true)
         )
       ),
       current_user_update_request: object(
@@ -875,7 +874,9 @@ module Openapi
           non_admin_permissions: { type: :array, items: { type: :object } }
         ),
         created_at: DATE_TIME,
-        updated_at: DATE_TIME
+        updated_at: DATE_TIME,
+        discarded_at: { type: :string, format: :"date-time", nullable: true },
+        undiscarded_at: { type: :string, format: :"date-time", nullable: true }
       ),
       role: object(
         id: UUID,
@@ -898,6 +899,7 @@ module Openapi
       ),
       product: object(
         id: UUID,
+        code: { type: :string, nullable: true },
         name: { type: :string },
         description: { type: :string, nullable: true },
         unit_amount: { type: :integer, description: "Minor currency units" },
@@ -910,8 +912,12 @@ module Openapi
         active: { type: :boolean },
         stripe_product_id: { type: :string },
         stripe_price_id: { type: :string },
+        thumbnail_url: { type: :string, format: :uri, nullable: true },
+        thumbnail_asset_id: UUID.merge(nullable: true),
         created_at: DATE_TIME,
-        updated_at: DATE_TIME
+        updated_at: DATE_TIME,
+        discarded_at: { type: :string, format: :"date-time", nullable: true },
+        undiscarded_at: { type: :string, format: :"date-time", nullable: true }
       ),
       subscription: object(
         required: %i[
@@ -1621,14 +1627,6 @@ module Openapi
       paths["/v1/admin/notifications/{id}/undiscard"] = {
         post: operation(tags: "Admin / Notifications", summary: "Restore a discarded notification template",
                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
-      }
-      paths["/v1/admin/notifications/templates"] = {
-        get: operation(
-          tags: "Admin / Notifications",
-          summary: "List notification events and their admin availability",
-          description: "Returns both selectable broadcast events and unavailable transactional events for display.",
-          errors: [ 401, 403 ]
-        )
       }
 
       user_notification_filters = %i[status filter search client user_id].map { |name| query_parameter(name) }

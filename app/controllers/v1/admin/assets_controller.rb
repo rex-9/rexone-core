@@ -152,39 +152,32 @@ class V1::Admin::AssetsController < V1::ApplicationController
   def update
     update_params = admin_asset_params
     new_type = update_params[:type].presence
-    client_name = update_params[:name].to_s.strip
-    old_storage_key = @asset.storage_key
-    old_name = @asset.name
-    new_storage_key = nil
 
-    if new_type.present? && new_type != @asset.type && @asset.uploaded_file? && @asset.storage_key.present?
-      new_storage_key = AssetConstants::AssetName.rename_type(@asset.storage_key, new_type, @asset.created_by_id)
-      if new_storage_key != @asset.storage_key
-        Rails.logger.info("[AssetsController] Renaming storage object: #{@asset.storage_key} -> #{new_storage_key}")
-        StorageService::Client.move(@asset.storage_key, new_storage_key)
-        @asset.storage_key = new_storage_key
-        @asset.url = StorageService::Client.url(new_storage_key)
-        @asset.name = new_storage_key
-      end
+    if @asset.parent_asset_id.present? && new_type.present? && new_type != @asset.type
+      render_json_response(
+        status_code: 422,
+        message: admin_asset_message(MessageService::Admin::Asset::UPDATE_FAILED),
+        error: "Child asset type cannot be changed"
+      )
+      return
     end
 
-    if new_storage_key.present?
-      if client_name.blank? ||
-         client_name == old_name ||
-         client_name == old_storage_key ||
-         client_name == new_storage_key ||
-         client_name == AssetConstants::AssetName.rename_type(old_name, new_type, @asset.created_by_id)
+    if new_type.present? && new_type != @asset.type
+      if @asset.uploaded_file? && @asset.storage_key.present?
+        new_storage_key = AssetConstants::AssetName.rename_type(@asset.storage_key, new_type, @asset.type)
+        if new_storage_key != @asset.storage_key
+          Rails.logger.info("[AssetsController] Renaming storage object: #{@asset.storage_key} -> #{new_storage_key}")
+          StorageService::Client.move(@asset.storage_key, new_storage_key)
+          @asset.storage_key = new_storage_key
+          @asset.url = StorageService::Client.url(new_storage_key)
+        end
         update_params = update_params.merge(name: new_storage_key)
-      else
-        update_params = update_params.merge(name: AssetConstants::AssetName.rename_type(client_name, new_type, @asset.created_by_id))
+      elsif @asset.name.present?
+        new_name = AssetConstants::AssetName.rename_type(@asset.name, new_type, @asset.type)
+        update_params = update_params.merge(name: new_name)
       end
-    elsif new_type.present? && new_type == @asset.type && @asset.storage_key.present?
-      expected_name = AssetConstants::AssetName.rename_type(client_name, @asset.type, @asset.created_by_id)
-      if expected_name != client_name
-        update_params = update_params.merge(name: expected_name)
-      elsif @asset.name != @asset.storage_key && (@asset.name == old_storage_key || client_name == old_name)
-        update_params = update_params.merge(name: @asset.storage_key)
-      end
+    elsif @asset.storage_key.present?
+      update_params = update_params.except(:name)
     end
 
     if @asset.update(update_params)
