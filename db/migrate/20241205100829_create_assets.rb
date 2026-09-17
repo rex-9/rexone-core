@@ -3,7 +3,7 @@ class CreateAssets < ActiveRecord::Migration[8.1]
     create_table :assets, id: :uuid do |t|
       t.string :storage_key                                             # Object key / identifier in object storage (Garage, S3, R2, Cloudinary)
       t.string :name, null: false                                       # File name / identifier
-      t.string :display_name                                            # Human-friendly display name (defaults to filename/name)
+      t.string :title                                                   # Human-friendly title (defaults to filename/name)
       t.text :description                                               # Optional asset description / caption
       t.string :url, null: false                                        # Public URL to access the file
       t.string :type, null: false, default: "general"                   # "avatar", "thumbnail", "subtitle", "tts", "attachment", "general"
@@ -47,7 +47,7 @@ class CreateAssets < ActiveRecord::Migration[8.1]
 
     add_index :assets, :url, unique: true
     add_index :assets, :name
-    add_index :assets, :display_name
+    add_index :assets, :title
     add_index :assets, :type
     add_index :assets, [ :assetable_type, :assetable_id ]
     add_index :assets, :discarded_at

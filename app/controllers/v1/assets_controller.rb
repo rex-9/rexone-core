@@ -98,7 +98,7 @@ class V1::AssetsController < V1::ApplicationController
     assetable_type = upload[:assetable_type].presence
     assetable_id = upload[:assetable_id].presence
     duration_secs = upload[:duration_secs]
-    display_name = upload[:display_name].presence || (file.respond_to?(:original_filename) ? file.original_filename : nil)
+    title = upload[:title].presence || (file.respond_to?(:original_filename) ? file.original_filename : nil)
     description = upload[:description].presence
 
     begin
@@ -117,7 +117,7 @@ class V1::AssetsController < V1::ApplicationController
       asset = Asset.find_or_initialize_by(storage_key: result[:storage_key])
       asset.assign_attributes(
         name: result[:storage_key],
-        display_name: display_name,
+        title: title,
         description: description,
         url: result[:url],
         type: asset_type,
@@ -277,7 +277,7 @@ class V1::AssetsController < V1::ApplicationController
   end
 
   def upload_params
-    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs, :display_name, :description)
+    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs, :title, :description)
   end
 
   def list_params
@@ -298,7 +298,7 @@ class V1::AssetsController < V1::ApplicationController
   end
 
   def asset_params
-    params.require(:asset).permit(:name, :display_name, :description, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :assetable_type, :assetable_id)
+    params.require(:asset).permit(:name, :title, :description, :url, :type, :format, :extension, :size_bytes, :duration_secs, :source, :assetable_type, :assetable_id)
   end
 
   def filter_asset_record_scope(scope, record_scope = filter_params[:record_scope])

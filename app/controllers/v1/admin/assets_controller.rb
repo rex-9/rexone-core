@@ -76,7 +76,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
     assetable_type = upload[:assetable_type].presence
     assetable_id = upload[:assetable_id].presence
     duration_secs = upload[:duration_secs]
-    display_name = upload[:display_name].presence || (file.respond_to?(:original_filename) ? file.original_filename : nil)
+    title = upload[:title].presence || (file.respond_to?(:original_filename) ? file.original_filename : nil)
     description = upload[:description].presence
 
     begin
@@ -95,7 +95,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
       asset = Asset.find_or_initialize_by(storage_key: result[:storage_key])
       asset.assign_attributes(
         name: result[:storage_key],
-        display_name: display_name,
+        title: title,
         description: description,
         url: result[:url],
         type: asset_type,
@@ -646,7 +646,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def upload_params
-    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs, :display_name, :description)
+    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs, :title, :description)
   end
 
   def upload_file_param
@@ -658,7 +658,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def admin_asset_params
-    params.require(:asset).permit(:name, :display_name, :description, :type, :assetable_type, :assetable_id)
+    params.require(:asset).permit(:name, :title, :description, :type, :assetable_type, :assetable_id)
   end
 
   def filter_params
@@ -671,7 +671,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
     pattern = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"
     scope.where(
-      "assets.name ILIKE :search OR assets.display_name ILIKE :search OR assets.storage_key ILIKE :search OR assets.assetable_type ILIKE :search",
+      "assets.name ILIKE :search OR assets.title ILIKE :search OR assets.storage_key ILIKE :search OR assets.assetable_type ILIKE :search",
       search: pattern
     )
   end

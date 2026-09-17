@@ -112,7 +112,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.text "description"
     t.datetime "discarded_at"
     t.uuid "discarded_by_id"
-    t.string "display_name"
     t.integer "duration_secs"
     t.string "extension"
     t.string "format"
@@ -123,6 +122,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.string "source", default: "upload", null: false
     t.string "status", default: "pending", null: false
     t.string "storage_key"
+    t.string "title"
     t.string "type", default: "general", null: false
     t.datetime "undiscarded_at"
     t.uuid "undiscarded_by_id"
@@ -133,10 +133,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.index ["created_by_id"], name: "index_assets_on_created_by_id"
     t.index ["discarded_at"], name: "index_assets_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_assets_on_discarded_by_id"
-    t.index ["display_name"], name: "index_assets_on_display_name"
     t.index ["name"], name: "index_assets_on_name"
     t.index ["parent_asset_id"], name: "index_assets_on_parent_asset_id"
     t.index ["status"], name: "index_assets_on_status"
+    t.index ["title"], name: "index_assets_on_title"
     t.index ["type"], name: "index_assets_on_type"
     t.index ["undiscarded_by_id"], name: "index_assets_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_assets_on_updated_by_id"
