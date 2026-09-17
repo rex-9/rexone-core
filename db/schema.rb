@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -112,7 +112,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.text "description"
     t.datetime "discarded_at"
     t.uuid "discarded_by_id"
-    t.string "display_name"
     t.integer "duration_secs"
     t.string "extension"
     t.string "format"
@@ -123,6 +122,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.string "source", default: "upload", null: false
     t.string "status", default: "pending", null: false
     t.string "storage_key"
+    t.string "title"
     t.string "type", default: "general", null: false
     t.datetime "undiscarded_at"
     t.uuid "undiscarded_by_id"
@@ -133,10 +133,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.index ["created_by_id"], name: "index_assets_on_created_by_id"
     t.index ["discarded_at"], name: "index_assets_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_assets_on_discarded_by_id"
-    t.index ["display_name"], name: "index_assets_on_display_name"
     t.index ["name"], name: "index_assets_on_name"
     t.index ["parent_asset_id"], name: "index_assets_on_parent_asset_id"
     t.index ["status"], name: "index_assets_on_status"
+    t.index ["title"], name: "index_assets_on_title"
     t.index ["type"], name: "index_assets_on_type"
     t.index ["undiscarded_by_id"], name: "index_assets_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_assets_on_updated_by_id"
@@ -289,6 +289,45 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.index ["status"], name: "index_client_versions_on_status"
     t.index ["undiscarded_by_id"], name: "index_client_versions_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_client_versions_on_updated_by_id"
+  end
+
+  create_table "coupons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.integer "amount", null: false
+    t.string "code", null: false
+    t.integer "coupon_type", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.string "currency"
+    t.text "description"
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
+    t.datetime "expires_at"
+    t.integer "max_usage", default: 0
+    t.integer "max_usage_per_user", default: 1
+    t.uuid "referrer_id"
+    t.string "stripe_coupon_id"
+    t.uuid "target_product_ids", default: [], array: true
+    t.uuid "target_role_ids", default: [], array: true
+    t.uuid "target_user_ids", default: [], array: true
+    t.string "title", null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
+    t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.integer "used_count", default: 0, null: false
+    t.index ["code"], name: "index_coupons_on_code", unique: true
+    t.index ["created_by_id"], name: "index_coupons_on_created_by_id"
+    t.index ["discarded_at"], name: "index_coupons_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_coupons_on_discarded_by_id"
+    t.index ["expires_at"], name: "index_coupons_on_expires_at"
+    t.index ["referrer_id"], name: "index_coupons_on_referrer_id"
+    t.index ["stripe_coupon_id"], name: "index_coupons_on_stripe_coupon_id"
+    t.index ["target_product_ids"], name: "index_coupons_on_target_product_ids", using: :gin
+    t.index ["target_role_ids"], name: "index_coupons_on_target_role_ids", using: :gin
+    t.index ["target_user_ids"], name: "index_coupons_on_target_user_ids", using: :gin
+    t.index ["undiscarded_by_id"], name: "index_coupons_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_coupons_on_updated_by_id"
   end
 
   create_table "feedbacks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -1137,6 +1176,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "user_coupons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "coupon_id", null: false
+    t.datetime "created_at", null: false
+    t.uuid "created_by_id"
+    t.string "currency", default: "usd", null: false
+    t.datetime "discarded_at"
+    t.uuid "discarded_by_id"
+    t.integer "discount_amount", default: 0, null: false
+    t.integer "final_amount", default: 0, null: false
+    t.integer "original_amount", default: 0, null: false
+    t.uuid "product_id", null: false
+    t.uuid "purchase_id", null: false
+    t.integer "purchase_type", default: 0, null: false
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
+    t.datetime "updated_at", null: false
+    t.uuid "updated_by_id"
+    t.uuid "user_id", null: false
+    t.index ["coupon_id", "user_id"], name: "index_user_coupons_on_coupon_id_and_user_id"
+    t.index ["coupon_id"], name: "index_user_coupons_on_coupon_id"
+    t.index ["created_by_id"], name: "index_user_coupons_on_created_by_id"
+    t.index ["discarded_at"], name: "index_user_coupons_on_discarded_at"
+    t.index ["discarded_by_id"], name: "index_user_coupons_on_discarded_by_id"
+    t.index ["product_id"], name: "index_user_coupons_on_product_id"
+    t.index ["purchase_id", "purchase_type"], name: "index_user_coupons_on_purchase_id_and_purchase_type"
+    t.index ["undiscarded_by_id"], name: "index_user_coupons_on_undiscarded_by_id"
+    t.index ["updated_by_id"], name: "index_user_coupons_on_updated_by_id"
+    t.index ["user_id"], name: "index_user_coupons_on_user_id"
+  end
+
   create_table "user_notifications", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "clients", default: ["web", "mobile"], null: false, array: true
     t.datetime "created_at", null: false
@@ -1263,6 +1332,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
   add_foreign_key "client_versions", "users", column: "discarded_by_id"
   add_foreign_key "client_versions", "users", column: "undiscarded_by_id"
   add_foreign_key "client_versions", "users", column: "updated_by_id"
+  add_foreign_key "coupons", "users", column: "created_by_id"
+  add_foreign_key "coupons", "users", column: "discarded_by_id"
+  add_foreign_key "coupons", "users", column: "referrer_id"
+  add_foreign_key "coupons", "users", column: "undiscarded_by_id"
+  add_foreign_key "coupons", "users", column: "updated_by_id"
   add_foreign_key "feedbacks", "client_versions", column: "version_id", on_delete: :nullify
   add_foreign_key "feedbacks", "users"
   add_foreign_key "iam_permissions", "users", column: "created_by_id"
@@ -1328,6 +1402,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_103000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "user_coupons", "coupons"
+  add_foreign_key "user_coupons", "payment_products", column: "product_id"
+  add_foreign_key "user_coupons", "users"
+  add_foreign_key "user_coupons", "users", column: "created_by_id"
+  add_foreign_key "user_coupons", "users", column: "discarded_by_id"
+  add_foreign_key "user_coupons", "users", column: "undiscarded_by_id"
+  add_foreign_key "user_coupons", "users", column: "updated_by_id"
   add_foreign_key "user_notifications", "notifications", on_delete: :nullify
   add_foreign_key "user_notifications", "users"
   add_foreign_key "user_notifications", "users", column: "created_by_id"

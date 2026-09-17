@@ -51,4 +51,29 @@ FactoryBot.define do
     payload { { "id" => stripe_event_id, "type" => event_type, "data" => { "object" => {} } } }
     received_at { Time.current }
   end
+
+  factory :payment_coupon, class: "Payment::Coupon" do
+    sequence(:title) { |n| "Coupon #{n}" }
+    sequence(:code) { |n| "COUPON#{n}" }
+    coupon_type { :percentage }
+    amount { 20 }
+    currency { "usd" }
+    max_usage { 100 }
+    max_usage_per_user { 1 }
+    used_count { 0 }
+    expires_at { 30.days.from_now }
+    active { true }
+  end
+
+  factory :payment_user_coupon, class: "Payment::UserCoupon" do
+    association :coupon, factory: :payment_coupon
+    user
+    association :product, factory: :payment_product
+    purchase_id { SecureRandom.uuid }
+    purchase_type { :trx }
+    discount_amount { 200 }
+    original_amount { 1_000 }
+    final_amount { 800 }
+    currency { "usd" }
+  end
 end

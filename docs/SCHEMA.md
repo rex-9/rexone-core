@@ -1,7 +1,7 @@
 # Database Schema Documentation (`rexone-core`)
 
 > **Database Engine:** PostgreSQL 18
-> **Schema Version:** `2026_09_14_103000`
+> **Schema Version:** `2026_09_16_173001`
 > **Key Conventions:** UUID v4 Primary Keys (`gen_random_uuid()`), Soft Deletion (`discard` gem), Audit Tracking (`Auditable` concern).
 
 > [!IMPORTANT]
@@ -59,9 +59,13 @@ erDiagram
   users ||--o{ payment_subscriptions : "subscribes"
   users ||--o{ payment_transactions : "pays"
   users ||--o{ accesses : "holds"
+  users ||--o{ coupons : "refers"
+  users ||--o{ user_coupons : "redeems"
   payment_products ||--o{ payment_subscriptions : "defines_tier"
   payment_products ||--o{ payment_transactions : "purchased_in"
   payment_products ||--o{ accesses : "grants_access_to"
+  payment_products ||--o{ user_coupons : "applied_to"
+  coupons ||--o{ user_coupons : "tracks_redemptions"
 
   users ||--o{ chat_rooms : "owns"
   chat_rooms ||--o{ chat_messages : "contains"
@@ -190,7 +194,7 @@ erDiagram
 | `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                      |
 | `name`              | `string`   |    ❌    | —                   | Unique identifier (e.g. `read_users`, `create_payments`)         |
 | `action`            | `string`   |    ❌    | —                   | Enum: `read`, `create`, `update`, `delete`                       |
-| `resource`          | `string`   |    ❌    | —                   | Enum of 21 canonical resources (`users`, `accesses`, `assets`, `notifications`, `feedbacks`, `analytics`, `speech`, `ai_profiles`, `ai_runs`, `chat_rooms`, `chat_messages`, `client_logs`, `client_versions`, `client_user_versions`, `iam_roles`, `iam_permissions`, `iam_user_roles`, `payment_products`, `payment_payments`, `payment_subscriptions`, `payment_transactions`) |
+| `resource`          | `string`   |    ❌    | —                   | Enum of 23 canonical resources (`users`, `accesses`, `assets`, `notifications`, `feedbacks`, `analytics`, `speech`, `ai_profiles`, `ai_runs`, `chat_rooms`, `chat_messages`, `client_logs`, `client_versions`, `client_user_versions`, `iam_roles`, `iam_permissions`, `iam_user_roles`, `payment_products`, `payment_payments`, `payment_subscriptions`, `payment_transactions`, `payment_coupons`, `payment_user_coupons`) |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                               |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                              |
@@ -454,6 +458,83 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 ---
 
+### 4.5. `coupons`
+
+- **Model**: [`Payment::Coupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/coupon.rb)
+- **Description**: Promotional discount codes and user referral coupons that can be applied during checkout. Supports percentage or fixed-amount discounts, currency restrictions, global and per-user redemption limits, expiration dates, and multi-tenant targeting restrictions (`target_role_ids`, `target_user_ids`, `target_product_ids`).
+
+| Column                | Type        | Nullable | Default             | Description / Notes                                         |
+| :-------------------- | :---------- | :------: | :------------------ | :---------------------------------------------------------- |
+| `id`                  | `uuid`      |    ❌    | `gen_random_uuid()` | Primary Key                                                 |
+| `title`               | `string`    |    ❌    | —                   | Marketing title / description of the promotion              |
+| `description`         | `text`      |    ✔️    | `NULL`              | Detailed promo terms or campaign notes                      |
+| `code`                | `string`    |    ❌    | —                   | Uppercase unique promo code (e.g. `SAVE20`, `REF-ALICE`)     |
+| `coupon_type`         | `integer`   |    ❌    | `0`                 | Enum: `0: percentage` (1-100%), `1: fixed` (minor units)    |
+| `amount`              | `integer`   |    ❌    | —                   | Discount magnitude: percentage (1-100) or fixed minor units |
+| `currency`            | `string`    |    ✔️    | `NULL`              | Minor units currency (e.g. `usd`). Nullable for percentage  |
+| `max_usage`           | `integer`   |    ❌    | `0`                 | Total allowable redemptions across all users (0 = unlimited)|
+| `max_usage_per_user`  | `integer`   |    ❌    | `1`                 | Maximum redemptions per individual user                     |
+| `used_count`          | `integer`   |    ❌    | `0`                 | Atomic redemption counter (reconciled by weekly DataSync)   |
+| `expires_at`          | `datetime`  |    ✔️    | `NULL`              | UTC expiration timestamp (NULL = never expires)             |
+| `referrer_id`         | `uuid`      |    ✔️    | `NULL`              | FK to `users.id` (user whose referral code this is)         |
+| `target_role_ids`     | `uuid[]`    |    ❌    | `[]`                | Array of `iam_roles.id` that are eligible                   |
+| `target_user_ids`     | `uuid[]`    |    ❌    | `[]`                | Array of `users.id` that are eligible                       |
+| `target_product_ids`  | `uuid[]`    |    ❌    | `[]`                | Array of `payment_products.id` that are eligible            |
+| `created_by_id`       | `uuid`      |    ✔️    | `NULL`              | Auditing: Creator                                           |
+| `updated_by_id`       | `uuid`      |    ✔️    | `NULL`              | Auditing: Modifier                                          |
+| `discarded_by_id`     | `uuid`      |    ✔️    | `NULL`              | Auditing: Discarder                                         |
+| `undiscarded_by_id`   | `uuid`      |    ✔️    | `NULL`              | Auditing: Restorer                                          |
+| `discarded_at`        | `datetime`  |    ✔️    | `NULL`              | Soft delete timestamp                                       |
+| `undiscarded_at`      | `datetime`  |    ✔️    | `NULL`              | Soft delete restoration timestamp                           |
+| `created_at`          | `datetime`  |    ❌    | —                   | Timestamp                                                   |
+| `updated_at`          | `datetime`  |    ❌    | —                   | Timestamp                                                   |
+
+**Indexes & Foreign Keys**:
+
+- `index_coupons_on_code` (UNIQUE: `code`)
+- `index_coupons_on_referrer_id` (`referrer_id`)
+- `index_coupons_on_expires_at` (`expires_at`)
+- `index_coupons_on_coupon_type` (`coupon_type`)
+- `index_coupons_on_discarded_at` (`discarded_at`)
+- FK to `users(id)` via `referrer_id`.
+
+---
+
+### 4.6. `user_coupons`
+
+- **Model**: [`Payment::UserCoupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/user_coupon.rb)
+- **Description**: Immutable audit ledger recording each coupon redemption associated with a purchase transaction or subscription.
+
+| Column             | Type       | Nullable | Default             | Description / Notes                                        |
+| :----------------- | :--------- | :------: | :------------------ | :--------------------------------------------------------- |
+| `id`               | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                |
+| `coupon_id`        | `uuid`     |    ❌    | —                   | FK to `coupons.id`                                         |
+| `user_id`          | `uuid`     |    ❌    | —                   | FK to `users.id`                                           |
+| `product_id`       | `uuid`     |    ❌    | —                   | FK to `payment_products.id`                                |
+| `purchase_id`      | `uuid`     |    ❌    | —                   | FK to `payment_transactions.id` or `payment_subscriptions.id`|
+| `purchase_type`    | `integer`  |    ❌    | `0`                 | Enum: `0: trx`, `1: sbs`                                   |
+| `discount_amount`  | `integer`  |    ❌    | `0`                 | Actual discount deducted in minor currency units           |
+| `original_amount`  | `integer`  |    ❌    | `0`                 | Product original price before discount                     |
+| `final_amount`     | `integer`  |    ❌    | `0`                 | Net amount billed after coupon discount                    |
+| `currency`         | `string`   |    ❌    | `"usd"`             | Currency identifier (e.g. `usd`, `mmk`, `sgd`)             |
+| `created_by_id`    | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                          |
+| `updated_by_id`    | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                         |
+| `discarded_by_id`  | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                        |
+| `undiscarded_by_id`| `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                         |
+| `discarded_at`     | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                      |
+| `undiscarded_at`   | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                          |
+| `created_at`       | `datetime` |    ❌    | —                   | Timestamp                                                  |
+| `updated_at`       | `datetime` |    ❌    | —                   | Timestamp                                                  |
+
+**Indexes & Foreign Keys**:
+
+- `index_user_coupons_on_purchase_id_and_purchase_type` (`purchase_id`, `purchase_type`)
+- `index_user_coupons_on_coupon_id_and_user_id` (`coupon_id`, `user_id`)
+- `index_user_coupons_on_discarded_at` (`discarded_at`)
+- FKs to `coupons(id)`, `users(id)`, and `payment_products(id)`.
+
+---
+
 ## 5. Product Access & Entitlements
 
 ### 5.1. `accesses`
@@ -654,7 +735,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | :------------------ | :--------- | :------: | :------------------ | :---------------------------------------------------------------------------------------------- |
 | `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                                     |
 | `name`              | `string`   |    ❌    | —                   | File original name / identifier                                                                 |
-| `display_name`      | `string`   |    ✔️    | `NULL`              | Human-friendly display name (defaults to name / original filename upon creation)                |
+| `title`             | `string`   |    ✔️    | `NULL`              | Human-friendly display title (defaults to name / original filename upon creation)               |
 | `description`       | `text`     |    ✔️    | `NULL`              | Optional asset description or caption                                                           |
 | `url`               | `string`   |    ❌    | —                   | Accessible CDN or storage URL                                                                   |
 | `storage_key`       | `string`   |    ✔️    | `NULL`              | Cloud bucket path (e.g. `user/{user_id}/avatar_profile_12345.png`)                              |
@@ -684,7 +765,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - `index_assets_on_assetable_type_and_assetable_id` (`assetable_type`, `assetable_id`)
 - `index_assets_on_parent_asset_id` (`parent_asset_id`)
 - `index_assets_on_name` (`name`)
-- `index_assets_on_display_name` (`display_name`)
+- `index_assets_on_title` (`title`)
 - `index_assets_on_status` (`status`)
 - `index_assets_on_type` (`type`)
 - `index_assets_on_discarded_at` (`discarded_at`)
@@ -970,6 +1051,8 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `payment_subscriptions`  | [`Payment::Subscription`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/subscription.rb)  | Billing        |      ✔️       |   ✔️    | —                                    |
 | `payment_transactions`   | [`Payment::Transaction`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/transaction.rb)    | Billing        |      ✔️       |   ✔️    | —                                    |
 | `payment_webhook_events` | [`Payment::WebhookEvent`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/webhook_event.rb) | Billing        |      ✔️       |   ✔️    | —                                    |
+| `coupons`                | [`Payment::Coupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/coupon.rb)              | Billing        |      ✔️       |   ✔️    | —                                    |
+| `user_coupons`           | [`Payment::UserCoupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/user_coupon.rb)      | Billing        |      ✔️       |   ✔️    | —                                    |
 | `accesses`               | [`Access`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/access.rb)                               | Access Control |      ✔️       |   ✔️    | —                                    |
 | `chat_rooms`             | [`Chat::Room`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/room.rb)                        | AI / Chat      |      ✔️       |   ✔️    | —                                    |
 | `chat_messages`          | [`Chat::Message`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/message.rb)                  | AI / Chat      |      ✔️       |   ✔️    | `assets` (`assetable`)               |

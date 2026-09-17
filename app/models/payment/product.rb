@@ -19,6 +19,11 @@ class Payment::Product < ApplicationRecord
           foreign_key: :product_id,
           dependent: :restrict_with_exception
 
+  has_many :user_coupons,
+          class_name: "Payment::UserCoupon",
+          foreign_key: :product_id,
+          dependent: :restrict_with_exception
+
   has_many :assets, as: :assetable, dependent: :nullify
 
   # ===== ENUMS =====
@@ -28,7 +33,11 @@ class Payment::Product < ApplicationRecord
     month: PaymentConstants::BillingInterval::MONTH,
     year: PaymentConstants::BillingInterval::YEAR
   }, prefix: true
-  enum :currency, { usd: "usd" }, prefix: true
+  enum :currency, {
+    usd: PaymentConstants::Currency::USD,
+    mmk: PaymentConstants::Currency::MMK,
+    sgd: PaymentConstants::Currency::SGD
+  }, prefix: true
 
   # ===== READONLY & IMMUTABLE ATTRIBUTES =====
   attr_readonly :code
@@ -56,6 +65,10 @@ class Payment::Product < ApplicationRecord
   # ===== INSTANCE METHODS =====
   def recurring?
     interval.present?
+  end
+
+  def one_time?
+    !recurring?
   end
 
   def free?

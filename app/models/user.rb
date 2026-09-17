@@ -6,6 +6,8 @@ class User < ApplicationRecord
   has_many :subscriptions, class_name: "Payment::Subscription", dependent: :destroy
   has_many :transactions, class_name: "Payment::Transaction", dependent: :destroy
   has_many :accesses, dependent: :destroy
+  has_many :user_coupons, class_name: "Payment::UserCoupon", dependent: :nullify
+  has_many :referred_coupons, class_name: "Payment::Coupon", foreign_key: :referrer_id, dependent: :destroy
   has_many :rooms, class_name: "Chat::Room", dependent: :destroy
   has_many :messages, through: :rooms, class_name: "Chat::Message"
   has_many :user_roles, class_name: "Iam::UserRole", dependent: :destroy
@@ -24,6 +26,7 @@ class User < ApplicationRecord
 
   before_create :generate_confirmation_code
   after_create :assign_default_user_role, if: -> { roles.empty? }
+  after_create :create_default_referral_coupon
 
   self.primary_key = "id"
 
@@ -149,5 +152,32 @@ class User < ApplicationRecord
     if default_role
       Iam::UserRole.find_or_create_by!(user: self, role: default_role)
     end
+  end
+
+  def create_default_referral_coupon
+    clean_username = username.to_s.upcase.gsub(/[^A-Z0-9]/, "")
+    base_code = "REF#{clean_username}"
+    base_code = base_code.ljust(6, "0") if base_code.length < 6
+    candidate_code = base_code
+    counter = 1
+    while Payment::Coupon.exists?(code: candidate_code)
+      candidate_code = "#{base_code}#{counter}"
+      counter += 1
+    end
+
+    Payment::Coupon.create!(
+      title: "#{name}'s Referral Code",
+      description: "Personal referral coupon for #{name}",
+      code: candidate_code,
+      coupon_type: :percentage,
+      amount: 10,
+      currency: nil,
+      max_usage: 0,
+      max_usage_per_user: 1,
+      referrer_id: id,
+      active: true
+    )
+  rescue => e
+    Rails.logger.warn("[User] Referral coupon creation skipped: #{e.message}")
   end
 end

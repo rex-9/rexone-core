@@ -22,16 +22,20 @@ module SortableHelper
         scope.left_joins(:product).order(
           Payment::Product.arel_table[:name].public_send(direction)
         )
+      when "coupon_code"
+        scope.left_joins(:coupon).order(
+          Payment::Coupon.arel_table[:code].public_send(direction)
+        )
       when "message_count"
         scope.left_joins(:messages)
              .group(scope.klass.arel_table[:id])
              .order(Chat::Message.arel_table[:id].count.public_send(direction))
       else
-        scope.order(sort_by.to_sym => direction)
+        scope.order(scope.klass.arel_table[sort_by.to_sym].public_send(direction))
       end
     else
       fallback_dir = default_direction.to_s == SortConstants::Order::ASC ? :asc : :desc
-      scope.order(default_column.to_sym => fallback_dir)
+      scope.order(scope.klass.arel_table[default_column.to_sym].public_send(fallback_dir))
     end
   end
 end

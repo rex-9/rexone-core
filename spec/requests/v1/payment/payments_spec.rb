@@ -75,6 +75,89 @@ RSpec.describe "V1 Payments API", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "creates a checkout session with valid coupon" do
+      coupon = create(:payment_coupon, coupon_type: :percentage, amount: 20, code: "SAVE20")
+      allow(PaymentService::Client).to receive(:create_checkout_session)
+        .with(
+          user_id: user.id,
+          product_id: product.id,
+          success_url: "https://example.com/success",
+          cancel_url: "https://example.com/cancel",
+          coupon: coupon
+        )
+        .and_return(checkout_url: "https://stripe.com/pay", session_id: "cs_test_coupon")
+
+      post "/v1/payment/session",
+           params: {
+             product_id: product.id,
+             success_url: "https://example.com/success",
+             cancel_url: "https://example.com/cancel",
+             coupon_code: "SAVE20"
+           },
+           headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["session_id"]).to eq("cs_test_coupon")
+    end
+
+    it "grants access directly when coupon provides 100% discount" do
+      free_coupon = create(:payment_coupon, coupon_type: :percentage, amount: 100, code: "FREE100")
+      expect(PaymentService::Client).not_to receive(:create_checkout_session)
+
+      post "/v1/payment/session",
+           params: {
+             product_id: product.id,
+             coupon_code: "free100"
+           },
+           headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data).to include(
+        "free_access_granted" => true,
+        "product_id" => product.id,
+        "coupon_code" => "FREE100"
+      )
+      expect(AccessService.has_access?(user_id: user.id, product_id: product.id)).to be(true)
+      expect(Payment::UserCoupon.where(coupon: free_coupon, user: user, product: product)).to exist
+    end
+
+    it "routes to Stripe Checkout when 100% discount coupon is applied to recurring product" do
+      recurring_product = create(:payment_product, interval: :month)
+      free_coupon = create(:payment_coupon, coupon_type: :percentage, amount: 100, code: "FREE100")
+
+      allow(PaymentService::Client).to receive(:create_checkout_session)
+        .with(
+          user_id: user.id,
+          product_id: recurring_product.id,
+          success_url: nil,
+          cancel_url: nil,
+          coupon: free_coupon
+        )
+        .and_return(checkout_url: "https://stripe.com/pay_sub", session_id: "cs_test_sub_100")
+
+      post "/v1/payment/session",
+           params: {
+             product_id: recurring_product.id,
+             coupon_code: "free100"
+           },
+           headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data["session_id"]).to eq("cs_test_sub_100")
+      expect(response_data["checkout_url"]).to eq("https://stripe.com/pay_sub")
+    end
+
+    it "rejects checkout when coupon code is invalid" do
+      post "/v1/payment/session",
+           params: {
+             product_id: product.id,
+             coupon_code: "NONEXISTENT"
+           },
+           headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
   end
 
   describe "GET /v1/payment/session/:session_id" do

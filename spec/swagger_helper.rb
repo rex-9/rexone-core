@@ -51,6 +51,8 @@ RSpec.configure do |config|
         { name: 'Admin / Chat Rooms', description: 'Admin chat room operations.' },
         { name: 'Admin / Chat Messages', description: 'Admin chat message operations.' },
         { name: 'Admin / Payment Products', description: 'Admin payment product operations.' },
+        { name: 'Admin / Coupons', description: 'Admin coupon creation, batch generation, redemption auditing, and lifecycle operations.' },
+        { name: 'Admin / User Coupons', description: 'Admin coupon redemption auditing and usage inspection.' },
         { name: 'Admin / Feedbacks', description: 'Admin feedback review and triage.' },
         { name: 'Admin / Analytics', description: 'Admin analytics overview metrics and KPIs.' },
         { name: 'Admin / Assets', description: 'Admin asset management, upload, and media compression.' },
