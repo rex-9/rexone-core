@@ -52,7 +52,7 @@ RSpec.describe "Asset uploads", type: :request do
     )
   end
 
-  it "persists display_name and description on upload, defaulting display_name to original_filename" do
+  it "persists title and description on upload, defaulting title to original_filename" do
     allow(StorageService::Client).to receive(:upload).and_return(
       storage_key: "profile/avatar_custom",
       url: "https://cdn.example.com/avatar_custom.png",
@@ -61,14 +61,14 @@ RSpec.describe "Asset uploads", type: :request do
       resource_type: "image"
     )
 
-    post "/v1/assets/upload", params: { file: file, display_name: "My Avatar", description: "Profile photo description" }, headers: headers
+    post "/v1/assets/upload", params: { file: file, title: "My Avatar", description: "Profile photo description" }, headers: headers
 
     expect(response).to have_http_status(:created)
     expect(Asset.last).to have_attributes(
-      display_name: "My Avatar",
+      title: "My Avatar",
       description: "Profile photo description"
     )
-    expect(response_data.dig("asset", "display_name")).to eq("My Avatar")
+    expect(response_data.dig("asset", "title")).to eq("My Avatar")
     expect(response_data.dig("asset", "description")).to eq("Profile photo description")
   end
 
@@ -294,16 +294,16 @@ RSpec.describe "Asset uploads", type: :request do
   end
 
   describe "PUT /v1/assets/:id" do
-    it "updates display_name and description" do
+    it "updates title and description" do
       grant_asset_update_permission(user)
-      asset = create(:asset, creator: user, name: "old_name.png", display_name: "old_name.png")
+      asset = create(:asset, creator: user, name: "old_name.png", title: "old_name.png")
 
-      put "/v1/assets/#{asset.id}", params: { asset: { display_name: "Custom Display Name", description: "Updated description text" } }, headers: headers
+      put "/v1/assets/#{asset.id}", params: { asset: { title: "Custom Display Name", description: "Updated description text" } }, headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(asset.reload.display_name).to eq("Custom Display Name")
+      expect(asset.reload.title).to eq("Custom Display Name")
       expect(asset.description).to eq("Updated description text")
-      expect(response_data.dig("asset", "display_name")).to eq("Custom Display Name")
+      expect(response_data.dig("asset", "title")).to eq("Custom Display Name")
       expect(response_data.dig("asset", "description")).to eq("Updated description text")
     end
   end
