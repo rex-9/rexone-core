@@ -654,7 +654,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | :------------------ | :--------- | :------: | :------------------ | :---------------------------------------------------------------------------------------------- |
 | `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                                     |
 | `name`              | `string`   |    ❌    | —                   | File original name / identifier                                                                 |
-| `display_name`      | `string`   |    ✔️    | `NULL`              | Human-friendly display name (defaults to name / original filename upon creation)                |
+| `title`             | `string`   |    ✔️    | `NULL`              | Human-friendly title (defaults to name / original filename upon creation)                       |
 | `description`       | `text`     |    ✔️    | `NULL`              | Optional asset description or caption                                                           |
 | `url`               | `string`   |    ❌    | —                   | Accessible CDN or storage URL                                                                   |
 | `storage_key`       | `string`   |    ✔️    | `NULL`              | Cloud bucket path (e.g. `user/{user_id}/avatar_profile_12345.png`)                              |
@@ -684,7 +684,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - `index_assets_on_assetable_type_and_assetable_id` (`assetable_type`, `assetable_id`)
 - `index_assets_on_parent_asset_id` (`parent_asset_id`)
 - `index_assets_on_name` (`name`)
-- `index_assets_on_display_name` (`display_name`)
+- `index_assets_on_title` (`title`)
 - `index_assets_on_status` (`status`)
 - `index_assets_on_type` (`type`)
 - `index_assets_on_discarded_at` (`discarded_at`)

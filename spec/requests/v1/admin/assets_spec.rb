@@ -66,9 +66,9 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(response_data.first.dig("attributes", "id")).to eq(needle.id)
     end
 
-    it "searches assets by display_name" do
-      needle = create(:asset, name: "asset_key_123", display_name: "Special Meditation Guide", storage_key: "keys/guide")
-      create(:asset, name: "asset_key_456", display_name: "Routine File", storage_key: "keys/routine")
+    it "searches assets by title" do
+      needle = create(:asset, name: "asset_key_123", title: "Special Meditation Guide", storage_key: "keys/guide")
+      create(:asset, name: "asset_key_456", title: "Routine File", storage_key: "keys/routine")
 
       get "/v1/admin/assets", params: { search: "Meditation" }, headers: headers
 
@@ -153,17 +153,17 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       )
     end
 
-    it "persists display_name and description on upload" do
+    it "persists title and description on upload" do
       post "/v1/admin/assets/upload",
-           params: { file: image_file, type: "thumbnail", display_name: "Admin Uploaded Avatar", description: "Admin photo" },
+           params: { file: image_file, type: "thumbnail", title: "Admin Uploaded Avatar", description: "Admin photo" },
            headers: headers
 
       expect(response).to have_http_status(:created)
       expect(Asset.last).to have_attributes(
-        display_name: "Admin Uploaded Avatar",
+        title: "Admin Uploaded Avatar",
         description: "Admin photo"
       )
-      expect(response_data.dig("asset", "display_name")).to eq("Admin Uploaded Avatar")
+      expect(response_data.dig("asset", "title")).to eq("Admin Uploaded Avatar")
       expect(response_data.dig("asset", "description")).to eq("Admin photo")
     end
 
@@ -729,17 +729,17 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(asset.reload.name).to eq("Updated Name")
     end
 
-    it "updates display_name and description" do
-      asset = create(:asset, name: "admin/test.png", display_name: "Old Display", description: "Old description")
+    it "updates title and description" do
+      asset = create(:asset, name: "admin/test.png", title: "Old Display", description: "Old description")
 
       patch "/v1/admin/assets/#{asset.id}",
-            params: { asset: { display_name: "New Display Name", description: "New description" } },
+            params: { asset: { title: "New Display Name", description: "New description" } },
             headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(asset.reload.display_name).to eq("New Display Name")
+      expect(asset.reload.title).to eq("New Display Name")
       expect(asset.description).to eq("New description")
-      expect(response_data.dig("asset", "display_name")).to eq("New Display Name")
+      expect(response_data.dig("asset", "title")).to eq("New Display Name")
       expect(response_data.dig("asset", "description")).to eq("New description")
     end
 

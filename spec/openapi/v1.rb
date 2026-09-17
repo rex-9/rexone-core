@@ -363,7 +363,7 @@ module Openapi
         required: [ :asset ],
         asset: object(
           name: { type: :string, nullable: true },
-          display_name: { type: :string, nullable: true },
+          title: { type: :string, nullable: true },
           description: { type: :string, nullable: true },
           storage_key: { type: :string, nullable: true },
           type: { type: :string, nullable: true },
@@ -381,7 +381,7 @@ module Openapi
         required: [ :asset ],
         asset: object(
           name: { type: :string, nullable: true },
-          display_name: { type: :string, nullable: true },
+          title: { type: :string, nullable: true },
           description: { type: :string, nullable: true },
           storage_key: { type: :string, nullable: true },
           type: { type: :string, nullable: true },
@@ -504,7 +504,7 @@ module Openapi
       asset_upload_request: object(
         required: [ :file ],
         file: { type: :string, format: :binary },
-        display_name: { type: :string, description: "Human-friendly display name (defaults to original filename)." },
+        title: { type: :string, description: "Human-friendly title (defaults to original filename)." },
         description: { type: :string, description: "Optional description or notes for the asset." },
         type: {
           type: :string,
@@ -968,7 +968,7 @@ module Openapi
         required: %i[id name url type source status],
         id: UUID,
         name: { type: :string },
-        display_name: { type: :string, nullable: true },
+        title: { type: :string, nullable: true },
         description: { type: :string, nullable: true },
         url: { type: :string, format: :uri },
         type: { type: :string, enum: AssetConstants::AssetType::ALL },
@@ -991,7 +991,7 @@ module Openapi
               properties: {
                 id: UUID,
                 name: { type: :string },
-                display_name: { type: :string, nullable: true },
+                title: { type: :string, nullable: true },
                 description: { type: :string, nullable: true },
                 metadata: { type: :object, description: "Arbitrary JSONB metadata" },
                 url: { type: :string, format: :uri },
@@ -1013,7 +1013,7 @@ module Openapi
                 properties: {
                   id: UUID,
                   name: { type: :string },
-                  display_name: { type: :string, nullable: true },
+                  title: { type: :string, nullable: true },
                   description: { type: :string, nullable: true },
                   metadata: { type: :object, description: "Arbitrary JSONB metadata" },
                   url: { type: :string, format: :uri },
