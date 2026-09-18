@@ -36,6 +36,7 @@ BRAND_SLUG_RAW=$(read_json "c.dig('brand', 'slug')")
 BRAND_SHORT_NAME=$(read_json "c.dig('brand', 'shortName') || c.dig('brand', 'name')")
 BRAND_DESC=$(read_json "c.dig('brand', 'description')")
 BRAND_LOGO=$(read_json "c.dig('brand', 'logoPath')")
+BRAND_DOMAIN=$(read_json "c.dig('brand', 'domain')")
 
 SLUG_SOURCE="${BRAND_SLUG_RAW:-$BRAND_NAME}"
 
@@ -53,6 +54,10 @@ BRAND_SLUG_FLAT=$(ruby -e "puts '$SLUG_SOURCE'.downcase.gsub(/[^a-z0-9]/, '')" 2
   echo "$SLUG_SOURCE" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]')
 
 BRAND_PASCAL=$(ruby -e "puts '$SLUG_SOURCE'.split(/[^a-zA-Z0-9]+/).map(&:capitalize).join" 2>/dev/null || echo "$BRAND_NAME")
+
+if [ -z "$BRAND_DOMAIN" ]; then
+  BRAND_DOMAIN="${BRAND_SLUG_FLAT}.com"
+fi
 
 MOBILE_APP_NAME=$(read_json "c.dig('mobile', 'appName') || \"${BRAND_NAME} Mobile\"")
 MOBILE_PACKAGE=$(read_json "c.dig('mobile', 'packageName') || \"com.rex9.${BRAND_SLUG_FLAT}\"")
@@ -73,6 +78,7 @@ fi
 
 echo "🎯 Target Brand Configuration:"
 echo "   - Title / Display Name:  $BRAND_NAME"
+echo "   - Canonical Domain:      $BRAND_DOMAIN"
 echo "   - Kebab Slug (Docker):   $BRAND_SLUG_KEBAB"
 echo "   - Snake Slug (Database): $BRAND_SLUG_SNAKE"
 echo "   - Flat Slug (Package):   $BRAND_SLUG_FLAT"
@@ -117,6 +123,7 @@ echo "⚙️  Rebranding Core Backend & Infrastructure..."
 for env_file in "$CORE_DIR"/.env*; do
   if [ -f "$env_file" ]; then
     update_env_var "$env_file" "APP_NAME" "\"$CORE_APP_NAME\""
+    update_env_var "$env_file" "PRODUCT_DOMAIN" "$BRAND_DOMAIN"
     update_env_var "$env_file" "RAILS_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-api"
     update_env_var "$env_file" "WAKA_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-waka"
     update_env_var "$env_file" "DB_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-db"
@@ -126,8 +133,8 @@ for env_file in "$CORE_DIR"/.env*; do
     update_env_var "$env_file" "S3_BUCKET" "${BRAND_SLUG_KEBAB}"
     update_env_var "$env_file" "S3_ADMIN_TOKEN" "${BRAND_SLUG_SNAKE}_garage_admin_token_secret_key_12345"
     update_env_var "$env_file" "RAILS_JWT_SECRET_KEY" "${BRAND_SLUG_SNAKE}"
-    update_env_var "$env_file" "FROM_EMAIL" "support@${BRAND_SLUG_FLAT}.me"
-    update_env_var "$env_file" "SMTP_DOMAIN" "${BRAND_SLUG_FLAT}.me"
+    update_env_var "$env_file" "FROM_EMAIL" "support@${BRAND_DOMAIN}"
+    update_env_var "$env_file" "SMTP_DOMAIN" "${BRAND_DOMAIN}"
     echo "  ✅ Core: Updated env variables in $(basename "$env_file")"
   fi
 done
@@ -165,29 +172,29 @@ if [ -d "$WEB_DIR" ]; then
   if [ -f "$WEB_DIR/index.html" ]; then
     sedi -E "s|<title>.*</title>|<title>$WEB_TITLE</title>|g" "$WEB_DIR/index.html"
     sedi -E "s|<meta name=\"title\" content=\"[^\"]*\"|<meta name=\"title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|<link rel=\"canonical\" href=\"[^\"]*\"|<link rel=\"canonical\" href=\"https://${BRAND_SLUG_FLAT}.me/\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<link rel=\"canonical\" href=\"[^\"]*\"|<link rel=\"canonical\" href=\"https://${BRAND_DOMAIN}/\"|g" "$WEB_DIR/index.html"
     sedi -E "s|<meta property=\"og:site_name\" content=\"[^\"]*\"|<meta property=\"og:site_name\" content=\"${BRAND_NAME} Ecosystem\"|g" "$WEB_DIR/index.html"
     sedi -E "s|<meta property=\"og:title\" content=\"[^\"]*\"|<meta property=\"og:title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|<meta property=\"og:url\" content=\"[^\"]*\"|<meta property=\"og:url\" content=\"https://${BRAND_SLUG_FLAT}.me/\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<meta property=\"og:url\" content=\"[^\"]*\"|<meta property=\"og:url\" content=\"https://${BRAND_DOMAIN}/\"|g" "$WEB_DIR/index.html"
     sedi -E "s|<meta name=\"twitter:title\" content=\"[^\"]*\"|<meta name=\"twitter:title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|<meta name=\"twitter:url\" content=\"[^\"]*\"|<meta name=\"twitter:url\" content=\"https://${BRAND_SLUG_FLAT}.me/\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<meta name=\"twitter:url\" content=\"[^\"]*\"|<meta name=\"twitter:url\" content=\"https://${BRAND_DOMAIN}/\"|g" "$WEB_DIR/index.html"
     if [ -n "$BRAND_DESC" ]; then
       sedi -E "s|<meta name=\"description\" content=\"[^\"]*\"|<meta name=\"description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
       sedi -E "s|<meta property=\"og:description\" content=\"[^\"]*\"|<meta property=\"og:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
       sedi -E "s|<meta name=\"twitter:description\" content=\"[^\"]*\"|<meta name=\"twitter:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
     fi
     sedi -E "s|\"name\": \"[^\"]*\"|\"name\": \"$BRAND_NAME\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|\"url\": \"https://[^\"]*\"|\"url\": \"https://${BRAND_SLUG_FLAT}.me\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|\"url\": \"https://[^\"]*\"|\"url\": \"https://${BRAND_DOMAIN}\"|g" "$WEB_DIR/index.html"
     echo "  ✅ Web: Updated index.html (Metadata, OpenGraph, Canonical & Schema.org)"
   fi
 
   # Update sitemap.xml and robots.txt
   if [ -f "$WEB_DIR/public/sitemap.xml" ]; then
-    sedi -E "s|https://[^/]+/|https://${BRAND_SLUG_FLAT}.me/|g" "$WEB_DIR/public/sitemap.xml"
-    echo "  ✅ Web: Updated public/sitemap.xml (https://${BRAND_SLUG_FLAT}.me)"
+    sedi -E "s|https://[^/]+/|https://${BRAND_DOMAIN}/|g" "$WEB_DIR/public/sitemap.xml"
+    echo "  ✅ Web: Updated public/sitemap.xml (https://${BRAND_DOMAIN})"
   fi
   if [ -f "$WEB_DIR/public/robots.txt" ]; then
-    sedi -E "s|Sitemap: https://[^/]+/sitemap.xml|Sitemap: https://${BRAND_SLUG_FLAT}.me/sitemap.xml|g" "$WEB_DIR/public/robots.txt"
+    sedi -E "s|Sitemap: https://[^/]+/sitemap.xml|Sitemap: https://${BRAND_DOMAIN}/sitemap.xml|g" "$WEB_DIR/public/robots.txt"
     echo "  ✅ Web: Updated public/robots.txt (Sitemap)"
   fi
 
@@ -222,10 +229,10 @@ if [ -d "$WEB_DIR" ]; then
   if [ -f "$WEB_DIR/docker-compose.yaml" ]; then
     sedi -E "s|container_name: \\\$\{WEB_CONTAINER_NAME:-[^}]*\}|container_name: \${WEB_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-web}|g" "$WEB_DIR/docker-compose.yaml"
     sedi -E "s|name: \\\$\{DOCKER_NETWORK:-[^}]*\}|name: \${DOCKER_NETWORK:-prod-${BRAND_SLUG_KEBAB}-net}|g" "$WEB_DIR/docker-compose.yaml"
-    sedi -E "s|VITE_REACT_APP_NAME: \\\$\{VITE_REACT_APP_NAME:-[^}]*\}|VITE_REACT_APP_NAME: \${VITE_REACT_APP_NAME:-${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
-    sedi -E "s|VITE_REACT_APP_SERVER_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_BASE_URL: \${VITE_REACT_APP_SERVER_BASE_URL:-https://api.${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
-    sedi -E "s|VITE_REACT_APP_CLIENT_BASE_URL: \\\$\{VITE_REACT_APP_CLIENT_BASE_URL:-[^}]*\}|VITE_REACT_APP_CLIENT_BASE_URL: \${VITE_REACT_APP_CLIENT_BASE_URL:-https://${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
-    sedi -E "s|VITE_REACT_APP_SERVER_WS_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_WS_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_WS_BASE_URL: \${VITE_REACT_APP_SERVER_WS_BASE_URL:-wss://api.${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_NAME: \\\$\{VITE_REACT_APP_NAME:-[^}]*\}|VITE_REACT_APP_NAME: \${VITE_REACT_APP_NAME:-${BRAND_DOMAIN}}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_SERVER_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_BASE_URL: \${VITE_REACT_APP_SERVER_BASE_URL:-https://api.${BRAND_DOMAIN}}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_CLIENT_BASE_URL: \\\$\{VITE_REACT_APP_CLIENT_BASE_URL:-[^}]*\}|VITE_REACT_APP_CLIENT_BASE_URL: \${VITE_REACT_APP_CLIENT_BASE_URL:-https://${BRAND_DOMAIN}}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_SERVER_WS_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_WS_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_WS_BASE_URL: \${VITE_REACT_APP_SERVER_WS_BASE_URL:-wss://api.${BRAND_DOMAIN}}|g" "$WEB_DIR/docker-compose.yaml"
     echo "  ✅ Web: Synchronized docker-compose.yaml with prod-${BRAND_SLUG_KEBAB}-web"
   fi
 

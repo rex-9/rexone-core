@@ -123,22 +123,22 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 ## Feature map
 
-| Foundation     | What is ready                                                                                                        | Details                                                                               |
-| -------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                               | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
-| Authorization  | Roles, permissions, user-role and role-permission assignments                                                        | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
+| Foundation     | What is ready                                                                                                                   | Details                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                                          | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
+| Authorization  | Roles, permissions, user-role and role-permission assignments                                                                   | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
 | Commerce       | Stripe Checkout, products, transactions, subscriptions, coupons & referrals (with rate-limiting cooldown ladder), access grants | [Payments & entitlements](docs/FOUNDATION.md#payments-and-entitlements)               |
-| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                      | [Background processing](#background-processing)                                       |
-| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo                                      | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
-| Media          | Provider-neutral storage, media optimization, SVG conversion, thumbnails, SRT subtitles, and progressive playback    | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
-| Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                          | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| AI             | Durable queued chat, Telegram-style multi-message chunking, persisted history, completion alerts, and language tools | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| Localization   | Request-scoped English and Myanmar responses with modular domain translations                                        | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                       | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                                | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
-| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications, app versions    | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
-| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                    | [Deployment](#deployment)                                                             |
-| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                    | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
+| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                                 | [Background processing](#background-processing)                                       |
+| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo                                                 | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
+| Media          | Provider-neutral storage, media optimization, SVG conversion, thumbnails, SRT subtitles, and progressive playback               | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
+| Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                                     | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
+| AI             | Durable queued chat, Telegram-style multi-message chunking, persisted history, completion alerts, and language tools            | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
+| Localization   | Request-scoped English and Myanmar responses with modular domain translations                                                   | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
+| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                                  | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
+| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                                           | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
+| Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications, app versions               | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
+| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                               | [Deployment](#deployment)                                                             |
+| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                               | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
 
 ## Architecture
 
@@ -264,41 +264,55 @@ The complete [Ecosystem Quick Start](docs/QUICK_START.md) explains which service
 
 ### Useful development scripts
 
-| Script | Purpose | Flags / Options |
-| --- | --- | --- |
-| `./scripts/dev.sh` | Start all 5 Core containers (API, DB, Waka, Garage, Media) | None |
-| `./scripts/ci.sh` | Run complete CI suite (RSpec, contracts, RuboCop, locales) | `contracts` (run contract validation only) |
-| `./scripts/check_locales.sh` | Validate EN/MY locale parity and `MessageService` constants | `--unused` (audit unreferenced keys) |
-| `./scripts/console.sh` | Open interactive Rails console inside the API container | None |
-| `./scripts/enter_api.sh` | Enter running API container shell or execute custom commands | `[cmd...]` |
-| `./scripts/db_reset.sh` | Recreate database from schema and run seeds (development only) | `-y`, `--force` (bypass confirmation prompt) |
-| `./scripts/docker_clean.sh` | Stop containers and prune dev volumes (Postgres, Garage S3) | `-y`, `--force` (bypass confirmation prompt) |
-| `./scripts/rebrand.sh` | Master rebrand engine across Core, Web, and Mobile ecosystem | `<config.json>` |
+| Script                       | Purpose                                                                                          | Flags / Options                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| `./scripts/dev.sh`           | Start all 5 Core containers (API, DB, Waka, Garage, Media)                                       | None                                         |
+| `./scripts/ci.sh`            | Run complete CI suite (RSpec, contracts, RuboCop, locales)                                       | `contracts` (run contract validation only)   |
+| `./scripts/check_locales.sh` | Validate EN/MY locale parity and `MessageService` constants                                      | `--unused` (audit unreferenced keys)         |
+| `./scripts/console.sh`       | Open interactive Rails console inside the API container                                          | None                                         |
+| `./scripts/enter_api.sh`     | Enter running API container shell or execute custom commands                                     | `[cmd...]`                                   |
+| `./scripts/db_reset.sh`      | Recreate database from schema and run seeds (development only)                                   | `-y`, `--force` (bypass confirmation prompt) |
+| `./scripts/docker_clean.sh`  | Stop containers and prune dev volumes (Postgres, Garage S3)                                      | `-y`, `--force` (bypass confirmation prompt) |
+| `./scripts/rebrand.sh`       | Master rebrand engine across Core, Web, and Mobile ecosystem (supports custom domains & any TLD) | `<config.json>`                              |
 
 ## Configuration
 
 Configuration is part of the [Ecosystem Quick Start](docs/QUICK_START.md#configure-core). The checked-in [`.env.example`](.env.example) remains the authoritative catalog of available settings; keep real credentials in the deployment environment or an encrypted secret store.
 
+### Multi-Environment Domain Routing & Security
+
+RexOne standardizes multi-tier domain architectures with zero-trust local isolation:
+
+- **Demo Tier**: `rexone.rex9.me` (Web) & `api.rexone.rex9.me` (API)
+- **Product Tiers** (e.g., RexOne or any product with any custom TLD: `.com`, `.io`, `.ai`, `.app`, etc.):
+  - **Prod**: `<product>.<tld>` (e.g. `rexone.me`) & `api.<product>.<tld>` (e.g. `api.rexone.me`)
+  - **UAT**: `uat.<product>.<tld>` (e.g. `uat.rexone.me`) & `api.uat.<product>.<tld>` (e.g. `api.uat.rexone.me`)
+  - **Dev**: `dev.<product>.<tld>` (e.g. `dev.rexone.me`) & `api.dev.<product>.<tld>` (e.g. `api.dev.rexone.me`)
+- **Key Parameters**:
+  - `PRODUCT_DOMAIN`: Custom product root domain (e.g. `rexone.me`) whitelisted for CORS, Action Cable, and Host Authorization.
+  - `CORS_ORIGINS`: Optional comma-separated origins for partner portals or third-party integrations.
+  - `CORS_ALLOW_LOCALHOST`: Disabled (`false`) by default in production to prevent local cross-origin attacks; enabled only when explicitly opted in.
+
 ## API surface
 
 The API is broader than a starter CRUD demo. Its main route families are:
 
-| Area             | Representative routes                                                                                                                                               |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Authentication   | `/signup`, `/signin`, `/signin/google`, `/confirmation/*`, `/password/*`                                                                                            |
-| Users            | `/v1/users/*`                                                                                                                                                       |
-| IAM              | `/v1/iam/*`                                                                                                                                                         |
-| Admin API        | `/v1/admin/*`                                                                                                                                                       |
-| Payments         | `/v1/payment/*` (checkout session, coupon validation with progressive cooldown ladder), `/v1/admin/payment/coupons` (batch generation, redemptions with search & sort, recycle bin purge, hard delete, batch operations), `/v1/admin/payment/user_coupons` (global audit ledger with search & sort), `/webhooks/stripe`                       |
-| Entitlements     | `/v1/access/*`                                                                                                                                                      |
-| Media            | `/v1/assets/upload`, `/v1/assets`, `/v1/assets/:id/playback`                                                                                                        |
-| Notifications    | `/v1/admin/notifications`, `/v1/admin/user_notifications` (lifecycle CRUD: active, recycle bin, discard, undiscard, destroy, batch operations)                      |
-| Chat             | `/v1/chat/rooms`, `/v1/chat/messages`, `/v1/chat/messages/destroy_all` (RESTful CRUD + message purge)                                                               |
-| Admin Chat       | `/v1/admin/chat/rooms`, `/v1/admin/chat/messages` (moderation CRUD: discard, undiscard, destroy)                                                                    |
-| Admin AI         | `/v1/admin/ai/profiles` (index, show, create, update with provider & model filters), `/v1/admin/ai/runs` (execution audit log & diagnostics with sorting/filters)   |
-| Speech           | `/v1/speech/*`, `SpeechLiveChannel` (WS)                                                                                                                            |
-| Client telemetry | `/v1/client/logs`                                                                                                                                                   |
-| App versions     | `/v1/client/versions/current`, `/v1/client/versions/user-version`, `/v1/admin/client/versions`, `/v1/admin/client/versions/user_versions`, `/admin/client/versions` |
+| Area             | Representative routes                                                                                                                                                                                                                                                                                                   |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication   | `/signup`, `/signin`, `/signin/google`, `/confirmation/*`, `/password/*`                                                                                                                                                                                                                                                |
+| Users            | `/v1/users/*`                                                                                                                                                                                                                                                                                                           |
+| IAM              | `/v1/iam/*`                                                                                                                                                                                                                                                                                                             |
+| Admin API        | `/v1/admin/*`                                                                                                                                                                                                                                                                                                           |
+| Payments         | `/v1/payment/*` (checkout session, coupon validation with progressive cooldown ladder), `/v1/admin/payment/coupons` (batch generation, redemptions with search & sort, recycle bin purge, hard delete, batch operations), `/v1/admin/payment/user_coupons` (global audit ledger with search & sort), `/webhooks/stripe` |
+| Entitlements     | `/v1/access/*`                                                                                                                                                                                                                                                                                                          |
+| Media            | `/v1/assets/upload`, `/v1/assets`, `/v1/assets/:id/playback`                                                                                                                                                                                                                                                            |
+| Notifications    | `/v1/admin/notifications`, `/v1/admin/user_notifications` (lifecycle CRUD: active, recycle bin, discard, undiscard, destroy, batch operations)                                                                                                                                                                          |
+| Chat             | `/v1/chat/rooms`, `/v1/chat/messages`, `/v1/chat/messages/destroy_all` (RESTful CRUD + message purge)                                                                                                                                                                                                                   |
+| Admin Chat       | `/v1/admin/chat/rooms`, `/v1/admin/chat/messages` (moderation CRUD: discard, undiscard, destroy)                                                                                                                                                                                                                        |
+| Admin AI         | `/v1/admin/ai/profiles` (index, show, create, update with provider & model filters), `/v1/admin/ai/runs` (execution audit log & diagnostics with sorting/filters)                                                                                                                                                       |
+| Speech           | `/v1/speech/*`, `SpeechLiveChannel` (WS)                                                                                                                                                                                                                                                                                |
+| Client telemetry | `/v1/client/logs`                                                                                                                                                                                                                                                                                                       |
+| App versions     | `/v1/client/versions/current`, `/v1/client/versions/user-version`, `/v1/admin/client/versions`, `/v1/admin/client/versions/user_versions`, `/admin/client/versions`                                                                                                                                                     |
 
 Use `/api-docs` for the interactive OpenAPI view and [`config/routes.rb`](config/routes.rb) for the authoritative route map.
 

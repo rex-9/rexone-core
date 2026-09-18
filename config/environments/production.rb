@@ -35,13 +35,27 @@ Rails.application.configure do
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
   # config.action_cable.url = "wss://example.com/cable"
-  # Action Cable allowed origins in production
-  config.action_cable.allowed_request_origins = [
-    ENV["RAILS_CLIENT_BASE_URL"],
-    %r{\Ahttps?://([a-zA-Z0-9-]+\.)?rexone\.me\z},
-    %r{\Ahttp://localhost:\d+\z},
-    %r{\Ahttp://127\.0\.0\.1:\d+\z}
-  ].compact
+  # Action Cable allowed origins in production (Secure: NO localhost in production by default)
+  cable_origins = [
+    %r{\Ahttps?://([a-zA-Z0-9-]+\.)*rex9\.me(:\d+)?\z}
+  ]
+
+  if ENV["PRODUCT_DOMAIN"].present?
+    p_domain = ENV["PRODUCT_DOMAIN"].strip
+    cable_origins << %r{\Ahttps?://([a-zA-Z0-9-]+\.)*#{Regexp.escape(p_domain)}(:\d+)?\z}
+  end
+
+  cable_origins << ENV["RAILS_CLIENT_BASE_URL"].strip if ENV["RAILS_CLIENT_BASE_URL"].present?
+  if ENV["CORS_ORIGINS"].present?
+    cable_origins.concat(ENV["CORS_ORIGINS"].split(",").map(&:strip).reject(&:empty?))
+  end
+
+  if ENV["CORS_ALLOW_LOCALHOST"] == "true"
+    cable_origins << %r{\Ahttp://localhost(:\d+)?\z}
+    cable_origins << %r{\Ahttp://127\.0\.0\.1(:\d+)?\z}
+  end
+
+  config.action_cable.allowed_request_origins = cable_origins.compact
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy (Traefik/Coolify).
   # Can be used together with config.force_ssl for Strict-Transport-Security and secure cookies.
@@ -126,11 +140,31 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
-  config.hosts = [
-    /localhost:\d+/,   # Allow requests from localhost with any port
-    "rexone.me",     # Allow requests from rexone.me
-    /.+\.rexone\.me/ # Allow requests from subdomains like `www.rexone.me`
+  allowed_hosts = [
+    "rex9.me",          # Allow requests from rex9.me showcase demo
+    /.+\.rex9\.me/,     # Allow requests from subdomains like `api.rexone.rex9.me`
   ]
+
+  # Allow localhost in production only if explicitly opted in
+  if ENV["CORS_ALLOW_LOCALHOST"] == "true"
+    allowed_hosts << /localhost(:\d+)?/
+  end
+
+  if ENV["PRODUCT_DOMAIN"].present?
+    p_domain = ENV["PRODUCT_DOMAIN"].strip
+    allowed_hosts << p_domain
+    allowed_hosts << /.+\.#{Regexp.escape(p_domain)}/
+  end
+
+  if ENV["RAILS_SERVER_BASE_URL"].present?
+    begin
+      server_host = URI.parse(ENV["RAILS_SERVER_BASE_URL"]).host
+      allowed_hosts << server_host if server_host.present?
+    rescue URI::InvalidURIError
+    end
+  end
+
+  config.hosts = allowed_hosts
 
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
