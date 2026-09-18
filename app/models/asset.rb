@@ -34,6 +34,7 @@ class Asset < ApplicationRecord
   validate :url_must_be_valid
   validate :only_one_thumbnail_per_parent
   validate :child_asset_type_immutable, on: :update
+  validate :parent_asset_validations
 
   before_validation :set_default_title
   before_validation :set_extension_and_format
@@ -215,8 +216,20 @@ class Asset < ApplicationRecord
   end
 
   def child_asset_type_immutable
-    if parent_asset_id.present? && type_changed?
+    if parent_asset_id_was.present? && type_changed?
       errors.add(:type, "Child asset type cannot be changed")
+    end
+  end
+
+  def parent_asset_validations
+    return unless parent_asset_id.present?
+
+    if parent_asset_id == id
+      errors.add(:parent_asset_id, "cannot be itself")
+    elsif parent_asset&.parent_asset_id.present?
+      errors.add(:parent_asset_id, "cannot be a child asset")
+    elsif (thumbnail.present? || subtitles.any?) && parent_asset_id.present?
+      errors.add(:parent_asset_id, "asset with existing children cannot become a child asset")
     end
   end
 

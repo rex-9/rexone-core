@@ -92,6 +92,13 @@ class V1::Admin::AssetsController < V1::ApplicationController
         }
       )
 
+      parent_asset_id = upload[:parent_asset_id].presence
+      if asset_type == AssetConstants::AssetType::THUMBNAIL && parent_asset_id.present?
+        parent = Asset.find_by(id: parent_asset_id)
+        existing_thumb = parent&.thumbnail
+        existing_thumb&.destroy!
+      end
+
       asset = Asset.find_or_initialize_by(storage_key: result[:storage_key])
       asset.assign_attributes(
         name: result[:storage_key],
@@ -105,6 +112,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
         source: AssetConstants::AssetSource::UPLOAD,
         assetable_type: assetable_type,
         assetable_id: assetable_id,
+        parent_asset_id: parent_asset_id,
         storage_key: result[:storage_key],
         extension: result[:format] || File.extname(filename_for(file)).delete("."),
         status: processing_status_for(file)
@@ -160,6 +168,19 @@ class V1::Admin::AssetsController < V1::ApplicationController
         error: "Child asset type cannot be changed"
       )
       return
+    end
+
+    target_type = new_type || @asset.type
+    if target_type == AssetConstants::AssetType::THUMBNAIL && update_params[:parent_asset_id].present?
+      parent = Asset.find_by(id: update_params[:parent_asset_id])
+      existing_thumb = parent&.thumbnail
+      if existing_thumb && existing_thumb.id != @asset.id
+        existing_thumb.destroy!
+      end
+    end
+
+    if new_type.present? && !AssetConstants::AssetType.child_type?(new_type)
+      update_params = update_params.merge(parent_asset_id: nil) if @asset.parent_asset_id.blank?
     end
 
     if new_type.present? && new_type != @asset.type
@@ -639,7 +660,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def upload_params
-    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs, :title, :description)
+    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs, :title, :description, :parent_asset_id)
   end
 
   def upload_file_param
@@ -651,7 +672,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def admin_asset_params
-    params.require(:asset).permit(:name, :title, :description, :type, :assetable_type, :assetable_id)
+    params.require(:asset).permit(:name, :title, :description, :type, :assetable_type, :assetable_id, :parent_asset_id)
   end
 
   def filter_params

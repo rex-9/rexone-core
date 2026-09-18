@@ -165,5 +165,10 @@ module AssetConstants
     GENERAL    = "general".freeze
     ALL        = [ AVATAR, THUMBNAIL, SUBTITLE, TTS, ATTACHMENT, GENERAL ].freeze
     IMAGE_TYPES = [ AVATAR, THUMBNAIL ].freeze
+    CHILD_TYPES = [ THUMBNAIL, SUBTITLE ].freeze
+
+    def self.child_type?(type)
+      CHILD_TYPES.include?(type.to_s)
+    end
   end
 end
