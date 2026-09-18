@@ -31,10 +31,15 @@ module PaymentService
     end
 
     # ===== SESSION =====
-    def create_checkout_session(user_id:, product_id:, success_url: nil, cancel_url: nil)
+    def create_checkout_session(user_id:, product_id:, success_url: nil, cancel_url: nil, coupon: nil)
       with_stripe_error("Create Checkout Session") do
         user = User.find(user_id)
         product = Payment::Product.find(product_id)
+
+        meta = {
+          user_id: user.id,
+          product_id: product.id
+        }
 
         checkout_params = {
           customer: user.stripe_customer,
@@ -45,44 +50,25 @@ module PaymentService
           mode: product.recurring? ? PaymentConstants::StripeMode::SUBSCRIPTION : PaymentConstants::StripeMode::PAYMENT,
           success_url: success_url || AppConfig::STRIPE_SUCCESS_URL,
           cancel_url: cancel_url || AppConfig::STRIPE_CANCEL_URL,
-          metadata: {
-            user_id: user.id,
-            product_id: product.id
-          }
-
-          # For Subscription Object metadata
-          # subscription_data: {
-          #   metadata: {
-          #     user_id: user.id,
-          #     product_id: product.id
-          #   }
-          # },
-
-          # For Payment Intent Object metadata
-          # payment_intent_data: {
-          #   metadata: {
-          #     user_id: user.id,
-          #     product_id: product.id
-          #   }
-          # }
+          metadata: meta
 
           # billing_address_collection: "required", # ask for adress
           # allow_promotion_codes: true, # promo codes
         }
 
+        if coupon.present?
+          stripe_coupon_id = CouponService.ensure_stripe_coupon(coupon)
+          checkout_params[:discounts] = [ { coupon: stripe_coupon_id } ] if stripe_coupon_id.present?
+          meta[:coupon_id] = coupon.id
+        end
+
         if product.recurring?
           checkout_params[:subscription_data] = {
-            metadata: {
-              user_id: user.id,
-              product_id: product.id
-            }
+            metadata: meta.dup
           }
         else
           checkout_params[:payment_intent_data] = {
-            metadata: {
-              user_id: user.id,
-              product_id: product.id
-            }
+            metadata: meta.dup
           }
         end
 
@@ -226,6 +212,93 @@ module PaymentService
       end
     end
 
+    # ===== COUPONS =====
+    def create_coupon(attributes)
+      with_stripe_error("Create Coupon") do
+        stripe_params = {
+          id: attributes[:code].to_s.strip.upcase,
+          name: attributes[:title],
+          duration: "once"
+        }
+
+        if attributes[:coupon_type].to_s == "percentage" || attributes[:coupon_type].to_i == 0
+          stripe_params[:percent_off] = attributes[:amount].to_i
+        else
+          stripe_params[:amount_off] = attributes[:amount].to_i
+          stripe_params[:currency] = attributes[:currency] || PaymentConstants::Currency::USD
+        end
+
+        stripe_params[:max_redemptions] = attributes[:max_usage].to_i if attributes[:max_usage].to_i.positive?
+        stripe_params[:redeem_by] = attributes[:expires_at].to_i if attributes[:expires_at].present?
+
+        begin
+          stripe_coupon = Stripe::Coupon.create(stripe_params)
+          attributes = attributes.merge(stripe_coupon_id: stripe_coupon.id)
+        rescue Stripe::InvalidRequestError => e
+          if e.message.include?("already exists")
+            attributes = attributes.merge(stripe_coupon_id: stripe_params[:id])
+          else
+            raise
+          end
+        end
+
+        coupon = Payment::Coupon.new(attributes)
+        coupon.save!
+        { data: coupon }
+      end
+    end
+
+    def update_coupon(coupon_id, attributes)
+      with_stripe_error("Update Coupon") do
+        coupon = Payment::Coupon.with_discarded.find(coupon_id)
+        if attributes[:title].present? && coupon.stripe_coupon_id.present?
+          begin
+            Stripe::Coupon.update(coupon.stripe_coupon_id, name: attributes[:title])
+          rescue Stripe::StripeError => e
+            Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not update Stripe coupon name: #{e.message}")
+          end
+        end
+        coupon.update!(attributes)
+        { data: coupon }
+      end
+    end
+
+    def discard_coupon(coupon_id)
+      with_stripe_error("Discard Coupon") do
+        coupon = Payment::Coupon.find(coupon_id)
+        # Note: We do NOT delete from Stripe on soft-delete/discard.
+        # Stripe permanently burns deleted coupon IDs (preventing restoration).
+        # Rexone's local validation automatically blocks redemptions for discarded coupons.
+        coupon.discard
+        { data: coupon }
+      end
+    end
+
+    def undiscard_coupon(coupon_id)
+      with_stripe_error("Undiscard Coupon") do
+        coupon = Payment::Coupon.with_discarded.find(coupon_id)
+        # Restore locally; ensure Stripe coupon exists if missing
+        CouponService.ensure_stripe_coupon(coupon) if coupon.stripe_coupon_id.blank?
+        coupon.undiscard
+        { data: coupon }
+      end
+    end
+
+    def destroy_coupon(coupon_id)
+      with_stripe_error("Destroy Coupon") do
+        coupon = Payment::Coupon.with_discarded.find(coupon_id)
+        if coupon.stripe_coupon_id.present?
+          begin
+            Stripe::Coupon.delete(coupon.stripe_coupon_id)
+          rescue Stripe::StripeError => e
+            Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not delete Stripe coupon: #{e.message}")
+          end
+        end
+        coupon.destroy!
+        { data: coupon }
+      end
+    end
+
     # ===== REFUND =====
     # def refund_payment(payment_intent_id, amount: nil)
     #   with_stripe_error("Refund Payment") do
@@ -283,6 +356,12 @@ module PaymentService
         handle_price_updated(event.data.object)
       when PaymentConstants::StripeEvent::PRICE_DELETED
         handle_price_deleted(event.data.object)
+      when PaymentConstants::StripeEvent::COUPON_CREATED
+        handle_coupon_created(event.data.object)
+      when PaymentConstants::StripeEvent::COUPON_UPDATED
+        handle_coupon_updated(event.data.object)
+      when PaymentConstants::StripeEvent::COUPON_DELETED
+        handle_coupon_deleted(event.data.object)
       else
         Rails.logger.info(
           "#{STRIPE_LOG_PREFIX} Ignored unsupported webhook event: #{event.type}"
@@ -653,6 +732,20 @@ module PaymentService
 
         subscription.save!
 
+        coupon_id = session.metadata&.coupon_id
+        if coupon_id.present?
+          coupon = Payment::Coupon.find_by(id: coupon_id)
+          if coupon
+            CouponService.apply_to_checkout!(
+              user: user,
+              product: product,
+              coupon: coupon,
+              purchase_id: subscription.id,
+              purchase_type: :sbs
+            )
+          end
+        end
+
         AccessService.grant(
           user_id: user_id,
           product_id: product_id,
@@ -712,6 +805,20 @@ module PaymentService
 
         transaction.save!
 
+        coupon_id = session.metadata&.coupon_id
+        if coupon_id.present?
+          coupon = Payment::Coupon.find_by(id: coupon_id)
+          if coupon
+            CouponService.apply_to_checkout!(
+              user: user,
+              product: product,
+              coupon: coupon,
+              purchase_id: transaction.id,
+              purchase_type: :trx
+            )
+          end
+        end
+
         if transaction.succeeded?
           AccessService.grant(
             user_id: user_id,
@@ -726,6 +833,54 @@ module PaymentService
           end
         end
       end
+    end
+
+    def handle_coupon_created(stripe_coupon)
+      coupon = Payment::Coupon.with_discarded.find_or_initialize_by(stripe_coupon_id: stripe_coupon.id)
+      return if coupon.persisted?
+
+      c_type = stripe_coupon.percent_off.present? ? :percentage : :fixed
+      c_amount = stripe_coupon.percent_off || stripe_coupon.amount_off || 0
+
+      coupon.assign_attributes(
+        title: stripe_coupon.name || stripe_coupon.id,
+        code: stripe_coupon.id.upcase,
+        coupon_type: c_type,
+        amount: c_amount,
+        currency: stripe_coupon.currency,
+        max_usage: stripe_coupon.max_redemptions || 0,
+        expires_at: stripe_coupon.redeem_by ? Time.at(stripe_coupon.redeem_by) : nil,
+        active: stripe_coupon.valid
+      )
+      coupon.save!
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Coupon created from webhook: #{coupon.code}")
+    rescue => e
+      Rails.logger.error("#{STRIPE_LOG_PREFIX} Failed to handle coupon created webhook: #{e.message}")
+    end
+
+    def handle_coupon_updated(stripe_coupon)
+      coupon = Payment::Coupon.with_discarded.find_by(stripe_coupon_id: stripe_coupon.id) ||
+               Payment::Coupon.with_discarded.find_by(code: stripe_coupon.id.upcase)
+      return unless coupon
+
+      coupon.update(
+        title: stripe_coupon.name || coupon.title,
+        active: stripe_coupon.valid
+      )
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Coupon updated from webhook: #{coupon.code}")
+    rescue => e
+      Rails.logger.error("#{STRIPE_LOG_PREFIX} Failed to handle coupon updated webhook: #{e.message}")
+    end
+
+    def handle_coupon_deleted(stripe_coupon)
+      coupon = Payment::Coupon.with_discarded.find_by(stripe_coupon_id: stripe_coupon.id) ||
+               Payment::Coupon.with_discarded.find_by(code: stripe_coupon.id.upcase)
+      return unless coupon
+
+      coupon.discard if coupon.kept?
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Coupon deleted from webhook: #{coupon.code}")
+    rescue => e
+      Rails.logger.error("#{STRIPE_LOG_PREFIX} Failed to handle coupon deleted webhook: #{e.message}")
     end
 
     def handle_subscription_updated(stripe_subscription)

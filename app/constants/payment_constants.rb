@@ -62,12 +62,17 @@ module PaymentConstants
     PRICE_UPDATED              = "price.updated".freeze
     PRICE_DELETED              = "price.deleted".freeze
 
+    COUPON_CREATED             = "coupon.created".freeze
+    COUPON_UPDATED             = "coupon.updated".freeze
+    COUPON_DELETED             = "coupon.deleted".freeze
+
     ALL = [
       CHECKOUT_SESSION_COMPLETED,
       SUBSCRIPTION_UPDATED, SUBSCRIPTION_DELETED,
       SUBSCRIPTION_PAUSED, SUBSCRIPTION_RESUMED,
       PRODUCT_UPDATED,
-      PRICE_CREATED, PRICE_UPDATED, PRICE_DELETED
+      PRICE_CREATED, PRICE_UPDATED, PRICE_DELETED,
+      COUPON_CREATED, COUPON_UPDATED, COUPON_DELETED
     ].freeze
   end
 
@@ -82,5 +87,32 @@ module PaymentConstants
     CANCELED   = "canceled".freeze
     REFUNDED   = "refunded".freeze
     OTHER      = "other".freeze
+  end
+
+  module CouponType
+    PERCENTAGE = "percentage".freeze
+    FIXED      = "fixed".freeze
+    ALL        = [ PERCENTAGE, FIXED ].freeze
+    INTEGER_MAPPING = {
+      percentage: 0,
+      fixed: 1
+    }.freeze
+  end
+
+  module PurchaseType
+    TRX = "trx".freeze
+    SBS = "sbs".freeze
+    ALL = [ TRX, SBS ].freeze
+    INTEGER_MAPPING = {
+      trx: 0,
+      sbs: 1
+    }.freeze
+  end
+
+  module Currency
+    USD = "usd".freeze
+    MMK = "mmk".freeze
+    SGD = "sgd".freeze
+    ALL = [ USD, MMK, SGD ].freeze
   end
 end

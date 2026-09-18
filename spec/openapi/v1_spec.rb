@@ -25,6 +25,9 @@ RSpec.describe "OpenAPI V1 document" do
     expect(document[:paths]).to include(
       "/signup",
       "/v1/payment/session",
+      "/v1/payment/coupons/validate",
+      "/v1/admin/payment/coupons",
+      "/v1/admin/payment/user_coupons",
       "/v1/chat/messages",
       "/v1/admin/ai/profiles",
       "/v1/admin/ai/runs",
@@ -154,6 +157,8 @@ RSpec.describe "OpenAPI V1 document" do
       "/v1/admin/users",
       "/v1/admin/iam/roles",
       "/v1/admin/payment/products",
+      "/v1/admin/payment/coupons",
+      "/v1/admin/payment/user_coupons",
       "/v1/admin/payment/transactions",
       "/v1/admin/payment/subscriptions",
       "/v1/admin/accesses",
@@ -175,6 +180,8 @@ RSpec.describe "OpenAPI V1 document" do
 
     searchable_endpoints = [
       "/v1/admin/users",
+      "/v1/admin/payment/coupons",
+      "/v1/admin/payment/user_coupons",
       "/v1/admin/payment/transactions",
       "/v1/admin/payment/subscriptions",
       "/v1/admin/accesses",

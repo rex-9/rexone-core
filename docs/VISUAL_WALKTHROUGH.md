@@ -356,7 +356,33 @@ Once checkout webhooks are fulfilled, the client pricing and plan selection inte
 
 Web redirects into Stripe Checkout; Mobile opens Checkout inside a WebView. Neither client owns Stripe secrets or webhook fulfillment. Core creates/reuses Stripe customers, creates Checkout Sessions, persists payment state, and processes supported Stripe webhooks asynchronously.
 
-## 5.3 Administrative Transactions and Subscriptions
+## 5.3 Promotional coupons, discounts and checkout activation
+
+<!-- SCREENSHOT:C04_CP — checkout coupon redemption -->
+<p align="center">
+  <img src="./images/walkthrough/commerce/c04-web.png" alt="C04 Web — Checkout Promo Code Validation & Dynamic Discount" width="73%">
+  <img src="./images/walkthrough/commerce/c04-mobile.png" alt="C04 Mobile — Native Checkout Promo Code Application" width="25%">
+</p>
+
+Web and Mobile support dynamic promotional and referral coupon redemption directly within the checkout sheet:
+
+- **Real-Time Discount Calculation**: Submitting a valid coupon code (`POST /v1/payment/coupons/validate`) dynamically recalculates the order subtotal, discount reduction, and total due in real time (e.g. `SAVE20` / `COUPON5` granting 20% savings).
+- **Entitlement Targeting & Quota Protection**: Core enforces strict usage limits (global and per-user), active validity windows, customer role restrictions, and eligible product constraints before checkout handoff.
+- **100% Free Access Direct Provisioning**: When a 100% discount coupon is redeemed, the client bypasses external Stripe checkout entirely, invoking Core `AccessService` to immediately provision product entitlements.
+
+## 5.4 Administrative Coupons Governance & Redemption Ledger
+
+<!-- SCREENSHOT:AD_CP — Admin Coupons & Redemption Ledger -->
+<p align="center">
+  <img src="./images/walkthrough/admin/ad-coupons-web.png" alt="Admin Coupons Governance Dashboard" width="49%">
+  <img src="./images/walkthrough/admin/ad-coupon-redemptions-web.png" alt="Admin Coupon Redemption Audit Ledger" width="49%">
+</p>
+
+Full administrative oversight across the promotional campaign lifecycle:
+- **Coupons Management (`/admin/coupons`)**: Batch coupon generator, percentage and fixed discount configurations, expiration controls, usage limit counters, and Discard soft-deletion with Recycle Bin restore.
+- **Redemption Ledger (`/admin/user-coupons`)**: Comprehensive audit ledger tracking every coupon redemption across customers, purchased products, purchase types (Subscription vs. Transaction), exact discount amounts, and UTC redemption timestamps.
+
+## 5.5 Administrative Transactions and Subscriptions
 
 <!-- SCREENSHOT:C04 — Admin Transactions & Subscriptions -->
 <p align="center">
@@ -366,7 +392,7 @@ Web redirects into Stripe Checkout; Mobile opens Checkout inside a WebView. Neit
 
 Full administrative visibility into commercial records: completed charges, pending invoices, refund workflows, active subscription lifecycles, and scheduled cancellations. Subscription cancellation is safely scheduled for the end of the paid period and can be resumed where allowed. Clients communicate intent; Core remains authoritative over subscription state and access.
 
-## 5.4 Durable webhook fulfillment
+## 5.6 Durable webhook fulfillment
 
 No screenshot is necessary.
 
@@ -1216,6 +1242,8 @@ Working checklist and file index of all visual assets integrated across this wal
 | C02     | Commerce       | `docs/images/walkthrough/commerce/c02-web.png`                | Stripe Checkout Handoff (Web)                | Captured |
 | C02_M   | Commerce       | `docs/images/walkthrough/commerce/c02-mobile.png`             | Stripe Checkout WebView (Mobile Native)      | Captured |
 | C03     | Commerce       | `docs/images/walkthrough/commerce/c03-web.png`                | Active Entitlements & Purchased Products     | Captured |
+| C04_CP  | Commerce       | `docs/images/walkthrough/commerce/c04-web.png`                | Web Checkout & Promo Code Modal              | Captured |
+| C04_CPM | Commerce       | `docs/images/walkthrough/commerce/c04-mobile.png`             | Mobile Checkout Coupon Redemption            | Captured |
 | C04     | Commerce       | `docs/images/walkthrough/admin/ad-transactions-web.png`       | Admin Transactions Audit                     | Captured |
 | C05     | Commerce       | `docs/images/walkthrough/admin/ad-subscriptions-web.png`      | Admin Subscriptions Lifecycle                | Captured |
 | AI01    | AI             | `docs/images/walkthrough/ai/ai01-web.png`                     | Persistent AI Workspace & Background Q       | Captured |
@@ -1249,6 +1277,8 @@ Working checklist and file index of all visual assets integrated across this wal
 | AD04    | Admin          | `docs/images/walkthrough/admin/ad04-web.png`                  | Products Catalogue Administration            | Captured |
 | AD04_B  | Admin          | `docs/images/walkthrough/admin/ad-products-bin-web.png`       | Product Recycle Bin & Soft Deletion          | Captured |
 | AD05    | Admin          | `docs/images/walkthrough/admin/ad05-web.png`                  | Access & Entitlements Management             | Captured |
+| AD_CP   | Admin          | `docs/images/walkthrough/admin/ad-coupons-web.png`            | Coupons Governance & Configuration           | Captured |
+| AD_RL   | Admin          | `docs/images/walkthrough/admin/ad-coupon-redemptions-web.png` | Coupon Redemptions Financial Ledger          | Captured |
 | AD06    | Admin          | `docs/images/walkthrough/admin/ad06-web.png`                  | Notification Dispatch & Templates            | Captured |
 | AD_UN   | Admin          | `docs/images/walkthrough/admin/ad-user-notifications-web.png` | Dispatched User Notifications Audit          | Captured |
 | AD07    | Admin          | `docs/images/walkthrough/admin/ad07-web.png`                  | App Version Governance                       | Captured |
@@ -1267,7 +1297,7 @@ Working checklist and file index of all visual assets integrated across this wal
 | O06     | Operations     | `docs/images/walkthrough/operations/o06-solid-cable.png`      | Solid Web UI — Cable                         | Captured |
 | O07     | Operations     | `docs/images/walkthrough/operations/o07-swagger.png`          | Rswag OpenAPI Documentation                  | Captured |
 
-All 71 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
+All 75 visual artifacts are captured at 2x retina density or user-provided fidelity and stored under `docs/images/walkthrough/`.
 
 ## Suggested file naming
 

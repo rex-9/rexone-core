@@ -66,9 +66,9 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(response_data.first.dig("attributes", "id")).to eq(needle.id)
     end
 
-    it "searches assets by display_name" do
-      needle = create(:asset, name: "asset_key_123", display_name: "Special Meditation Guide", storage_key: "keys/guide")
-      create(:asset, name: "asset_key_456", display_name: "Routine File", storage_key: "keys/routine")
+    it "searches assets by title" do
+      needle = create(:asset, name: "asset_key_123", title: "Special Meditation Guide", storage_key: "keys/guide")
+      create(:asset, name: "asset_key_456", title: "Routine File", storage_key: "keys/routine")
 
       get "/v1/admin/assets", params: { search: "Meditation" }, headers: headers
 
@@ -101,6 +101,22 @@ RSpec.describe "V1 Admin Assets API", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response_data.first.dig("attributes", "name")).to eq("Resilient Asset")
+    end
+
+    it "sorts assets by title" do
+      asset_b = create(:asset, title: "Beta Asset")
+      asset_a = create(:asset, title: "Alpha Asset")
+      asset_c = create(:asset, title: "Gamma Asset")
+
+      get "/v1/admin/assets", params: { sort_by: "title", sort_order: "asc" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.map { |a| a.dig("attributes", "id") }).to eq([ asset_a.id, asset_b.id, asset_c.id ])
+
+      get "/v1/admin/assets", params: { sort_by: "title", sort_order: "desc" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.map { |a| a.dig("attributes", "id") }).to eq([ asset_c.id, asset_b.id, asset_a.id ])
     end
   end
 
@@ -153,17 +169,17 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       )
     end
 
-    it "persists display_name and description on upload" do
+    it "persists title and description on upload" do
       post "/v1/admin/assets/upload",
-           params: { file: image_file, type: "thumbnail", display_name: "Admin Uploaded Avatar", description: "Admin photo" },
+           params: { file: image_file, type: "thumbnail", title: "Admin Uploaded Avatar", description: "Admin photo" },
            headers: headers
 
       expect(response).to have_http_status(:created)
       expect(Asset.last).to have_attributes(
-        display_name: "Admin Uploaded Avatar",
+        title: "Admin Uploaded Avatar",
         description: "Admin photo"
       )
-      expect(response_data.dig("asset", "display_name")).to eq("Admin Uploaded Avatar")
+      expect(response_data.dig("asset", "title")).to eq("Admin Uploaded Avatar")
       expect(response_data.dig("asset", "description")).to eq("Admin photo")
     end
 
@@ -720,52 +736,73 @@ RSpec.describe "V1 Admin Assets API", type: :request do
   end
 
   describe "PATCH /v1/admin/assets/:id" do
-    it "updates asset attributes" do
-      asset = create(:asset, name: "Old Name")
-
-      patch "/v1/admin/assets/#{asset.id}", params: { asset: { name: "Updated Name" } }, headers: headers
-
-      expect(response).to have_http_status(:ok)
-      expect(asset.reload.name).to eq("Updated Name")
-    end
-
-    it "updates display_name and description" do
-      asset = create(:asset, name: "admin/test.png", display_name: "Old Display", description: "Old description")
+    it "updates asset attributes without modifying storage key or file name" do
+      asset = create(:asset, name: "dev/admin/avatar_test.png", storage_key: "dev/admin/avatar_test.png")
 
       patch "/v1/admin/assets/#{asset.id}",
-            params: { asset: { display_name: "New Display Name", description: "New description" } },
+            params: { asset: { title: "Updated Title", description: "Updated Desc" } },
             headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(asset.reload.display_name).to eq("New Display Name")
-      expect(asset.description).to eq("New description")
-      expect(response_data.dig("asset", "display_name")).to eq("New Display Name")
-      expect(response_data.dig("asset", "description")).to eq("New description")
+      expect(asset.reload.title).to eq("Updated Title")
+      expect(asset.description).to eq("Updated Desc")
+      expect(asset.name).to eq("dev/admin/avatar_test.png")
+      expect(asset.storage_key).to eq("dev/admin/avatar_test.png")
     end
 
-    it "renames storage key and name when asset type changes" do
+    it "preserves storage key and file name when type is not changed even if name param is sent" do
       asset = create(:asset,
-        name: "admin/avatar_company_1788500000.png",
-        storage_key: "admin/avatar_company_1788500000.png",
+        name: "dev/admin/avatar_company_1788500000.png",
+        storage_key: "dev/admin/avatar_company_1788500000.png",
         type: "avatar",
         source: AssetConstants::AssetSource::UPLOAD
       )
       allow(StorageService::Client).to receive(:move)
-      allow(StorageService::Client).to receive(:url).and_return("http://localhost:3100/rexone/admin/thumbnail_company_1788500000.png")
+
+      patch "/v1/admin/assets/#{asset.id}",
+            params: {
+              asset: {
+                name: "dev/user/123/avatar_renamed.png",
+                title: "New Display Name",
+                description: "New description",
+                type: "avatar"
+              }
+            },
+            headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(StorageService::Client).not_to have_received(:move)
+      expect(asset.reload.name).to eq("dev/admin/avatar_company_1788500000.png")
+      expect(asset.storage_key).to eq("dev/admin/avatar_company_1788500000.png")
+      expect(asset.title).to eq("New Display Name")
+      expect(asset.description).to eq("New description")
+      expect(response_data.dig("asset", "title")).to eq("New Display Name")
+      expect(response_data.dig("asset", "description")).to eq("New description")
+    end
+
+    it "renames storage key and name preserving directory path when asset type changes" do
+      asset = create(:asset,
+        name: "dev/admin/avatar_company_1788500000.png",
+        storage_key: "dev/admin/avatar_company_1788500000.png",
+        type: "avatar",
+        source: AssetConstants::AssetSource::UPLOAD
+      )
+      allow(StorageService::Client).to receive(:move)
+      allow(StorageService::Client).to receive(:url).and_return("http://localhost:3100/rexone/dev/admin/thumbnail_company_1788500000.png")
 
       patch "/v1/admin/assets/#{asset.id}", params: { asset: { type: "thumbnail" } }, headers: headers
 
       expect(response).to have_http_status(:ok)
       expect(StorageService::Client).to have_received(:move).with(
-        "admin/avatar_company_1788500000.png",
-        "admin/thumbnail_company_1788500000.png"
+        "dev/admin/avatar_company_1788500000.png",
+        "dev/admin/thumbnail_company_1788500000.png"
       )
       expect(asset.reload.type).to eq("thumbnail")
-      expect(asset.storage_key).to eq("admin/thumbnail_company_1788500000.png")
-      expect(asset.name).to eq("admin/thumbnail_company_1788500000.png")
+      expect(asset.storage_key).to eq("dev/admin/thumbnail_company_1788500000.png")
+      expect(asset.name).to eq("dev/admin/thumbnail_company_1788500000.png")
     end
 
-    it "renames name and storage key even when form submits stale old name" do
+    it "renames name and storage key strictly preserving path even when form submits stale old name" do
       asset = create(:asset,
         name: "admin/general_sayadaw-kelasa_1788540008.png",
         storage_key: "admin/general_sayadaw-kelasa_1788540008.png",
@@ -792,6 +829,26 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(asset.reload.type).to eq("attachment")
       expect(asset.storage_key).to eq("admin/attachment_sayadaw-kelasa_1788540008.png")
       expect(asset.name).to eq("admin/attachment_sayadaw-kelasa_1788540008.png")
+    end
+
+    it "rejects changing the type of a child asset" do
+      parent = create(:asset, type: "general", format: "video", extension: "mp4", url: "https://example.com/parent_video.mp4")
+      child = create(
+        :asset,
+        name: "dev/admin/thumbnail_child_123.webp",
+        storage_key: "dev/admin/thumbnail_child_123.webp",
+        type: "thumbnail",
+        format: "image",
+        extension: "webp",
+        parent_asset: parent,
+        url: "https://example.com/parent_thumb_3.webp"
+      )
+
+      patch "/v1/admin/assets/#{child.id}", params: { asset: { type: "general" } }, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response_status["error"]).to eq("Child asset type cannot be changed")
+      expect(child.reload.type).to eq("thumbnail")
     end
   end
 

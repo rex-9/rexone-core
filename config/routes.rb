@@ -56,6 +56,8 @@ Rails.application.routes.draw do
       resources :products, only: %i[index show new create edit update destroy]
       resources :subscriptions, only: %i[index show new create edit update destroy]
       resources :transactions, only: %i[index show new create edit update destroy]
+      resources :coupons, only: %i[index show new create edit update destroy]
+      resources :user_coupons, only: %i[index show new create edit update destroy]
       resources :webhook_events, only: %i[index show]
     end
 
@@ -211,6 +213,24 @@ Rails.application.routes.draw do
 
         resources :transactions, only: %i[index show]
         resources :subscriptions, only: %i[index show]
+
+        resources :coupons, only: %i[index show create update destroy] do
+          collection do
+            post :create_batch, path: "batch"
+            delete :destroy_bin, path: "bin"
+            post :discard_batch
+            post :undiscard_batch
+            post :destroy_batch
+          end
+
+          member do
+            post :discard
+            post :undiscard
+            get :read_redemptions, path: "redemptions"
+          end
+        end
+
+        resources :user_coupons, only: %i[index show]
       end
 
       resources :notifications do
@@ -323,6 +343,7 @@ Rails.application.routes.draw do
 
       post "session", to: "payments#create"
       get "session/:session_id", to: "payments#read_status"
+      post "coupons/validate", to: "coupons#validate_coupon"
     end
 
     # ===== ACCESSES =====

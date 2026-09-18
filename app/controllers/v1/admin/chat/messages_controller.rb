@@ -11,8 +11,8 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
 
   # GET /v1/admin/chat/messages
   def index
-    messages = Chat::MessageService.admin_list(params)
-    pagy, records = pagy(:offset, messages, limit: params[:limit])
+    messages = Chat::MessageService.admin_list(filter_params)
+    pagy, records = pagy(:offset, messages, limit: index_params[:limit])
 
     render_json_response(
       status_code: 200,
@@ -82,7 +82,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
   private
 
   def set_active_message
-    @message = Chat::MessageService.find(params[:id], with_discarded: false)
+    @message = Chat::MessageService.find(id_params[:id], with_discarded: false)
   rescue ActiveRecord::RecordNotFound
     render_json_response(
       status_code: 404,
@@ -92,13 +92,25 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
   end
 
   def set_message_including_discarded
-    @message = Chat::MessageService.find(params[:id], with_discarded: true)
+    @message = Chat::MessageService.find(id_params[:id], with_discarded: true)
   rescue ActiveRecord::RecordNotFound
     render_json_response(
       status_code: 404,
       message: admin_chat_message(MessageService::Admin::Chat::NOT_FOUND),
       error: admin_chat_message(MessageService::Admin::Chat::NOT_FOUND)
     )
+  end
+
+  def id_params
+    params.permit(:id)
+  end
+
+  def index_params
+    params.permit(:limit)
+  end
+
+  def filter_params
+    params.permit(:room_id, :role, :search, :discarded, :sort_by, :sort_order)
   end
 
   def message_params

@@ -28,6 +28,7 @@ module MessageService
     USER_EXISTENCE_CHECKED = "auth.user_existence_checked"
     TOO_MANY_ATTEMPTS = "auth.too_many_attempts"
     TOO_MANY_ATTEMPTS_WITH_WAIT = "auth.too_many_attempts_with_wait"
+    PASSWORD_RESET_COOLDOWN = "auth.password_reset_cooldown"
     SET_PASSWORD = "auth.set_password"
     CHALLENGE_AND_PASSWORD_REQUIRED = "auth.challenge_and_password_required"
   end

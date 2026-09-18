@@ -168,11 +168,20 @@ This verifies authentication, IAM, API transport, PostgreSQL, Garage, Solid Queu
 # OpenAPI, channel, and socket contracts
 ./scripts/ci.sh contracts
 
-# English/Myanmar locale and MessageService parity
-./scripts/check_locales.sh
+# English/Myanmar locale and MessageService parity (add --unused to audit unreferenced keys)
+./scripts/check_locales.sh [--unused]
 
 # Rails console
 ./scripts/console.sh
+
+# Enter running API container shell (or execute custom commands)
+./scripts/enter_api.sh [cmd...]
+
+# Reset development database (safeguarded; use -y / --force to bypass confirmation prompt)
+./scripts/db_reset.sh [-y]
+
+# Prune containers and dev data volumes (safeguarded; use -y / --force to bypass confirmation prompt)
+./scripts/docker_clean.sh [-y]
 
 # Regenerate OpenAPI
 ./scripts/rswag.sh

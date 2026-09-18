@@ -210,8 +210,7 @@ module Openapi
           username: { type: :string, pattern: "^[a-z0-9_]+$", example: "admin_created" },
           name: { type: :string, maxLength: 50, example: "Admin Created" },
           email: { type: :string, format: :email, example: "admin-created@example.com" },
-          password: { type: :string, format: :password, minLength: 6, writeOnly: true },
-          password_confirmation: { type: :string, format: :password, minLength: 6, writeOnly: true }
+          avatar_asset_id: UUID.merge(nullable: true)
         )
       ),
       current_user_update_request: object(
@@ -280,6 +279,49 @@ module Openapi
             description: "Use null for one-time products."
           },
           active: { type: :boolean, default: true }
+        )
+      ),
+      admin_coupon_request: object(
+        required: [ :coupon ],
+        coupon: object(
+          required: %i[title code coupon_type amount],
+          title: { type: :string, example: "Summer Promo" },
+          description: { type: :string, nullable: true },
+          code: { type: :string, example: "SUMMER20", pattern: "^[A-Z0-9]+$" },
+          coupon_type: { type: :string, enum: %w[percentage fixed], example: "percentage" },
+          amount: { type: :integer, minimum: 1, example: 20 },
+          currency: { type: :string, nullable: true, enum: %w[usd mmk sgd], example: "usd" },
+          max_usage: { type: :integer, minimum: 0, default: 0 },
+          max_usage_per_user: { type: :integer, minimum: 0, default: 1 },
+          expires_at: DATE_TIME,
+          referrer_id: UUID.merge(nullable: true),
+          active: { type: :boolean, default: true },
+          target_role_ids: { type: :array, items: UUID, default: [] },
+          target_user_ids: { type: :array, items: UUID, default: [] },
+          target_user_emails: { type: :array, items: { type: :string, format: :email }, default: [] },
+          target_product_ids: { type: :array, items: UUID, default: [] }
+        )
+      ),
+      admin_coupon_batch_request: object(
+        required: %i[count prefix coupon],
+        count: { type: :integer, minimum: 1, maximum: 500, example: 50 },
+        prefix: { type: :string, example: "VIP", pattern: "^[A-Z0-9]+$" },
+        coupon: object(
+          required: %i[title coupon_type amount],
+          title: { type: :string, example: "VIP Promo" },
+          description: { type: :string, nullable: true },
+          coupon_type: { type: :string, enum: %w[percentage fixed], example: "percentage" },
+          amount: { type: :integer, minimum: 1, example: 15 },
+          currency: { type: :string, nullable: true, enum: %w[usd mmk sgd], example: "usd" },
+          max_usage: { type: :integer, minimum: 0, default: 1 },
+          max_usage_per_user: { type: :integer, minimum: 0, default: 1 },
+          expires_at: DATE_TIME,
+          referrer_id: UUID.merge(nullable: true),
+          active: { type: :boolean, default: true },
+          target_role_ids: { type: :array, items: UUID, default: [] },
+          target_user_ids: { type: :array, items: UUID, default: [] },
+          target_user_emails: { type: :array, items: { type: :string, format: :email }, default: [] },
+          target_product_ids: { type: :array, items: UUID, default: [] }
         )
       ),
       admin_access_request: object(
@@ -363,7 +405,7 @@ module Openapi
         required: [ :asset ],
         asset: object(
           name: { type: :string, nullable: true },
-          display_name: { type: :string, nullable: true },
+          title: { type: :string, nullable: true },
           description: { type: :string, nullable: true },
           storage_key: { type: :string, nullable: true },
           type: { type: :string, nullable: true },
@@ -381,7 +423,7 @@ module Openapi
         required: [ :asset ],
         asset: object(
           name: { type: :string, nullable: true },
-          display_name: { type: :string, nullable: true },
+          title: { type: :string, nullable: true },
           description: { type: :string, nullable: true },
           storage_key: { type: :string, nullable: true },
           type: { type: :string, nullable: true },
@@ -504,7 +546,7 @@ module Openapi
       asset_upload_request: object(
         required: [ :file ],
         file: { type: :string, format: :binary },
-        display_name: { type: :string, description: "Human-friendly display name (defaults to original filename)." },
+        title: { type: :string, description: "Human-friendly display name (defaults to original filename)." },
         description: { type: :string, description: "Optional description or notes for the asset." },
         type: {
           type: :string,
@@ -532,7 +574,13 @@ module Openapi
         required: %i[product_id success_url cancel_url],
         product_id: UUID,
         success_url: { type: :string, format: :uri, description: "Client URL used by Stripe after success." },
-        cancel_url: { type: :string, format: :uri, description: "Client URL used by Stripe after cancellation." }
+        cancel_url: { type: :string, format: :uri, description: "Client URL used by Stripe after cancellation." },
+        coupon_code: { type: :string, nullable: true, description: "Optional coupon or promo code applied to checkout session." }
+      ),
+      coupon_validate_request: object(
+        required: %i[code product_id],
+        code: { type: :string, example: "SAVE20", description: "Coupon or promo code." },
+        product_id: UUID.merge(description: "Target product UUID.")
       ),
       ai_chat_request: object(
         required: [ :message ],
@@ -826,7 +874,9 @@ module Openapi
           non_admin_permissions: { type: :array, items: { type: :object } }
         ),
         created_at: DATE_TIME,
-        updated_at: DATE_TIME
+        updated_at: DATE_TIME,
+        discarded_at: { type: :string, format: :"date-time", nullable: true },
+        undiscarded_at: { type: :string, format: :"date-time", nullable: true }
       ),
       role: object(
         id: UUID,
@@ -849,6 +899,7 @@ module Openapi
       ),
       product: object(
         id: UUID,
+        code: { type: :string, nullable: true },
         name: { type: :string },
         description: { type: :string, nullable: true },
         unit_amount: { type: :integer, description: "Minor currency units" },
@@ -861,8 +912,12 @@ module Openapi
         active: { type: :boolean },
         stripe_product_id: { type: :string },
         stripe_price_id: { type: :string },
+        thumbnail_url: { type: :string, format: :uri, nullable: true },
+        thumbnail_asset_id: UUID.merge(nullable: true),
         created_at: DATE_TIME,
-        updated_at: DATE_TIME
+        updated_at: DATE_TIME,
+        discarded_at: { type: :string, format: :"date-time", nullable: true },
+        undiscarded_at: { type: :string, format: :"date-time", nullable: true }
       ),
       subscription: object(
         required: %i[
@@ -968,7 +1023,7 @@ module Openapi
         required: %i[id name url type source status],
         id: UUID,
         name: { type: :string },
-        display_name: { type: :string, nullable: true },
+        title: { type: :string, nullable: true },
         description: { type: :string, nullable: true },
         url: { type: :string, format: :uri },
         type: { type: :string, enum: AssetConstants::AssetType::ALL },
@@ -991,7 +1046,7 @@ module Openapi
               properties: {
                 id: UUID,
                 name: { type: :string },
-                display_name: { type: :string, nullable: true },
+                title: { type: :string, nullable: true },
                 description: { type: :string, nullable: true },
                 metadata: { type: :object, description: "Arbitrary JSONB metadata" },
                 url: { type: :string, format: :uri },
@@ -1013,7 +1068,7 @@ module Openapi
                 properties: {
                   id: UUID,
                   name: { type: :string },
-                  display_name: { type: :string, nullable: true },
+                  title: { type: :string, nullable: true },
                   description: { type: :string, nullable: true },
                   metadata: { type: :object, description: "Arbitrary JSONB metadata" },
                   url: { type: :string, format: :uri },
@@ -1573,14 +1628,6 @@ module Openapi
         post: operation(tags: "Admin / Notifications", summary: "Restore a discarded notification template",
                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
-      paths["/v1/admin/notifications/templates"] = {
-        get: operation(
-          tags: "Admin / Notifications",
-          summary: "List notification events and their admin availability",
-          description: "Returns both selectable broadcast events and unavailable transactional events for display.",
-          errors: [ 401, 403 ]
-        )
-      }
 
       user_notification_filters = %i[status filter search client user_id].map { |name| query_parameter(name) }
       paths["/v1/admin/user_notifications"] = {
@@ -1710,6 +1757,92 @@ module Openapi
                        parameters: [ { name: :session_id, in: :path, required: true,
                                        schema: { type: :string, example: "cs_test_123" } } ],
                        errors: [ 401, 404 ])
+      }
+      paths["/v1/payment/coupons/validate"] = {
+        post: operation(
+          tags: "Payments", summary: "Validate a coupon or promo code against a product",
+          body: ref(:coupon_validate_request),
+          errors: [ 401, 404, 422, 429 ]
+        )
+      }
+
+      coupon_filters = [
+        query_parameter(:coupon_type, enum: %w[percentage fixed]),
+        query_parameter(:currency, enum: %w[usd mmk sgd]),
+        query_parameter(:active, type: :boolean),
+        query_parameter(:discarded, type: :boolean),
+        query_parameter(:search, type: :string),
+        query_parameter(:page, type: :integer),
+        query_parameter(:limit, type: :integer),
+        query_parameter(:sort_by, type: :string),
+        query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+      ]
+      paths["/v1/admin/payment/coupons"] = {
+        get: operation(tags: "Admin / Coupons", summary: "List and filter coupons for admins",
+                       parameters: coupon_filters, errors: [ 401, 403 ]),
+        post: operation(tags: "Admin / Coupons", summary: "Create a discount coupon", success: 201,
+                        body: ref(:admin_coupon_request), errors: [ 401, 403, 422 ])
+      }
+      paths["/v1/admin/payment/coupons/batch"] = {
+        post: operation(tags: "Admin / Coupons", summary: "Bulk generate promo coupons", success: 201,
+                        body: ref(:admin_coupon_batch_request), errors: [ 401, 403, 422 ])
+      }
+      paths["/v1/admin/payment/coupons/bin"] = {
+        delete: operation(tags: "Admin / Coupons", summary: "Permanently empty the coupon recycle bin",
+                          errors: [ 401, 403, 422 ])
+      }
+      %w[discard_batch undiscard_batch destroy_batch].each do |action|
+        paths["/v1/admin/payment/coupons/#{action}"] = {
+          post: operation(tags: "Admin / Coupons", summary: "#{action.humanize} coupons",
+                          body: ref(:id_batch_request), errors: [ 401, 403, 404, 422 ])
+        }
+      end
+      paths["/v1/admin/payment/coupons/{id}"] = {
+        get: operation(tags: "Admin / Coupons", summary: "Get coupon details",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
+        patch: operation(tags: "Admin / Coupons", summary: "Update coupon details",
+                         parameters: [ path_parameter(:id) ], body: ref(:admin_coupon_request),
+                         errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / Coupons", summary: "Permanently destroy a coupon",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
+      }
+      %w[discard undiscard].each do |action|
+        paths["/v1/admin/payment/coupons/{id}/#{action}"] = {
+          post: operation(tags: "Admin / Coupons", summary: "#{action.capitalize} a coupon",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
+        }
+      end
+      paths["/v1/admin/payment/coupons/{id}/redemptions"] = {
+        get: operation(tags: "Admin / Coupons", summary: "List coupon redemptions",
+                       parameters: [
+                         path_parameter(:id),
+                         query_parameter(:purchase_type, type: :string),
+                         query_parameter(:search, type: :string),
+                         query_parameter(:page, type: :integer),
+                         query_parameter(:limit, type: :integer),
+                         query_parameter(:sort_by, type: :string),
+                         query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+                       ], errors: [ 401, 403, 404 ])
+      }
+
+      user_coupon_filters = [
+        query_parameter(:coupon_id, format: :uuid),
+        query_parameter(:user_id, format: :uuid),
+        query_parameter(:product_id, format: :uuid),
+        query_parameter(:purchase_type, type: :string),
+        query_parameter(:search, type: :string),
+        query_parameter(:page, type: :integer),
+        query_parameter(:limit, type: :integer),
+        query_parameter(:sort_by, type: :string),
+        query_parameter(:sort_order, enum: SortConstants::Order::ALL)
+      ]
+      paths["/v1/admin/payment/user_coupons"] = {
+        get: operation(tags: "Admin / User Coupons", summary: "List and filter coupon redemptions for admins",
+                       parameters: user_coupon_filters, errors: [ 401, 403 ]),
+      }
+      paths["/v1/admin/payment/user_coupons/{id}"] = {
+        get: operation(tags: "Admin / User Coupons", summary: "Get user coupon redemption details",
+                       parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
       }
 
       paths["/v1/accesses"] = {

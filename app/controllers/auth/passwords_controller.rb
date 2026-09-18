@@ -9,11 +9,24 @@ class Auth::PasswordsController < Devise::PasswordsController
     if user
       return render_discarded_account if user.discarded?
 
+      limiter = PasswordService.new(user.id)
+      unless limiter.reset_allowed?
+        remaining = limiter.reset_cooldown_remaining
+        return render_json_response(
+          status_code: 429,
+          data: { cooldown_remaining: remaining },
+          message: auth_message(MessageService::Auth::PASSWORD_RESET_COOLDOWN, seconds: remaining),
+          error: auth_message(MessageService::Auth::PASSWORD_RESET_COOLDOWN, seconds: remaining)
+        )
+      end
+
       token = user.send_reset_password_instructions
       NotificationService::Center.password_reset_email(
         email: user.email,
         token: token
       )
+
+      limiter.record_reset_request
 
       render_json_response(
         status_code: 200,
@@ -35,6 +48,8 @@ class Auth::PasswordsController < Devise::PasswordsController
   def update
     user = User.reset_password_by_token(reset_password_params)
     if user.errors.empty?
+      PasswordService.new(user.id).record_reset_success
+
       render_json_response(
         status_code: 200,
         message: auth_message(MessageService::Auth::PASSWORD_RESET)

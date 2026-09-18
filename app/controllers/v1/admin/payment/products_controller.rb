@@ -4,7 +4,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # GET /v1/admin/payment/products
   def index
-    discarded = params[:discarded].to_s == "true"
+    discarded = filter_params[:discarded].to_s == "true"
     products = discarded ? ::Payment::Product.with_discarded.discarded : ::Payment::Product.all
     products = if discarded
       sort(products, columns: SortConstants::Columns::PRODUCT, default_column: :discarded_at)
@@ -98,11 +98,19 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
   private
 
   def set_active_product
-    @product = ::Payment::Product.find(params[:id])
+    @product = ::Payment::Product.find(id_params[:id])
   end
 
   def set_product_including_discarded
-    @product = ::Payment::Product.with_discarded.find(params[:id])
+    @product = ::Payment::Product.with_discarded.find(id_params[:id])
+  end
+
+  def filter_params
+    params.permit(:discarded)
+  end
+
+  def id_params
+    params.permit(:id)
   end
 
   def product_params

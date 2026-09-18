@@ -33,7 +33,9 @@ class Asset < ApplicationRecord
   validates :assetable_id, presence: true, if: -> { assetable_type.present? }
   validate :url_must_be_valid
   validate :only_one_thumbnail_per_parent
-  before_validation :set_default_display_name
+  validate :child_asset_type_immutable, on: :update
+
+  before_validation :set_default_title
   before_validation :set_extension_and_format
   after_destroy_commit :delete_from_storage, if: :uploaded_file?
 
@@ -212,6 +214,12 @@ class Asset < ApplicationRecord
     errors.add(:type, :thumbnail_exists_for_parent) if duplicate.exists?
   end
 
+  def child_asset_type_immutable
+    if parent_asset_id.present? && type_changed?
+      errors.add(:type, "Child asset type cannot be changed")
+    end
+  end
+
   def storage_resource_type
     AssetConstants::AssetFormat.storage_resource_type(extension)
   end
@@ -255,7 +263,7 @@ class Asset < ApplicationRecord
     AssetConstants::AssetType::IMAGE_TYPES.include?(type)
   end
 
-  def set_default_display_name
-    self.display_name = name if display_name.blank? && name.present?
+  def set_default_title
+    self.title = name if title.blank? && name.present?
   end
 end

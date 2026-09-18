@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Generate the administrate dashboard
-docker-compose -f docker-compose.dev.yaml exec api rails rails_pulse:backfill_summaries
+# Backfill Rails Pulse APM summaries
+docker compose -f docker-compose.dev.yaml exec api rails rails_pulse:backfill_summaries "$@"
+

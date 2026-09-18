@@ -150,12 +150,12 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
     puts '  ✅ Existing notifications target both clients; admin routes target Web only.'
 
     # ----------------------------------------------------
-    # 6. ASSETS: display_name and description
+    # 6. ASSETS: title and description
     # ----------------------------------------------------
-    puts '\n📁 [6/7] Synchronizing Assets display_name & description...'
-    unless ActiveRecord::Base.connection.column_exists?(:assets, :display_name)
-      puts '  -> Adding missing \"display_name\" column to assets table...'
-      ActiveRecord::Base.connection.add_column :assets, :display_name, :string
+    puts '\n📁 [6/7] Synchronizing Assets title & description...'
+    unless ActiveRecord::Base.connection.column_exists?(:assets, :title)
+      puts '  -> Adding missing \"title\" column to assets table...'
+      ActiveRecord::Base.connection.add_column :assets, :title, :string
     end
 
     unless ActiveRecord::Base.connection.column_exists?(:assets, :description)
@@ -163,18 +163,18 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
       ActiveRecord::Base.connection.add_column :assets, :description, :text
     end
 
-    unless ActiveRecord::Base.connection.index_exists?(:assets, :display_name)
-      puts '  -> Adding index on assets(display_name)...'
-      ActiveRecord::Base.connection.add_index :assets, :display_name
+    unless ActiveRecord::Base.connection.index_exists?(:assets, :title)
+      puts '  -> Adding index on assets(title)...'
+      ActiveRecord::Base.connection.add_index :assets, :title
     end
 
     backfilled_assets = 0
-    Asset.with_discarded.where(display_name: [nil, ""]).find_each do |asset|
-      asset.update_columns(display_name: asset.name)
+    Asset.with_discarded.where(title: [nil, ""]).find_each do |asset|
+      asset.update_columns(title: asset.name)
       backfilled_assets += 1
     end
-    puts \"  -> Backfilled display_name for #{backfilled_assets} assets.\"
-    puts '  ✅ Assets display_name and description synchronized and backfilled.'
+    puts \"  -> Backfilled title for #{backfilled_assets} assets.\"
+    puts '  ✅ Assets title and description synchronized and backfilled.'
 
     # ----------------------------------------------------
     # 7. METADATA JSONB STANDARDIZATION

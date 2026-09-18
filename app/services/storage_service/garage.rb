@@ -5,7 +5,7 @@ require_relative "error"
 module StorageService
   class Garage < Base
     LOG_PREFIX = "[Garage]".freeze
-    ENVIRONMENT_PREFIXES = %w[dev uat prod].freeze
+    ENVIRONMENT_PREFIXES = AssetConstants::ENVIRONMENT_PREFIXES
 
     attr_reader :client, :public_client
 

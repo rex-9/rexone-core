@@ -8,15 +8,22 @@ class AssetDashboard < Administrate::BaseDashboard
 
   ATTRIBUTE_TYPES = {
     id: Field::String,
+    title: Field::String,
+    name: Field::String,
+    description: Field::Text,
     type: Field::String,
     format: Field::String,
+    status: Field::String,
     extension: Field::String,
     size_bytes: Field::Number,
     duration_secs: Field::Number,
     source: Field::String,
-    name: Field::String,
     url: Field::String,
     storage_key: Field::String,
+    parent_asset: Field::BelongsTo,
+    parent_asset_id: Field::String,
+    thumbnail: Field::HasOne,
+    subtitles: Field::HasMany,
     assetable_type: Field::String,
     assetable_id: Field::String,
     resource: Field::Polymorphic,
@@ -36,27 +43,37 @@ class AssetDashboard < Administrate::BaseDashboard
 
   COLLECTION_ATTRIBUTES = %i[
     id
+    name
+    title
     type
     format
-    name
+    status
     assetable_type
   ].freeze
 
   SHOW_PAGE_ATTRIBUTES = %i[
     id
+    title
+    name
+    description
     type
     format
+    status
     extension
     size_bytes
     duration_secs
     source
-    name
     url
     storage_key
+    parent_asset
+    thumbnail
+    subtitles
     assetable_type
     assetable_id
     creator
     updater
+    discarder
+    undiscarder
     discarded_at
     undiscarded_at
     created_at
@@ -64,15 +81,19 @@ class AssetDashboard < Administrate::BaseDashboard
   ].freeze
 
   FORM_ATTRIBUTES = %i[
+    title
+    name
+    description
     type
     format
+    status
     extension
     size_bytes
     duration_secs
     source
-    name
     url
     storage_key
+    parent_asset_id
     assetable_type
     assetable_id
   ].freeze

@@ -76,7 +76,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
     assetable_type = upload[:assetable_type].presence
     assetable_id = upload[:assetable_id].presence
     duration_secs = upload[:duration_secs]
-    display_name = upload[:display_name].presence || (file.respond_to?(:original_filename) ? file.original_filename : nil)
+    title = upload[:title].presence || (file.respond_to?(:original_filename) ? file.original_filename : nil)
     description = upload[:description].presence
 
     begin
@@ -95,7 +95,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
       asset = Asset.find_or_initialize_by(storage_key: result[:storage_key])
       asset.assign_attributes(
         name: result[:storage_key],
-        display_name: display_name,
+        title: title,
         description: description,
         url: result[:url],
         type: asset_type,
@@ -152,39 +152,32 @@ class V1::Admin::AssetsController < V1::ApplicationController
   def update
     update_params = admin_asset_params
     new_type = update_params[:type].presence
-    client_name = update_params[:name].to_s.strip
-    old_storage_key = @asset.storage_key
-    old_name = @asset.name
-    new_storage_key = nil
 
-    if new_type.present? && new_type != @asset.type && @asset.uploaded_file? && @asset.storage_key.present?
-      new_storage_key = AssetConstants::AssetName.rename_type(@asset.storage_key, new_type, @asset.created_by_id)
-      if new_storage_key != @asset.storage_key
-        Rails.logger.info("[AssetsController] Renaming storage object: #{@asset.storage_key} -> #{new_storage_key}")
-        StorageService::Client.move(@asset.storage_key, new_storage_key)
-        @asset.storage_key = new_storage_key
-        @asset.url = StorageService::Client.url(new_storage_key)
-        @asset.name = new_storage_key
-      end
+    if @asset.parent_asset_id.present? && new_type.present? && new_type != @asset.type
+      render_json_response(
+        status_code: 422,
+        message: admin_asset_message(MessageService::Admin::Asset::UPDATE_FAILED),
+        error: "Child asset type cannot be changed"
+      )
+      return
     end
 
-    if new_storage_key.present?
-      if client_name.blank? ||
-         client_name == old_name ||
-         client_name == old_storage_key ||
-         client_name == new_storage_key ||
-         client_name == AssetConstants::AssetName.rename_type(old_name, new_type, @asset.created_by_id)
+    if new_type.present? && new_type != @asset.type
+      if @asset.uploaded_file? && @asset.storage_key.present?
+        new_storage_key = AssetConstants::AssetName.rename_type(@asset.storage_key, new_type, @asset.type)
+        if new_storage_key != @asset.storage_key
+          Rails.logger.info("[AssetsController] Renaming storage object: #{@asset.storage_key} -> #{new_storage_key}")
+          StorageService::Client.move(@asset.storage_key, new_storage_key)
+          @asset.storage_key = new_storage_key
+          @asset.url = StorageService::Client.url(new_storage_key)
+        end
         update_params = update_params.merge(name: new_storage_key)
-      else
-        update_params = update_params.merge(name: AssetConstants::AssetName.rename_type(client_name, new_type, @asset.created_by_id))
+      elsif @asset.name.present?
+        new_name = AssetConstants::AssetName.rename_type(@asset.name, new_type, @asset.type)
+        update_params = update_params.merge(name: new_name)
       end
-    elsif new_type.present? && new_type == @asset.type && @asset.storage_key.present?
-      expected_name = AssetConstants::AssetName.rename_type(client_name, @asset.type, @asset.created_by_id)
-      if expected_name != client_name
-        update_params = update_params.merge(name: expected_name)
-      elsif @asset.name != @asset.storage_key && (@asset.name == old_storage_key || client_name == old_name)
-        update_params = update_params.merge(name: @asset.storage_key)
-      end
+    elsif @asset.storage_key.present?
+      update_params = update_params.except(:name)
     end
 
     if @asset.update(update_params)
@@ -646,7 +639,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def upload_params
-    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs, :display_name, :description)
+    params.permit(:file, :type, :assetable_type, :assetable_id, :duration_secs, :title, :description)
   end
 
   def upload_file_param
@@ -658,7 +651,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def admin_asset_params
-    params.require(:asset).permit(:name, :display_name, :description, :type, :assetable_type, :assetable_id)
+    params.require(:asset).permit(:name, :title, :description, :type, :assetable_type, :assetable_id)
   end
 
   def filter_params
@@ -671,7 +664,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
     pattern = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"
     scope.where(
-      "assets.name ILIKE :search OR assets.display_name ILIKE :search OR assets.storage_key ILIKE :search OR assets.assetable_type ILIKE :search",
+      "assets.name ILIKE :search OR assets.title ILIKE :search OR assets.storage_key ILIKE :search OR assets.assetable_type ILIKE :search",
       search: pattern
     )
   end
