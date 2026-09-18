@@ -22,8 +22,8 @@ Across all three repositories, the architecture adheres to one uncompromising do
 >
 > - **Demo Tier**: `rexone.rex9.me` (Web) & `api.rexone.rex9.me` (API)
 > - **Product Prod**: `<product>.<tld>` (e.g. `rexone.me`) & `api.<product>.<tld>` (e.g. `api.rexone.me`)
-> - **Product UAT**: `uat.<product>.<tld>` (e.g. `uat.rexone.me`) & `api.uat.<product>.<tld>` (e.g. `api.uat.rexone.me`)
-> - **Product Dev**: `dev.<product>.<tld>` (e.g. `dev.rexone.me`) & `api.dev.<product>.<tld>` (e.g. `api.dev.rexone.me`)
+> - **Product UAT**: `uat.<product>.<tld>` (e.g. `uat.rexone.me`) & `uat.api.<product>.<tld>` (e.g. `uat.api.rexone.me`)
+> - **Product Dev**: `dev.<product>.<tld>` (e.g. `dev.rexone.me`) & `dev.api.<product>.<tld>` (e.g. `dev.api.rexone.me`)
 >
 > 🗺️ **Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of the ecosystem across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**.
 >
@@ -146,7 +146,7 @@ Heavy or external provider operations sit behind clean service interfaces and ex
 
 Unlike legacy systems that force users through frustrating decision trees ("Do you want to log in or sign up?", "Select SSO vs Email", "Enter password vs request magic link"), RexOne's authentication engine eliminates decision fatigue entirely:
 
-- **Unified Single-Field Entry**: The user simply enters their email or username. The system dynamically queries the account state (`/peek`) to infer whether to proceed with registration, prompt for their 6-digit passcode, route through email verification, or apply rate-limited security cooldowns.
+- **Unified Single-Field Entry**: The user simply enters their email or username. The system dynamically queries the account state (`/peek`, protected by a strict 12 req/min IP rate limiter to block user enumeration) to infer whether to proceed with registration, prompt for their 6-digit passcode, route through email verification, or apply rate-limited security cooldowns.
 - **Frictionless Google SSO & Challenge Flows**: Seamlessly links OAuth accounts and requests password setup only when necessary, smoothly converting unconfirmed dropped registrations without jarring interruptions.
 - **Tri-Platform Concurrent Isolation**: Supports 3 distinct active sessions simultaneously (Web, Android, iOS) without logging users out across devices.
 

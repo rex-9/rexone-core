@@ -137,6 +137,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                                  | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
 | Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                                           | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
 | Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications, app versions               | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
+| Security       | Boot Guard, Zero-Trust CORS, Rate Limiting (Rack::Attack), Pre-Commit Secret Scanner                                            | [Security Architecture](docs/SECURITY.md)                                             |
 | Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                               | [Deployment](#deployment)                                                             |
 | Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                               | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
 
@@ -237,6 +238,7 @@ git clone https://github.com/rex-9/rexone-core.git
 cd rexone-core
 git switch dev
 cp .env.example .env
+./scripts/install_pre_commit.sh
 ./scripts/dev.sh
 ```
 
@@ -264,16 +266,19 @@ The complete [Ecosystem Quick Start](docs/QUICK_START.md) explains which service
 
 ### Useful development scripts
 
-| Script                       | Purpose                                                                                          | Flags / Options                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------- |
-| `./scripts/dev.sh`           | Start all 5 Core containers (API, DB, Waka, Garage, Media)                                       | None                                         |
-| `./scripts/ci.sh`            | Run complete CI suite (RSpec, contracts, RuboCop, locales)                                       | `contracts` (run contract validation only)   |
-| `./scripts/check_locales.sh` | Validate EN/MY locale parity and `MessageService` constants                                      | `--unused` (audit unreferenced keys)         |
-| `./scripts/console.sh`       | Open interactive Rails console inside the API container                                          | None                                         |
-| `./scripts/enter_api.sh`     | Enter running API container shell or execute custom commands                                     | `[cmd...]`                                   |
-| `./scripts/db_reset.sh`      | Recreate database from schema and run seeds (development only)                                   | `-y`, `--force` (bypass confirmation prompt) |
-| `./scripts/docker_clean.sh`  | Stop containers and prune dev volumes (Postgres, Garage S3)                                      | `-y`, `--force` (bypass confirmation prompt) |
-| `./scripts/rebrand.sh`       | Master rebrand engine across Core, Web, and Mobile ecosystem (supports custom domains & any TLD) | `<config.json>`                              |
+| Script                            | Purpose                                                                                          | Flags / Options                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| `./scripts/dev.sh`                | Start all 5 Core containers (API, DB, Waka, Garage, Media)                                       | None                                         |
+| `./scripts/ci.sh`                 | Run complete CI suite (RSpec, contracts, RuboCop, locales)                                       | `contracts` (run contract validation only)   |
+| `./scripts/check_locales.sh`      | Validate EN/MY locale parity and `MessageService` constants                                      | `--unused` (audit unreferenced keys)         |
+| `./scripts/console.sh`            | Open interactive Rails console inside the API container                                          | None                                         |
+| `./scripts/enter_api.sh`          | Enter running API container shell or execute custom commands                                     | `[cmd...]`                                   |
+| `./scripts/db_reset.sh`           | Recreate database from schema and run seeds (development only)                                   | `-y`, `--force` (bypass confirmation prompt) |
+| `./scripts/docker_clean.sh`       | Stop containers and prune dev volumes (Postgres, Garage S3)                                      | `-y`, `--force` (bypass confirmation prompt) |
+| `./scripts/rebrand.sh`            | Master rebrand engine across Core, Web, and Mobile ecosystem (supports custom domains & any TLD) | `<config.json>`                              |
+| `./scripts/generate_secrets.sh`   | Generate high-entropy cryptographically secure production keys for `.env`                        | None                                         |
+| `./scripts/check_secrets.sh`      | Pre-commit secret scanner (blocks uncommitted `.env` files and live API keys)                    | `--install` (setup git hook), `--all`        |
+| `./scripts/install_pre_commit.sh` | Install master git pre-commit hook executing secret scans and quality checks before each commit  | None                                         |
 
 ## Configuration
 
@@ -286,12 +291,30 @@ RexOne standardizes multi-tier domain architectures with zero-trust local isolat
 - **Demo Tier**: `rexone.rex9.me` (Web) & `api.rexone.rex9.me` (API)
 - **Product Tiers** (e.g., RexOne or any product with any custom TLD: `.com`, `.io`, `.ai`, `.app`, etc.):
   - **Prod**: `<product>.<tld>` (e.g. `rexone.me`) & `api.<product>.<tld>` (e.g. `api.rexone.me`)
-  - **UAT**: `uat.<product>.<tld>` (e.g. `uat.rexone.me`) & `api.uat.<product>.<tld>` (e.g. `api.uat.rexone.me`)
-  - **Dev**: `dev.<product>.<tld>` (e.g. `dev.rexone.me`) & `api.dev.<product>.<tld>` (e.g. `api.dev.rexone.me`)
+  - **UAT**: `uat.<product>.<tld>` (e.g. `uat.rexone.me`) & `uat.api.<product>.<tld>` (e.g. `uat.api.rexone.me`)
+  - **Dev**: `dev.<product>.<tld>` (e.g. `dev.rexone.me`) & `dev.api.<product>.<tld>` (e.g. `dev.api.rexone.me`)
 - **Key Parameters**:
   - `PRODUCT_DOMAIN`: Custom product root domain (e.g. `rexone.me`) whitelisted for CORS, Action Cable, and Host Authorization.
   - `CORS_ORIGINS`: Optional comma-separated origins for partner portals or third-party integrations.
   - `CORS_ALLOW_LOCALHOST`: Disabled (`false`) by default in production to prevent local cross-origin attacks; enabled only when explicitly opted in.
+
+### Security Boot Guard & Cryptographic Hygiene
+
+RexOne includes a built-in startup validator ([`config/initializers/security_boot_guard.rb`](config/initializers/security_boot_guard.rb)):
+
+- **Production Enforcement**: Refuses to boot if critical keys (`RAILS_SECRET_KEY_BASE`, `RAILS_JWT_SECRET_KEY`, `PG_PASSWORD`, `S3_ADMIN_TOKEN`) match `.env.example` placeholders, are blank, or fail minimum length requirements. Run `./scripts/generate_secrets.sh` to generate 64-byte random keys.
+- **Development Diagnostics**: In development, prints an actionable diagnostic report if optional keys (Brevo, Stripe, DeepSeek, Gemini, OneSignal, Azure Speech) are missing or dummy, explicitly stating what feature is affected.
+- **Pre-Commit Secret Scanner**: [`scripts/check_secrets.sh`](scripts/check_secrets.sh) guards against committing real `.env` files or cloud keys. Install with `./scripts/install_pre_commit.sh`.
+
+### API Rate Limiting (`Rack::Attack`)
+
+All authentication surfaces are protected against brute-force, scraping, and email bombing ([`config/initializers/rack_attack.rb`](config/initializers/rack_attack.rb)):
+
+- **Account Peek (`GET /peek`)**: 12 requests / minute (1 per 5s) per IP to block user enumeration.
+- **Sign In (`POST /signin*`)**: 10 attempts / 3 minutes per IP.
+- **Registration (`POST /signup`)**: 10 attempts / 3 minutes per IP.
+- **Code Dispatch (`POST /confirmation/send_code`, `POST /password/forgot`)**: 10 requests / 3 minutes per IP to prevent transactional email bombing.
+- **General Auth Baseline**: 60 requests / minute per IP.
 
 ## API surface
 

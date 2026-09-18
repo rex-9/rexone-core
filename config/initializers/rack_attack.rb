@@ -19,8 +19,35 @@ Rack::Attack.cache.store = Rails.cache
 class Rack::Attack
   # ── Authentication throttles ──────────────────────────────────────────────
 
-  # General protection for authentication-related endpoints.
-  # Allow up to 60 requests/min per IP to included endpoints.
+  # Strict limit for account peek / user existence checking (GET /peek).
+  # 12 requests per minute (1 per 5 seconds) per IP to prevent email/account enumeration.
+  throttle("auth/peek/ip", limit: 12, period: 1.minute) do |req|
+    req.ip if req.path == "/peek" && req.get?
+  end
+
+  # Strict limit: 10 signin POST attempts per IP per 3 minutes.
+  # Prevents credential stuffing attacks across any signin endpoint.
+  throttle("auth/signin/ip", limit: 10, period: 3.minutes) do |req|
+    req.ip if req.path.start_with?("/signin") && req.post?
+  end
+
+  # Strict limit: 10 registration attempts per IP per 3 minutes.
+  # Prevents bot account creation storms.
+  throttle("auth/signup/ip", limit: 10, period: 3.minutes) do |req|
+    req.ip if req.path == "/signup" && req.post?
+  end
+
+  # Strict limit: 10 code-dispatch / password-reset requests per IP per 3 minutes.
+  # Prevents transactional email bombing (confirmation codes, password resets).
+  throttle("auth/codes/ip", limit: 10, period: 3.minutes) do |req|
+    req.ip if req.post? && (
+      req.path == "/confirmation/send_code" ||
+      req.path == "/password/forgot"
+    )
+  end
+
+  # General baseline protection for all authentication-related endpoints.
+  # Allow up to 60 requests/min per IP.
   throttle("auth/req/ip", limit: 60, period: 1.minute) do |req|
     req.ip if req.path.start_with?(
       "/signin",
@@ -28,12 +55,6 @@ class Rack::Attack
       "/confirmation",
       "/password"
     )
-  end
-
-  # Strict limit: 10 signin POST attempts per IP per 5 minutes.
-  # Prevents an attacker from cycling through users from a single IP.
-  throttle("auth/signin/ip", limit: 10, period: 5.minutes) do |req|
-    req.ip if req.path == "/signin" && req.post?
   end
 
   # ── Responses ─────────────────────────────────────────────────────────────

@@ -23,8 +23,8 @@ flowchart TD
     subgraph Internet ["🌐 Public Internet (Let's Encrypt SSL / 443)"]
         DemoDomain["rexone.rex9.me (Demo Web) / api.rexone.rex9.me (Demo API)"]
         ProdDomain["rexone.me (Prod Web) / api.rexone.me (Prod API)"]
-        UatDomain["uat.rexone.me (UAT Web) / api.uat.rexone.me (UAT API)"]
-        DevDomain["dev.rexone.me (Dev Web) / api.dev.rexone.me (Dev API)"]
+        UatDomain["uat.rexone.me (UAT Web) / uat.api.rexone.me (UAT API)"]
+        DevDomain["dev.rexone.me (Dev Web) / dev.api.rexone.me (Dev API)"]
         S3Domain["s3.rexone.me (Shared Garage S3)"]
     end
 
@@ -253,7 +253,7 @@ _(This automatically assigns the cluster layout, creates bucket `rexone`, and co
 | `RAILS_JWT_SECRET_KEY`  | `<STRONG_RANDOM_SECRET>`                                         | `<STRONG_RANDOM_SECRET>`                                 |
 | `PRODUCT_DOMAIN`        | `rexone.me` (or custom product domain)                           | `rexone.me`                                              |
 | `RAILS_CLIENT_BASE_URL` | `https://rexone.me`                                              | `https://uat.rexone.me`                                  |
-| `RAILS_SERVER_BASE_URL` | `https://api.rexone.me`                                          | `https://api.uat.rexone.me`                              |
+| `RAILS_SERVER_BASE_URL` | `https://api.rexone.me`                                          | `https://uat.api.rexone.me`                              |
 | `STORAGE_PROVIDER`      | `garage`                                                         | `garage`                                                 |
 | `S3_ENDPOINT`           | `http://rexone-garage:3100`                                      | `http://rexone-garage:3100`                              |
 | `S3_PUBLIC_ENDPOINT`    | `https://s3.rexone.me`                                           | `https://s3.rexone.me`                                   |
@@ -265,8 +265,8 @@ _(This automatically assigns the cluster layout, creates bucket `rexone`, and co
 
 4. In the **Traefik Configuration** for `api`:
    - Production: `https://api.rexone.me`
-   - UAT: `https://api.uat.rexone.me`
-   - Dev: `https://api.dev.rexone.me`
+   - UAT: `https://uat.api.rexone.me`
+   - Dev: `https://dev.api.rexone.me`
    - Demo: `https://api.rexone.rex9.me`
    - Traefik maps port `3000` with automatic Let's Encrypt SSL.
 
@@ -283,9 +283,9 @@ _(This automatically assigns the cluster layout, creates bucket `rexone`, and co
 | `WEB_CONTAINER_NAME`                | `prod-rexone-web`              | `uat-rexone-web`            | `demo-rexone-web`            |
 | `DOCKER_NETWORK`                    | `prod-rexone-net`              | `uat-rexone-net`            | `demo-rexone-net`            |
 | `VITE_REACT_APP_NAME`               | `rexone.me`                    | `uat.rexone.me`             | `rexone.rex9.me`             |
-| `VITE_REACT_APP_SERVER_BASE_URL`    | `https://api.rexone.me`        | `https://api.uat.rexone.me` | `https://api.rexone.rex9.me` |
+| `VITE_REACT_APP_SERVER_BASE_URL`    | `https://api.rexone.me`        | `https://uat.api.rexone.me` | `https://api.rexone.rex9.me` |
 | `VITE_REACT_APP_CLIENT_BASE_URL`    | `https://rexone.me`            | `https://uat.rexone.me`     | `https://rexone.rex9.me`     |
-| `VITE_REACT_APP_SERVER_WS_BASE_URL` | `wss://api.rexone.me`          | `wss://api.uat.rexone.me`   | `wss://api.rexone.rex9.me`   |
+| `VITE_REACT_APP_SERVER_WS_BASE_URL` | `wss://api.rexone.me`          | `wss://uat.api.rexone.me`   | `wss://api.rexone.rex9.me`   |
 | `VITE_REACT_APP_GOOGLE_CLIENT_ID`   | `<Google_Client_ID>`           | `<Google_Client_ID>`        | `<Google_Client_ID>`         |
 
 4. Set Traefik Domain:

@@ -21,14 +21,20 @@ Use the three `dev` branches together for the supported development integration 
 
 For a native Core installation, use Ruby 4.0.4, PostgreSQL 18, libvips, FFmpeg, `librsvg2-bin`, and Bundler 4.0.16.
 
-## 1. Clone and configure Core
+## 1. Clone, configure, and secure Core
 
 ```bash
 git clone https://github.com/rex-9/rexone-core.git
 cd rexone-core
 git switch dev
 cp .env.example .env
+
+# Install master pre-commit security & quality hooks (MANDATORY)
+./scripts/install_pre_commit.sh
 ```
+
+> [!IMPORTANT]
+> **Pre-Commit Safety Guardrail**: Running `./scripts/install_pre_commit.sh` is required before making any commits. It installs local Git hooks that automatically prevent committing unignored `.env` files, high-entropy cloud keys (Stripe, AWS, OpenAI, Google), and unlocalized strings. See [Security Architecture](SECURITY.md) for full details.
 
 ## Configure Core
 
