@@ -86,6 +86,15 @@ elif [ -n "$BRAND_LOGO" ]; then
 fi
 echo "------------------------------------------------------------"
 
+# Cross-platform sed -i helper (macOS BSD sed vs Linux GNU sed)
+sedi() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "$@"
+  else
+    sed -i "$@"
+  fi
+}
+
 # Helper to update key=value in .env files safely
 update_env_var() {
   local target_file="$1"
@@ -94,7 +103,7 @@ update_env_var() {
 
   if [ -f "$target_file" ]; then
     if grep -q "^#* *${key}=" "$target_file"; then
-      sed -i '' -E "s|^#* *${key}=.*|${key}=${val}|g" "$target_file"
+      sedi -E "s|^#* *${key}=.*|${key}=${val}|g" "$target_file"
     fi
   fi
 }
@@ -125,23 +134,23 @@ done
 
 # Update Core docker-compose.yaml (Production / Coolify)
 if [ -f "$CORE_DIR/docker-compose.yaml" ]; then
-  sed -i '' -E "s|container_name: \\\$\{RAILS_CONTAINER_NAME:-[^}]*\}|container_name: \${RAILS_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-api}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|container_name: \\\$\{WAKA_CONTAINER_NAME:-[^}]*\}|container_name: \${WAKA_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-waka}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|container_name: \\\$\{MEDIA_CONTAINER_NAME:-[^}]*\}|container_name: \${MEDIA_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-media}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|container_name: \\\$\{DB_CONTAINER_NAME:-[^}]*\}|container_name: \${DB_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-db}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|container_name: \\\$\{GARAGE_CONTAINER_NAME:-[^}]*\}|container_name: \${GARAGE_CONTAINER_NAME:-${BRAND_SLUG_KEBAB}-garage}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|S3_BUCKET: \\\$\{S3_BUCKET:-[^}]*\}|S3_BUCKET: \${S3_BUCKET:-${BRAND_SLUG_KEBAB}}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|POSTGRES_DB: \\\$\{PG_DATABASE:-[^}]*\}|POSTGRES_DB: \${PG_DATABASE:-${BRAND_SLUG_SNAKE}_production}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|name: \\\$\{DOCKER_NETWORK:-[^}]*\}|name: \${DOCKER_NETWORK:-prod-${BRAND_SLUG_KEBAB}-net}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|name: \\\$\{POSTGRES_VOLUME:-[^}]*\}|name: \${POSTGRES_VOLUME:-prod-${BRAND_SLUG_KEBAB}-postgres-data}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|name: \\\$\{GARAGE_META_VOLUME:-[^}]*\}|name: \${GARAGE_META_VOLUME:-${BRAND_SLUG_KEBAB}-garage-meta}|g" "$CORE_DIR/docker-compose.yaml"
-  sed -i '' -E "s|name: \\\$\{GARAGE_DATA_VOLUME:-[^}]*\}|name: \${GARAGE_DATA_VOLUME:-${BRAND_SLUG_KEBAB}-garage-data}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|container_name: \\\$\{RAILS_CONTAINER_NAME:-[^}]*\}|container_name: \${RAILS_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-api}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|container_name: \\\$\{WAKA_CONTAINER_NAME:-[^}]*\}|container_name: \${WAKA_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-waka}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|container_name: \\\$\{MEDIA_CONTAINER_NAME:-[^}]*\}|container_name: \${MEDIA_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-media}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|container_name: \\\$\{DB_CONTAINER_NAME:-[^}]*\}|container_name: \${DB_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-db}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|container_name: \\\$\{GARAGE_CONTAINER_NAME:-[^}]*\}|container_name: \${GARAGE_CONTAINER_NAME:-${BRAND_SLUG_KEBAB}-garage}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|S3_BUCKET: \\\$\{S3_BUCKET:-[^}]*\}|S3_BUCKET: \${S3_BUCKET:-${BRAND_SLUG_KEBAB}}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|POSTGRES_DB: \\\$\{PG_DATABASE:-[^}]*\}|POSTGRES_DB: \${PG_DATABASE:-${BRAND_SLUG_SNAKE}_production}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|name: \\\$\{DOCKER_NETWORK:-[^}]*\}|name: \${DOCKER_NETWORK:-prod-${BRAND_SLUG_KEBAB}-net}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|name: \\\$\{POSTGRES_VOLUME:-[^}]*\}|name: \${POSTGRES_VOLUME:-prod-${BRAND_SLUG_KEBAB}-postgres-data}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|name: \\\$\{GARAGE_META_VOLUME:-[^}]*\}|name: \${GARAGE_META_VOLUME:-${BRAND_SLUG_KEBAB}-garage-meta}|g" "$CORE_DIR/docker-compose.yaml"
+  sedi -E "s|name: \\\$\{GARAGE_DATA_VOLUME:-[^}]*\}|name: \${GARAGE_DATA_VOLUME:-${BRAND_SLUG_KEBAB}-garage-data}|g" "$CORE_DIR/docker-compose.yaml"
   echo "  ✅ Core: Synchronized docker-compose.yaml with prod-${BRAND_SLUG_KEBAB} containers"
 fi
 
 # Update Core docker-compose.dev.yaml (Development)
 if [ -f "$CORE_DIR/docker-compose.dev.yaml" ]; then
-  sed -i '' -E "s|container_name: \\\$\{GARAGE_CONTAINER_NAME:-[^}]*\}|container_name: \${GARAGE_CONTAINER_NAME:-dev-${BRAND_SLUG_KEBAB}-core-garage}|g" "$CORE_DIR/docker-compose.dev.yaml"
+  sedi -E "s|container_name: \\\$\{GARAGE_CONTAINER_NAME:-[^}]*\}|container_name: \${GARAGE_CONTAINER_NAME:-dev-${BRAND_SLUG_KEBAB}-core-garage}|g" "$CORE_DIR/docker-compose.dev.yaml"
   echo "  ✅ Core: Synchronized docker-compose.dev.yaml"
 fi
 
@@ -154,44 +163,50 @@ if [ -d "$WEB_DIR" ]; then
 
   # Update index.html (Title, Metadata, Canonical, OpenGraph, Twitter, Schema.org)
   if [ -f "$WEB_DIR/index.html" ]; then
-    sed -i '' -E "s|<title>.*</title>|<title>$WEB_TITLE</title>|g" "$WEB_DIR/index.html"
-    sed -i '' -E "s|<meta name=\"title\" content=\"[^\"]*\"|<meta name=\"title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
-    sed -i '' -E "s|<link rel=\"canonical\" href=\"[^\"]*\"|<link rel=\"canonical\" href=\"https://${BRAND_SLUG_FLAT}.me/\"|g" "$WEB_DIR/index.html"
-    sed -i '' -E "s|<meta property=\"og:site_name\" content=\"[^\"]*\"|<meta property=\"og:site_name\" content=\"${BRAND_NAME} Ecosystem\"|g" "$WEB_DIR/index.html"
-    sed -i '' -E "s|<meta property=\"og:title\" content=\"[^\"]*\"|<meta property=\"og:title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
-    sed -i '' -E "s|<meta property=\"og:url\" content=\"[^\"]*\"|<meta property=\"og:url\" content=\"https://${BRAND_SLUG_FLAT}.me/\"|g" "$WEB_DIR/index.html"
-    sed -i '' -E "s|<meta name=\"twitter:title\" content=\"[^\"]*\"|<meta name=\"twitter:title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
-    sed -i '' -E "s|<meta name=\"twitter:url\" content=\"[^\"]*\"|<meta name=\"twitter:url\" content=\"https://${BRAND_SLUG_FLAT}.me/\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<title>.*</title>|<title>$WEB_TITLE</title>|g" "$WEB_DIR/index.html"
+    sedi -E "s|<meta name=\"title\" content=\"[^\"]*\"|<meta name=\"title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<link rel=\"canonical\" href=\"[^\"]*\"|<link rel=\"canonical\" href=\"https://${BRAND_SLUG_FLAT}.me/\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<meta property=\"og:site_name\" content=\"[^\"]*\"|<meta property=\"og:site_name\" content=\"${BRAND_NAME} Ecosystem\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<meta property=\"og:title\" content=\"[^\"]*\"|<meta property=\"og:title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<meta property=\"og:url\" content=\"[^\"]*\"|<meta property=\"og:url\" content=\"https://${BRAND_SLUG_FLAT}.me/\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<meta name=\"twitter:title\" content=\"[^\"]*\"|<meta name=\"twitter:title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|<meta name=\"twitter:url\" content=\"[^\"]*\"|<meta name=\"twitter:url\" content=\"https://${BRAND_SLUG_FLAT}.me/\"|g" "$WEB_DIR/index.html"
     if [ -n "$BRAND_DESC" ]; then
-      sed -i '' -E "s|<meta name=\"description\" content=\"[^\"]*\"|<meta name=\"description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
-      sed -i '' -E "s|<meta property=\"og:description\" content=\"[^\"]*\"|<meta property=\"og:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
-      sed -i '' -E "s|<meta name=\"twitter:description\" content=\"[^\"]*\"|<meta name=\"twitter:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
+      sedi -E "s|<meta name=\"description\" content=\"[^\"]*\"|<meta name=\"description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
+      sedi -E "s|<meta property=\"og:description\" content=\"[^\"]*\"|<meta property=\"og:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
+      sedi -E "s|<meta name=\"twitter:description\" content=\"[^\"]*\"|<meta name=\"twitter:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
     fi
-    sed -i '' -E "s|\"name\": \"[^\"]*\"|\"name\": \"$BRAND_NAME\"|g" "$WEB_DIR/index.html"
-    sed -i '' -E "s|\"url\": \"https://[^\"]*\"|\"url\": \"https://${BRAND_SLUG_FLAT}.me\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|\"name\": \"[^\"]*\"|\"name\": \"$BRAND_NAME\"|g" "$WEB_DIR/index.html"
+    sedi -E "s|\"url\": \"https://[^\"]*\"|\"url\": \"https://${BRAND_SLUG_FLAT}.me\"|g" "$WEB_DIR/index.html"
     echo "  ✅ Web: Updated index.html (Metadata, OpenGraph, Canonical & Schema.org)"
   fi
 
   # Update sitemap.xml and robots.txt
   if [ -f "$WEB_DIR/public/sitemap.xml" ]; then
-    sed -i '' -E "s|https://[^/]+/|https://${BRAND_SLUG_FLAT}.me/|g" "$WEB_DIR/public/sitemap.xml"
+    sedi -E "s|https://[^/]+/|https://${BRAND_SLUG_FLAT}.me/|g" "$WEB_DIR/public/sitemap.xml"
     echo "  ✅ Web: Updated public/sitemap.xml (https://${BRAND_SLUG_FLAT}.me)"
   fi
   if [ -f "$WEB_DIR/public/robots.txt" ]; then
-    sed -i '' -E "s|Sitemap: https://[^/]+/sitemap.xml|Sitemap: https://${BRAND_SLUG_FLAT}.me/sitemap.xml|g" "$WEB_DIR/public/robots.txt"
+    sedi -E "s|Sitemap: https://[^/]+/sitemap.xml|Sitemap: https://${BRAND_SLUG_FLAT}.me/sitemap.xml|g" "$WEB_DIR/public/robots.txt"
     echo "  ✅ Web: Updated public/robots.txt (Sitemap)"
   fi
 
   # Update package.json
   if [ -f "$WEB_DIR/package.json" ]; then
-    sed -i '' -E "s/\"name\": \"[^\"]*\"/\"name\": \"$BRAND_SLUG_KEBAB-web\"/g" "$WEB_DIR/package.json"
+    sedi -E "s/\"name\": \"[^\"]*\"/\"name\": \"$BRAND_SLUG_KEBAB-web\"/g" "$WEB_DIR/package.json"
     echo "  ✅ Web: Updated package.json (\"name\": \"$BRAND_SLUG_KEBAB-web\")"
   fi
 
   # Update queryClient cache key
   if [ -f "$WEB_DIR/src/services/queryClient.ts" ]; then
-    sed -i '' -E "s/\"[a-z0-9_-]+_react_query_cache\"/\"${BRAND_SLUG_SNAKE}_react_query_cache\"/g" "$WEB_DIR/src/services/queryClient.ts"
+    sedi -E "s/\"[a-z0-9_-]+_react_query_cache\"/\"${BRAND_SLUG_SNAKE}_react_query_cache\"/g" "$WEB_DIR/src/services/queryClient.ts"
     echo "  ✅ Web: Updated React Query cache key to \"${BRAND_SLUG_SNAKE}_react_query_cache\""
+  fi
+
+  # Update locales/en.json if brand name mentioned
+  if [ -f "$WEB_DIR/src/locales/en.json" ]; then
+    sedi -E "s/\"title\": \"Welcome to [^\"]*\"/\"title\": \"Welcome to $BRAND_NAME\"/g" "$WEB_DIR/src/locales/en.json"
+    echo "  ✅ Web: Updated brand references in src/locales/en.json"
   fi
 
   # Update Web .env files and .env.example
@@ -205,18 +220,18 @@ if [ -d "$WEB_DIR" ]; then
 
   # Update Web docker-compose.yaml
   if [ -f "$WEB_DIR/docker-compose.yaml" ]; then
-    sed -i '' -E "s|container_name: \\\$\{WEB_CONTAINER_NAME:-[^}]*\}|container_name: \${WEB_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-web}|g" "$WEB_DIR/docker-compose.yaml"
-    sed -i '' -E "s|name: \\\$\{DOCKER_NETWORK:-[^}]*\}|name: \${DOCKER_NETWORK:-prod-${BRAND_SLUG_KEBAB}-net}|g" "$WEB_DIR/docker-compose.yaml"
-    sed -i '' -E "s|VITE_REACT_APP_NAME: \\\$\{VITE_REACT_APP_NAME:-[^}]*\}|VITE_REACT_APP_NAME: \${VITE_REACT_APP_NAME:-${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
-    sed -i '' -E "s|VITE_REACT_APP_SERVER_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_BASE_URL: \${VITE_REACT_APP_SERVER_BASE_URL:-https://api.${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
-    sed -i '' -E "s|VITE_REACT_APP_CLIENT_BASE_URL: \\\$\{VITE_REACT_APP_CLIENT_BASE_URL:-[^}]*\}|VITE_REACT_APP_CLIENT_BASE_URL: \${VITE_REACT_APP_CLIENT_BASE_URL:-https://${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
-    sed -i '' -E "s|VITE_REACT_APP_SERVER_WS_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_WS_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_WS_BASE_URL: \${VITE_REACT_APP_SERVER_WS_BASE_URL:-wss://api.${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|container_name: \\\$\{WEB_CONTAINER_NAME:-[^}]*\}|container_name: \${WEB_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-web}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|name: \\\$\{DOCKER_NETWORK:-[^}]*\}|name: \${DOCKER_NETWORK:-prod-${BRAND_SLUG_KEBAB}-net}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_NAME: \\\$\{VITE_REACT_APP_NAME:-[^}]*\}|VITE_REACT_APP_NAME: \${VITE_REACT_APP_NAME:-${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_SERVER_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_BASE_URL: \${VITE_REACT_APP_SERVER_BASE_URL:-https://api.${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_CLIENT_BASE_URL: \\\$\{VITE_REACT_APP_CLIENT_BASE_URL:-[^}]*\}|VITE_REACT_APP_CLIENT_BASE_URL: \${VITE_REACT_APP_CLIENT_BASE_URL:-https://${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_SERVER_WS_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_WS_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_WS_BASE_URL: \${VITE_REACT_APP_SERVER_WS_BASE_URL:-wss://api.${BRAND_SLUG_FLAT}.me}|g" "$WEB_DIR/docker-compose.yaml"
     echo "  ✅ Web: Synchronized docker-compose.yaml with prod-${BRAND_SLUG_KEBAB}-web"
   fi
 
   # Update Web docker-compose.dev.yaml
   if [ -f "$WEB_DIR/docker-compose.dev.yaml" ]; then
-    sed -i '' -E "s|container_name: dev-[^ ]*|container_name: dev-${BRAND_SLUG_KEBAB}-web|g" "$WEB_DIR/docker-compose.dev.yaml"
+    sedi -E "s|container_name: dev-[^ ]*|container_name: dev-${BRAND_SLUG_KEBAB}-web|g" "$WEB_DIR/docker-compose.dev.yaml"
     echo "  ✅ Web: Synchronized docker-compose.dev.yaml (dev-${BRAND_SLUG_KEBAB}-web)"
   fi
 
@@ -239,7 +254,7 @@ if [ -d "$MOBILE_DIR" ]; then
   echo "📱 Rebranding Mobile Client ($MOBILE_DIR)..."
 
   if [ -f "$MOBILE_DIR/scripts/rebrand.sh" ]; then
-    bash "$MOBILE_DIR/scripts/rebrand.sh" "$MOBILE_APP_NAME" "$MOBILE_PACKAGE" "$RESOLVED_LOGO_PATH"
+    bash "$MOBILE_DIR/scripts/rebrand.sh" "$MOBILE_APP_NAME" "$MOBILE_PACKAGE" "$RESOLVED_LOGO_PATH" "$BRAND_NAME"
   fi
 else
   echo "ℹ️  Mobile repository not found at $MOBILE_DIR (skipping)"

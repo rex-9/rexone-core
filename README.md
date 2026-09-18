@@ -262,6 +262,19 @@ docker compose -f docker-compose.dev.yaml exec api bin/rails db:seed
 
 The complete [Ecosystem Quick Start](docs/QUICK_START.md) explains which services are optional, covers Core/Web/Mobile compatibility, provides alternative granular process commands for advanced debugging, and guides client startup and troubleshooting.
 
+### Useful development scripts
+
+| Script | Purpose | Flags / Options |
+| --- | --- | --- |
+| `./scripts/dev.sh` | Start all 5 Core containers (API, DB, Waka, Garage, Media) | None |
+| `./scripts/ci.sh` | Run complete CI suite (RSpec, contracts, RuboCop, locales) | `contracts` (run contract validation only) |
+| `./scripts/check_locales.sh` | Validate EN/MY locale parity and `MessageService` constants | `--unused` (audit unreferenced keys) |
+| `./scripts/console.sh` | Open interactive Rails console inside the API container | None |
+| `./scripts/enter_api.sh` | Enter running API container shell or execute custom commands | `[cmd...]` |
+| `./scripts/db_reset.sh` | Recreate database from schema and run seeds (development only) | `-y`, `--force` (bypass confirmation prompt) |
+| `./scripts/docker_clean.sh` | Stop containers and prune dev volumes (Postgres, Garage S3) | `-y`, `--force` (bypass confirmation prompt) |
+| `./scripts/rebrand.sh` | Master rebrand engine across Core, Web, and Mobile ecosystem | `<config.json>` |
+
 ## Configuration
 
 Configuration is part of the [Ecosystem Quick Start](docs/QUICK_START.md#configure-core). The checked-in [`.env.example`](.env.example) remains the authoritative catalog of available settings; keep real credentials in the deployment environment or an encrypted secret store.

@@ -1,5 +1,3 @@
-#!/bin/bash
-# scripts/rails
-
+#!/usr/bin/env bash
 # Enter the Rails Console
-docker-compose -f docker-compose.dev.yaml exec api rails console
+docker compose -f docker-compose.dev.yaml exec api rails console "$@"

@@ -53,19 +53,39 @@ burmese_files.each do |burmese_file|
   errors << "missing English locale: #{burmese_file.delete_prefix("#{ROOT}/")}" unless File.exist?(english_file)
 end
 
+show_unused = ARGV.include?("--unused")
+constants = []
 constant_count = 0
 Dir.glob(File.join(MESSAGE_ROOT, "**/*.rb")).sort.each do |file|
   File.foreach(file).with_index(1) do |line, line_number|
-    match = line.match(/^\s*[A-Z][A-Z0-9_]*\s*=\s*["']([a-z][a-z0-9_.]+)["']/)
+    match = line.match(/^\s*([A-Z][A-Z0-9_]*)\s*=\s*["']([a-z][a-z0-9_.]+)["']/)
     next unless match
 
     constant_count += 1
-    key = match[1]
+    const_name = match[1]
+    key = match[2]
+    constants << { name: const_name, key: key, file: file, line: line_number }
     errors << "#{file.delete_prefix("#{ROOT}/")}:#{line_number}: unknown locale key #{key}" unless english_keys.include?(key)
   end
 end
 
-puts "Core locale report: #{english_files.length} pairs, #{english_keys.length} keys, #{constant_count} message constants."
+app_code = Dir.glob(File.join(ROOT, "app/**/*.rb"))
+              .reject { |f| f.start_with?(MESSAGE_ROOT) }
+              .map { |f| File.read(f) }
+              .join("\n")
+
+unused_constants = constants.reject { |c| app_code.match?(/\b#{Regexp.escape(c[:name])}\b/) }
+
+puts "Core locale report: #{english_files.length} pairs, #{english_keys.length} keys, #{constant_count} message constants (#{unused_constants.length} unused)."
+
+if show_unused && unused_constants.any?
+  puts "\nUnused MessageService constants (#{unused_constants.length}):"
+  unused_constants.each do |c|
+    puts "  - #{c[:name]} (#{c[:key]}) -> #{c[:file].delete_prefix("#{ROOT}/")}:#{c[:line]}"
+  end
+  puts ""
+end
+
 if errors.any?
   warn "Core locale checks failed (#{errors.length}):"
   errors.each { |error| warn "- #{error}" }
