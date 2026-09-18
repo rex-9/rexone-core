@@ -27,7 +27,7 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
-gem "async", "~> 2.45"
+gem "async", "~> 2.46"
 
 # ============================================================
 # Performance / Deployment
