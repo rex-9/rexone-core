@@ -22,6 +22,7 @@
     "flutterTools.displayRiverpodContextMenu": false,
     "flutterTools.displayModularContextMenu": false,
     "flutterTools.displaySignalsContextMenu": false,
-    "yaml.maxItemsComputed": 20000
+    "yaml.maxItemsComputed": 20000,
+    "java.configuration.updateBuildConfiguration": "interactive",
   },
 }
