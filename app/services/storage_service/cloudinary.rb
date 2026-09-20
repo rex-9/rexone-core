@@ -168,7 +168,7 @@ module StorageService
       }
     end
 
-    def playback_url(asset, expires_in:)
+    def playback_url(asset, expires_in:, **options)
       {
         type: MediaConstants::Playback::DELIVERY_TYPE_PROGRESSIVE,
         url: url(

@@ -50,20 +50,48 @@ class V1::AssetsController < V1::ApplicationController
       return
     end
 
+    public_host = request.headers[AuthConstants::Headers::FORWARDED_HOST].presence || request.host
     delivery = StorageService::Client.playback_url(
       @asset,
-      expires_in: MediaConstants::PLAYBACK_URL_TTL
+      expires_in: MediaConstants::PLAYBACK_URL_TTL,
+      public_host: public_host
     )
 
     render_json_response(
       status_code: 200,
       message: asset_message(MessageService::Asset::PLAYBACK_READY),
-      data: playback_payload(@asset, delivery)
+      data: playback_payload(@asset, delivery, public_host: public_host)
     )
   rescue StorageService::Error => e
     Rails.logger.error("[AssetsController] Playback URL failed for asset #{@asset&.id}: #{e.class}")
     message = asset_message(MessageService::Asset::PLAYBACK_STORAGE_FAILED)
     render_json_response(status_code: 503, message: message, error: message)
+  end
+
+  # GET /v1/assets/:id/subtitles/:subtitle_id
+  # Fallback HTTP streaming endpoint for external players (VLC, native mobile)
+  # or when in-memory subtitle content is not embedded in the playback JSON.
+  # Automatically normalizes SRT subtitles to standard WebVTT format.
+  def read_subtitle
+    set_asset
+    return unless @asset
+
+    subtitle = @asset.subtitles.find(params.permit(:subtitle_id)[:subtitle_id])
+    content = StorageService::Client.download(subtitle.storage_key)
+
+    vtt_content = convert_to_vtt(content)
+    send_data vtt_content, type: "text/vtt; charset=utf-8", disposition: "inline"
+  rescue ActiveRecord::RecordNotFound
+    render_json_response(
+      status_code: 404,
+      message: asset_message(MessageService::Asset::NOT_FOUND)
+    )
+  rescue StorageService::Error => e
+    Rails.logger.error("[AssetsController] Subtitle download failed: #{e.message}")
+    render_json_response(
+      status_code: 503,
+      message: asset_message(MessageService::Asset::STORAGE_UPLOAD_FAILED)
+    )
   end
 
   # POST /assets/upload
@@ -312,7 +340,23 @@ class V1::AssetsController < V1::ApplicationController
     end
   end
 
-  def playback_payload(asset, delivery)
+  def playback_payload(asset, delivery, public_host: nil)
+    subtitles_list = asset.subtitles.map do |subtitle|
+      content = begin
+        StorageService::Client.download(subtitle.storage_key)
+      rescue => e
+        Rails.logger.warn("[AssetsController] Could not pre-fetch subtitle #{subtitle.id}: #{e.message}")
+        nil
+      end
+
+      data = AssetSerializer.new(subtitle).serializable_hash[:data][:attributes]
+      # FAST PATH (In-Memory): Pre-fetched subtitle string for zero-latency, zero-CORS browser playback
+      data[:content] = content if content.present?
+      # FALLBACK PATH (HTTP Endpoint): Streaming route for external players or when content is omitted
+      data[:core_url] = "/v1/assets/#{asset.id}/subtitles/#{subtitle.id}"
+      data
+    end
+
     {
       asset_id: asset.id,
       delivery: {
@@ -326,7 +370,7 @@ class V1::AssetsController < V1::ApplicationController
         size_bytes: asset.size_bytes,
         duration_secs: asset.duration_secs,
         thumbnail: asset.thumbnail ? AssetSerializer.new(asset.thumbnail).serializable_hash[:data][:attributes] : nil,
-        subtitles: asset.subtitles.map { |subtitle| AssetSerializer.new(subtitle).serializable_hash[:data][:attributes] }
+        subtitles: subtitles_list
       }
     }
   end
@@ -380,5 +424,22 @@ class V1::AssetsController < V1::ApplicationController
   def file_processable?(file)
     ext = File.extname(filename_for(file)).delete(".").downcase
     MediaConstants::Processing::ALL_EXTENSIONS.include?(ext)
+  end
+
+  # Normalizes SRT / VTT subtitle strings into standard WebVTT format for browser players
+  def convert_to_vtt(content)
+    return "" if content.blank?
+
+    trimmed = content.sub(/\A\xEF\xBB\xBF/, "").strip
+    return trimmed if trimmed.start_with?("WEBVTT")
+
+    normalized = trimmed
+      .gsub(/\r\n?/, "\n")
+      .gsub(/(?:(\d{1,2}):)?(\d{2}):(\d{2}),(\d{3})/) do
+        hours = Regexp.last_match(1) ? Regexp.last_match(1).rjust(2, "0") : "00"
+        "#{hours}:#{Regexp.last_match(2)}:#{Regexp.last_match(3)}.#{Regexp.last_match(4)}"
+      end
+
+    "WEBVTT\n\n#{normalized}"
   end
 end

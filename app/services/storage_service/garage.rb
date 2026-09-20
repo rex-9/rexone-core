@@ -15,7 +15,7 @@ module StorageService
       @bucket = AppConfig::S3_BUCKET
       @public_endpoint = AppConfig::S3_PUBLIC_ENDPOINT
 
-      common_options = {
+      @common_options = {
         access_key_id: AppConfig::S3_ACCESS_KEY,
         secret_access_key: AppConfig::S3_SECRET_KEY,
         region: AppConfig::S3_REGION,
@@ -23,14 +23,29 @@ module StorageService
       }
 
       @client = Aws::S3::Client.new(
-        common_options.merge(endpoint: AppConfig::S3_ENDPOINT)
+        @common_options.merge(endpoint: AppConfig::S3_ENDPOINT)
       )
 
       @public_client = Aws::S3::Client.new(
-        common_options.merge(endpoint: @public_endpoint)
+        @common_options.merge(endpoint: @public_endpoint)
       )
     rescue KeyError => e
       raise Error, "Missing Garage configuration: #{e.message}"
+    end
+
+    def public_client_for(public_host = nil)
+      return @public_client if public_host.blank?
+
+      uri = URI.parse(@public_endpoint)
+      host_only = public_host.to_s.split(":").first
+      return @public_client if host_only.blank? || host_only == uri.host
+
+      dynamic_endpoint = "#{uri.scheme}://#{host_only}:#{uri.port}"
+      Aws::S3::Client.new(
+        @common_options.merge(endpoint: dynamic_endpoint)
+      )
+    rescue URI::InvalidURIError
+      @public_client
     end
 
     def upload(file, options = {})
@@ -93,7 +108,8 @@ module StorageService
       disposition = options[:response_content_disposition]
       presign_params[:response_content_disposition] = disposition if disposition.present?
 
-      signer = Aws::S3::Presigner.new(client: @public_client)
+      target_client = public_client_for(options[:public_host])
+      signer = Aws::S3::Presigner.new(client: target_client)
       signer.presigned_url(:get_object, **presign_params)
     rescue Aws::S3::Errors::ServiceError, ArgumentError => e
       Rails.logger.error("#{LOG_PREFIX} URL presigning error: #{e.message}")
@@ -197,11 +213,12 @@ module StorageService
       raise Error, e.message
     end
 
-    def playback_url(asset, expires_in:)
+    def playback_url(asset, expires_in:, public_host: nil)
       key = apply_prefix(asset.storage_key)
       content_type = Rack::Mime.mime_type(".#{asset.extension}", "application/octet-stream")
 
-      signer = Aws::S3::Presigner.new(client: @public_client)
+      target_client = public_client_for(public_host)
+      signer = Aws::S3::Presigner.new(client: target_client)
       signed_url = signer.presigned_url(
         :get_object,
         bucket: @bucket,

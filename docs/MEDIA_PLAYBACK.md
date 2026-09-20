@@ -21,7 +21,8 @@ Core stays responsible for identity, authorization, asset readiness, and provide
 ## Endpoints
 
 - `POST /v1/assets/upload` uploads client media.
-- `GET /v1/assets/:id/playback` returns a temporary playback contract for playable audio/video assets.
+- `GET /v1/assets/:id/playback` returns a temporary playback contract for playable audio/video assets, including pre-fetched subtitle text (`content`) and Core proxy URLs (`core_url`) for all attached `.srt` tracks. Storage URLs are dynamically presigned against the requesting client's host (e.g., `10.0.2.2:3100` for Android emulators, LAN IPs, or `localhost:3100`).
+- `GET /v1/assets/:id/subtitles/:subtitle_id` streams raw VTT/SRT text inline with standard CORS headers (`Access-Control-Allow-Origin: *`).
 
 The playback response uses a provider-neutral delivery object:
 
@@ -31,11 +32,20 @@ The playback response uses a provider-neutral delivery object:
     "type": "progressive",
     "url": "https://storage.example.com/...",
     "expires_at": "2026-09-13T14:00:00Z"
-  }
+  },
+  "subtitles": [
+    {
+      "id": "0191b2...",
+      "title": "English",
+      "url": "https://storage.example.com/...",
+      "core_url": "/v1/assets/0191a1.../subtitles/0191b2...",
+      "content": "1\n00:00:01,000 --> 00:00:04,000\nWelcome to RexOne!\n"
+    }
+  ]
 }
 ```
 
-Clients should use the URL directly in `<video>`, `<audio>`, or native media players. Do not download playback files through Axios/fetch first.
+Clients should use the playback URL directly in `<video>`, `<audio>`, or native media players. Web clients use the pre-fetched `content` to build in-memory `Blob` object URLs, completely bypassing cross-origin fetch restrictions. Mobile clients can consume either `content` or stream from `core_url`.
 
 ## Media pipeline compatibility
 

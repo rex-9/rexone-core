@@ -2015,6 +2015,12 @@ module Openapi
                        errors: [ 401, 403, 404, 409, 422, 503 ],
                        success_schema: ref(:asset_playback_response))
       }
+      paths["/v1/assets/{id}/subtitles/{subtitle_id}"] = {
+        get: operation(tags: "Assets", summary: "Stream subtitle file normalized as WebVTT",
+                       description: "Serves the subtitle file for the specified asset normalized to standard WebVTT format (text/vtt; charset=utf-8). Fallback endpoint for external or standalone media players.",
+                       parameters: [ path_parameter(:id), path_parameter(:subtitle_id) ],
+                       errors: [ 401, 403, 404, 503 ])
+      }
 
       paths["/v1/notifications"] = {
         get: operation(tags: "Notifications", summary: "List the current user's in-app notifications",

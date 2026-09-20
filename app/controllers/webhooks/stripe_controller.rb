@@ -4,7 +4,7 @@ class Webhooks::StripeController < ActionController::API
 
   def create
     payload = request.raw_post
-    signature = request.headers["Stripe-Signature"]
+    signature = request.headers[AuthConstants::Headers::STRIPE_SIGNATURE]
 
     stripe_event = PaymentService::Client.verify_webhook(
       payload,

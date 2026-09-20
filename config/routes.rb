@@ -321,6 +321,7 @@ Rails.application.routes.draw do
 
       member do
         get :read_playback, path: "playback"
+        get "subtitles/:subtitle_id", to: "assets#read_subtitle", as: :subtitle
       end
     end
 

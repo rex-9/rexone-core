@@ -215,10 +215,62 @@ RSpec.describe "Asset uploads", type: :request do
       expect(response_data.dig("media", "content_type")).to eq("video/mp4")
       expect(response_data.dig("media", "thumbnail", "id")).to eq(thumbnail.id)
       expect(response_data.dig("media", "subtitles").first["id"]).to eq(subtitle.id)
+      expect(response_data.dig("media", "subtitles").first).to include("core_url")
       expect(StorageService::Client).to have_received(:playback_url).with(
         asset,
-        expires_in: MediaConstants::PLAYBACK_URL_TTL
+        expires_in: MediaConstants::PLAYBACK_URL_TTL,
+        public_host: "www.example.com"
       )
+    end
+
+    it "handles video with 0 subtitles gracefully" do
+      asset = create(:asset, type: "general", format: "video", extension: "mp4", status: "ready", storage_key: "user/#{user.id}/no_sub.mp4")
+      expires_at = 1.hour.from_now
+      allow(StorageService::Client).to receive(:playback_url).and_return(
+        type: "progressive",
+        url: "https://media.example.com/no_sub.mp4?signature=secret",
+        expires_at: expires_at
+      )
+
+      get "/v1/assets/#{asset.id}/playback", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_data.dig("media", "subtitles")).to eq([])
+    end
+
+    it "handles video with multiple subtitles" do
+      asset = create(:asset, type: "general", format: "video", extension: "mp4", status: "ready", storage_key: "user/#{user.id}/multi_sub.mp4")
+      sub1 = create(:asset, type: "subtitle", format: "subtitle", extension: "srt", parent_asset: asset, storage_key: "user/#{user.id}/sub1.srt")
+      sub2 = create(:asset, type: "subtitle", format: "subtitle", extension: "vtt", parent_asset: asset, storage_key: "user/#{user.id}/sub2.vtt")
+      allow(StorageService::Client).to receive(:download).with("user/#{user.id}/sub1.srt").and_return("Sub 1")
+      allow(StorageService::Client).to receive(:download).with("user/#{user.id}/sub2.vtt").and_return("WEBVTT\nSub 2")
+      allow(StorageService::Client).to receive(:playback_url).and_return(
+        type: "progressive",
+        url: "https://media.example.com/multi_sub.mp4?signature=secret",
+        expires_at: 1.hour.from_now
+      )
+
+      get "/v1/assets/#{asset.id}/playback", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      subs = response_data.dig("media", "subtitles")
+      expect(subs.length).to eq(2)
+      expect(subs[0]["content"]).to eq("Sub 1")
+      expect(subs[1]["content"]).to eq("WEBVTT\nSub 2")
+    end
+
+    it "streams subtitle content with CORS-friendly headers" do
+      asset = create(:asset, type: "general", format: "video", extension: "mp4", status: "ready", storage_key: "user/#{user.id}/video.mp4")
+      subtitle = create(:asset, type: "subtitle", format: "subtitle", extension: "srt", parent_asset: asset, storage_key: "user/#{user.id}/subtitle.srt")
+      allow(StorageService::Client).to receive(:download).with("user/#{user.id}/subtitle.srt").and_return("1\n00:00:01,000 --> 00:00:04,000\nHello world\n")
+
+      get "/v1/assets/#{asset.id}/subtitles/#{subtitle.id}", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("WEBVTT")
+      expect(response.body).to include("00:00:01.000")
+      expect(response.body).to include("Hello world")
+      expect(response.headers["Content-Type"]).to include("text/vtt")
     end
 
     it "returns progressive playback delivery for optimal audio" do
