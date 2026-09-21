@@ -153,4 +153,28 @@ module AppConfig
 
   # Data Synchronization Schedule (Default: weekly on Sunday at 3am)
   DATA_SYNC_SCHEDULE = env_or.call("DATA_SYNC_SCHEDULE", "at 3:00am every Sunday")
+
+  class << self
+    def client_url(path = nil)
+      base = CLIENT_BASE_URL.to_s.chomp("/")
+      return base if path.blank?
+
+      p = path.to_s.strip
+      return p if p.start_with?("http://", "https://", "mailto:", "tel:", "rexone://")
+
+      p = "/#{p}" unless p.start_with?("/")
+      "#{base}#{p}"
+    end
+
+    def server_url(path = nil)
+      base = SERVER_BASE_URL.to_s.chomp("/")
+      return base if path.blank?
+
+      p = path.to_s.strip
+      return p if p.start_with?("http://", "https://", "mailto:", "tel:")
+
+      p = "/#{p}" unless p.start_with?("/")
+      "#{base}#{p}"
+    end
+  end
 end

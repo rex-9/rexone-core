@@ -43,7 +43,7 @@ Customer-facing checkout stays responsive while fulfillment and reconciliation r
 
 ## Notifications and real-time delivery
 
-`NotificationService` coordinates independent socket, push, and email delivery. Socket delivery uses Action Cable, push delivery uses OneSignal, and email delivery uses `EmailService` with Brevo as the default provider. Each channel has its own retry boundary, so one provider failure does not repeat successful channels or roll back the originating business action.
+`NotificationService` coordinates independent socket, push, and email delivery. Socket delivery uses Action Cable, push delivery uses OneSignal, and email delivery uses `EmailService` (supporting Brevo and OneSignal). All emails are dynamically structured using the unified cyber-glass **Alert Center Master Shell** (`TemplateRenderer`), supporting open-ended campaign variables, highlight code boxes, receipt grids, and call-to-action buttons without touching code. Relative links (e.g. `/home`, `/payment`) are automatically resolved to full client URLs via `AppConfig.client_url` (`RAILS_CLIENT_BASE_URL`), preventing broken email links, and static HTML files on disk are completely eliminated. Each channel has its own retry boundary, so one provider failure does not repeat successful channels or roll back the originating business action.
 
 Persistent `UserNotification` records provide the in-app inbox, immutable delivery snapshots, read state, and cumulative delivery metrics. Client-visible asynchronous work follows the stable lifecycle:
 

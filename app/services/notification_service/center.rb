@@ -144,18 +144,20 @@ module NotificationService
             )
           ) do
             user_email ||= User.find_by(id: user_id)&.email
+            email_link = AppConfig.client_url(link) if link.present?
 
             if email_template.present?
               {
                 to: user_email,
                 template_id: email_template,
-                template_data: email_template_data
+                template_data: email_template_data.merge({ link: email_link, cta_url: email_link }.compact)
               }
             else
               {
                 to: user_email,
                 subject: title || notification_message(MessageService::Notification::DEFAULT_TITLE),
-                body: message || notification_message(MessageService::Notification::DEFAULT_BODY)
+                body: message || notification_message(MessageService::Notification::DEFAULT_BODY),
+                data: data.merge({ link: email_link, cta_url: email_link }.compact)
               }
             end
           end

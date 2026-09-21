@@ -15,14 +15,30 @@ module EmailService
       end
     end
 
-    def send_email(to:, subject:, body:, from: nil, reply_to: nil)
+    def send_email(to:, subject:, body:, from: nil, reply_to: nil, **kwargs)
       return { "disabled" => true } if @disabled
+
+      rendered_body = if body.to_s.strip.start_with?("<!doctype", "<html", "<table")
+        body
+      else
+        data = (kwargs[:data] || kwargs).with_indifferent_access
+        TemplateRenderer.render_content(
+          title: subject,
+          body: body,
+          cta_url: data[:cta_url] || data[:link] || kwargs[:link],
+          cta_text: data[:cta_text],
+          highlight: data[:highlight] || data[:code] || data[:promo_code],
+          details: data[:details],
+          disclaimer: data[:disclaimer],
+          data: data
+        )
+      end
 
       payload = {
         app_id: @app_id,
         target_channel: "email",
         email_subject: subject,
-        email_body: body,
+        email_body: rendered_body,
         email_from: from || AppConfig::FROM_EMAIL,
         email_to: [ to ]
       }
@@ -46,7 +62,7 @@ module EmailService
     def send_template(to:, template_id:, template_data: {}, from: nil)
       return { "disabled" => true } if @disabled
 
-      # 1. Prefer local HTML template from docs/email_templates (e.g. password_reset, email_confirmation)
+      # 1. Prefer local TemplateRenderer
       rendered_body = TemplateRenderer.render(template_id, template_data)
       if rendered_body.present?
         subject = TemplateRenderer.subject(template_id, template_data).presence ||

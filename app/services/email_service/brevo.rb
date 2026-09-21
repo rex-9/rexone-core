@@ -16,14 +16,30 @@ module EmailService
       end
     end
 
-    def send_email(to:, subject:, body:, from: nil, reply_to: nil)
+    def send_email(to:, subject:, body:, from: nil, reply_to: nil, **kwargs)
       return { "disabled" => true } if @disabled
+
+      rendered_body = if body.to_s.strip.start_with?("<")
+        body
+      else
+        data = (kwargs[:data] || kwargs).with_indifferent_access
+        TemplateRenderer.render_content(
+          title: subject,
+          body: body,
+          cta_url: data[:cta_url] || data[:link] || kwargs[:link],
+          cta_text: data[:cta_text],
+          highlight: data[:highlight] || data[:code] || data[:promo_code],
+          details: data[:details],
+          disclaimer: data[:disclaimer],
+          data: data
+        )
+      end
 
       payload = {
         sender: sender_payload(from),
         to: recipients_payload(to),
         subject: subject,
-        htmlContent: body
+        htmlContent: rendered_body
       }
       payload[:replyTo] = address_payload(reply_to) if reply_to.present?
 

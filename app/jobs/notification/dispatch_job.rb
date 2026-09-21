@@ -15,6 +15,20 @@ class Notification::DispatchJob < ApplicationJob
         email_subject = notification.render_text(notification.email_subject.presence || notification.name, user: user)
         email_body = notification.render_text(notification.email_body, user: user)
 
+        email_data = {
+          title: email_subject,
+          message: email_body,
+          subject: email_subject,
+          body: email_body,
+          user_name: user.name || user.username
+        }
+        if notification.link.present?
+          email_link = AppConfig.client_url(notification.link)
+          email_data[:link] = email_link
+          email_data[:cta_url] = email_link
+        end
+        email_data.merge!((notification.in_app_data || {}).symbolize_keys)
+
         NotificationService::Center.notify(
           user_id: user.id,
           user_email: user.email,
@@ -31,13 +45,7 @@ class Notification::DispatchJob < ApplicationJob
           send_email: channels.include?(NotificationConstants::Channel::EMAIL),
           push_template_id: notification.push_template_id,
           email_template: notification.email_template_id,
-          email_template_data: {
-            user_name: user.name || user.username,
-            title: email_subject,
-            message: email_body,
-            subject: email_subject,
-            body: email_body
-          }
+          email_template_data: email_data.compact
         )
       end
     end
