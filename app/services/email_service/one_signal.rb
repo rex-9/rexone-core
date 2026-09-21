@@ -20,10 +20,11 @@ module EmailService
 
       payload = {
         app_id: @app_id,
+        target_channel: "email",
         email_subject: subject,
         email_body: body,
         email_from: from || AppConfig::FROM_EMAIL,
-        include_email_tokens: [ to ]
+        email_to: [ to ]
       }
 
       response = RestClient.post(
@@ -41,16 +42,30 @@ module EmailService
       raise EmailService::Error, "Failed to send email: #{e.message}"
     end
 
-    # Send using a template created in OneSignal Dashboard
+    # Send using local TemplateRenderer or OneSignal Dashboard template
     def send_template(to:, template_id:, template_data: {}, from: nil)
-      # Fetch template from OneSignal (or use cached version)
-      template = fetch_template(template_id)
+      return { "disabled" => true } if @disabled
 
-      # Replace template variables with data
+      # 1. Prefer local HTML template from docs/email_templates (e.g. password_reset, email_confirmation)
+      rendered_body = TemplateRenderer.render(template_id, template_data)
+      if rendered_body.present?
+        subject = TemplateRenderer.subject(template_id, template_data).presence ||
+                  template_data[:subject] ||
+                  fallback_subject(template_id, template_data)
+        return send_email(
+          to: to,
+          subject: subject,
+          body: rendered_body,
+          from: from
+        )
+      end
+
+      # 2. Fallback to OneSignal Dashboard template if local template doesn't exist
+      template = fetch_template(template_id)
       body = render_template(template, template_data)
       subject = template_data[:subject] ||
-                template["subject"] ||
-                MessageService::Notification.t(MessageService::Notification::DEFAULT_TITLE)
+                template&.dig("subject") ||
+                fallback_subject(template_id, template_data)
 
       send_email(
         to: to,
@@ -64,6 +79,12 @@ module EmailService
     end
 
     private
+
+    def fallback_subject(template_id, data)
+      TemplateRenderer.subject(template_id, data).presence ||
+        template_id.to_s.tr("_", " ").titleize.presence ||
+        MessageService::Notification.t(MessageService::Notification::DEFAULT_TITLE)
+    end
 
     def fetch_template(template_id)
       # In production, you could cache this
