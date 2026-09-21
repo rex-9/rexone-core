@@ -424,7 +424,7 @@ GEM
     rails-html-sanitizer (1.7.1)
       loofah (~> 2.25, >= 2.25.2)
       nokogiri (>= 1.15.7, != 1.16.7, != 1.16.6, != 1.16.5, != 1.16.4, != 1.16.3, != 1.16.2, != 1.16.1, != 1.16.0.rc1, != 1.16.0)
-    rails_error_dashboard (0.12.0)
+    rails_error_dashboard (0.13.0)
       concurrent-ruby (~> 1.3)
       groupdate (~> 6.0)
       pagy (~> 43.0)
@@ -717,7 +717,7 @@ DEPENDENCIES
   rack-attack (~> 6.8)
   rack-cors (~> 3.0)
   rails (~> 8.1.3)
-  rails_error_dashboard (~> 0.12.0)
+  rails_error_dashboard (~> 0.13.0)
   rails_pulse (~> 0.3.3)
   rest-client (~> 2.1)
   rspec-rails (~> 8.0)
@@ -911,7 +911,7 @@ CHECKSUMS
   rails (8.1.3.1) sha256=ccd11a36bfc171bf9c66d585d14c0ece91c0c9dde840aae60c0118d6f5c9c52a
   rails-dom-testing (2.3.0) sha256=8acc7953a7b911ca44588bf08737bc16719f431a1cc3091a292bca7317925c1d
   rails-html-sanitizer (1.7.1) sha256=e797a7c9b01e567307e317c576b49ab4168017e63eea4dba9ce3cb587e2f22c2
-  rails_error_dashboard (0.12.0) sha256=f6cbe424477d8ea8249ab42c4540b11f2ee6747ee622fa7b27a38c738e9038a3
+  rails_error_dashboard (0.13.0) sha256=665022bf5472e9c888f1a7e032b2a00d8fb9f708ef56ef6e4fe2b4e637071588
   rails_pulse (0.3.3) sha256=53cbf413cd56c9cadf4cdd4e69a5beca703e832949a4f588115fee74794e0a5d
   railties (8.1.3.1) sha256=2388a232579a00cefea4487de66c8553c3408c1300abdc6cf1799d86ffb04487
   rainbow (3.1.1) sha256=039491aa3a89f42efa1d6dec2fc4e62ede96eb6acd95e52f1ad581182b79bc6a
