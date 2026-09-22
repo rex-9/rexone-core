@@ -37,6 +37,8 @@
   - [U11. Omnipresent Documentation Synchronization](#u11-omnipresent-documentation-synchronization)
   - [U12. Environment File & Secret Isolation Protocol](#u12-environment-file--secret-isolation-protocol)
   - [U13. Strict Git Safety Protocol](#u13-strict-git-safety-protocol)
+  - [U14. Zero Loose Code & Clean Parameter Contracts](#u14-zero-loose-code--clean-parameter-contracts)
+  - [U15. Human-Readable Code, Plain English & Zero Alien Syntax](#u15-human-readable-code-plain-english--zero-alien-syntax)
 - [⚙️ Part I: RexOne Core Architectural Laws (Backend / Rails API)](#️-part-i-rexone-core-architectural-laws-backend--rails-api)
   - [C1. Strict 3-Tier MCS Architecture (Model, Controller, Service)](#c1-strict-3-tier-mcs-architecture-model-controller-service)
   - [C2. Standardized JSON:API Envelope](#c2-standardized-jsonapi-envelope)
@@ -159,6 +161,20 @@ The following foundational principles apply universally across all three reposit
 ### U13. Strict Git Safety Protocol
 
 - NEVER propose, execute, or ask about `git add`, `git commit`, or `git push`.
+
+### U14. Zero Loose Code & Clean Parameter Contracts
+
+- **Strict, Deterministic Parameter Contracts**: Method signatures, service gateways, controller actions, and API payloads MUST define unambiguous, strongly typed, deterministic parameter contracts.
+- **Prohibition of Loose Parameter & Alias Shims**: NEVER define loose optional parameters, fallback aliases, or duplicate synonym keys in method signatures, controllers, or payload dictionaries (e.g. `user_name: nil, name: nil`, `{"user_name" => x, "name" => x}`). A concept or variable MUST have one and only one canonical name across the entire ecosystem.
+- **Direct Domain Entity Passing**: When an object or entity (`user`, `product`, `subscription`, `asset`) is already available in memory, pass the domain entity directly as a cohesive argument (e.g. `Center.welcome(user)` instead of `Center.welcome(user_id: user.id, name: user.name)`). Never force callers to manually unpack primitive attributes, and never re-query database records when the entity is already loaded.
+- **Zero Dead Code, Zombie Branches & Obsolete Compatibility**: "No legacy, no backward compatibility, complete wipe out and replacement." Never retain commented-out code, unused parameters, dead fallback branches, or deprecated shims. Fix callers and tests cleanly at the root.
+
+### U15. Human-Readable Code, Plain English & Zero Alien Syntax
+
+- **Readability & Reviewability as Primary Virtues**: Code is written for human engineers to read, review, audit, and reason about without cognitive strain. Clarity and straightforwardness ALWAYS triumph over cleverness or density.
+- **Compact, Plain English Naming**: Variable, parameter, method, class, and constant names MUST use compact, natural, straightforward English words that directly convey their business intent (e.g. `user_name`, `user_email`, `due_date`, `is_active`, `time_str`). Cryptic abbreviations, single-letter identifiers (outside standard loop indices), obscure acronyms, and redundant prefixes/suffixes are strictly forbidden.
+- **Zero Alien Syntax & Esoteric Language Tricks**: Avoid overly convoluted one-liners, deeply nested ternaries, bizarre regex gymnastics, dense monkey-patching, or magical metaprogramming where simple, idiomatic control flow (`if`/`else`, early returns, guard clauses) makes the code immediately understandable.
+- **Self-Documenting Code Structure**: If a piece of code cannot be easily read, understood, and reviewed by another engineer in seconds, refactor it into clean, idiomatic, simple English.
 
 ---
 
@@ -441,3 +457,5 @@ Transport Layer   (lib/services/api.service.dart)
 | **Timezone Transport**    | Strict UTC database and ISO 8601 payload            | Browser local timezone conversion                          | Device local timezone conversion                              |
 | **Test Verification**     | RSpec (`bundle exec rspec` 100% pass)               | Vitest unit + Playwright E2E                               | Flutter test + Flutter analyze (0 issues)                     |
 | **Documentation Sync**    | `docs/SCHEMA.md`, `README.md`, `ECOSYSTEM.md`       | `README.md`, `ECOSYSTEM.md` (pointer)                      | `README.md`, `ECOSYSTEM.md` (pointer)                         |
+| **Parameter Contracts**   | Strict entity passing, zero loose kwargs or shims   | Strongly typed interfaces, zero loose props or any         | Typed GetX models, zero loose dynamic params                  |
+| **Code Readability**      | Plain English, compact names, zero alien syntax     | Self-documenting, idiomatic React/TS, plain English        | Self-documenting, idiomatic Dart/GetX, plain English          |

@@ -26,3 +26,14 @@
    - Only `.env.example` may be inspected, modified, or maintained.
    - Always provide explicit, clean copy-paste snippets for developers to apply to their local `.env` manually.
    - Do NOT run out-of-band scripts or commands that mutate local state without leaving traces in git source control.
+
+6. **Zero Loose Code & Clean Parameter Contracts (Law U14)**:
+   - Method signatures, service gateways, controller actions, and API payloads MUST define unambiguous, deterministic parameter contracts.
+   - NEVER define loose optional parameters, fallback aliases, or duplicate synonym keys (e.g. `user_name: nil, name: nil`).
+   - Pass cohesive domain entities directly (e.g. `Center.welcome(user)`) when already in memory; never force callers to unpack primitive attributes.
+   - "No legacy, no backward compatibility, complete wipe out and replacement." Zero dead code, zombie branches, or obsolete shims.
+
+7. **Human-Readable Code, Plain English & Zero Alien Syntax (Law U15)**:
+   - Code is written for humans to read, understand, review, and audit with zero mental friction.
+   - Use compact, straightforward, natural English words for variables and methods. No cryptic abbreviations or acronym soup.
+   - Avoid alien syntax, dense one-liners, nested ternaries, or esoteric metaprogramming. Prefer clean, idiomatic control flow.
