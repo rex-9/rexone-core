@@ -40,6 +40,16 @@ RSpec.describe Notification, type: :model do
       create(:notification, event: "unique_event")
       expect(build(:notification, event: "unique_event")).not_to be_valid
     end
+
+    it "validates format of event to strictly allow lowercase snake_case" do
+      expect(build(:notification, event: "valid_event_123")).to be_valid
+      expect(build(:notification, event: "Invalid Event")).not_to be_valid
+      expect(build(:notification, event: "CAPS_EVENT")).not_to be_valid
+      expect(build(:notification, event: "event-with-hyphens")).not_to be_valid
+      expect(build(:notification, event: "event with spaces")).not_to be_valid
+      expect(build(:notification, event: "special!chars?")).not_to be_valid
+      expect(build(:notification, event: "123_starts_with_num")).not_to be_valid
+    end
   end
 
   describe "#render_text" do

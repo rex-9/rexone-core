@@ -8,7 +8,9 @@ class Notification < ApplicationRecord
   has_many :user_notifications, dependent: :nullify
 
   # ===== VALIDATIONS =====
-  validates :event, presence: true, uniqueness: { conditions: -> { kept } }
+  validates :event, presence: true,
+                    uniqueness: { conditions: -> { kept } },
+                    format: { with: NotificationConstants::Event::FORMAT }
   validates :name, presence: true
   validates :category, presence: true, inclusion: { in: NotificationConstants::Category::ALL }
   validate :clients_are_valid

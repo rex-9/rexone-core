@@ -2,6 +2,10 @@
 
 # app/constants/notification_constants.rb
 module NotificationConstants
+  module Event
+    FORMAT = /\A[a-z][a-z0-9_]*\z/.freeze
+  end
+
   module Client
     WEB = "web".freeze
     MOBILE = "mobile".freeze
