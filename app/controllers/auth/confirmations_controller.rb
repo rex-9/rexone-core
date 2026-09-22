@@ -53,10 +53,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
         sign_in(resource) # Automatically sign in the resource
         token = AppConfig::JWT_TOKEN.call(resource)
         signup_active_session!(user: resource, token: token)
-        NotificationService::Center.welcome(
-          user_id: resource.id,
-          name: resource.name || resource.username
-        )
+        NotificationService::Center.welcome(resource)
         render_json_response(
           status_code: 200,
           message: auth_message(MessageService::Auth::EMAIL_CONFIRMED),

@@ -79,10 +79,7 @@ class Auth::SessionsController < Devise::SessionsController
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
 
-        NotificationService::Center.sign_in_alert(
-          user_id: user.id,
-          name: user.name || user.username
-        )
+        NotificationService::Center.sign_in_alert(user)
 
         render_json_response(
           status_code: 200,
@@ -185,10 +182,7 @@ class Auth::SessionsController < Devise::SessionsController
 
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
-        NotificationService::Center.sign_in_alert(
-          user_id: user.id,
-          name: user.name || user.username
-        )
+        NotificationService::Center.sign_in_alert(user)
 
         # Existing confirmed user - just return user + token
         render_json_response(
@@ -272,10 +266,7 @@ class Auth::SessionsController < Devise::SessionsController
         token = AppConfig::JWT_TOKEN.call(user)
         signup_active_session!(user: user, token: token)
 
-        NotificationService::Center.welcome(
-          user_id: user.id,
-          name: user.name || user.username
-        )
+        NotificationService::Center.welcome(user)
 
         render_json_response(
           status_code: 200,
@@ -345,10 +336,7 @@ class Auth::SessionsController < Devise::SessionsController
       signup_active_session!(user: user, token: token)
 
       if created_user
-        NotificationService::Center.welcome(
-          user_id: user.id,
-          name: user.name || user.username
-        )
+        NotificationService::Center.welcome(user)
       end
 
       render_json_response(

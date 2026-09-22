@@ -49,6 +49,21 @@ module EmailService
     def send_template(to:, template_id:, template_data: {}, from: nil)
       return { "disabled" => true } if @disabled
 
+      # 1. Prefer local TemplateRenderer if template exists in catalog
+      rendered_body = TemplateRenderer.render(template_id, template_data)
+      if rendered_body.present?
+        subject = TemplateRenderer.subject(template_id, template_data).presence ||
+                  template_data[:subject] ||
+                  fallback_subject(template_id, template_data)
+        return send_email(
+          to: to,
+          subject: subject,
+          body: rendered_body,
+          from: from
+        )
+      end
+
+      # 2. Brevo native numeric template ID
       if brevo_template_id?(template_id)
         return post(
           sender: sender_payload(from),
@@ -58,7 +73,7 @@ module EmailService
         )
       end
 
-      Rails.logger.warn("#{LOG_PREFIX} template_id=#{template_id.inspect} is not a Brevo numeric template ID; falling back to plain HTML email")
+      # 3. Ad-hoc fallback
       send_email(
         to: to,
         subject: fallback_subject(template_id, template_data),
@@ -114,6 +129,15 @@ module EmailService
     def fallback_body(template_id, data)
       rendered_template = TemplateRenderer.render(template_id, data)
       return rendered_template if rendered_template.present?
+
+      body_content = data[:body].presence || data[:message].presence
+      if body_content.present?
+        return TemplateRenderer.render_content(
+          title: fallback_subject(template_id, data),
+          body: body_content,
+          data: data
+        )
+      end
 
       rows = data.map do |key, value|
         "<p><strong>#{ERB::Util.html_escape(key.to_s.humanize)}:</strong> #{ERB::Util.html_escape(value.to_s)}</p>"

@@ -44,7 +44,7 @@ RSpec.describe "Email confirmation", type: :request do
       expect(response).to have_http_status(:ok)
       expect(user.reload).to be_confirmed
       expect(response_data["token"]).to be_present
-      expect(NotificationService::Center).to have_received(:welcome).with(user_id: user.id, name: user.name)
+      expect(NotificationService::Center).to have_received(:welcome).with(user)
       expect(CacheService).to have_received(:write).with(
         "active_session:user:#{user.id}:web",
         response_data["token"],

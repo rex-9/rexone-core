@@ -7,13 +7,15 @@ class Notification::DispatchJob < ApplicationJob
       notification = Notification.find_by(event: event) || Notification.find_by(id: event)
       return unless notification
 
+      context = (notification.in_app_data || {}).merge("link" => notification.link).compact
+
       recipients(audience.symbolize_keys).find_each do |user|
-        title = notification.render_text(notification.in_app_title.presence || notification.name, user: user)
-        message = notification.render_text(notification.in_app_body, user: user)
-        push_title = notification.render_text(notification.push_title.presence || notification.name, user: user)
-        push_body = notification.render_text(notification.push_body, user: user)
-        email_subject = notification.render_text(notification.email_subject.presence || notification.name, user: user)
-        email_body = notification.render_text(notification.email_body, user: user)
+        title = notification.render_text(notification.in_app_title.presence || notification.name, user: user, context: context)
+        message = notification.render_text(notification.in_app_body, user: user, context: context)
+        push_title = notification.render_text(notification.push_title.presence || notification.name, user: user, context: context)
+        push_body = notification.render_text(notification.push_body, user: user, context: context)
+        email_subject = notification.render_text(notification.email_subject.presence || notification.name, user: user, context: context)
+        email_body = notification.render_text(notification.email_body, user: user, context: context)
 
         email_data = {
           title: email_subject,

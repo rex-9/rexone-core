@@ -173,7 +173,7 @@ RSpec.describe NotificationService::Center do
 
     it "creates a welcome notification for new users" do
       expect do
-        described_class.welcome(user_id: user.id, name: user.name)
+        described_class.welcome(user)
       end.to change(user.user_notifications, :count).by(1)
     end
 
@@ -185,7 +185,7 @@ RSpec.describe NotificationService::Center do
         link: external_link
       )
 
-      described_class.welcome(user_id: user.id, name: user.name)
+      described_class.welcome(user)
 
       expect(Notification::DeliverJob).to have_been_enqueued.with(
         channel: :socket,
@@ -195,7 +195,7 @@ RSpec.describe NotificationService::Center do
 
     it "safely returns if user is nil" do
       expect do
-        described_class.welcome(user_id: "non-existent-id", name: "Ghost")
+        described_class.welcome("non-existent-id")
       end.not_to raise_error
     end
   end

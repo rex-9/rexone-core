@@ -153,11 +153,19 @@ module NotificationService
                 template_data: email_template_data.merge({ link: email_link, cta_url: email_link }.compact)
               }
             else
+              resolved_subject = email_template_data[:subject].presence ||
+                                 email_template_data[:title].presence ||
+                                 title ||
+                                 notification_message(MessageService::Notification::DEFAULT_TITLE)
+              resolved_body = email_template_data[:body].presence ||
+                              email_template_data[:message].presence ||
+                              message ||
+                              notification_message(MessageService::Notification::DEFAULT_BODY)
               {
                 to: user_email,
-                subject: title || notification_message(MessageService::Notification::DEFAULT_TITLE),
-                body: message || notification_message(MessageService::Notification::DEFAULT_BODY),
-                data: data.merge({ link: email_link, cta_url: email_link }.compact)
+                subject: resolved_subject,
+                body: resolved_body,
+                data: data.merge(email_template_data).merge({ link: email_link, cta_url: email_link }.compact)
               }
             end
           end
@@ -364,58 +372,72 @@ module NotificationService
 
       # ===== AUTH NOTIFICATIONS =====
 
-      def welcome(user_id:, name:, **kwargs)
-        user = User.find_by(id: user_id)
+      def welcome(user, **kwargs)
+        user = user.is_a?(User) ? user : User.find_by(id: user)
+        user_name = user&.name.presence || user&.username.presence || "User"
         template = template_for(NotificationConstants::NotificationType::WELCOME)
-        context = { name: name }
+        context = { user_name: user_name }
 
         title = template ? template.render_text(template.in_app_title, user: user, context: context) : notification_message(MessageService::Notification::WELCOME_TITLE)
-        message = template ? template.render_text(template.in_app_body, user: user, context: context) : notification_message(MessageService::Notification::WELCOME_BODY, name: name)
+        message = template ? template.render_text(template.in_app_body, user: user, context: context) : notification_message(MessageService::Notification::WELCOME_BODY, name: user_name)
         push_title = template ? template.render_text(template.push_title.presence || template.in_app_title, user: user, context: context) : title
         push_body = template ? template.render_text(template.push_body.presence || template.in_app_body, user: user, context: context) : message
         link = template_link(template, NotificationConstants::Link::HOME)
 
         notify(
-          user_id: user_id,
+          user_id: user&.id,
+          user_email: user&.email,
           template_id: template&.id,
           title: title,
           message: message,
           push_title: push_title,
           push_body: push_body,
           link: link,
-          data: { type: NotificationConstants::NotificationType::WELCOME, name: name },
+          data: { type: NotificationConstants::NotificationType::WELCOME, user_name: user_name },
           send_push: true,
           send_socket: true,
           send_email: false,
           push_template_id: template&.push_template_id,
+          email_template: template&.email_template_id.presence || "welcome",
+          email_template_data: {
+            user_name: user_name
+          },
           **kwargs
         )
       end
 
-      def sign_in_alert(user_id:, name:, **kwargs)
-        user = User.find_by(id: user_id)
+      def sign_in_alert(user, **kwargs)
+        user = user.is_a?(User) ? user : User.find_by(id: user)
+        user_name = user&.name.presence || user&.username.presence || "User"
+        time_str = Time.current.strftime("%B %d, %Y %H:%M UTC")
         template = template_for(NotificationConstants::NotificationType::SIGN_IN_ALERT)
-        context = { name: name, time: Time.current.strftime("%B %d, %Y %H:%M UTC") }
+        context = { user_name: user_name, time: time_str }
 
         title = template ? template.render_text(template.in_app_title, user: user, context: context) : notification_message(MessageService::Notification::SIGN_IN_ALERT_TITLE)
-        message = template ? template.render_text(template.in_app_body, user: user, context: context) : notification_message(MessageService::Notification::SIGN_IN_ALERT_BODY, name: name)
+        message = template ? template.render_text(template.in_app_body, user: user, context: context) : notification_message(MessageService::Notification::SIGN_IN_ALERT_BODY, name: user_name)
         push_title = template ? template.render_text(template.push_title.presence || template.in_app_title, user: user, context: context) : title
         push_body = template ? template.render_text(template.push_body.presence || template.in_app_body, user: user, context: context) : message
         link = template_link(template, NotificationConstants::Link::PROFILE)
 
         notify(
-          user_id: user_id,
+          user_id: user&.id,
+          user_email: user&.email,
           template_id: template&.id,
           title: title,
           message: message,
           push_title: push_title,
           push_body: push_body,
           link: link,
-          data: { type: NotificationConstants::NotificationType::SIGN_IN_ALERT, time: Time.current.iso8601 },
+          data: { type: NotificationConstants::NotificationType::SIGN_IN_ALERT, time: Time.current.iso8601, user_name: user_name },
           send_push: true,
           send_socket: true,
           send_email: false,
           push_template_id: template&.push_template_id,
+          email_template: template&.email_template_id.presence || "sign_in_alert",
+          email_template_data: {
+            user_name: user_name,
+            time: time_str
+          },
           **kwargs
         )
       end

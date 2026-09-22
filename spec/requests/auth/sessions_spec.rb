@@ -56,7 +56,7 @@ RSpec.describe "Authentication sessions", type: :request do
         response_data["token"],
         expires_in: AppConfig::SESSION_TIMEOUT
       )
-      expect(NotificationService::Center).to have_received(:sign_in_alert).with(user_id: user.id, name: user.name)
+      expect(NotificationService::Center).to have_received(:sign_in_alert).with(user)
     end
 
     it "signs in by username and isolates android sessions" do

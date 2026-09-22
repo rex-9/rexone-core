@@ -94,7 +94,8 @@ module NotificationConstants
         push_title: "Welcome aboard! 🎉",
         push_body: "Hey {{user_name}}, thanks for joining RexOne!",
         email_subject: "Welcome to RexOne!",
-        email_body: "Welcome to RexOne, {{user_name}}!"
+        email_body: "Welcome to RexOne, {{user_name}}!",
+        email_template_id: "welcome"
       }.freeze,
       {
         event: NotificationType::SIGN_IN_ALERT,
@@ -108,7 +109,8 @@ module NotificationConstants
         push_title: "New Sign In",
         push_body: "Hi {{user_name}}, new sign-in detected.",
         email_subject: "Security Alert: New Sign In",
-        email_body: "Hi {{user_name}}, we noticed a new sign-in to your account."
+        email_body: "Hi {{user_name}}, we noticed a new sign-in to your account.",
+        email_template_id: "sign_in_alert"
       }.freeze,
       {
         event: NotificationType::PAYMENT_SUCCESS,

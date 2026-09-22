@@ -127,7 +127,7 @@ RSpec.describe "Google authentication", type: :request do
         source_url: "https://example.com/avatar.jpg",
         storage_key: a_string_starting_with("user/#{user.id}/avatar_google_")
       )
-      expect(NotificationService::Center).to have_received(:welcome).with(user_id: user.id, name: user.name)
+      expect(NotificationService::Center).to have_received(:welcome).with(user)
       expect(CacheService).to have_received(:delete).with("google_signin:challenge:challenge")
     end
 
@@ -155,7 +155,7 @@ RSpec.describe "Google authentication", type: :request do
       expect(user.provider).to eq("google")
       expect(response_data.dig("user", "id")).to eq(user.id)
       expect(response_data["token"]).to be_present
-      expect(NotificationService::Center).to have_received(:welcome).with(user_id: user.id, name: "New Google User")
+      expect(NotificationService::Center).to have_received(:welcome).with(user)
       expect(CacheService).to have_received(:delete).with("google_signin:challenge:challenge")
     end
 
