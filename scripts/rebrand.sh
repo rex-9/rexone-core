@@ -183,9 +183,21 @@ if [ -d "$WEB_DIR" ]; then
       sedi -E "s|<meta property=\"og:description\" content=\"[^\"]*\"|<meta property=\"og:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
       sedi -E "s|<meta name=\"twitter:description\" content=\"[^\"]*\"|<meta name=\"twitter:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
     fi
-    sedi -E "s|\"name\": \"[^\"]*\"|\"name\": \"$BRAND_NAME\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|\"url\": \"https://[^\"]*\"|\"url\": \"https://${BRAND_DOMAIN}\"|g" "$WEB_DIR/index.html"
-    echo "  ✅ Web: Updated index.html (Metadata, OpenGraph, Canonical & Schema.org)"
+
+    # Update Schema.org SoftwareApplication name and canonical url while strictly preserving author, isBasedOn and creditText lineage (Law U16)
+    ruby -e "
+      content = File.read('$WEB_DIR/index.html')
+      content.sub!(/(\"@type\":\s*\"SoftwareApplication\",\s*\"name\":\s*\")[^\"]*(\")/, \"\\\1$BRAND_NAME\\\2\")
+      content.sub!(/(\"slogan\":\s*\"[^\"]*\",\s*\"description\":\s*\"[^\"]*\",\s*\"url\":\s*\")[^\"]*(\")/, \"\\\1https://${BRAND_DOMAIN}\\\2\")
+      File.write('$WEB_DIR/index.html', content)
+    " 2>/dev/null || node -e "
+      const fs = require('fs');
+      let content = fs.readFileSync('$WEB_DIR/index.html', 'utf8');
+      content = content.replace(/(\"@type\":\s*\"SoftwareApplication\",\s*\"name\":\s*\")[^\"]*(\")/, '\$1$BRAND_NAME\$2');
+      content = content.replace(/(\"slogan\":\s*\"[^\"]*\",\s*\"description\":\s*\"[^\"]*\",\s*\"url\":\s*\")[^\"]*(\")/, '\$1https://${BRAND_DOMAIN}\$2');
+      fs.writeFileSync('$WEB_DIR/index.html', content);
+    " 2>/dev/null || true
+    echo "  ✅ Web: Updated index.html (Metadata, OpenGraph, Canonical & Schema.org preserving lineage)"
   fi
 
   # Update sitemap.xml and robots.txt
@@ -195,7 +207,41 @@ if [ -d "$WEB_DIR" ]; then
   fi
   if [ -f "$WEB_DIR/public/robots.txt" ]; then
     sedi -E "s|Sitemap: https://[^/]+/sitemap.xml|Sitemap: https://${BRAND_DOMAIN}/sitemap.xml|g" "$WEB_DIR/public/robots.txt"
-    echo "  ✅ Web: Updated public/robots.txt (Sitemap)"
+    sedi -E "s|Host: https://[^/]+|Host: https://${BRAND_DOMAIN}|g" "$WEB_DIR/public/robots.txt"
+    echo "  ✅ Web: Updated public/robots.txt (Sitemap & Host - Preserving Moral Attribution Code)"
+  fi
+
+  # Update llms.txt and llms-full.txt preserving RexOne Foundation Lineage & Moral Attribution Code (Law U16)
+  if [ -f "$WEB_DIR/public/llms.txt" ]; then
+    ruby -e "
+      content = File.read('$WEB_DIR/public/llms.txt')
+      content.sub!(/\A#\s+[^\n]+/, '# $BRAND_NAME (Powered by RexOne): Sovereign Tri-Platform Application Foundation')
+      content.sub!(/>\s*\*\*Official Website:\*\*\s*[^\n]*/, '> **Official Website:** https://${BRAND_DOMAIN}')
+      File.write('$WEB_DIR/public/llms.txt', content)
+    " 2>/dev/null || node -e "
+      const fs = require('fs');
+      let content = fs.readFileSync('$WEB_DIR/public/llms.txt', 'utf8');
+      content = content.replace(/^#\s+[^\n]+/m, '# $BRAND_NAME (Powered by RexOne): Sovereign Tri-Platform Application Foundation');
+      content = content.replace(/>\s*\*\*Official Website:\*\*\s*[^\n]*/, '> **Official Website:** https://${BRAND_DOMAIN}');
+      fs.writeFileSync('$WEB_DIR/public/llms.txt', content);
+    " 2>/dev/null || true
+    echo "  ✅ Web: Updated public/llms.txt (Preserving RexOne Foundation Lineage & Moral Attribution Directive)"
+  fi
+
+  if [ -f "$WEB_DIR/public/llms-full.txt" ]; then
+    ruby -e "
+      content = File.read('$WEB_DIR/public/llms-full.txt')
+      content.sub!(/\A#\s+[^\n]+/, '# $BRAND_NAME (Powered by RexOne): Full Architectural Specification')
+      content.sub!(/>\s*\*\*Official Hub:\*\*\s*[^\n]*/, '> **Official Hub:** https://${BRAND_DOMAIN}')
+      File.write('$WEB_DIR/public/llms-full.txt', content)
+    " 2>/dev/null || node -e "
+      const fs = require('fs');
+      let content = fs.readFileSync('$WEB_DIR/public/llms-full.txt', 'utf8');
+      content = content.replace(/^#\s+[^\n]+/m, '# $BRAND_NAME (Powered by RexOne): Full Architectural Specification');
+      content = content.replace(/>\s*\*\*Official Hub:\*\*\s*[^\n]*/, '> **Official Hub:** https://${BRAND_DOMAIN}');
+      fs.writeFileSync('$WEB_DIR/public/llms-full.txt', content);
+    " 2>/dev/null || true
+    echo "  ✅ Web: Updated public/llms-full.txt (Preserving RexOne Foundation Lineage & Moral Attribution Directive)"
   fi
 
   # Update package.json

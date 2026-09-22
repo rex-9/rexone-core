@@ -4,11 +4,8 @@ This guide hardens RexOne Core's current Coolify, Traefik, Rails, Rack Attack,
 Garage, and worker deployment. Apply changes gradually in UAT, observe normal
 traffic, and then promote the same configuration to production.
 
-> [!IMPORTANT]
-> No application setting makes a service "DDoS proof." Rack Attack protects
-> Rails from endpoint abuse and brute-force traffic that reaches the process.
-> Cloudflare and the origin firewall must reject volumetric traffic before it
-> consumes VPS bandwidth, sockets, memory, or Puma threads.
+### ⚠️ Fundamental Defense Doctrine
+**No application setting makes a service "DDoS proof."** Rack Attack protects Rails from endpoint abuse and brute-force traffic that reaches the process. Cloudflare and the origin firewall must reject volumetric traffic before it consumes VPS bandwidth, sockets, memory, or Puma threads.
 
 ## Defense model
 

@@ -427,11 +427,8 @@ In `rexone-web` at `/admin/assets`, administrators can monitor storage metrics d
 
 ---
 
-### Server Downtime & Persistence
-
-> [!IMPORTANT]
-> **Rebooting or restarting servers DOES NOT lose any data.**
-> Docker named volumes (`postgres`, `garage-meta`, `garage-data`) are permanently decoupled from container lifecycles. Running `docker compose down`, `docker restart`, or rebooting the physical VPS leaves all database rows and Garage files 100% intact.
+### 🛡️ Server Downtime & Data Persistence Guarantee
+**Rebooting or restarting servers DOES NOT lose any data.** Docker named volumes (`postgres`, `garage-meta`, `garage-data`) are permanently decoupled from container lifecycles. Running `docker compose down`, `docker restart`, or rebooting the physical VPS leaves all database rows and Garage files 100% intact.
 
 ---
 

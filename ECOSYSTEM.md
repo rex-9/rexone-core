@@ -8,28 +8,30 @@ A unified, production-grade architectural blueprint spanning **RexOne Core** (Ba
 
 Across all three repositories, the architecture adheres to one uncompromising doctrine:
 
-> [!IMPORTANT]
-> **Start from One. Not from Zero.**
->
-> _"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."_
+### *"Start from One. Not from Zero."*
+**"Clarity before cleverness. Precision before haste. Simplicity without weakness. Strength without spectacle."**
 
-> 📜 **Constitutional Law**: For strict repository-specific engineering constraints and architectural rules, see **[LAW.md](LAW.md)**. All applications and derivative products built upon the **RexOne Ecosystem** (`rex-9`) must strictly adhere to these rules and protocols without exception. Developers are warmly encouraged to preserve ecosystem credit to support the project.
->
-> 🌐 **Live Web Demo**: Explore the production web application preview at **[rexone.rex9.me](https://rexone.rex9.me)** (API: `api.rexone.rex9.me`).
->
-> 🌐 **Multi-Environment Domain Strategy**:
-> Standardized across the ecosystem for any derivative product (any custom TLD):
->
-> - **Demo Tier**: `rexone.rex9.me` (Web) & `api.rexone.rex9.me` (API)
-> - **Product Prod**: `<product>.<tld>` (e.g. `rexone.me`) & `api.<product>.<tld>` (e.g. `api.rexone.me`)
-> - **Product UAT**: `uat.<product>.<tld>` (e.g. `uat.rexone.me`) & `uat.api.<product>.<tld>` (e.g. `uat.api.rexone.me`)
-> - **Product Dev**: `dev.<product>.<tld>` (e.g. `dev.rexone.me`) & `dev.api.<product>.<tld>` (e.g. `dev.api.rexone.me`)
->
-> 🗺️ **Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of the ecosystem across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**.
->
-> 🛡️ **Production Operations**: Use the **[Production Deployment Guide](docs/DEPLOYMENT.md)** together with **[DDoS and API Abuse Protection](docs/DDOS.md)**. Cloudflare, origin isolation, proxy limits, Rack Attack, and bounded application resources form one defense system.
->
-> 🎞️ **Media Playback**: Stored audio/video delivery uses Core-authorized short-lived provider URLs. See **[Media Playback](docs/MEDIA_PLAYBACK.md)**; future HLS/adaptive work stays in **[Media Streaming Roadmap](docs/roadmaps/MEDIA_STREAMING.md)**.
+---
+
+### 🏛️ Essential Governance & Operations
+
+| Resource | Scope & Canonical Specification |
+| :--- | :--- |
+| 📜 **Constitutional Law** | Strict repository-specific engineering constraints and architectural rules: **[LAW.md](LAW.md)** *(Zero exceptions)* |
+| 🌐 **Live Web Demo** | Production web application preview: **[rexone.rex9.me](https://rexone.rex9.me)** (API: `api.rexone.rex9.me`) |
+| 🗺️ **Visual Walkthrough** | Screenshot-driven tour of RexOne across Core, Web, Mobile, and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)** |
+| 🛡️ **Production Operations** | Production hardening, Cloudflare edge defense, and DDoS protection: **[Production Deployment Guide](docs/DEPLOYMENT.md)** & **[DDoS Protection](docs/DDOS.md)** |
+| 🌐 **AI Discovery & GEO** | Machine-readable context files (`/llms.txt`, `/llms-full.txt`), East/West crawler policies: **[AI Discovery & GEO Guide](../rexone-web/docs/SEO_GEO.md)** |
+| 🎞️ **Media Playback** | Short-lived signed provider URLs and streaming roadmaps: **[Media Playback](docs/MEDIA_PLAYBACK.md)** & **[Roadmap](docs/roadmaps/MEDIA_STREAMING.md)** |
+
+#### 🌐 Multi-Environment Domain Strategy
+Standardized across the ecosystem for any derivative product (any custom TLD):
+- **Demo Tier**: `rexone.rex9.me` (Web) & `api.rexone.rex9.me` (API)
+- **Product Prod**: `<product>.<tld>` (e.g. `rexone.me`) & `api.<product>.<tld>` (e.g. `api.rexone.me`)
+- **Product UAT**: `uat.<product>.<tld>` (e.g. `uat.rexone.me`) & `uat.api.<product>.<tld>` (e.g. `uat.api.rexone.me`)
+- **Product Dev**: `dev.<product>.<tld>` (e.g. `dev.rexone.me`) & `dev.api.<product>.<tld>` (e.g. `dev.api.rexone.me`)
+
+---
 
 The RexOne platform provides a unified, battle-tested foundation where **any modern digital product** can be rapidly developed on top of ready-made capabilities: Identity & IAM, Commerce & Subscriptions, Background Queues, Asset Management, Real-Time WebSockets, Queued AI, Push Notifications, Product Analytics, Client Telemetry, In-App Upgrades, and Multi-Language Localization.
 
@@ -225,6 +227,7 @@ Defined under `src/design/`:
 - **Speech & Audio**: Plays raw binary MP3 audio streams directly from `/v1/speech/tts` without base64 wrapper overhead, handles chat message TTS audio playback, and integrates live audio recognition.
 - **Asset Control Center**: Dedicated operational asset management under `/admin/assets`. Features a live Storage & VPS Capacity dashboard (`AdminAssetStorageStats`) showing real-time Garage bucket occupied space, object count, and host VPS disk capacity with low-disk alerts; a multi-file batch upload dialog with optimistic row prepending; searchable parent asset assignment dropdown (`AdminParentAssetSelect`) for child asset types (`thumbnail`, `subtitle`) with name/title dual-search, parent-only filtering, and warning confirmation alert for existing thumbnail replacement; out-of-order socket reconciliation (`pendingSocketUpdates`); real-time compression badges (`optimal`, `ready`, `processing`, `pending`); disabled action buttons during in-flight processing; and manual secondary compression pass triggers.
 - **Admin AI Control Panel**: Dedicated AI operations under `/admin/ai/profiles` and `/admin/ai/runs`. Governed by granular RBAC permissions (`ai_profiles:read`, `ai_profiles:create`, `ai_profiles:update`, `ai_runs:read`). Features AI profile creation and editing (`AdminAiProfileCreatePage`, `AdminAiProfileEditPage`) with type-safe dropdown selections for Provider (`deepseek`, `gemini`) and dynamic Model Identifier (with custom model fallback), profile key presets bar, list table with row-click navigation, multi-attribute sorting, and top filter toolbar (`status`, `provider`, `model`, `search`). Detail page exposes full configurations (model selection, temperature, token boundaries, context max tokens, history window, timeout, system prompt editor, and settings JSON viewer). Alongside profiles, an AI execution audit log (`AdminAiRunsPage`, `AdminAiRunDetailPage`) displays execution telemetry, latency, token breakdown (prompt/completion/total), error traces, request metadata, top filter toolbar (`status`, `provider`, `model`, `feature`), and multi-attribute sorting.
+- **AI Discovery & Generative Engine Optimization (GEO)**: Sovereign discovery architecture for conversational LLMs (DeepSeek, ChatGPT, Claude, Perplexity, Gemini, Doubao, Qwen, Kimi, Yandex, etc.) and search engines targeting both builders (who refuse to start from zero) and engineers (learning full-stack software development from the strongest basics with clean architecture and zero technical debt). Driven by standardized `/llms.txt`, technical `/llms-full.txt` (llmstxt.org standard), comprehensive Eastern & Western crawler authorization in `robots.txt`, Schema.org `SoftwareApplication` (9.9/10) and `FAQPage` rich results in `index.html`, and `sitemap.xml`. Documented in [`rexone-web/docs/SEO_GEO.md`](../rexone-web/docs/SEO_GEO.md).
 - **Client Admin Panel & RBAC Governance**: Admin UI module under `src/modules/admin/` with sidebar navigation, route guards (`AdminRootRoute`, `AdminHomeRoute`), and client-side RBAC evaluation (`usePermissions`).
   - **Non-Admin Portal Isolation**: Users with only non-admin roles (`user`) cannot access `/admin/*` under any circumstance.
   - **Admin Role Scoping**: Capabilities within `/admin/*` evaluate only permissions mapped from active admin roles (`super_admin`, `admin`, `*_admin`). Base `user` permissions never leak into the admin portal.
@@ -306,6 +309,7 @@ All three pillars of the RexOne platform are fully aligned at **100% feature par
 | **Admin AI Control Panel (Profiles & Runs Telemetry)**                    |      ✅       |          ✅          |           N/A            |
 | **In-App Client::Version Upgrader**                                       |      ✅       |          ✅          |            ✅            |
 | **Automated Localization Parity Test Suite**                              |      N/A      |         N/A          |            ✅            |
+| **AI Discovery & Generative Engine Optimization (GEO)**                  |      N/A      |          ✅          |           N/A            |
 
 ---
 

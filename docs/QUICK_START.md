@@ -33,8 +33,8 @@ cp .env.example .env
 ./scripts/install_pre_commit.sh
 ```
 
-> [!IMPORTANT]
-> **Pre-Commit Safety Guardrail**: Running `./scripts/install_pre_commit.sh` is required before making any commits. It installs local Git hooks that automatically prevent committing unignored `.env` files, high-entropy cloud keys (Stripe, AWS, OpenAI, Google), and unlocalized strings. See [Security Architecture](SECURITY.md) for full details.
+### 🛡️ Pre-Commit Safety Guardrail
+**Running `./scripts/install_pre_commit.sh` is mandatory before making any commits.** It installs local Git hooks that automatically prevent committing unignored `.env` files, high-entropy cloud keys (Stripe, AWS, OpenAI, Google), and unlocalized strings. See [Security Architecture](SECURITY.md) for full details.
 
 ## Configure Core
 

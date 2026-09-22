@@ -26,21 +26,17 @@ Built under a simple creed: **Start from One. Not from Zero. Clear in thought, e
 
 ---
 
-> [!IMPORTANT]
+### 🏛️ Unified Ecosystem & Constitutional Directives
 
-> **🏛️ Unified Ecosystem**: For the complete cross-platform architecture, feature parity matrix, and communication protocols between Core, Web, and Mobile, see **[ECOSYSTEM.md](ECOSYSTEM.md)**.
+| Resource | Purpose & Canonical Specification |
+| :--- | :--- |
+| **🏛️ Unified Ecosystem** | Complete cross-platform architecture, feature parity matrix, and communication protocols across Core, Web, and Mobile: **[ECOSYSTEM.md](ECOSYSTEM.md)** |
+| **🗺️ Visual Walkthrough** | Screenshot-driven, feature-by-feature tour of RexOne across all surfaces and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)** |
+| **📜 Constitutional Law** | Non-negotiable architecture, service boundaries, and API envelope laws: **[LAW.md](LAW.md)** *(Zero exceptions)* |
+| **🛡️ Production Security** | Origin isolation, Cloudflare edge defense, and rate-limiting protocols: **[Production DDoS & API Abuse Protection](docs/DDOS.md)** |
+| **🌐 AI Discovery & GEO** | Generative Engine Optimization, crawler allowlists, and LLM context files: **[AI Discovery & GEO Guide](../rexone-web/docs/SEO_GEO.md)** |
 
->
-
-> **🗺️ Visual Walkthrough**: For the screenshot-driven, feature-by-feature tour of RexOne across Core, Web, Mobile, administration, and operations, see **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**.
-
->
-
-> **📜 Constitutional Law**: All development must strictly adhere to the architecture, service boundary, and API envelope laws in **[LAW.md](LAW.md)**. Zero exceptions.
-
->
-
-> **🛡️ Production Security**: Deployments must follow the origin-isolation, edge protection, rate limiting, and verification steps in **[Production DDoS and API Abuse Protection](docs/DDOS.md)**.
+---
 
 ## Why RexOne Core?
 

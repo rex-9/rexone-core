@@ -1,14 +1,14 @@
 # Database Schema Documentation (`rexone-core`)
 
-> **Database Engine:** PostgreSQL 18
-> **Schema Version:** `2026_09_16_173001`
-> **Key Conventions:** UUID v4 Primary Keys (`gen_random_uuid()`), Soft Deletion (`discard` gem), Audit Tracking (`Auditable` concern).
+| Parameter | Configuration |
+| :--- | :--- |
+| **Database Engine** | PostgreSQL 18 |
+| **Schema Version** | `2026_09_16_173001` |
+| **Key Conventions** | UUID v4 Primary Keys (`gen_random_uuid()`), Soft Deletion (`discard` gem), Audit Tracking (`Auditable` concern) |
 
-> [!IMPORTANT]
->
-> ### 🏛️ Mandatory Synchronization Law (LAW.md #12)
->
-> This document MUST be updated synchronously **EVERY TIME** the database schema or `ApplicationRecord` models are created, migrated, altered, or updated. Leaving `docs/SCHEMA.md` out-of-sync with migrations or models is strictly prohibited. Keep this document focused exclusively on application records (omitting background and APM tables).
+### 🏛️ Mandatory Synchronization Law (LAW.md #12)
+
+This document MUST be updated synchronously **EVERY TIME** the database schema or `ApplicationRecord` models are created, migrated, altered, or updated. Leaving `docs/SCHEMA.md` out-of-sync with migrations or models is strictly prohibited. Keep this document focused exclusively on application records (omitting background and APM tables).
 
 ---
 
