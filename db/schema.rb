@@ -270,6 +270,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.uuid "discarded_by_id"
     t.integer "ios_build_number"
     t.boolean "is_force_update", default: false, null: false
+    t.jsonb "metadata", default: {}, null: false
     t.string "number", null: false
     t.datetime "released_at"
     t.string "status", default: "draft", null: false
@@ -305,6 +306,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.datetime "expires_at"
     t.integer "max_usage", default: 0
     t.integer "max_usage_per_user", default: 1
+    t.jsonb "metadata", default: {}, null: false
     t.uuid "referrer_id"
     t.string "stripe_coupon_id"
     t.uuid "target_product_ids", default: [], array: true
@@ -456,6 +458,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.string "clients", default: ["web", "mobile"], null: false, array: true
     t.datetime "created_at", null: false
     t.uuid "created_by_id"
+    t.string "cta_text"
     t.text "description"
     t.datetime "discarded_at"
     t.uuid "discarded_by_id"
@@ -467,6 +470,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.jsonb "in_app_data", default: {}
     t.string "in_app_title"
     t.string "link"
+    t.jsonb "metadata", default: {}, null: false
     t.string "name", null: false
     t.text "push_body"
     t.string "push_template_id"

@@ -3,9 +3,14 @@
 # Comprehensive, idempotent database synchronization & backfill script.
 # Safely updates schema and backfills data WITHOUT dropping tables or losing user data.
 
-BACKFILL_ENV="${1:-development}"
+TARGET_ENVS=("$@")
+if [ ${#TARGET_ENVS[@]} -eq 0 ]; then
+  TARGET_ENVS=("development" "test")
+fi
 
-docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api bundle exec rails runner "
+for BACKFILL_ENV in "${TARGET_ENVS[@]}"; do
+  echo "🚀 Running database synchronization for environment: $BACKFILL_ENV"
+  docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api bundle exec rails runner "
   ActiveRecord::Base.transaction do
     puts '========================================================'
     puts '🚀 STARTING DATABASE SYNCHRONIZATION & BACKFILL'
@@ -208,3 +213,4 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
     puts '========================================================'
   end
 "
+done
