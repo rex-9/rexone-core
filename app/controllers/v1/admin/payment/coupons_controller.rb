@@ -315,6 +315,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
       :expires_at,
       :referrer_id,
       :active,
+      metadata: {},
       target_role_ids: [],
       target_user_ids: [],
       target_user_emails: [],

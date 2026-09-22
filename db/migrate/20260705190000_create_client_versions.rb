@@ -10,6 +10,7 @@ class CreateClientVersions < ActiveRecord::Migration[8.1]
       t.datetime :released_at
       t.integer :ios_build_number
       t.integer :android_build_number
+      t.jsonb :metadata, default: {}
 
       t.references :created_by, type: :uuid, foreign_key: { to_table: :users }
       t.references :updated_by, type: :uuid, foreign_key: { to_table: :users }

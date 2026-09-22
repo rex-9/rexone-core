@@ -9,6 +9,7 @@ class CreateCoupons < ActiveRecord::Migration[8.1]
       t.integer :coupon_type, null: false, default: 0 # 0: percentage, 1: fixed
       t.integer :amount, null: false
       t.string :currency # null indicates currency-agnostic (applies to product's currency)
+      t.jsonb :metadata, default: {}
 
       t.integer :max_usage, default: 0 # 0 = unlimited
       t.integer :max_usage_per_user, default: 1 # 0 = unlimited

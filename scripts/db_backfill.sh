@@ -125,10 +125,15 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
     puts '  ✅ Accesses and client logs sanitized.'
 
     # ----------------------------------------------------
-    # 5. NOTIFICATIONS: Client Targeting
+    # 5. NOTIFICATIONS: Client Targeting & CTA Text
     # ----------------------------------------------------
-    puts '\n🔔 [5/7] Synchronizing notification client targeting...'
+    puts '\n🔔 [5/7] Synchronizing notifications (client targeting & CTA text)...'
     default_clients = NotificationConstants::Client::DEFAULT
+
+    unless ActiveRecord::Base.connection.column_exists?(:notifications, :cta_text)
+      puts '  -> Adding missing \"cta_text\" column to notifications table...'
+      ActiveRecord::Base.connection.add_column :notifications, :cta_text, :string
+    end
 
     [ :notifications, :user_notifications ].each do |table|
       unless ActiveRecord::Base.connection.column_exists?(table, :clients)
@@ -186,19 +191,17 @@ docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$BACKFILL_ENV" api 
       ActiveRecord::Base.connection.rename_column :user_notifications, :data, :metadata
     end
 
-    unless ActiveRecord::Base.connection.column_exists?(:assets, :metadata)
-      puts '  -> Adding missing \"metadata\" jsonb column to assets table...'
-      ActiveRecord::Base.connection.add_column :assets, :metadata, :jsonb, default: {}, null: false
+    [ :assets, :user_notifications, :notifications, :client_versions, :coupons ].each do |table|
+      unless ActiveRecord::Base.connection.column_exists?(table, :metadata)
+        puts \"  -> Adding missing 'metadata' jsonb column to #{table} table...\"
+        ActiveRecord::Base.connection.add_column table, :metadata, :jsonb, default: {}, null: false
+      end
+
+      ActiveRecord::Base.connection.execute(<<~SQL)
+        UPDATE #{table} SET metadata = '{}'::jsonb WHERE metadata IS NULL;
+      SQL
     end
-
-    ActiveRecord::Base.connection.execute(<<~SQL)
-      UPDATE assets SET metadata = '{}'::jsonb WHERE metadata IS NULL;
-    SQL
-
-    ActiveRecord::Base.connection.execute(<<~SQL)
-      UPDATE user_notifications SET metadata = '{}'::jsonb WHERE metadata IS NULL;
-    SQL
-    puts '  ✅ Metadata JSONB columns fully standardized.'
+    puts '  ✅ Metadata JSONB columns fully standardized across assets, notifications, client_versions, and coupons.'
 
     puts '\n========================================================'
     puts '🎉 ALL DATABASE SYNCHRONIZATIONS & BACKFILLS COMPLETED!'

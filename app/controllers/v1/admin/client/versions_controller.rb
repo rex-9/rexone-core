@@ -129,7 +129,8 @@ class V1::Admin::Client::VersionsController < V1::ApplicationController
       :is_force_update,
       :status,
       :ios_build_number,
-      :android_build_number
+      :android_build_number,
+      metadata: {}
     )
 
     %i[ios_build_number android_build_number].each do |key|

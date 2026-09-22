@@ -9,6 +9,7 @@ class Client::VersionAdminSerializer < ApplicationSerializer
              :released_at,
              :ios_build_number,
              :android_build_number,
+             :metadata,
              :created_at,
              :updated_at,
              :discarded_at,

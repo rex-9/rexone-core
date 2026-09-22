@@ -472,6 +472,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `coupon_type`         | `integer`   |    ❌    | `0`                 | Enum: `0: percentage` (1-100%), `1: fixed` (minor units)    |
 | `amount`              | `integer`   |    ❌    | —                   | Discount magnitude: percentage (1-100) or fixed minor units |
 | `currency`            | `string`    |    ✔️    | `NULL`              | Minor units currency (e.g. `usd`). Nullable for percentage  |
+| `metadata`            | `jsonb`     |    ❌    | `{}`                | Arbitrary JSONB metadata payload                            |
 | `max_usage`           | `integer`   |    ❌    | `0`                 | Total allowable redemptions across all users (0 = unlimited)|
 | `max_usage_per_user`  | `integer`   |    ❌    | `1`                 | Maximum redemptions per individual user                     |
 | `used_count`          | `integer`   |    ❌    | `0`                 | Atomic redemption counter (reconciled by weekly DataSync)   |
@@ -904,10 +905,13 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `description`       | `text`     |    ✔️    | `NULL`              | Administrative description                                 |
 | `category`          | `string`   |    ❌    | `broadcast`         | `system`, `marketing`, or `broadcast`                      |
 | `link`              | `string`   |    ✔️    | `NULL`              | Default target navigation URL/path                         |
+| `cta_text`          | `string`   |    ✔️    | `NULL`              | Call-to-action button text for destination link            |
+| `clients`           | `string[]` |    ❌    | `['web', 'mobile']` | Target client platforms (`web`, `mobile`)                  |
 | `admin`             | `boolean`  |    ❌    | `true`              | Indicates if notification is available for admin broadcast |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Custom JSONB metadata payload                              |
 | `in_app_title`      | `string`   |    ✔️    | `NULL`              | In-app notification title template                         |
 | `in_app_body`       | `text`     |    ✔️    | `NULL`              | In-app notification body template                          |
-| `in_app_data`       | `jsonb`    |    ❌    | `{}`                | Custom payload / metadata                                  |
+| `in_app_data`       | `jsonb`    |    ❌    | `{}`                | Custom in-app payload / placeholders                       |
 | `push_title`        | `string`   |    ✔️    | `NULL`              | Push notification title template                           |
 | `push_body`         | `text`     |    ✔️    | `NULL`              | Push notification body template                            |
 | `push_template_id`  | `string`   |    ✔️    | `NULL`              | Provider-agnostic push template ID                         |
@@ -985,6 +989,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `released_at`          | `datetime` |    ✔️    | `NULL`              | Set on first publish if blank; future value = scheduled. UTC.                                                 |
 | `ios_build_number`     | `integer`  |    ✔️    | `NULL`              | Informational iOS `CFBundleVersion`; unique among kept when present. Not used for `must_update`.              |
 | `android_build_number` | `integer`  |    ✔️    | `NULL`              | Informational Android `versionCode`; unique among kept when present. Not used for `must_update`.              |
+| `metadata`             | `jsonb`    |    ❌    | `{}`                | JSONB metadata payload                                                                                        |
 | `created_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                             |
 | `updated_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                            |
 | `discarded_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                                           |

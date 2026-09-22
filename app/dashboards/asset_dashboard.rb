@@ -20,6 +20,7 @@ class AssetDashboard < Administrate::BaseDashboard
     source: Field::String,
     url: Field::String,
     storage_key: Field::String,
+    metadata: Field::String.with_options(searchable: false),
     parent_asset: Field::BelongsTo,
     parent_asset_id: Field::String,
     thumbnail: Field::HasOne,
@@ -65,6 +66,7 @@ class AssetDashboard < Administrate::BaseDashboard
     source
     url
     storage_key
+    metadata
     parent_asset
     thumbnail
     subtitles
@@ -93,6 +95,7 @@ class AssetDashboard < Administrate::BaseDashboard
     source
     url
     storage_key
+    metadata
     parent_asset_id
     assetable_type
     assetable_id

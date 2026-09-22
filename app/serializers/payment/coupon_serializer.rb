@@ -5,7 +5,7 @@ class Payment::CouponSerializer < ApplicationSerializer
   attributes :id, :title, :description, :code, :coupon_type, :amount, :currency,
              :max_usage, :max_usage_per_user, :used_count, :expires_at, :referrer_id,
              :target_role_ids, :target_user_ids, :target_product_ids,
-             :stripe_coupon_id, :active, :created_at, :updated_at,
+             :stripe_coupon_id, :active, :metadata, :created_at, :updated_at,
              :discarded_at, :undiscarded_at
 
   attribute :percentage do |coupon|

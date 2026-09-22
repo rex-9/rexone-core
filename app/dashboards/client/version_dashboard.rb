@@ -15,6 +15,7 @@ class Client::VersionDashboard < Administrate::BaseDashboard
     released_at: Field::DateTime,
     ios_build_number: Field::Number,
     android_build_number: Field::Number,
+    metadata: Field::String.with_options(searchable: false),
     user_versions: Field::HasMany,
     created_by_id: Field::String,
     creator: Field::BelongsTo,
@@ -48,6 +49,7 @@ class Client::VersionDashboard < Administrate::BaseDashboard
     released_at
     ios_build_number
     android_build_number
+    metadata
     user_versions
     creator
     updater
@@ -67,6 +69,7 @@ class Client::VersionDashboard < Administrate::BaseDashboard
     status
     ios_build_number
     android_build_number
+    metadata
   ].freeze
 
   COLLECTION_FILTERS = {}.freeze

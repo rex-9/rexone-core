@@ -129,7 +129,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | Authorization  | Roles, permissions, user-role and role-permission assignments                                                                   | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
 | Commerce       | Stripe Checkout, products, transactions, subscriptions, coupons & referrals (with rate-limiting cooldown ladder), access grants | [Payments & entitlements](docs/FOUNDATION.md#payments-and-entitlements)               |
 | Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                                 | [Background processing](#background-processing)                                       |
-| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo (Master Shell & client URL normalization)     | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
+| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo (Master Shell & client URL normalization)       | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
 | Media          | Provider-neutral storage, media optimization, SVG conversion, thumbnails, SRT subtitles, and progressive playback               | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
 | Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                                     | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
 | AI             | Durable queued chat, Telegram-style multi-message chunking, persisted history, completion alerts, and language tools            | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
@@ -266,19 +266,19 @@ The complete [Ecosystem Quick Start](docs/QUICK_START.md) explains which service
 
 ### Useful development scripts
 
-| Script                            | Purpose                                                                                          | Flags / Options                              |
-| --------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------- |
-| `./scripts/dev.sh`                | Start all 5 Core containers (API, DB, Waka, Garage, Media)                                       | None                                         |
-| `./scripts/ci.sh`                 | Run complete CI suite (RSpec, contracts, RuboCop, locales)                                       | `contracts` (run contract validation only)   |
-| `./scripts/check_locales.sh`      | Validate EN/MY locale parity and `MessageService` constants                                      | `--unused` (audit unreferenced keys)         |
-| `./scripts/console.sh`            | Open interactive Rails console inside the API container                                          | None                                         |
-| `./scripts/enter_api.sh`          | Enter running API container shell or execute custom commands                                     | `[cmd...]`                                   |
-| `./scripts/db_reset.sh`           | Recreate database from schema and run seeds (development only)                                   | `-y`, `--force` (bypass confirmation prompt) |
-| `./scripts/docker_clean.sh`       | Stop containers and prune dev volumes (Postgres, Garage S3)                                      | `-y`, `--force` (bypass confirmation prompt) |
-| `./scripts/rebrand.sh`            | Master rebrand engine across Core, Web, and Mobile ecosystem (supports custom domains & any TLD) | `<config.json>`                              |
-| `./scripts/generate_secrets.sh`   | Generate high-entropy cryptographically secure production keys for `.env`                        | None                                         |
-| `./scripts/check_secrets.sh`      | Pre-commit secret scanner (blocks uncommitted `.env` files and live API keys)                    | `--install` (setup git hook), `--all`        |
-| `./scripts/install_pre_commit.sh` | Install master git pre-commit hook executing secret scans and quality checks before each commit  | None                                         |
+| Script                            | Purpose                                                                                                            | Flags / Options                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `./scripts/dev.sh`                | Start all 5 Core containers (API, DB, Waka, Garage, Media)                                                         | None                                                                  |
+| `./scripts/ci.sh`                 | Run complete CI suite (RSpec, contracts, RuboCop, locales)                                                         | `contracts` (run contract validation only)                            |
+| `./scripts/check_locales.sh`      | Validate EN/MY locale parity and `MessageService` constants                                                        | `--unused` (audit unreferenced keys)                                  |
+| `./scripts/console.sh`            | Open interactive Rails console inside the API container                                                            | None                                                                  |
+| `./scripts/enter_api.sh`          | Enter running API container shell or execute custom commands                                                       | `[cmd...]`                                                            |
+| `./scripts/docker_clean.sh`       | Safe local Docker cleanup (stopped containers, unused networks, images, build cache; preserves volumes by default) | `-y`, `--force` (bypass prompts), `--volumes` (explicit volume prune) |
+| `./scripts/vps_cleanup.sh`        | Safe recurring production VPS maintenance for Coolify (prunes images & cache older than 7d; never touches volumes) | `IMAGE_RETENTION_HOURS=168`, `BUILD_CACHE_RETENTION_HOURS=168`        |
+| `./scripts/rebrand.sh`            | Master rebrand engine across Core, Web, and Mobile ecosystem (supports custom domains & any TLD)                   | `<config.json>`                                                       |
+| `./scripts/generate_secrets.sh`   | Generate high-entropy cryptographically secure production keys for `.env`                                          | None                                                                  |
+| `./scripts/check_secrets.sh`      | Pre-commit secret scanner (blocks uncommitted `.env` files and live API keys)                                      | `--install` (setup git hook), `--all`                                 |
+| `./scripts/install_pre_commit.sh` | Install master git pre-commit hook executing secret scans and quality checks before each commit                    | None                                                                  |
 
 ## Configuration
 
@@ -328,7 +328,7 @@ The API is broader than a starter CRUD demo. Its main route families are:
 | Admin API        | `/v1/admin/*`                                                                                                                                                                                                                                                                                                           |
 | Payments         | `/v1/payment/*` (checkout session, coupon validation with progressive cooldown ladder), `/v1/admin/payment/coupons` (batch generation, redemptions with search & sort, recycle bin purge, hard delete, batch operations), `/v1/admin/payment/user_coupons` (global audit ledger with search & sort), `/webhooks/stripe` |
 | Entitlements     | `/v1/access/*`                                                                                                                                                                                                                                                                                                          |
-| Media            | `/v1/assets/upload`, `/v1/assets`, `/v1/assets/:id/playback` (with embedded subtitle content & dynamic S3 presigned host), `/v1/assets/:id/subtitles/:subtitle_id` (raw VTT/SRT text streaming with CORS)                                                                                                              |
+| Media            | `/v1/assets/upload`, `/v1/assets`, `/v1/assets/:id/playback` (with embedded subtitle content & dynamic S3 presigned host), `/v1/assets/:id/subtitles/:subtitle_id` (raw VTT/SRT text streaming with CORS)                                                                                                               |
 | Notifications    | `/v1/admin/notifications`, `/v1/admin/user_notifications` (lifecycle CRUD: active, recycle bin, discard, undiscard, destroy, batch operations)                                                                                                                                                                          |
 | Chat             | `/v1/chat/rooms`, `/v1/chat/messages`, `/v1/chat/messages/destroy_all` (RESTful CRUD + message purge)                                                                                                                                                                                                                   |
 | Admin Chat       | `/v1/admin/chat/rooms`, `/v1/admin/chat/messages` (moderation CRUD: discard, undiscard, destroy)                                                                                                                                                                                                                        |
@@ -345,7 +345,7 @@ The production image is multi-stage, runs as a non-root user, precompiles Bootsn
 
 [`docker-compose.yaml`](docker-compose.yaml) separates the API, Solid Queue worker, and PostgreSQL services with health checks and restart policies.
 
-The same image can also be deployed through Kamal or another container platform.
+The same image can also be deployed through Coolify, Kamal, or another container platform.
 
 Before production:
 
@@ -356,6 +356,41 @@ Before production:
 5. Confirm database pool sizing against API threads and queue concurrency.
 6. Put TLS and a trusted reverse proxy in front of the application.
 7. Review retention, throttling, alerting, and backup policies for your product.
+
+### Production VPS Maintenance & Docker Log Rotation (Coolify)
+
+To keep production and UAT VPS environments fast and prevent disks from filling up:
+
+#### 1. Docker Log Rotation (`/etc/docker/daemon.json`)
+
+Configure Docker daemon log rotation to prevent infinite container log accumulation:
+
+```json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "50m",
+    "max-file": "3"
+  }
+}
+```
+
+Apply via `sudo systemctl restart docker`.
+
+#### 2. Safe Weekly VPS Cleanup (`./scripts/vps_cleanup.sh`)
+
+Add a weekly cron job (`crontab -e`) that prunes only unused deployment images and build cache older than 7 days (168 hours), **never touching persistent volumes or database data**:
+
+```bash
+# Every Sunday at 03:00 UTC: Safe cleanup of aged deployment images and build cache
+0 3 * * 0 /path/to/rexone-core/scripts/vps_cleanup.sh >> /var/log/rexone_vps_cleanup.log 2>&1
+```
+
+Retention values are easily configurable via environment variables:
+
+```bash
+IMAGE_RETENTION_HOURS=168 BUILD_CACHE_RETENTION_HOURS=168 ./scripts/vps_cleanup.sh
+```
 
 ## Clients in RexOne Ecosystem
 

@@ -28,6 +28,7 @@ class Notification::DispatchJob < ApplicationJob
           email_link = AppConfig.client_url(notification.link)
           email_data[:link] = email_link
           email_data[:cta_url] = email_link
+          email_data[:cta_text] = notification.cta_text if notification.cta_text.present?
         end
         email_data.merge!((notification.in_app_data || {}).symbolize_keys)
 
@@ -41,7 +42,10 @@ class Notification::DispatchJob < ApplicationJob
           push_body: push_body,
           link: notification.link,
           clients: notification.clients,
-          data: { type: notification.event }.merge(notification.in_app_data || {}),
+          data: {
+            type: notification.event,
+            cta_text: notification.cta_text
+          }.compact.merge(notification.in_app_data || {}),
           send_socket: channels.include?(NotificationConstants::Channel::SOCKET),
           send_push: channels.include?(NotificationConstants::Channel::PUSH),
           send_email: channels.include?(NotificationConstants::Channel::EMAIL),

@@ -22,6 +22,7 @@ class Payment::CouponDashboard < Administrate::BaseDashboard
     referrer: Field::BelongsTo.with_options(class_name: "User"),
     stripe_coupon_id: Field::String,
     active: Field::Boolean,
+    metadata: Field::String.with_options(searchable: false),
     user_coupons: Field::HasMany.with_options(class_name: "Payment::UserCoupon"),
     discarded_at: Field::DateTime,
     undiscarded_at: Field::DateTime,
@@ -55,6 +56,7 @@ class Payment::CouponDashboard < Administrate::BaseDashboard
     referrer
     stripe_coupon_id
     active
+    metadata
     user_coupons
     discarded_at
     created_at
@@ -73,6 +75,7 @@ class Payment::CouponDashboard < Administrate::BaseDashboard
     expires_at
     referrer
     active
+    metadata
   ].freeze
 
   COLLECTION_FILTERS = {}.freeze

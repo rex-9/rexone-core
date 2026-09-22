@@ -125,7 +125,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
   private
 
   def dispatch_params
-    params.permit(:event, channels: [], audience: [:type, user_ids: [], role_ids: []])
+    params.permit(:event, channels: [], audience: [ :type, user_ids: [], role_ids: [] ])
   end
 
   def notification_params
@@ -135,6 +135,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
       :description,
       :category,
       :link,
+      :cta_text,
       :admin,
       :in_app_title,
       :in_app_body,
@@ -145,6 +146,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
       :email_body,
       :email_template_id,
       in_app_data: {},
+      metadata: {},
       clients: []
     )
   end
