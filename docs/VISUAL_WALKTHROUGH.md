@@ -599,24 +599,39 @@ flowchart LR
 
 Heavy image/video/audio processing runs in an isolated media worker so API requests and general transactional jobs are not forced to share the same compute path.
 
-## 9.4 Audio/video streaming — Test Lab diagnostics & Core media delivery
+## 9.4 Audio/video streaming — Test Lab diagnostics & cross-platform media delivery
 
 Until this branch, the visual story of media was strongest on the **ingest and processing** side: upload an asset, persist its metadata, optimize it in the isolated media worker, generate thumbnails/subtitles where relevant, and surface live processing state to administrators.
 
-The streaming work closes the other half of that lifecycle: **delivery**.
+The streaming work closes the other half of that lifecycle: **delivery** across Web and Mobile.
 
-<!-- SCREENSHOT:M03 — Test Lab with Core-backed stored audio/video playback and telemetry -->
+<!-- SCREENSHOT:M03-WEB — Test Lab with Core-backed stored audio/video playback, SRT subtitles, and telemetry -->
 <p align="center">
-  <img src="./images/walkthrough/media/m03-web.png" alt="M03 Web — Test Lab diagnostics and Core-backed stored audio/video playback" width="100%">
+  <img src="./images/walkthrough/media/m03-web.png" alt="M03 Web — Test Lab diagnostics and Core-backed stored audio/video playback with SRT subtitles" width="100%">
 </p>
 
 The **Test Lab** (`/test`) showcases:
 
-- **Progressive Video & Audio Streaming**: Native HTML5 media elements streaming MP4 video and MP3 audio directly through Core's streaming routes, supporting range headers, seekability, and buffer optimization.
-- **Diagnostics & Error Telemetry**: Interactive error generation buttons testing uncaught runtime errors, Promise rejections, and network failures, verifying that structured client logs are dispatched to Core and captured in the telemetry subsystem.
-
+- **Progressive Video & Audio Streaming with SRT Subtitles**: Vidstack media player streaming MP4 video and MP3 audio directly through Core's streaming routes, rendering synchronized WebVTT closed captions from fast-path in-memory SRT content with automated dialogue gap bridging ($\le 800\text{ms}$) to eliminate subtitle flicker.
+- **HLS Buffer Retention & Memory Caching**: 60-second back-buffer chunk retention and 60-second forward-buffer tuning allowing users to instantly rewind without repeating network segment requests.
+- **Diagnostics & Error Telemetry**: Interactive error generation buttons testing uncaught runtime errors, Promise rejections, and storage failures, verifying that structured client logs are dispatched to Core and captured in the telemetry subsystem.
 - **Range-Header Streaming Protocol**: Core media delivery exposes standard RFC 7233 HTTP 206 Partial Content range requests (`bytes=start-end`), enabling smooth audio/video scrubbing, pause/resume, and low-latency chunk buffering without requiring clients to download the entire media asset upfront.
 - **Provider Credential Shielding**: Media playback routes stream assets directly through Core's authenticated controller layer with short-lived tokens, shielding the underlying Garage S3-compatible storage endpoints, private bucket names, and internal VPS network topography.
+
+### Mobile Media Delivery & Subtitle Architecture
+
+Cross-platform parity extends to RexOne Mobile via dedicated video, subtitle, and synced lyric experiences backed by the same Core streaming and subtitle endpoints:
+
+<!-- SCREENSHOT:M03-MOBILE — Mobile Video Player, Subtitle Sheet, and Synced Lyrics -->
+<p align="center">
+  <img src="./images/walkthrough/media/m03-mobile-video.png" alt="M03 Mobile Video — Video Player with Closed Captions and In-Line Playlist" width="32%">
+  <img src="./images/walkthrough/media/m03-mobile-subtitles.png" alt="M03 Mobile Subtitles — Subtitle Track Switching" width="32%">
+  <img src="./images/walkthrough/media/m03-mobile-lyrics.png" alt="M03 Mobile Lyrics — Apple Music-Style Synced Lyrics" width="32%">
+</p>
+
+- **Video Player with In-Line Playlist (`m03-mobile-video.png`)**: Inline 16:9 video player with live closed captions positioned above controls, dynamic aspect ratio preservation, and in-line playlist rendering with download status badges.
+- **Dynamic Subtitle Track Switching (`m03-mobile-subtitles.png`)**: Real-time language track selector bottom sheet (`eng`, `mm`, or `None`) prefetching subtitle bodies into memory sources for 0ms switching latency without video interruption.
+- **Apple Music-Style Synced Lyrics (`m03-mobile-lyrics.png`)**: Full-screen kinetic audio lyrics viewer with active line auto-scrolling, brand red cue highlighting, multi-language switching, and interactive scrubbing.
 
 ## 9.5 Storage lifecycle
 
@@ -1260,7 +1275,10 @@ Working checklist and file index of all visual assets integrated across this wal
 | F02     | Feedback       | `docs/images/walkthrough/admin/ad09-web.png`                  | Feedback Triage & Telemetry                  | Captured |
 | M01     | Media          | `docs/images/walkthrough/media/m01-web.png`                   | Asset Control Center                         | Captured |
 | M02     | Media Storage  | `docs/images/walkthrough/media/m02-garage.png`                | Garage Storage & VPS Capacity                | Captured |
-| M03     | Media Delivery | `docs/images/walkthrough/media/m03-web.png`                   | Test Lab Video/Audio Streaming               | Captured |
+| M03     | Media Delivery | `docs/images/walkthrough/media/m03-web.png`                   | Test Lab Video/Audio Streaming (SRT)         | Captured |
+| M03_MV  | Media Delivery | `docs/images/walkthrough/media/m03-mobile-video.png`          | Mobile Video Player with Closed Captions     | Captured |
+| M03_MS  | Media Delivery | `docs/images/walkthrough/media/m03-mobile-subtitles.png`      | Mobile Subtitle Track Switching Sheet        | Captured |
+| M03_ML  | Media Delivery | `docs/images/walkthrough/media/m03-mobile-lyrics.png`         | Apple Music-Style Synced Lyrics (Mobile)     | Captured |
 | V01_M   | Versioning     | `docs/images/walkthrough/versions/v01-mobile.png`             | Optional App Update Dialog (Mobile)          | Captured |
 | V02_M   | Versioning     | `docs/images/walkthrough/versions/v02-mobile.png`             | Forced App Update Dialog (Mobile)            | Captured |
 | T01     | Telemetry      | `docs/images/walkthrough/telemetry/t01-telemetry.png`         | Analytics & Event Telemetry Engine           | Captured |
