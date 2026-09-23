@@ -536,4 +536,122 @@ RSpec.describe PaymentService::Stripe do
       expect(Stripe::Customer).not_to have_received(:create)
     end
   end
+
+  describe "Coupons" do
+    let(:service) { described_class.new }
+
+    describe "#create_coupon" do
+      it "creates a coupon on Stripe with metadata and persists in database" do
+        stripe_coupon = instance_double("Stripe::Coupon", id: "WELCOME20")
+        allow(Stripe::Coupon).to receive(:create).and_return(stripe_coupon)
+
+        result = service.create_coupon(
+          code: "WELCOME20",
+          title: "Welcome 20% Off",
+          coupon_type: :percentage,
+          amount: 20,
+          currency: "usd",
+          metadata: { tier: "vip" }
+        )
+
+        expect(result[:data]).to be_a(Payment::Coupon)
+        expect(result[:data].stripe_coupon_id).to eq("WELCOME20")
+        expect(Stripe::Coupon).to have_received(:create).with(
+          hash_including(
+            id: "WELCOME20",
+            name: "Welcome 20% Off",
+            percent_off: 20,
+            metadata: { "tier" => "vip" }
+          )
+        )
+      end
+    end
+
+    describe "#update_coupon" do
+      it "updates title and metadata on Stripe when stripe_coupon_id is present" do
+        coupon = create(:payment_coupon, stripe_coupon_id: "STRIPE_CPN_1", title: "Old Title")
+        allow(Stripe::Coupon).to receive(:update)
+
+        result = service.update_coupon(coupon.id, title: "New Title", metadata: { "env" => "staging" })
+
+        expect(result[:data].reload.title).to eq("New Title")
+        expect(Stripe::Coupon).to have_received(:update).with(
+          "STRIPE_CPN_1",
+          name: "New Title",
+          metadata: { "env" => "staging" }
+        )
+      end
+    end
+
+    describe "#destroy_coupon" do
+      it "deletes the coupon from Stripe and permanently destroys the local record" do
+        coupon = create(:payment_coupon, stripe_coupon_id: "STRIPE_CPN_DEL")
+        allow(Stripe::Coupon).to receive(:delete)
+
+        service.destroy_coupon(coupon.id)
+
+        expect(Stripe::Coupon).to have_received(:delete).with("STRIPE_CPN_DEL")
+        expect(Payment::Coupon.find_by(id: coupon.id)).to be_nil
+      end
+    end
+
+    describe "Coupon Webhooks" do
+      let(:stripe_coupon_object) do
+        OpenStruct.new(
+          id: "SUMMER50",
+          name: "Summer 50% Off",
+          percent_off: 50,
+          amount_off: nil,
+          currency: "usd",
+          max_redemptions: 100,
+          redeem_by: 1_790_000_000,
+          valid: true,
+          metadata: { "channel" => "email" }
+        )
+      end
+
+      it "creates a new coupon from coupon.created webhook" do
+        service.send(:handle_coupon_created, stripe_coupon_object)
+
+        coupon = Payment::Coupon.find_by!(code: "SUMMER50")
+        expect(coupon.title).to eq("Summer 50% Off")
+        expect(coupon.amount).to eq(50)
+        expect(coupon.percentage?).to be(true)
+        expect(coupon.metadata).to eq({ "channel" => "email" })
+      end
+
+      it "links existing coupon by code on coupon.created webhook without error" do
+        existing = create(:payment_coupon, code: "SUMMER50", stripe_coupon_id: nil, title: "Draft Summer")
+
+        service.send(:handle_coupon_created, stripe_coupon_object)
+
+        expect(existing.reload.stripe_coupon_id).to eq("SUMMER50")
+        expect(existing.title).to eq("Summer 50% Off")
+        expect(existing.metadata).to eq({ "channel" => "email" })
+      end
+
+      it "updates coupon from coupon.updated webhook" do
+        coupon = create(:payment_coupon, code: "SUMMER50", stripe_coupon_id: "SUMMER50", title: "Old Title")
+        updated_obj = OpenStruct.new(
+          id: "SUMMER50",
+          name: "Updated Summer Title",
+          valid: true,
+          metadata: { "ref" => "twitter" }
+        )
+
+        service.send(:handle_coupon_updated, updated_obj)
+
+        expect(coupon.reload.title).to eq("Updated Summer Title")
+        expect(coupon.metadata).to eq({ "ref" => "twitter" })
+      end
+
+      it "permanently deletes coupon from coupon.deleted webhook" do
+        coupon = create(:payment_coupon, code: "SUMMER50", stripe_coupon_id: "SUMMER50")
+
+        service.send(:handle_coupon_deleted, stripe_coupon_object)
+
+        expect(Payment::Coupon.find_by(id: coupon.id)).to be_nil
+      end
+    end
+  end
 end

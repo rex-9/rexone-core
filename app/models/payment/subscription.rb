@@ -31,6 +31,8 @@ class Payment::Subscription < ApplicationRecord
   validates :currency, format: { with: /\A[a-z]{3}\z/ }
   validates :interval, inclusion: { in: PaymentConstants::BillingInterval::ALL }
 
+  after_destroy :cleanup_stripe_subscription, if: -> { stripe_subscription_id.present? }
+
   # ===== SCOPES =====
   scope :active, -> { where(status: PaymentConstants::SubscriptionStatus::ACTIVE) }
   scope :canceled, -> { where(status: PaymentConstants::SubscriptionStatus::CANCELED) }
@@ -121,5 +123,18 @@ class Payment::Subscription < ApplicationRecord
     return "Unknown" if payment_method_id.blank?
     brand = card_brand&.capitalize || payment_method_type&.capitalize || "Other"
     card_last4.present? ? "#{brand} ending in #{card_last4}" : brand
+  end
+
+  def cleanup_stripe_subscription
+    return if stripe_subscription_id.blank?
+
+    begin
+      Stripe::Subscription.cancel(stripe_subscription_id)
+      Rails.logger.info("[Subscription] Canceled Stripe subscription: #{stripe_subscription_id}")
+    rescue Stripe::InvalidRequestError => e
+      Rails.logger.info("[Subscription] Stripe subscription #{stripe_subscription_id} not found or already canceled: #{e.message}")
+    rescue => e
+      Rails.logger.warn("[Subscription] Could not cancel Stripe subscription #{stripe_subscription_id}: #{e.message}")
+    end
   end
 end

@@ -41,6 +41,7 @@ module AppConfig
   STRIPE_WEBHOOK_SECRET = env_or.call("STRIPE_WEBHOOK_SECRET", "")
   STRIPE_SUCCESS_URL = env_or.call("STRIPE_SUCCESS_URL", "http://localhost:4000/success")
   STRIPE_CANCEL_URL = env_or.call("STRIPE_CANCEL_URL", "http://localhost:4000/cancel")
+  PAYMENT_BATCH_COUPON_LIMIT = env_or.call("PAYMENT_BATCH_COUPON_LIMIT", "100").to_i
 
   # Onesignal Keys
   ONE_SIGNAL_APP_ID = env_or.call("ONE_SIGNAL_APP_ID", "")

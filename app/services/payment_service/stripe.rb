@@ -230,6 +230,9 @@ module PaymentService
 
         stripe_params[:max_redemptions] = attributes[:max_usage].to_i if attributes[:max_usage].to_i.positive?
         stripe_params[:redeem_by] = attributes[:expires_at].to_i if attributes[:expires_at].present?
+        if attributes[:metadata].present? && attributes[:metadata].is_a?(Hash)
+          stripe_params[:metadata] = attributes[:metadata].stringify_keys.transform_values(&:to_s)
+        end
 
         begin
           stripe_coupon = Stripe::Coupon.create(stripe_params)
@@ -251,11 +254,19 @@ module PaymentService
     def update_coupon(coupon_id, attributes)
       with_stripe_error("Update Coupon") do
         coupon = Payment::Coupon.with_discarded.find(coupon_id)
-        if attributes[:title].present? && coupon.stripe_coupon_id.present?
-          begin
-            Stripe::Coupon.update(coupon.stripe_coupon_id, name: attributes[:title])
-          rescue Stripe::StripeError => e
-            Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not update Stripe coupon name: #{e.message}")
+        if coupon.stripe_coupon_id.present?
+          stripe_update_params = {}
+          stripe_update_params[:name] = attributes[:title] if attributes[:title].present?
+          if attributes.key?(:metadata) && attributes[:metadata].is_a?(Hash)
+            stripe_update_params[:metadata] = attributes[:metadata].stringify_keys.transform_values(&:to_s)
+          end
+
+          if stripe_update_params.any?
+            begin
+              Stripe::Coupon.update(coupon.stripe_coupon_id, stripe_update_params)
+            rescue Stripe::StripeError => e
+              Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not update Stripe coupon #{coupon.stripe_coupon_id}: #{e.message}")
+            end
           end
         end
         coupon.update!(attributes)
@@ -287,13 +298,6 @@ module PaymentService
     def destroy_coupon(coupon_id)
       with_stripe_error("Destroy Coupon") do
         coupon = Payment::Coupon.with_discarded.find(coupon_id)
-        if coupon.stripe_coupon_id.present?
-          begin
-            Stripe::Coupon.delete(coupon.stripe_coupon_id)
-          rescue Stripe::StripeError => e
-            Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not delete Stripe coupon: #{e.message}")
-          end
-        end
         coupon.destroy!
         { data: coupon }
       end
@@ -836,37 +840,58 @@ module PaymentService
     end
 
     def handle_coupon_created(stripe_coupon)
-      coupon = Payment::Coupon.with_discarded.find_or_initialize_by(stripe_coupon_id: stripe_coupon.id)
-      return if coupon.persisted?
+      coupon = Payment::Coupon.with_discarded.find_by(stripe_coupon_id: stripe_coupon.id) ||
+               Payment::Coupon.with_discarded.find_by(code: stripe_coupon.id.to_s.strip.upcase)
+      if coupon
+        coupon.update!(
+          stripe_coupon_id: stripe_coupon.id,
+          title: stripe_coupon.name.presence || coupon.title,
+          active: stripe_coupon.valid,
+          metadata: (coupon.metadata || {}).merge(stripe_coupon.metadata&.to_h || {})
+        )
+        Rails.logger.info("#{STRIPE_LOG_PREFIX} Linked existing coupon from webhook: #{coupon.code} (Stripe ID: #{stripe_coupon.id})")
+        return
+      end
 
       c_type = stripe_coupon.percent_off.present? ? :percentage : :fixed
       c_amount = stripe_coupon.percent_off || stripe_coupon.amount_off || 0
 
-      coupon.assign_attributes(
-        title: stripe_coupon.name || stripe_coupon.id,
-        code: stripe_coupon.id.upcase,
+      cleaned_code = stripe_coupon.id.to_s.strip.upcase.gsub(/[^A-Z0-9]/, "")
+      cleaned_code = cleaned_code.ljust(6, "0") if cleaned_code.length < 6
+
+      coupon = Payment::Coupon.new(
+        stripe_coupon_id: stripe_coupon.id,
+        title: stripe_coupon.name.presence || stripe_coupon.id,
+        code: cleaned_code,
         coupon_type: c_type,
         amount: c_amount,
-        currency: stripe_coupon.currency,
+        currency: stripe_coupon.currency.presence || PaymentConstants::Currency::USD,
         max_usage: stripe_coupon.max_redemptions || 0,
         expires_at: stripe_coupon.redeem_by ? Time.at(stripe_coupon.redeem_by) : nil,
-        active: stripe_coupon.valid
+        active: stripe_coupon.valid,
+        metadata: stripe_coupon.metadata&.to_h || {}
       )
       coupon.save!
-      Rails.logger.info("#{STRIPE_LOG_PREFIX} Coupon created from webhook: #{coupon.code}")
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Coupon created from webhook: #{coupon.code} (Stripe ID: #{stripe_coupon.id})")
     rescue => e
       Rails.logger.error("#{STRIPE_LOG_PREFIX} Failed to handle coupon created webhook: #{e.message}")
     end
 
     def handle_coupon_updated(stripe_coupon)
       coupon = Payment::Coupon.with_discarded.find_by(stripe_coupon_id: stripe_coupon.id) ||
-               Payment::Coupon.with_discarded.find_by(code: stripe_coupon.id.upcase)
+               Payment::Coupon.with_discarded.find_by(code: stripe_coupon.id.to_s.strip.upcase)
       return unless coupon
 
-      coupon.update(
-        title: stripe_coupon.name || coupon.title,
+      attrs = {
+        stripe_coupon_id: stripe_coupon.id,
+        title: stripe_coupon.name.presence || coupon.title,
         active: stripe_coupon.valid
-      )
+      }
+      if stripe_coupon.metadata.present?
+        attrs[:metadata] = (coupon.metadata || {}).merge(stripe_coupon.metadata.to_h)
+      end
+
+      coupon.update!(attrs)
       Rails.logger.info("#{STRIPE_LOG_PREFIX} Coupon updated from webhook: #{coupon.code}")
     rescue => e
       Rails.logger.error("#{STRIPE_LOG_PREFIX} Failed to handle coupon updated webhook: #{e.message}")
@@ -874,11 +899,11 @@ module PaymentService
 
     def handle_coupon_deleted(stripe_coupon)
       coupon = Payment::Coupon.with_discarded.find_by(stripe_coupon_id: stripe_coupon.id) ||
-               Payment::Coupon.with_discarded.find_by(code: stripe_coupon.id.upcase)
+               Payment::Coupon.with_discarded.find_by(code: stripe_coupon.id.to_s.strip.upcase)
       return unless coupon
 
-      coupon.discard if coupon.kept?
-      Rails.logger.info("#{STRIPE_LOG_PREFIX} Coupon deleted from webhook: #{coupon.code}")
+      coupon.destroy!
+      Rails.logger.info("#{STRIPE_LOG_PREFIX} Coupon permanently deleted from webhook: #{coupon.code}")
     rescue => e
       Rails.logger.error("#{STRIPE_LOG_PREFIX} Failed to handle coupon deleted webhook: #{e.message}")
     end

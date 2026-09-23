@@ -37,10 +37,13 @@ class Payment::Coupon < ApplicationRecord
   validate :validate_percentage_amount
   validate :validate_fixed_currency_presence
   validate :validate_user_usage_within_max_usage
+  validate :validate_immutable_fields, on: :update
+  validate :validate_failed_status_cannot_be_active, on: :update
 
   # ===== CALLBACKS =====
   before_validation :normalize_code
   before_discard :deactivate
+  after_destroy :cleanup_stripe_coupon, if: :stripe_coupon_present?
 
   # ===== SCOPES =====
   scope :active, -> { where(active: true) }
@@ -63,6 +66,22 @@ class Payment::Coupon < ApplicationRecord
 
   def fixed?
     coupon_type_fixed?
+  end
+
+  def sync_status
+    metadata&.dig("status").to_s.downcase.presence
+  end
+
+  def sync_processing?
+    sync_status == PaymentConstants::SyncStatus::PROCESSING
+  end
+
+  def sync_succeeded?
+    %w[succeeded success].include?(sync_status)
+  end
+
+  def sync_failed?
+    %w[failed failure].include?(sync_status)
   end
 
   def calculate_discount(product)
@@ -155,7 +174,41 @@ class Payment::Coupon < ApplicationRecord
     end
   end
 
+  def validate_immutable_fields
+    immutable_attrs = %w[code coupon_type amount currency max_usage expires_at]
+    changed_immutables = immutable_attrs.select { |attr| attribute_changed?(attr) }
+    if changed_immutables.any?
+      errors.add(:base, "Coupon terms (#{changed_immutables.join(', ')}) are immutable once created. Delete and recreate coupon instead.")
+    end
+  end
+
+  def validate_failed_status_cannot_be_active
+    return unless active?
+
+    if sync_failed?
+      errors.add(:active, "cannot be set to true for coupons that failed Stripe synchronization. Inspect the sync failure and delete the coupon.")
+    end
+  end
+
   def deactivate
     self.active = false
+  end
+
+  def cleanup_stripe_coupon
+    stripe_id = stripe_coupon_id.presence || (sync_succeeded? ? code : nil)
+    return if stripe_id.blank?
+
+    begin
+      Stripe::Coupon.delete(stripe_id)
+      Rails.logger.info("[Coupon] Deleted Stripe coupon: #{stripe_id}")
+    rescue Stripe::InvalidRequestError => e
+      Rails.logger.info("[Coupon] Stripe coupon #{stripe_id} not found or already deleted: #{e.message}")
+    rescue => e
+      Rails.logger.warn("[Coupon] Could not delete Stripe coupon #{stripe_id}: #{e.message}")
+    end
+  end
+
+  def stripe_coupon_present?
+    stripe_coupon_id.present? || sync_succeeded?
   end
 end

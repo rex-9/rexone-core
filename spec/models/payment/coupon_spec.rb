@@ -120,4 +120,65 @@ RSpec.describe Payment::Coupon, type: :model do
 
     expect(coupon.applicable_to?(user: user, product: sgd_product)).to be(false)
   end
+
+  it "enforces immutability of financial terms on update" do
+    coupon = create(:payment_coupon, title: "Original Title", amount: 20, coupon_type: :percentage)
+
+    # Allowed updates
+    expect(coupon.update(title: "Updated Title", active: false, metadata: { "tier" => "gold" })).to be(true)
+    expect(coupon.reload.title).to eq("Updated Title")
+    expect(coupon.metadata).to eq({ "tier" => "gold" })
+
+    # Prohibited financial updates
+    expect(coupon.update(amount: 30)).to be(false)
+    expect(coupon.errors[:base]).to include(match(/immutable/i))
+
+    expect(coupon.update(code: "NEWCODE2026")).to be(false)
+    expect(coupon.errors[:base]).to include(match(/immutable/i))
+
+    expect(coupon.update(coupon_type: :fixed)).to be(false)
+    expect(coupon.errors[:base]).to include(match(/immutable/i))
+  end
+
+  it "prohibits setting active: true on failed status coupons" do
+    coupon = create(:payment_coupon, active: false, metadata: { "status" => "failed", "sync_error" => "Card error" })
+
+    expect(coupon.sync_failed?).to be(true)
+    expect(coupon.sync_processing?).to be(false)
+
+    # Attempting to activate failed coupon must fail
+    expect(coupon.update(active: true)).to be(false)
+    expect(coupon.errors[:active]).to include(match(/cannot be set to true for coupons that failed Stripe/i))
+
+    # Updating other non-financial fields while inactive is allowed
+    coupon.reload
+    expect(coupon.update(title: "Updated Pending Title")).to be(true)
+
+    # Hard delete is allowed
+    expect { coupon.destroy! }.not_to raise_error
+  end
+
+  it "cleans up Stripe coupon when destroyed" do
+    coupon = create(:payment_coupon, stripe_coupon_id: "STRIPE_CLEANUP_123")
+    allow(Stripe::Coupon).to receive(:delete)
+
+    coupon.destroy!
+
+    expect(Stripe::Coupon).to have_received(:delete).with("STRIPE_CLEANUP_123")
+  end
+
+  it "correctly identifies sync statuses" do
+    proc_coupon = build(:payment_coupon, metadata: { "status" => "processing" })
+    expect(proc_coupon.sync_processing?).to be(true)
+    expect(proc_coupon.sync_succeeded?).to be(false)
+    expect(proc_coupon.sync_failed?).to be(false)
+
+    succ_coupon = build(:payment_coupon, metadata: { "status" => "succeeded" })
+    expect(succ_coupon.sync_succeeded?).to be(true)
+    expect(succ_coupon.sync_processing?).to be(false)
+
+    fail_coupon = build(:payment_coupon, metadata: { "status" => "failed" })
+    expect(fail_coupon.sync_failed?).to be(true)
+    expect(fail_coupon.sync_succeeded?).to be(false)
+  end
 end

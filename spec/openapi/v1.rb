@@ -296,6 +296,22 @@ module Openapi
           expires_at: DATE_TIME,
           referrer_id: UUID.merge(nullable: true),
           active: { type: :boolean, default: true },
+          metadata: { type: :object, nullable: true },
+          target_role_ids: { type: :array, items: UUID, default: [] },
+          target_user_ids: { type: :array, items: UUID, default: [] },
+          target_user_emails: { type: :array, items: { type: :string, format: :email }, default: [] },
+          target_product_ids: { type: :array, items: UUID, default: [] }
+        )
+      ),
+      admin_coupon_update_request: object(
+        required: [ :coupon ],
+        coupon: object(
+          title: { type: :string, example: "Summer Promo" },
+          description: { type: :string, nullable: true },
+          max_usage_per_user: { type: :integer, minimum: 0, default: 1 },
+          referrer_id: UUID.merge(nullable: true),
+          active: { type: :boolean, default: true },
+          metadata: { type: :object, nullable: true },
           target_role_ids: { type: :array, items: UUID, default: [] },
           target_user_ids: { type: :array, items: UUID, default: [] },
           target_user_emails: { type: :array, items: { type: :string, format: :email }, default: [] },
@@ -318,6 +334,7 @@ module Openapi
           expires_at: DATE_TIME,
           referrer_id: UUID.merge(nullable: true),
           active: { type: :boolean, default: true },
+          metadata: { type: :object, nullable: true },
           target_role_ids: { type: :array, items: UUID, default: [] },
           target_user_ids: { type: :array, items: UUID, default: [] },
           target_user_emails: { type: :array, items: { type: :string, format: :email }, default: [] },
@@ -1209,7 +1226,8 @@ module Openapi
             description: "Public splash check. Query version (semver) drives update_required, must_update, and skip_premium. Missing or invalid JWT still returns 200. A valid JWT requires read_versions. Install tracking is POST /v1/client/versions/user-version.",
             security: nil,
             parameters: [
-              query_parameter(:version, description: "Client marketing semver x.y.z")
+              query_parameter(:version, description: "Client marketing semver x.y.z"),
+              query_parameter(:build_number, type: :integer, description: "Client platform build number")
             ],
             errors: []
           )
@@ -1801,7 +1819,7 @@ module Openapi
         get: operation(tags: "Admin / Coupons", summary: "Get coupon details",
                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
         patch: operation(tags: "Admin / Coupons", summary: "Update coupon details",
-                         parameters: [ path_parameter(:id) ], body: ref(:admin_coupon_request),
+                         parameters: [ path_parameter(:id) ], body: ref(:admin_coupon_update_request),
                          errors: [ 401, 403, 404, 422 ]),
         delete: operation(tags: "Admin / Coupons", summary: "Permanently destroy a coupon",
                           parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])

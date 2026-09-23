@@ -554,6 +554,9 @@ components:
             active:
               type: boolean
               default: true
+            metadata:
+              type: object
+              nullable: true
             target_role_ids:
               type: array
               items:
@@ -583,6 +586,58 @@ components:
             - code
             - coupon_type
             - amount
+      required:
+        - coupon
+    admin_coupon_update_request:
+      type: object
+      properties:
+        coupon:
+          type: object
+          properties:
+            title:
+              type: string
+              example: Summer Promo
+            description:
+              type: string
+              nullable: true
+            max_usage_per_user:
+              type: integer
+              minimum: 0
+              default: 1
+            referrer_id:
+              type: string
+              format: uuid
+              nullable: true
+            active:
+              type: boolean
+              default: true
+            metadata:
+              type: object
+              nullable: true
+            target_role_ids:
+              type: array
+              items:
+                type: string
+                format: uuid
+              default: []
+            target_user_ids:
+              type: array
+              items:
+                type: string
+                format: uuid
+              default: []
+            target_user_emails:
+              type: array
+              items:
+                type: string
+                format: email
+              default: []
+            target_product_ids:
+              type: array
+              items:
+                type: string
+                format: uuid
+              default: []
       required:
         - coupon
     admin_coupon_batch_request:
@@ -643,6 +698,9 @@ components:
             active:
               type: boolean
               default: true
+            metadata:
+              type: object
+              nullable: true
             target_role_ids:
               type: array
               items:
@@ -3474,6 +3532,12 @@ paths:
           description: Client marketing semver x.y.z
           schema:
             type: string
+        - name: build_number
+          in: query
+          required: false
+          description: Client platform build number
+          schema:
+            type: integer
       responses:
         "200":
           description: Successful response
@@ -10727,7 +10791,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/admin_coupon_request"
+              "$ref": "#/components/schemas/admin_coupon_update_request"
     delete:
       tags:
         - Admin / Coupons

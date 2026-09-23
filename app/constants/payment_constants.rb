@@ -115,4 +115,16 @@ module PaymentConstants
     SGD = "sgd".freeze
     ALL = [ USD, MMK, SGD ].freeze
   end
+
+  module SyncStatus
+    PENDING    = "pending".freeze
+    PROCESSING = "processing".freeze
+    SUCCEEDED  = "succeeded".freeze
+    FAILED     = "failed".freeze
+    ALL        = [ PENDING, PROCESSING, SUCCEEDED, FAILED ].freeze
+  end
+
+  module Batch
+    MAX_COUPONS = 100
+  end
 end

@@ -105,11 +105,8 @@ RSpec.describe "Admin payment coupons", type: :request do
   end
 
   describe "POST /v1/admin/payment/coupons/batch" do
-    it "creates batch coupons with generated codes" do
-      allow(PaymentService::Client).to receive(:create_coupon) do |attrs|
-        coupon = Payment::Coupon.create!(attrs)
-        { data: coupon }
-      end
+    it "creates batch coupons with generated codes, inactive status, and enqueues sync job" do
+      allow(Payment::SyncBatchCouponsJob).to receive(:perform_later)
 
       post "/v1/admin/payment/coupons/batch",
            params: {
@@ -127,6 +124,12 @@ RSpec.describe "Admin payment coupons", type: :request do
       expect(response).to have_http_status(:created)
       expect(response_data.length).to eq(5)
       expect(response_data.first["code"]).to start_with("VIP")
+      expect(response_data.first["active"]).to be(false)
+      expect(response_data.first.dig("metadata", "status")).to eq("processing")
+
+      expect(Payment::SyncBatchCouponsJob).to have_received(:perform_later).with(
+        an_instance_of(Array)
+      )
     end
   end
 
@@ -146,6 +149,19 @@ RSpec.describe "Admin payment coupons", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response_data["title"]).to eq("New Title")
+    end
+
+    it "rejects activating a coupon with failed sync status" do
+      coupon = create(:payment_coupon, active: false, metadata: { "status" => "failed", "sync_error" => "Stripe reject" })
+
+      allow(PaymentService::Client).to receive(:update_coupon).and_call_original
+
+      put "/v1/admin/payment/coupons/#{coupon.id}",
+          params: { coupon: { active: true } },
+          headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("failed Stripe synchronization")
     end
   end
 

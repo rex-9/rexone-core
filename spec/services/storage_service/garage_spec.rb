@@ -329,20 +329,20 @@ RSpec.describe StorageService::Garage do
       hide_const("AppConfig::S3_FOLDER_PREFIX")
     end
 
-    it "falls back gracefully to ENV or nil without raising NameError" do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("S3_FOLDER_PREFIX").and_return(nil)
-
+    it "falls back gracefully to nil without raising NameError" do
       expect(adapter.send(:folder_prefix)).to be_nil
       expect(adapter.send(:apply_prefix, "my_file.png")).to eq("my_file.png")
     end
+  end
 
-    it "uses ENV['S3_FOLDER_PREFIX'] when defined and constant is missing" do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("S3_FOLDER_PREFIX").and_return("custom_env")
+  context "when AppConfig::S3_FOLDER_PREFIX is configured" do
+    before do
+      stub_const("AppConfig::S3_FOLDER_PREFIX", "custom_folder")
+    end
 
-      expect(adapter.send(:folder_prefix)).to eq("custom_env")
-      expect(adapter.send(:apply_prefix, "my_file.png")).to eq("custom_env/my_file.png")
+    it "uses AppConfig::S3_FOLDER_PREFIX" do
+      expect(adapter.send(:folder_prefix)).to eq("custom_folder")
+      expect(adapter.send(:apply_prefix, "my_file.png")).to eq("custom_folder/my_file.png")
     end
   end
 end

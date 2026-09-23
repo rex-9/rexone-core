@@ -400,11 +400,7 @@ module StorageService
     end
 
     def folder_prefix
-      raw = if defined?(AppConfig::S3_FOLDER_PREFIX)
-              AppConfig::S3_FOLDER_PREFIX
-      else
-              ENV["S3_FOLDER_PREFIX"]
-      end
+      raw = AppConfig::S3_FOLDER_PREFIX if defined?(AppConfig::S3_FOLDER_PREFIX)
       raw.to_s.strip.gsub(%r{\A/+|/+$}, "").presence
     end
 

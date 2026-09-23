@@ -8,7 +8,8 @@ class V1::Client::VersionsController < V1::ApplicationController
   def read_current
     result = Client::VersionService.check(
       version: current_params[:version],
-      platform: platform_session
+      platform: platform_session,
+      build_number: current_params[:build_number]
     )
 
     render_json_response(
@@ -21,7 +22,7 @@ class V1::Client::VersionsController < V1::ApplicationController
   private
 
   def current_params
-    params.permit(:version)
+    params.permit(:version, :build_number)
   end
 
   def check_payload(result)

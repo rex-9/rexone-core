@@ -12,6 +12,7 @@ class Client::LogSerializer < ApplicationSerializer
   attribute :app_version do |log_client|
     log_client.version&.number
   end
+
   attribute :formatted_context, &:formatted_context
   attribute :display_name, &:display_name
   attribute :storage_snapshot, &:storage_snapshot

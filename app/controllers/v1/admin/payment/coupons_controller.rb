@@ -65,14 +65,20 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
 
   # POST /v1/admin/payment/coupons/batch
   def create_batch
+    max_batch_limit = AppConfig::PAYMENT_BATCH_COUPON_LIMIT.positive? ? AppConfig::PAYMENT_BATCH_COUPON_LIMIT : PaymentConstants::Batch::MAX_COUPONS
+
     count = batch_params[:count].to_i
     count = 10 if count <= 0
-    count = [ count, 500 ].min # Safety cap of 500 per batch
+    count = [ count, max_batch_limit ].min # Configurable cap (default 100)
     prefix = batch_params[:prefix].to_s.strip.upcase.gsub(/[^A-Z0-9]/, "")
 
     base_attributes = coupon_params.to_h.symbolize_keys
     base_attributes[:created_by_id] = current_user.id
     base_attributes[:updated_by_id] = current_user.id
+    base_attributes[:active] = false
+    base_attributes[:metadata] = (base_attributes[:metadata] || {}).merge(
+      "status" => PaymentConstants::SyncStatus::PROCESSING
+    )
     resolve_target_user_ids!(base_attributes)
 
     created_coupons = []
@@ -85,23 +91,20 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
         end
 
         attrs = base_attributes.merge(code: code)
-        result = PaymentService::Client.create_coupon(attrs)
-        if result[:error]
-          raise ActiveRecord::Rollback, result[:error]
-        end
-        created_coupons << result[:data]
+        created_coupons << ::Payment::Coupon.create!(attrs)
       end
     end
 
-    if created_coupons.length == count
-      render_json_response(
-        status_code: 201,
-        message: payment_message(MessageService::Payment::BATCH_COUPONS_CREATED),
-        data: created_coupons.map { |c| ::Payment::CouponSerializer.new(c).serializable_hash[:data][:attributes] }
-      )
-    else
-      render_service_error(MessageService::Payment::BATCH_COUPONS_CREATE_FAILED, payment_message(MessageService::Payment::BATCH_COUPONS_CREATE_FAILED))
+    created_coupons.map(&:id).each_slice(50) do |coupon_ids_slice|
+      Payment::SyncBatchCouponsJob.perform_later(coupon_ids_slice)
     end
+
+    render_json_response(
+      status_code: 201,
+      message: payment_message(MessageService::Payment::BATCH_COUPONS_CREATED),
+      data: created_coupons.map { |c| ::Payment::CouponSerializer.new(c).serializable_hash[:data][:attributes] }
+    )
+
   rescue ActiveRecord::RecordInvalid => e
     render_service_error(MessageService::Payment::BATCH_COUPONS_CREATE_FAILED, e.record.errors.full_messages.to_sentence)
   rescue => e
@@ -110,7 +113,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
 
   # PUT /v1/admin/payment/coupons/:id
   def update
-    attributes = coupon_params.to_h.symbolize_keys
+    attributes = coupon_update_params.to_h.symbolize_keys
     attributes[:updated_by_id] = current_user.id
     resolve_target_user_ids!(attributes)
 
@@ -313,6 +316,21 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
       :max_usage,
       :max_usage_per_user,
       :expires_at,
+      :referrer_id,
+      :active,
+      metadata: {},
+      target_role_ids: [],
+      target_user_ids: [],
+      target_user_emails: [],
+      target_product_ids: []
+    )
+  end
+
+  def coupon_update_params
+    params.require(:coupon).permit(
+      :title,
+      :description,
+      :max_usage_per_user,
       :referrer_id,
       :active,
       metadata: {},

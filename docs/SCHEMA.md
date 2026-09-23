@@ -481,6 +481,8 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `target_role_ids`     | `uuid[]`    |    ❌    | `[]`                | Array of `iam_roles.id` that are eligible                   |
 | `target_user_ids`     | `uuid[]`    |    ❌    | `[]`                | Array of `users.id` that are eligible                       |
 | `target_product_ids`  | `uuid[]`    |    ❌    | `[]`                | Array of `payment_products.id` that are eligible            |
+| `stripe_coupon_id`    | `string`    |    ✔️    | `NULL`              | Remote Stripe coupon identifier (synchronized bi-directionally) |
+| `active`              | `boolean`   |    ❌    | `true`              | Operational availability flag (deactivated upon soft-discard)|
 | `created_by_id`       | `uuid`      |    ✔️    | `NULL`              | Auditing: Creator                                           |
 | `updated_by_id`       | `uuid`      |    ✔️    | `NULL`              | Auditing: Modifier                                          |
 | `discarded_by_id`     | `uuid`      |    ✔️    | `NULL`              | Auditing: Discarder                                         |
@@ -493,11 +495,37 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 **Indexes & Foreign Keys**:
 
 - `index_coupons_on_code` (UNIQUE: `code`)
+- `index_coupons_on_stripe_coupon_id` (`stripe_coupon_id`)
 - `index_coupons_on_referrer_id` (`referrer_id`)
 - `index_coupons_on_expires_at` (`expires_at`)
 - `index_coupons_on_coupon_type` (`coupon_type`)
 - `index_coupons_on_discarded_at` (`discarded_at`)
+- `index_coupons_on_target_role_ids` (`target_role_ids`, GIN)
+- `index_coupons_on_target_user_ids` (`target_user_ids`, GIN)
+- `index_coupons_on_target_product_ids` (`target_product_ids`, GIN)
 - FK to `users(id)` via `referrer_id`.
+
+**Stripe Synchronization & Immutability Invariants**:
+- **Immutability of Financial Terms**: Financial parameters (`code`, `coupon_type`, `amount`, `currency`, `max_usage`, `expires_at`) are strictly immutable once created, ensuring deterministic parity with Stripe coupons. To alter terms, coupons must be destroyed and recreated.
+- **Bi-Directional Metadata Sync**: `metadata` JSONB is converted to string maps and synced to Stripe upon creation and update.
+- **Soft Delete vs Hard Delete**:
+  - Soft-delete (`discard`) is purely local (sets `active = false` and blocks redemptions) so Stripe does not permanently burn the coupon ID, preserving restoration (`undiscard`) capabilities.
+  - Hard-delete (`destroy`) permanently destroys both local DB records and remote Stripe coupons.
+  - Inbound `coupon.deleted` webhooks from Stripe permanently destroy the local DB coupon (`coupon.destroy!`) to prevent accidental redemptions.
+- **Batch Generation & Asynchronous Stripe Sync**:
+  - Batch coupon creation (`POST /v1/admin/payment/coupons/batch`) creates up to 100 coupons per batch (configurable via `AppConfig::PAYMENT_BATCH_COUPON_LIMIT`, default 100).
+  - All batch coupons are initially persisted with `active: false` and `metadata.status = "processing"`.
+  - Stripe registration is enqueued asynchronously in slices of 50 via [`Payment::SyncBatchCouponsJob`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/jobs/payment/sync_batch_coupons_job.rb) on queue `:payments`.
+  - Successful coupons are set to `active: true` with `metadata.status = "succeeded"`.
+  - Coupons that fail registration (or exhaust retries) remain permanently `active: false` with `metadata.status = "failed"` and `metadata.sync_error`.
+  - Failed coupons cannot be manually updated to `active: true` (enforced via model validation `validate_failed_status_cannot_be_active`). Admins can inspect the error and hard delete them if appropriate.
+- **Referral Coupon Auto-Creation & Third-Party Cleanup Cascade**:
+  - Upon user registration, a default referral coupon (`REF<USERNAME>`, 10% off) is automatically generated for the user (`User#create_default_referral_coupon`).
+  - When a user is deleted (`user.destroy`), all associated `referred_coupons` are destroyed via `dependent: :destroy`, which in turn triggers `Payment::Coupon#after_destroy` to permanently delete the remote Stripe coupon.
+  - `User#after_destroy` automatically deletes the associated remote Stripe customer (`Stripe::Customer.delete`) if `stripe_customer_id` is present.
+  - `Payment::Subscription#after_destroy` automatically cancels the remote Stripe subscription (`Stripe::Subscription.cancel`).
+  - `Asset#after_destroy_commit` purges physical files from Garage S3 storage (`StorageService::Client.delete(storage_key)`).
+  - This ensures zero orphaned resources on third-party providers (Stripe, Garage) during user cleanup, database pruning, integration tests, and e2e testing suites.
 
 ---
 
@@ -1010,7 +1038,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - `index_client_versions_on_discarded_at` (`discarded_at`)
 - FKs: audit columns → `users(id)`.
 
-**Live scope** (public check): kept + `status = published` + (`released_at` is `NULL` or `<= now`). At most one kept published row exists. Versions are discard/undiscard only (non-destroyable). `install_count` is computed (kept `client_user_versions` rows whose `version_id` matches); it is not a stored column. Feedback and client-log ingest send `app_version` (marketing semver); Core stores `version_id` when a kept `client_versions.number` matches, otherwise null.
+**Live scope** (public check): kept + `status = published` + (`released_at` is `NULL` or `<= now`). At most one kept published row exists. Versions are discard/undiscard only (non-destroyable). `install_count` is computed (kept `client_user_versions` rows whose `version_id` matches); it is not a stored column. Feedback and client-log ingest send `app_version` (marketing semver); Core links `version_id` when a kept `client_versions.number` matches (using `lookup_by_number` which resolves raw semver or `+build` suffix), otherwise null. Context and metadata retain the client's build number and full version details.
 
 ### 11.2. `client_user_versions`
 

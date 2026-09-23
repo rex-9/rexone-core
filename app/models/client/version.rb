@@ -34,7 +34,8 @@ class Client::Version < ApplicationRecord
   def self.lookup_by_number(number)
     return if number.blank?
 
-    find_by(number: number)
+    cleaned = number.to_s.split("+").first.strip
+    find_by(number: cleaned) || find_by(number: number.to_s.strip)
   end
 
   before_save :yank_other_published_versions, if: :publishing?

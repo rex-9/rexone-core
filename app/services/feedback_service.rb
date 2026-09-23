@@ -80,6 +80,11 @@ class FeedbackService
       category = params[:category].presence || infer_category(content)
       priority = params[:priority].presence || infer_priority(content, rating)
 
+      raw_version = params[:app_version].to_s.strip.presence
+      matched_version = Client::Version.lookup_by_number(raw_version) if raw_version
+      meta = (params[:metadata] || {}).to_h
+      meta["app_version"] = raw_version if raw_version.present? && matched_version.nil?
+
       feedback = Feedback.new(
         user: user,
         content: content,
@@ -88,12 +93,12 @@ class FeedbackService
         priority: priority,
         status: FeedbackConstants::Status::NEW,
         platform: platform,
-        version_id: Client::Version.lookup_by_number(params[:app_version])&.id,
+        version_id: matched_version&.id,
         os: params[:os],
         device: params[:device],
         browser: params[:browser],
         page: params[:page],
-        metadata: params[:metadata] || {}
+        metadata: meta
       )
 
       feedback.save!

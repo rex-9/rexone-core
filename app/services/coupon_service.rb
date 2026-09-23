@@ -119,7 +119,7 @@ class CouponService
       end
     end
 
-    def ensure_stripe_coupon(coupon)
+    def ensure_stripe_coupon(coupon, raise_on_error: false)
       return coupon.stripe_coupon_id if coupon.stripe_coupon_id.present?
 
       stripe_params = {
@@ -137,6 +137,11 @@ class CouponService
 
       stripe_params[:max_redemptions] = coupon.max_usage if coupon.max_usage.to_i.positive?
       stripe_params[:redeem_by] = coupon.expires_at.to_i if coupon.expires_at.present?
+      if coupon.metadata.present? && coupon.metadata.is_a?(Hash)
+        sync_keys = %w[status sync_error failed_at synced_at]
+        domain_metadata = coupon.metadata.except(*sync_keys)
+        stripe_params[:metadata] = domain_metadata.transform_values(&:to_s) if domain_metadata.present?
+      end
 
       begin
         stripe_coupon = Stripe::Coupon.create(stripe_params)
@@ -148,10 +153,16 @@ class CouponService
           coupon.code
         else
           Rails.logger.error("#{LOG_PREFIX} Failed to create Stripe coupon: #{e.message}")
+          raise if raise_on_error
           nil
         end
+      rescue Stripe::RateLimitError, Stripe::APIConnectionError, Stripe::APIError, Timeout::Error => e
+        Rails.logger.error("#{LOG_PREFIX} Stripe API error syncing coupon #{coupon.code}: #{e.message}")
+        raise if raise_on_error
+        nil
       rescue => e
-        Rails.logger.error("#{LOG_PREFIX} Error syncing Stripe coupon: #{e.message}")
+        Rails.logger.error("#{LOG_PREFIX} Error syncing Stripe coupon #{coupon.code}: #{e.message}")
+        raise if raise_on_error
         nil
       end
     end

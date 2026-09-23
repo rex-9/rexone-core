@@ -153,4 +153,46 @@ RSpec.describe User, type: :model do
       expect(user.latest_user_version).to eq(latest)
     end
   end
+
+  describe "referral coupon and third-party cleanup lifecycle" do
+    it "automatically creates a default referral coupon on user creation" do
+      user = create(:user, username: "alice9")
+      expect(user.referred_coupons.count).to eq(1)
+
+      referral_coupon = user.referred_coupons.first
+      expect(referral_coupon.code).to start_with("REFALICE9")
+      expect(referral_coupon.coupon_type).to eq("percentage")
+      expect(referral_coupon.amount).to eq(10)
+      expect(referral_coupon.referrer_id).to eq(user.id)
+    end
+
+    it "destroys referred coupons when user is destroyed" do
+      user = create(:user)
+      coupon_id = user.referred_coupons.first.id
+
+      expect { user.destroy! }.to change { Payment::Coupon.count }.by(-1)
+      expect(Payment::Coupon.find_by(id: coupon_id)).to be_nil
+    end
+
+    it "cleans up Stripe customer when user with stripe_customer_id is destroyed" do
+      user = create(:user)
+      user.update_column(:stripe_customer_id, "cus_test_123")
+      allow(Stripe::Customer).to receive(:delete)
+
+      user.destroy!
+
+      expect(Stripe::Customer).to have_received(:delete).with("cus_test_123")
+    end
+
+    it "cleans up referred coupon on Stripe when user is destroyed" do
+      user = create(:user)
+      coupon = user.referred_coupons.first
+      coupon.update_column(:stripe_coupon_id, "STRIPE_REF_123")
+      allow(Stripe::Coupon).to receive(:delete)
+
+      user.destroy!
+
+      expect(Stripe::Coupon).to have_received(:delete).with("STRIPE_REF_123")
+    end
+  end
 end

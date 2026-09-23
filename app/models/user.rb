@@ -27,6 +27,7 @@ class User < ApplicationRecord
   before_create :generate_confirmation_code
   after_create :assign_default_user_role, if: -> { roles.empty? }
   after_create :create_default_referral_coupon
+  after_destroy :cleanup_stripe_customer, if: -> { stripe_customer_id.present? }
 
   self.primary_key = "id"
 
@@ -179,5 +180,18 @@ class User < ApplicationRecord
     )
   rescue => e
     Rails.logger.warn("[User] Referral coupon creation skipped: #{e.message}")
+  end
+
+  def cleanup_stripe_customer
+    return if stripe_customer_id.blank?
+
+    begin
+      Stripe::Customer.delete(stripe_customer_id)
+      Rails.logger.info("[User] Deleted Stripe customer: #{stripe_customer_id}")
+    rescue Stripe::InvalidRequestError => e
+      Rails.logger.info("[User] Stripe customer #{stripe_customer_id} not found or already deleted: #{e.message}")
+    rescue => e
+      Rails.logger.warn("[User] Could not delete Stripe customer #{stripe_customer_id}: #{e.message}")
+    end
   end
 end
