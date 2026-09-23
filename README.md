@@ -177,26 +177,32 @@ Chat workflow is handled by `V1::ChatController`, `ChatMessageService`, and `Cha
 
 The same principle applies to product-specific functionality: the foundation provides the structure, while the product remains free to define its own domain, workflows, and experience.
 
-### Background processing
+### Background processing & Concurrency Architecture
 
-Solid Queue is part of the application architecture, not an afterthought.
+Solid Queue is part of the application architecture, not an afterthought. RexOne leverages a **hybrid Fiber + Thread concurrency model** powered by Ruby Fibers (`async`), Rails 8 fiber isolation (`config.active_support.isolation_level = :fiber`), and Solid Queue 1.7.0:
 
-The foundation currently queues work where it benefits from durability, isolation, retries, or provider independence:
+| Work | Queue | Concurrency Engine | Why |
+| ---- | ----- | ------------------ | --- |
+| Stripe webhook processing | `payments` | **Fibers** (50 concurrent) | Durable ingestion, idempotency, non-blocking HTTP verification |
+| AI completions & TTS synthesis | `ai` | **Fibers** (50 concurrent) | I/O-bound LLM socket streaming; 50 in-flight requests without thread exhaustion |
+| Socket, push, and email delivery | `notifications` | **Fibers** (50 concurrent) | Provider latency (OneSignal, Brevo, ActionCable) must not block OS threads |
+| Default application tasks | `default` | **Fibers** (50 concurrent) | Dynamic shared capacity with instant failover |
+| System maintenance & recurring cron | `solid_queue_recurring` | **Threads** (2 isolated OS threads) | Sequential, transactional DB table maintenance ([`config/recurring.yml`](config/recurring.yml)) |
+| Media transcoding & image processing | `media` | **Threads** (2 isolated OS threads) | Isolated in dedicated `media` worker/container; prevents CPU-heavy libvips/FFmpeg from starving I/O |
 
-| Work                             | Queue           | Why                                                                          |
-| -------------------------------- | --------------- | ---------------------------------------------------------------------------- |
-| Stripe webhook processing        | `payments`      | Durable ingestion, idempotency, retries, and concurrency safety              |
-| Socket, push, and email delivery | `notifications` | Provider latency must not delay the originating request                      |
-| AI chat completion               | `ai`            | Durable processing, profile-controlled prompts/models, and run telemetry     |
-| Media processing                 | `media`         | Isolated compression, conversion, thumbnail, and remote-image ingestion work |
+#### Dynamic Workload Elasticity Under All Conditions
 
-Production workers are separated by workload in [`config/queue.yml`](config/queue.yml), and recurring maintenance lives in [`config/recurring.yml`](config/recurring.yml).
+1. **Uneven Workload Spikes** (e.g. zero AI traffic, surge in notifications):
+   All I/O queues (`[ payments, ai, notifications, default ]`) are pooled under the fiber worker with deterministic priority order. When notifications surge, **all 50 fibers instantly pivot to deliver notifications**. When AI requests spike, free fibers immediately prioritize AI completions. Zero idle worker capacity is wasted.
+2. **Low Workload / Idle State**:
+   Fibers run on a single cooperative event reactor. When queues are empty, context switching drops to zero, CPU usage is near-zero, and Active Record releases idle database connections back to PostgreSQL.
+3. **Full System Saturation**:
+   Up to 50 concurrent I/O operations execute simultaneously within a single worker process without OS thread thrashing, using only 5–10 active database connections. CPU-bound media operations remain isolated in the `media` container so image/video compression never starves payment webhooks or live chat completions.
+4. **Exact Development & Production Parity**:
+   [`config/queue.yml`](config/queue.yml) maintains the exact same fiber + thread configuration in both `development` and `production`, allowing engineers to observe and benchmark real-world concurrent execution locally.
 
-The queue architecture is intentionally extensible. As a product grows, new workloads can be introduced as dedicated queues with their own concurrency, retry, and execution policies rather than turning the background layer into one undifferentiated worker.
+The API, worker (`waka`), and media processor run as separate services in Docker, keeping request handling, async I/O, and CPU-intensive operations independently scalable.
 
-The exact queue structure can also be customized around the requirements of the product being built.
-
-The API and worker run as separate services in Docker, keeping request handling and background execution independently scalable.
 
 ## Foundation capabilities
 

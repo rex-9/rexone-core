@@ -73,9 +73,13 @@ module AppConfig
   ALLOW_UNCONFIRMED_ACCESS_FOR = env_or.call("ALLOW_UNCONFIRMED_ACCESS_FOR", (24 * 60 * 60).to_s).to_i.then { |s| defined?(ActiveSupport) ? s.seconds : s }
   CONFIRM_CODE_WITHIN = env_or.call("CONFIRM_CODE_WITHIN", (10 * 60).to_s).to_i.then { |s| defined?(ActiveSupport) ? s.seconds : s }
 
-  # Solid Queue Worker
+  # Solid Queue Worker & Hybrid Concurrency
   SOLID_QUEUE_IN_PUMA = !env_or.call("SOLID_QUEUE_IN_PUMA").nil? && env_or.call("SOLID_QUEUE_IN_PUMA") != "0" && env_or.call("SOLID_QUEUE_IN_PUMA") != "false"
   SOLID_QUEUE_SHUTDOWN_TIMEOUT = env_or.call("SOLID_QUEUE_SHUTDOWN_TIMEOUT", "30").to_i.then { |s| defined?(ActiveSupport) ? s.seconds : s }
+  SOLID_QUEUE_FIBERS = env_or.call("SOLID_QUEUE_FIBERS", "50").to_i
+  SOLID_QUEUE_POLLING_INTERVAL = env_or.call("SOLID_QUEUE_POLLING_INTERVAL", "0.1").to_f
+  SOLID_QUEUE_MAINTENANCE_THREADS = env_or.call("SOLID_QUEUE_MAINTENANCE_THREADS", "2").to_i
+  MEDIA_QUEUE_THREADS = env_or.call("MEDIA_QUEUE_THREADS", "2").to_i
   PIDFILE = env_or.call("PIDFILE", nil)
 
   # Storage Provider (garage, cloudinary, local)

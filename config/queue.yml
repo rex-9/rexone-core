@@ -1,17 +1,32 @@
 # config/queue.yml
-# TODO: need to test with dev
+# Solid Queue Multi-Workload Concurrency Architecture:
+# - Fiber-based worker: Non-blocking cooperative async concurrency for I/O-bound jobs
+#   (AI streaming/LLM requests, Notification push/email/ActionCable, Stripe webhook processing, default jobs).
+#   Dynamically balances across all queues based on priority: when one area surges, fibers
+#   scale to handle it; when quiet, CPU and DB connections stay minimal.
+# - Thread-based worker: Isolated preemptive OS threads for sequential recurring maintenance
+#   and system reconciliation tasks.
+# - (Dedicated Media Container via config/queue.media.yml isolates CPU-bound libvips & FFmpeg).
+
 default: &default
   dispatchers: # move scheduled queue to ready queue when time's up [not immediate jobs]
     - polling_interval: 1 # check scheduled queue every 1s & move to ready when scheduled time's up
-      batch_size: 500 # 2000 notis => 4 x 500 notis move to ready queue
-      concurrency_maintenance_interval: 60 # check blocked jobs every min. not affect normal ready-job polling. default is 600s.
+      batch_size: 500 # batch move to ready queue
+      concurrency_maintenance_interval: 60 # check blocked jobs every min
 
 development:
   <<: *default
-  workers: # idle worker checks ready queue & execute (excludes :media which is handled by media container)
-    - queues: [ default, payments, notifications, ai, solid_queue_recurring ]
-      threads: 3
-      polling_interval: 0.5 # 2 checks per second
+  workers:
+    # High-concurrency non-blocking Fiber reactor for I/O-bound workloads
+    # Dynamically scales across queues: payments -> ai -> notifications -> default
+    - queues: [payments, notifications, ai, default]
+      fibers: <%= ENV.fetch("SOLID_QUEUE_FIBERS", 50).to_i %>
+      polling_interval: <%= ENV.fetch("SOLID_QUEUE_POLLING_INTERVAL", 0.1).to_f %>
+
+    # Isolated OS Thread worker for recurring scheduler & maintenance jobs
+    - queues: [solid_queue_recurring, default]
+      threads: <%= ENV.fetch("SOLID_QUEUE_MAINTENANCE_THREADS", 2).to_i %>
+      polling_interval: 1
 
 test:
   <<: *default
@@ -22,23 +37,14 @@ test:
 
 production:
   <<: *default
-
   workers:
-    # Payment operations, recurring scheduler, and ordinary application jobs
-    - queues: [ payments, default, solid_queue_recurring ]
-      threads: 3
-      polling_interval: 0.2
+    # High-concurrency non-blocking Fiber reactor for I/O-bound workloads
+    # Dynamically scales across queues: payments -> ai -> notifications -> default
+    - queues: [payments, notifications, ai, default]
+      fibers: <%= ENV.fetch("SOLID_QUEUE_FIBERS", 50).to_i %>
+      polling_interval: <%= ENV.fetch("SOLID_QUEUE_POLLING_INTERVAL", 0.1).to_f %>
 
-    # Everything coordinated by NotificationService
-    - queues: [ notifications ]
-      threads: 3
-      polling_interval: 0.5
-
-    # AI
-    - queues: [ ai ]
-      threads: 2
-      polling_interval: 0.5
-
-    # NOTE: :media queue is NOT listed here.
-    # It is processed exclusively by the `media` container
-    # using config/queue.media.yml.
+    # Isolated OS Thread worker for recurring scheduler & maintenance jobs
+    - queues: [solid_queue_recurring, default]
+      threads: <%= ENV.fetch("SOLID_QUEUE_MAINTENANCE_THREADS", 2).to_i %>
+      polling_interval: 1

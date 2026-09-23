@@ -13,7 +13,7 @@ development:
   <<: *default
   workers:
     - queues: "media"
-      threads: 2
+      threads: <%= ENV.fetch("MEDIA_QUEUE_THREADS", 2).to_i %>
       polling_interval: 1
 
 test:
@@ -27,5 +27,6 @@ production:
   <<: *default
   workers:
     - queues: "media"
-      threads: 2
+      threads: <%= ENV.fetch("MEDIA_QUEUE_THREADS", 2).to_i %>
       polling_interval: 1
+
