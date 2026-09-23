@@ -8,22 +8,22 @@
 module SecurityBootGuard
   CRITICAL_KEYS = {
     "RAILS_SECRET_KEY_BASE" => {
-      placeholders: [ "secret-key-base", "change-me", "your_secret_key_base" ],
+      placeholders: [ "secret-key-base", "change-me", "your_secret_key_base", "changeme_rails_secret_key_base_min_32_characters_long" ],
       min_length: 32,
       description: "Rails session and cookie encryption key"
     },
     "RAILS_JWT_SECRET_KEY" => {
-      placeholders: [ "rexone", "secret", "change-me", "your_jwt_secret" ],
+      placeholders: [ "rexone", "secret", "change-me", "your_jwt_secret", "changeme_jwt_secret_key" ],
       min_length: 16,
       description: "JWT authentication signature key"
     },
     "PG_PASSWORD" => {
-      placeholders: [ "password", "postgres", "admin", "123456" ],
+      placeholders: [ "password", "postgres", "admin", "123456", "changeme_db_password" ],
       min_length: 8,
       description: "PostgreSQL database password"
     },
     "S3_ADMIN_TOKEN" => {
-      placeholders: [ "rexone_garage_admin_token_secret_key_12345" ],
+      placeholders: [ "rexone_garage_admin_token_secret_key_12345", "changeme_garage_admin_token" ],
       min_length: 16,
       description: "Garage S3 storage administration token"
     }
@@ -31,32 +31,32 @@ module SecurityBootGuard
 
   INTEGRATION_KEYS = {
     "BREVO_API_KEY" => {
-      placeholders: [ "your_brevo_api_key_here", "brevo_key_xxx" ],
+      placeholders: [ "your_brevo_api_key_here", "brevo_key_xxx", "changeme_brevo_api_key" ],
       feature: "Transactional Email Service (Brevo)",
       impact: "User account confirmation codes and password reset emails will not be sent."
     },
     "STRIPE_SECRET_KEY" => {
-      placeholders: [ "sk_test_xxx", "sk_live_xxx", "your_stripe_secret_key" ],
+      placeholders: [ "sk_test_xxx", "sk_live_xxx", "your_stripe_secret_key", "sk_test_changeme" ],
       feature: "Stripe Payments & Billing",
       impact: "Checkout sessions, payment intents, and customer subscriptions will fail."
     },
     "DEEPSEEK_API_KEY" => {
-      placeholders: [ "sk-xxx", "your_deepseek_api_key" ],
+      placeholders: [ "sk-xxx", "your_deepseek_api_key", "sk-changeme" ],
       feature: "DeepSeek AI Engine",
       impact: "DeepSeek LLM completions will fail."
     },
     "GEMINI_API_KEY" => {
-      placeholders: [ "AIzaSyxxx", "your_gemini_api_key" ],
+      placeholders: [ "AIzaSyxxx", "your_gemini_api_key", "AIzaSy_changeme" ],
       feature: "Google Gemini AI Engine",
       impact: "Gemini multimodal and text completions will fail."
     },
     "ONE_SIGNAL_API_KEY" => {
-      placeholders: [ "your_onesignal_api_key", "xxx" ],
+      placeholders: [ "your_onesignal_api_key", "xxx", "changeme_onesignal_api_key" ],
       feature: "OneSignal Push Notifications",
       impact: "Push notifications will not be delivered to mobile and web subscribers."
     },
     "AZURE_SPEECH_KEY" => {
-      placeholders: [ "your_azure_speech_key" ],
+      placeholders: [ "your_azure_speech_key", "changeme_azure_speech_key" ],
       feature: "Azure Speech Live Streaming",
       impact: "Real-time WebSocket speech-to-text is disabled (Nova HTTP STT remains active)."
     }
