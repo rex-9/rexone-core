@@ -108,7 +108,7 @@ echo "🧹 [2/4] Pruning dangling Docker images..."
 docker image prune -f
 
 echo "🧹 [3/4] Pruning Docker build cache..."
-docker builder prune -f
+docker builder prune -a -f
 
 if [ "$PRUNE_VOLUMES" = true ]; then
   echo ""

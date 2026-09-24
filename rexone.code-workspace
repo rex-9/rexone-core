@@ -24,5 +24,6 @@
     "flutterTools.displaySignalsContextMenu": false,
     "yaml.maxItemsComputed": 20000,
     "java.configuration.updateBuildConfiguration": "interactive",
+    "java.compile.nullAnalysis.mode": "automatic",
   },
 }
