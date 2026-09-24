@@ -7,6 +7,10 @@ class AssetSerializer < ApplicationSerializer
     asset.storage_url
   end
 
+  attribute :display_name do |asset|
+    asset.display_name
+  end
+
   attribute :children do |asset|
     {
       thumbnail: asset.thumbnail ? AssetSerializer.child_payload(asset.thumbnail) : nil,

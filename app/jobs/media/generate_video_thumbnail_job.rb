@@ -109,7 +109,7 @@ module Media
 
       message = MessageService::Admin::Asset.t(
         MessageService::Admin::Asset::THUMBNAIL_GENERATED,
-        name: asset.name
+        name: asset.display_name
       )
       NotificationService::Center.operation(
         user_id: @notification_user_id,
@@ -132,7 +132,7 @@ module Media
       asset.mark_failed! unless asset.failed?
       return if @notification_user_id.blank?
 
-      message = MessageService::Admin::Asset.t(MessageService::Admin::Asset::THUMBNAIL_FAILED, name: asset.name)
+      message = MessageService::Admin::Asset.t(MessageService::Admin::Asset::THUMBNAIL_FAILED, name: asset.display_name)
       NotificationService::Center.operation(
         user_id: @notification_user_id,
         operation_id: @operation_id,

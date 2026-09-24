@@ -77,9 +77,9 @@ RSpec.describe "V1 Admin Users API", type: :request do
   end
 
   describe "GET /v1/admin/users/:id" do
-    it "allows standard admins with user read permission" do
+    it "allows standard admins with user read permission and serializes confirmed status" do
       standard_admin = create(:user)
-      target_user = create(:user)
+      target_user = create(:user, confirmed_at: Time.current)
       admin_token = jwt_for(standard_admin)
       allow(CacheService).to receive(:read).and_return(admin_token)
       grant_admin_role(standard_admin)
@@ -89,6 +89,8 @@ RSpec.describe "V1 Admin Users API", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response_data).to include("id" => target_user.id)
+      expect(response_data["confirmed"]).to be true
+      expect(response_data["confirmed_at"]).to be_present
     end
   end
 end

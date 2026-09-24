@@ -7,6 +7,12 @@ class Payment::Subscription < ApplicationRecord
   # ===== ASSOCIATIONS =====
   belongs_to :user
   belongs_to :product, class_name: "Payment::Product", inverse_of: :subscriptions
+  has_one :user_coupon, -> { where(purchase_type: :sbs) },
+          class_name: "Payment::UserCoupon",
+          foreign_key: :purchase_id,
+          dependent: :nullify,
+          inverse_of: false
+  has_one :coupon, through: :user_coupon, class_name: "Payment::Coupon"
 
   # ===== ENUMS =====
   enum :status, {

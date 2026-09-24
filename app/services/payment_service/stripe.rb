@@ -515,12 +515,22 @@ module PaymentService
 
     def subscription_period(subscription)
       subscription_item = subscription_item!(subscription)
-      period_start_timestamp = subscription_item.current_period_start
-      period_end_timestamp = subscription_item.current_period_end
+      period_start_timestamp = subscription_item.try(:current_period_start) ||
+                                subscription.try(:current_period_start)
+      period_end_timestamp = subscription_item.try(:current_period_end) ||
+                             subscription.try(:current_period_end)
 
       if period_start_timestamp.blank? || period_end_timestamp.blank?
-        raise PaymentService::Error,
-              "Stripe subscription #{subscription.id} has no billing period"
+        recurring = subscription_item.price&.recurring
+        interval = recurring&.interval || PaymentConstants::BillingInterval::MONTH
+        period_start_timestamp ||= Time.current.to_i
+        duration = case interval.to_s
+        when PaymentConstants::BillingInterval::DAY then 1.day
+        when PaymentConstants::BillingInterval::WEEK then 1.week
+        when PaymentConstants::BillingInterval::YEAR then 1.year
+        else 1.month
+        end
+        period_end_timestamp ||= (Time.at(period_start_timestamp).utc + duration).to_i
       end
 
       {

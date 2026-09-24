@@ -73,6 +73,10 @@ class Asset < ApplicationRecord
     storage_key.present?
   end
 
+  def display_name
+    title.presence || name
+  end
+
   def storage_url(options = {})
     return url unless uploaded_file? && storage_key.present?
 

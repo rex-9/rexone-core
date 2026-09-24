@@ -8,6 +8,12 @@ class Payment::Transaction < ApplicationRecord
   # ===== ASSOCIATIONS =====
   belongs_to :user
   belongs_to :product, class_name: "Payment::Product", optional: true, inverse_of: :transactions
+  has_one :user_coupon, -> { where(purchase_type: :trx) },
+          class_name: "Payment::UserCoupon",
+          foreign_key: :purchase_id,
+          dependent: :nullify,
+          inverse_of: false
+  has_one :coupon, through: :user_coupon, class_name: "Payment::Coupon"
 
   # ===== ENUMS =====
   # Stripe Payment Intent statuses (sync with Stripe)

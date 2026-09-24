@@ -2,7 +2,7 @@ class V1::Admin::Payment::SubscriptionsController < V1::ApplicationController
   # GET /v1/admin/payment/subscriptions
   def index
     filters = filter_params
-    subscriptions = ::Payment::Subscription.includes(:user, :product)
+    subscriptions = ::Payment::Subscription.includes(:user, :product, user_coupon: :coupon)
     subscriptions = subscriptions.where(status: filters[:status]) if filters[:status].present?
     subscriptions = subscriptions.where(interval: filters[:interval]) if filters[:interval].present?
     subscriptions = subscriptions.where(product_id: filters[:product_id]) if filters[:product_id].present?
@@ -28,7 +28,7 @@ class V1::Admin::Payment::SubscriptionsController < V1::ApplicationController
 
   # GET /v1/admin/payment/subscriptions/:id
   def show
-    subscription = ::Payment::Subscription.includes(:user, :product).find(params.permit(:id)[:id])
+    subscription = ::Payment::Subscription.includes(:user, :product, user_coupon: :coupon).find(params.permit(:id)[:id])
 
     render_json_response(
       status_code: 200,

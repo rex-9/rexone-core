@@ -141,6 +141,12 @@ module AnalyticsService
       # Feedbacks
       period_feedbacks = Feedback.kept.where(created_at: time_range).count
 
+      # Coupons & Discounts
+      period_coupons_count = Payment::UserCoupon.where(created_at: time_range).count
+      prev_coupons_count   = Payment::UserCoupon.where(created_at: prev_time_range).count
+      discounts_cents      = Payment::UserCoupon.where(created_at: time_range).sum(:discount_amount)
+      prev_discounts_cents = Payment::UserCoupon.where(created_at: prev_time_range).sum(:discount_amount)
+
       {
         total_users: total_users,
         new_users: new_users_current,
@@ -162,7 +168,12 @@ module AnalyticsService
 
         unresolved_errors: unresolved_errors,
         period_errors: total_period_errors,
-        period_feedbacks: period_feedbacks
+        period_feedbacks: period_feedbacks,
+
+        coupons_used: period_coupons_count,
+        coupons_delta_pct: calculate_delta_pct(period_coupons_count, prev_coupons_count),
+        period_discounts: (discounts_cents / 100.0).round(2),
+        discounts_delta_pct: calculate_delta_pct(discounts_cents, prev_discounts_cents)
       }
     end
 
@@ -178,6 +189,7 @@ module AnalyticsService
         "unit_amount * quantity",
         "payment_subscriptions.created_at"
       )
+      discounts_by_bucket     = group_sum(Payment::UserCoupon.where(created_at: time_range), :discount_amount)
       user_messages_by_bucket = group_count(Chat::Message.kept.where(role: AiConstants::ChatRole::USER, created_at: time_range))
       ai_messages_by_bucket   = group_count(Chat::Message.kept.where(role: AiConstants::ChatRole::ASSISTANT, created_at: time_range))
 
@@ -187,6 +199,7 @@ module AnalyticsService
           date: label,
           key: key,
           revenue: (rev_cents / 100.0).round(2),
+          discounts: ((discounts_by_bucket[key] || 0) / 100.0).round(2),
           transactions: transactions_by_bucket[key] || 0,
           new_users: users_by_bucket[key] || 0,
           user_messages: user_messages_by_bucket[key] || 0,
@@ -197,37 +210,41 @@ module AnalyticsService
 
     def generate_bucket_keys
       buckets = {}
-      cursor = time_range.begin
-
-      while cursor <= time_range.end
-        case grain
-        when :hourly
+      case grain.to_s
+      when AnalyticsConstants::Grain::HOURLY
+        cursor = time_range.begin.beginning_of_hour
+        end_cursor = time_range.end.end_of_hour
+        while cursor <= end_cursor
           key = cursor.strftime("%Y-%m-%d %H:00")
-          label = cursor.iso8601
-          buckets[key] = label
+          buckets[key] = cursor.iso8601
           cursor += 1.hour
-        when :monthly
+        end
+      when AnalyticsConstants::Grain::MONTHLY
+        cursor = time_range.begin.beginning_of_month
+        end_cursor = time_range.end.end_of_month
+        while cursor <= end_cursor
           key = cursor.strftime("%Y-%m")
-          label = cursor.iso8601
-          buckets[key] = label
+          buckets[key] = cursor.iso8601
           cursor = cursor.next_month.beginning_of_month
-        else # :daily
+        end
+      else # daily
+        cursor = time_range.begin.beginning_of_day
+        end_cursor = time_range.end.end_of_day
+        while cursor <= end_cursor
           key = cursor.strftime("%Y-%m-%d")
-          label = cursor.iso8601
-          buckets[key] = label
+          buckets[key] = cursor.iso8601
           cursor += 1.day
         end
       end
-
       buckets
     end
 
     def group_count(scope, time_col = nil)
       col = time_col || "#{scope.table_name}.created_at"
-      case grain
-      when :hourly
+      case grain.to_s
+      when AnalyticsConstants::Grain::HOURLY
         scope.group("TO_CHAR(#{col}, 'YYYY-MM-DD HH24:00')").count
-      when :monthly
+      when AnalyticsConstants::Grain::MONTHLY
         scope.group("TO_CHAR(#{col}, 'YYYY-MM')").count
       else
         scope.group("TO_CHAR(#{col}, 'YYYY-MM-DD')").count
@@ -236,10 +253,10 @@ module AnalyticsService
 
     def group_sum(scope, column, time_col = nil)
       col = time_col || "#{scope.table_name}.created_at"
-      case grain
-      when :hourly
+      case grain.to_s
+      when AnalyticsConstants::Grain::HOURLY
         scope.group("TO_CHAR(#{col}, 'YYYY-MM-DD HH24:00')").sum(column)
-      when :monthly
+      when AnalyticsConstants::Grain::MONTHLY
         scope.group("TO_CHAR(#{col}, 'YYYY-MM')").sum(column)
       else
         scope.group("TO_CHAR(#{col}, 'YYYY-MM-DD')").sum(column)
@@ -267,10 +284,17 @@ module AnalyticsService
         .group(:platform)
         .count
 
+      coupons_by_type = Payment::UserCoupon
+        .where(created_at: time_range)
+        .joins(:coupon)
+        .group("coupons.coupon_type")
+        .count
+
       {
         subscriptions_by_interval: subscription_intervals,
         feedback_ratings: feedback_ratings,
-        errors_by_platform: errors_by_platform
+        errors_by_platform: errors_by_platform,
+        coupons_by_type: coupons_by_type
       }
     end
 

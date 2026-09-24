@@ -118,7 +118,7 @@ module Media
         operation_id: @operation_id,
         operation_type: NotificationConstants::OperationType::ASSET_COMPRESSION,
         operation_status: operation_status(status),
-        message: MessageService::Admin::Asset.t(message_key(status), name: @asset.name),
+        message: MessageService::Admin::Asset.t(message_key(status), name: @asset.display_name),
         link: "/admin/assets/#{@asset.id}",
         data: {
           type: socket_event_type(status),

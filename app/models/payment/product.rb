@@ -88,7 +88,7 @@ class Payment::Product < ApplicationRecord
   def interval_in_duration
     return 0.days unless recurring?
 
-    case interval
+    case interval.to_s
     when PaymentConstants::BillingInterval::DAY then 1.day
     when PaymentConstants::BillingInterval::WEEK then 7.days
     when PaymentConstants::BillingInterval::MONTH then 30.days

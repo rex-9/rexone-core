@@ -2,7 +2,7 @@ class V1::Admin::Payment::TransactionsController < V1::ApplicationController
   # GET /v1/admin/payment/transactions
   def index
     filters = filter_params
-    transactions = ::Payment::Transaction.includes(:user, :product)
+    transactions = ::Payment::Transaction.includes(:user, :product, user_coupon: :coupon)
     transactions = transactions.where(status: filters[:status]) if filters[:status].present?
     transactions = transactions.where(currency: filters[:currency]) if filters[:currency].present?
     transactions = transactions.where(product_id: filters[:product_id]) if filters[:product_id].present?
@@ -25,7 +25,7 @@ class V1::Admin::Payment::TransactionsController < V1::ApplicationController
 
   # GET /v1/admin/payment/transactions/:id
   def show
-    transaction = ::Payment::Transaction.includes(:user, :product).find(params.permit(:id)[:id])
+    transaction = ::Payment::Transaction.includes(:user, :product, user_coupon: :coupon).find(params.permit(:id)[:id])
 
     render_json_response(
       status_code: 200,

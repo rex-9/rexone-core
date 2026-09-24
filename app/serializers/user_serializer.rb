@@ -1,7 +1,12 @@
 # app/serializers/user_serializer.rb:
 
 class UserSerializer < ApplicationSerializer
-  attributes :id, :email, :username, :name, :provider, :created_at, :updated_at, :discarded_at, :undiscarded_at
+  attributes :id, :email, :username, :name, :provider, :confirmed_at,
+             :created_at, :updated_at, :discarded_at, :undiscarded_at
+
+  attribute :confirmed do |user|
+    user.confirmed?
+  end
 
   attribute :avatar_url do |user|
     user.get_avatar_url

@@ -160,7 +160,7 @@ RSpec.describe User, type: :model do
       expect(user.referred_coupons.count).to eq(1)
 
       referral_coupon = user.referred_coupons.first
-      expect(referral_coupon.code).to start_with("REFALICE9")
+      expect(referral_coupon.code).to match(/\AREF[A-Z0-9]{6}\z/)
       expect(referral_coupon.coupon_type).to eq("percentage")
       expect(referral_coupon.amount).to eq(10)
       expect(referral_coupon.referrer_id).to eq(user.id)

@@ -156,14 +156,9 @@ class User < ApplicationRecord
   end
 
   def create_default_referral_coupon
-    clean_username = username.to_s.upcase.gsub(/[^A-Z0-9]/, "")
-    base_code = "REF#{clean_username}"
-    base_code = base_code.ljust(6, "0") if base_code.length < 6
-    candidate_code = base_code
-    counter = 1
-    while Payment::Coupon.exists?(code: candidate_code)
-      candidate_code = "#{base_code}#{counter}"
-      counter += 1
+    candidate_code = loop do
+      code = "REF#{SecureRandom.alphanumeric(6).upcase}"
+      break code unless Payment::Coupon.exists?(code: code)
     end
 
     Payment::Coupon.create!(
