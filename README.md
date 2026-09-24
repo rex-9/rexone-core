@@ -6,9 +6,9 @@
 
 ### Start from One. Not from Zero. A battle-hardened Rails foundation, forged so the product can wage the interesting war.
 
-A production-minded API core for web and mobile products. Authentication, IAM, payments, access control, media, notifications, AI, real-time delivery, background work, administration, and observability stand ready—not as scattered trophies, but as one disciplined system.
+A sovereign, production-grade API core for modern web and mobile products. Authentication, hierarchical IAM, Stripe billing, access control, media pipelines, notifications, durable AI queues, real-time Action Cable WebSockets, background job topologies, operational administration, and glass-box observability stand ready—not as scattered trophies, but as one disciplined system.
 
-Built under a simple creed: **Start from One. Not from Zero. Clear in thought, exact in structure, simple in use, and strong enough to endure what comes after launch.**
+Built under an immutable creed: **Start from One. Not from Zero. Clear in thought, exact in structure, simple in use, and strong enough to endure what comes after launch.**
 
 [![Ruby](https://img.shields.io/badge/Ruby-4.0.4-CC342D?logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
 [![Rails](https://img.shields.io/badge/Rails-8.1-CC0000?logo=rubyonrails&logoColor=white)](https://rubyonrails.org/)
@@ -20,7 +20,7 @@ Built under a simple creed: **Start from One. Not from Zero. Clear in thought, e
 
 **API-first · Modular · Observable · Queue-aware · Built to grow**
 
-[Live Demo ↗](https://rexone.rex9.me) · [Quick Start](docs/QUICK_START.md) · [Explore the foundation](#feature-map) · [Foundation Guide](docs/FOUNDATION.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Visual Walkthrough](./docs/VISUAL_WALKTHROUGH.md) · [Who it is for](#who-rexone-is-for) · [Development Law](LAW.md) · [Production Deployment](docs/DEPLOYMENT.md)
+[Live Demo ↗](https://rexone.rex9.me) · [Quick Start](docs/QUICK_START.md) · [Explore the foundation](#feature-map) · [Foundation Guide](docs/FOUNDATION.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Visual Walkthrough](./docs/VISUAL_WALKTHROUGH.md) · [Who it is for](#who-rexone-is-for) · [Development Law](LAW.md) · [Agent Governance](AGENTS.md) · [Production Deployment](docs/DEPLOYMENT.md)
 
 </div>
 
@@ -32,7 +32,8 @@ Built under a simple creed: **Start from One. Not from Zero. Clear in thought, e
 | :--- | :--- |
 | **🏛️ Unified Ecosystem** | Complete cross-platform architecture, feature parity matrix, and communication protocols across Core, Web, and Mobile: **[ECOSYSTEM.md](ECOSYSTEM.md)** |
 | **🗺️ Visual Walkthrough** | Screenshot-driven, feature-by-feature tour of RexOne across all surfaces and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)** |
-| **📜 Constitutional Law** | Non-negotiable architecture, service boundaries, and API envelope laws: **[LAW.md](LAW.md)** *(Zero exceptions)* |
+| **📜 Constitutional Law** | Non-negotiable architecture, pure parameter contracts, zero legacy shims, and plain English laws: **[LAW.md](LAW.md)** *(Zero exceptions)* |
+| **🤖 Operational Agent Governance** | Immutable operational rules for AI coding assistants (secret isolation, git safety, synchronous doc sync): **[AGENTS.md](AGENTS.md)** |
 | **🛡️ Production Security** | Origin isolation, Cloudflare edge defense, and rate-limiting protocols: **[Production DDoS & API Abuse Protection](docs/DDOS.md)** |
 | **🌐 AI Discovery & GEO** | Generative Engine Optimization, crawler allowlists, and LLM context files: **[AI Discovery & GEO Guide](../rexone-web/docs/SEO_GEO.md)** |
 
@@ -40,9 +41,9 @@ Built under a simple creed: **Start from One. Not from Zero. Clear in thought, e
 
 ## Why RexOne Core?
 
-Every product eventually meets the same old enemies: accounts, permissions, billing, uploads, jobs, notifications, dashboards, audit trails, failures, and the darkness between _“it works”_ and _“we know why it works.”_. Especially, the real challenge is _“it works on my machine.”_
+Every product eventually meets the same old enemies: accounts, permissions, billing, uploads, jobs, notifications, dashboards, audit trails, failures, and the darkness between _“it works”_ and _“we know why it works.”_ Especially, the ultimate killer of momentum: _“it works on my machine.”_
 
-RexOne Core exists because this ground should not have to be conquered again for every product.
+RexOne Core exists because this ground should never have to be conquered again for every product.
 
 ### The Purpose: Start from One. Not from Zero.
 
@@ -50,27 +51,60 @@ Software has never been easier to generate, but more code does not automatically
 
 RexOne turns that repeated, expensive grind into a battle-tested, sovereign baseline.
 
-**Start from One. Not from Zero.**
+### Discipline-Driven Development (DDD): The Unvarnished Truth
 
-- **Stop Burning Money on Repetitive Plumbing**: Avoid wasting expensive AI tokens and engineering hours rewriting authentication, IAM permissions, background queues, and storage bridges from scratch for every product.
-- **Zero Spaghetti, Zero Hallucinated Debt**: Explicit constitutional laws (`LAW.md`) keep human developers and AI coding agents strictly aligned on clean service boundaries, preventing architectural drift and compounding technical debt.
-- **Focus 100% on the Business Domain**: Everything around the domain is already built, integrated, and battle-tested—smart zero-decision-fatigue authentication, granular RBAC authorization, asynchronous job queues, durable Stripe billing and entitlements, provider-neutral media pipelines, real-time Action Cable WebSockets, and full-stack observability.
-- **Effortless Code Reviews**: Reviewing PRs is clean, fast, and predictable. When architectural patterns and boundaries are crystal clear, reviewers never have to wade through unorganized garbage code or brittle one-off hacks.
-- **Automated Tests & CI Across Server & Clients**: Robust, automated test suites & CI pipelines across Core (RSpec), Web (Playwright + Vitest), and Mobile ensure regressions are caught immediately and changes can be deployed with unshakeable confidence.
+RexOne pioneers **Discipline-Driven Development (DDD)**. While legacy paradigms spent decades debating Domain-Driven Design or Test-Driven Development, the AI era created a fundamentally different reality: **typing code is free**. Generating 10,000 lines of code takes 30 seconds. 
+
+90% of modern software projects never survive to master the business domain because their architecture collapses first under an avalanche of hallucinatory abstractions, conflicting shims, and zombie code. Tests cannot save a rotten architecture.
+
+Discipline-Driven Development establishes that **architectural discipline, sovereign foundation, and constitutional law are the primary drivers of sustainable engineering**.
+
+> *You bring the idea. AI writes the code. RexOne keeps both of you from destroying the foundation.*
+
+#### The Brutal Realities Others Hesitate to Reveal:
+1. **The Vibe-Coding Delusion**: Prompting an AI to generate code without an immutable constitution isn't velocity; it's compounding debt at 100x speed. Speed without discipline is just accelerating toward a brick wall.
+2. **The BaaS Trap**: Serverless "5-minute backends" lure developers in with toys, then slap them with a $5,000/mo cloud hostage bill when they need relational integrity, background queues, or compliance audits. Real software runs sovereign PostgreSQL, native queues (Solid Queue), and self-hosted S3 (Garage).
+3. **The Full-Stack Monolith Lie**: Stuffing API controllers, database queries, background tasks, and client hydration into a single node runtime creates fragile, unmaintainable monoliths. True engineering enforces client-server separation.
+4. **Deprecation Cowardice & Zombie Code**: Retaining dead code, backwards-compatibility shims, and duplicate parameter aliases is cowardice. Under Constitutional Law U14, if code is replaced, the old code is wiped out completely. No shims. No legacy bloat.
+5. **100% Free Sovereignty**: Unlike commercial boilerplates charging $300–$800 for basic auth or gating features behind "pro licenses", RexOne is 100% free, MIT/open, and sovereign. You own your code, your data, and your infrastructure.
+
+### The Reality: The Exponential AI Tech Debt Cycle
+
+Without immutable architectural boundaries:
+```text
+Agent 1 invents Pattern A
+   ↓
+Agent 2 arrives on the next prompt, treats Pattern A as "legacy",
+and adds a backward-compatibility shim with Pattern B
+   ↓
+Agent 3 arrives, bypasses both, and hardcodes an inline workaround
+   ↓
+Deadlines loom; human developers layer more glue code
+   ↓
+Context windows fill with duplicate abstractions & zombie code
+   ↓
+Exponential technical debt & token burn before the product even launches
+```
+
+RexOne breaks this cycle decisively:
+* **Constitutional Law (`LAW.md`)**: Law U14 enforces *zero loose code, zero backward-compatibility shims, complete wipeout and replacement*. If code deviates from the law, the code is wrong—fix the code. Law U15 enforces human-readable plain English with zero esoteric syntax.
+* **Operational Agent Governance (`AGENTS.md`)**: Strict guidelines for AI coding tools—never read `.env` secrets, never run destructive git operations, and synchronize documentation in the exact same turn as code changes.
+* **AI Turns from an Architect into a Worker**: The architecture has already been decided. AI works cleanly inside it.
+
+### Born from Battle-Tested Production Reality
+
+RexOne was not born from framework fandom or an abstract weekend thought experiment. It is the hard-won distillation of years of shipping real-world production systems across:
+* **Firebase & Google Ecosystem**: Battle-tested as a founding engineer at **js.eco** (a 3-person team: CEO, CTO, and Htet Naing, scaling rapidly in the US EV charging market). While one of the most systematic, high-growth Google-centric architectures, it proved that proprietary ecosystem lock-in and scattered functions still create immense friction.
+* **Multi-Cloud & Polyglot Background**: Extensive real-world production engineering across AWS SAM, Microsoft Azure, FastAPI (Python), Laravel & TALL/Filament (PHP), NestJS & Next.js (Node/TypeScript), Go, Prisma, MongoDB, MySQL, and PostgreSQL.
+
+**The Golden Architectural Rule**:
+Server frameworks on the frontend create clumsy UX; client languages on the backend create loose, messy architectures. RexOne combines the strongest technologies that survived this crucible—**Rails 8 API Core + React 19 Web + Flutter 3 Mobile**—with crystal-clear boundaries, workload-separated queues, self-hosted S3 storage (Garage), full-stack observability, and constitutional laws.
 
 The foundation is designed to **bend around the product**, never to make the product kneel before the framework.
 
-Its boundaries are deliberate and provider-aware. Capabilities can be extended, replaced, or reforged as the product evolves without scattering vendor logic across the codebase.
+Instead of hardcoding a rigid SaaS "Teams" hierarchy into domains where it doesn't belong (which is painful to dismantle if the product is an educational platform, clinic, or marketplace), RexOne provides rock-solid IAM primitives (roles, permissions, and 23 canonical resources), leaving domain hierarchy entirely to the business.
 
-And no—this was not vibe-coded into existence.
-
-The boundaries were reasoned about. Failure paths were traced. Immediate work was separated from deferred work. Retries, idempotency, observability, security, and data lifecycle were treated as engineering concerns, not decorations added after the demo survived.
-
-RexOne Core brings startup speed with battle-tested discipline—and fewer final-hour whispers of _“we should probably build that before launch.”_
-
-## Who RexOne is for
-
-RexOne is built for Rails teams, founder-engineers, AI agents, and agencies creating API-first web or mobile products that need production infrastructure without rebuilding the same foundation for every launch.
+RexOne Core brings startup speed with battle-tested discipline—and zero final-hour whispers of _“we should probably build that before launch.”_
 
 It is a particularly good fit when you want to:
 
@@ -126,7 +160,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | Commerce       | Stripe Checkout, products, transactions, subscriptions, coupons & referrals (with rate-limiting cooldown ladder), access grants | [Payments & entitlements](docs/FOUNDATION.md#payments-and-entitlements)               |
 | Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                                 | [Background processing](#background-processing)                                       |
 | Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo (Master Shell & client URL normalization)       | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
-| Media          | Provider-neutral storage, media optimization, SVG conversion, thumbnails, SRT subtitles, and progressive playback               | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
+| Media          | Provider-neutral storage (Garage S3), silent background optimization (FFmpeg + libvips), SVG conversion, posters, SRT subtitle tracks, and progressive playback | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
 | Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                                     | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
 | AI             | Durable queued chat, Telegram-style multi-message chunking, persisted history, completion alerts, and language tools            | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
 | Localization   | Request-scoped English and Myanmar responses with modular domain translations                                                   | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
@@ -134,6 +168,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                                           | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
 | Administration | Administrate for Server plus Client Admin API for users, IAM, products, chat, assets, notifications, app versions               | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
 | Security       | Boot Guard, Zero-Trust CORS, Rate Limiting (Rack::Attack), Pre-Commit Secret Scanner                                            | [Security Architecture](docs/SECURITY.md)                                             |
+| Governance     | Constitutional Law (LAW.md: pure deterministic contracts, zero legacy shims) & Agent Operations (AGENTS.md)                     | [LAW.md](LAW.md) · [AGENTS.md](AGENTS.md)                                              |
 | Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                               | [Deployment](#deployment)                                                             |
 | Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                               | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
 
@@ -169,11 +204,9 @@ flowchart LR
     API --> Observability[Pulse · RED · client logs]
 ```
 
-Provider-facing code lives behind focused clients such as `PaymentService::Client`, `StorageService::Client`, `Ai::Providers::Client`, `SpeechService::Client`, and the notification delivery services.
+External vendor and provider integrations live behind focused gateway clients (e.g., payment, storage, AI, speech, and notification clients). Swapping or extending an upstream vendor never leaks into controllers or domain logic.
 
-Swapping or extending a provider does not require spreading vendor logic across controllers.
-
-Chat workflow is handled by `V1::ChatController`, `ChatMessageService`, and `Chat::ProcessMessageJob`, with `Chat::TextService` providing Telegram-style multi-message chunking for user prompts and assistant completions exceeding 2,000 characters while AI provider execution stays behind swappable provider clients (`Ai::Providers::Client` supporting DeepSeek and Google Gemini via OpenAI-compatible endpoint). AI behavior is controlled by database-backed `Ai::Profile` records and lightweight `Ai::Run` telemetry exposed through `V1::Admin::AiController`, so prompts, models, output limits, timeouts, and run health stay server-owned instead of being hardcoded in clients. For full details on provider architecture and setup, see [AI Manual](docs/AI_MANUAL.md).
+For example, queued AI chat orchestrates message chunking, multi-provider execution (DeepSeek, Google Gemini), and live WebSocket streaming through clean service boundaries with server-owned profiles and run telemetry. For deep implementation details, see the [AI Manual](docs/AI_MANUAL.md) and [Foundation Guide](docs/FOUNDATION.md).
 
 The same principle applies to product-specific functionality: the foundation provides the structure, while the product remains free to define its own domain, workflows, and experience.
 
@@ -204,200 +237,80 @@ Solid Queue is part of the application architecture, not an afterthought. RexOne
 The API, worker (`waka`), and media processor run as separate services in Docker, keeping request handling, async I/O, and CPU-intensive operations independently scalable.
 
 
-## Foundation capabilities
+## ⚡ Quick Start
 
-RexOne Core integrates identity, IAM, payments and entitlements, notifications, media, AI, speech, version management, administration, and observability behind explicit service and provider boundaries.
-
-Read the [Foundation Guide](docs/FOUNDATION.md) for the detailed capability map, lifecycle behavior, provider boundaries, and operational responsibilities. The [Ecosystem Architecture](ECOSYSTEM.md) defines how Core, Web, and Mobile divide ownership and communicate.
-
-## Operations center
-
-Operational dashboards are mounted in the application and protected by admin authentication. API documentation and the health endpoint are listed alongside them for convenience.
-
-| Path                          | Purpose                             |
-| ----------------------------- | ----------------------------------- |
-| `/admin`                      | Administrate resource management    |
-| `/admin/ai/profiles`          | AI profile configurations           |
-| `/admin/ai/runs`              | AI telemetry & run diagnostics      |
-| `/admin/client/versions`      | App versions (super-admin only)     |
-| `/admin/client/user_versions` | User version snapshots (index/show) |
-| `/admin/pulse`                | Request, query, and job performance |
-| `/admin/red`                  | Backend errors and diagnostics      |
-| `/admin/queue`                | Solid Queue inspection and control  |
-| `/admin/cache`                | Solid Cache inspection              |
-| `/admin/cable`                | Solid Cable inspection              |
-| `/api-docs`                   | Swagger/OpenAPI documentation       |
-| `/up`                         | Application health check            |
-
-Client-side errors are accepted at `POST /v1/client/logs` and managed from the admin area.
-
-## Quick start
-
-With Docker installed, you do **not** need multiple terminals. All Core services (PostgreSQL, Rails 8 API, Solid Queue workers, self-hosted Garage S3 storage, and media processor) run together in a single script:
+With Docker installed, you do **not** need multiple terminals. All Core services (PostgreSQL 18, Rails 8 API, Solid Queue workers, self-hosted Garage S3 storage, and media processor) run together in a single command:
 
 ```bash
 git clone https://github.com/rex-9/rexone-core.git
-cd rexone-core
-git switch dev
+cd rexone-core && git switch dev
 cp .env.example .env
 ./scripts/install_pre_commit.sh
 ./scripts/dev.sh
 ```
 
-For **RexOne Web**, run its container:
-
-```bash
-cd ../rexone-web
-docker compose -f docker-compose.dev.yaml up
-# or ./scripts/dev.sh
-```
-
-That's it for Core and Web! The **only** optional terminal you ever need during local development is for forwarding Stripe webhooks if testing payments:
-
-```bash
-./scripts/listen_webhook.sh
-```
-
-After the API starts, seed the development IAM roles, accounts, and initial client version (`1.0.0`):
+Seed the initial IAM roles, accounts, and client version (`1.0.0`):
 
 ```bash
 docker compose -f docker-compose.dev.yaml exec api bin/rails db:seed
 ```
 
-The complete [Ecosystem Quick Start](docs/QUICK_START.md) explains which services are optional, covers Core/Web/Mobile compatibility, provides alternative granular process commands for advanced debugging, and guides client startup and troubleshooting.
-
-### Useful development scripts
-
-| Script                            | Purpose                                                                                                            | Flags / Options                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| `./scripts/dev.sh`                | Start all 5 Core containers (API, DB, Waka, Garage, Media)                                                         | None                                                                  |
-| `./scripts/ci.sh`                 | Run complete CI suite (RSpec, contracts, RuboCop, locales)                                                         | `contracts` (run contract validation only)                            |
-| `./scripts/check_locales.sh`      | Validate EN/MY locale parity and `MessageService` constants                                                        | `--unused` (audit unreferenced keys)                                  |
-| `./scripts/console.sh`            | Open interactive Rails console inside the API container                                                            | None                                                                  |
-| `./scripts/enter_api.sh`          | Enter running API container shell or execute custom commands                                                       | `[cmd...]`                                                            |
-| `./scripts/docker_clean.sh`       | Safe local Docker cleanup (stopped containers, unused networks, images, build cache; preserves volumes by default) | `-y`, `--force` (bypass prompts), `--volumes` (explicit volume prune) |
-| `./scripts/vps_cleanup.sh`        | Safe recurring production VPS maintenance for Coolify (prunes images & cache older than 7d; never touches volumes) | `IMAGE_RETENTION_HOURS=168`, `BUILD_CACHE_RETENTION_HOURS=168`        |
-| `./scripts/rebrand.sh`            | Master rebrand engine across Core, Web, and Mobile ecosystem (supports custom domains & any TLD)                   | `<config.json>`                                                       |
-| `./scripts/generate_secrets.sh`   | Generate high-entropy cryptographically secure production keys for `.env`                                          | None                                                                  |
-| `./scripts/check_secrets.sh`      | Pre-commit secret scanner (blocks uncommitted `.env` files and live API keys)                                      | `--install` (setup git hook), `--all`                                 |
-| `./scripts/install_pre_commit.sh` | Install master git pre-commit hook executing secret scans and quality checks before each commit                    | None                                                                  |
-
-## Configuration
-
-Configuration is part of the [Ecosystem Quick Start](docs/QUICK_START.md#configure-core). The checked-in [`.env.example`](.env.example) remains the authoritative catalog of available settings; keep real credentials in the deployment environment or an encrypted secret store.
-
-### Multi-Environment Domain Routing & Security
-
-RexOne standardizes multi-tier domain architectures with zero-trust local isolation:
-
-- **Demo Tier**: `rexone.rex9.me` (Web) & `api.rexone.rex9.me` (API)
-- **Product Tiers** (e.g., RexOne or any product with any custom TLD: `.com`, `.io`, `.ai`, `.app`, etc.):
-  - **Prod**: `<product>.<tld>` (e.g. `rexone.me`) & `api.<product>.<tld>` (e.g. `api.rexone.me`)
-  - **UAT**: `uat.<product>.<tld>` (e.g. `uat.rexone.me`) & `uat.api.<product>.<tld>` (e.g. `uat.api.rexone.me`)
-  - **Dev**: `dev.<product>.<tld>` (e.g. `dev.rexone.me`) & `dev.api.<product>.<tld>` (e.g. `dev.api.rexone.me`)
-- **Key Parameters**:
-  - `PRODUCT_DOMAIN`: Custom product root domain (e.g. `rexone.me`) whitelisted for CORS, Action Cable, and Host Authorization.
-  - `CORS_ORIGINS`: Optional comma-separated origins for partner portals or third-party integrations.
-  - `CORS_ALLOW_LOCALHOST`: Disabled (`false`) by default in production to prevent local cross-origin attacks; enabled only when explicitly opted in.
-
-### Security Boot Guard & Cryptographic Hygiene
-
-RexOne includes a built-in startup validator ([`config/initializers/security_boot_guard.rb`](config/initializers/security_boot_guard.rb)):
-
-- **Production Enforcement**: Refuses to boot if critical keys (`RAILS_SECRET_KEY_BASE`, `RAILS_JWT_SECRET_KEY`, `PG_PASSWORD`, `S3_ADMIN_TOKEN`) match `.env.example` placeholders, are blank, or fail minimum length requirements. Run `./scripts/generate_secrets.sh` to generate 64-byte random keys.
-- **Development Diagnostics**: In development, prints an actionable diagnostic report if optional keys (Brevo, Stripe, DeepSeek, Gemini, OneSignal, Azure Speech) are missing or dummy, explicitly stating what feature is affected.
-- **Pre-Commit Secret Scanner**: [`scripts/check_secrets.sh`](scripts/check_secrets.sh) guards against committing real `.env` files or cloud keys. Install with `./scripts/install_pre_commit.sh`.
-
-### API Rate Limiting (`Rack::Attack`)
-
-All authentication surfaces are protected against brute-force, scraping, and email bombing ([`config/initializers/rack_attack.rb`](config/initializers/rack_attack.rb)):
-
-- **Account Peek (`GET /peek`)**: 12 requests / minute (1 per 5s) per IP to block user enumeration.
-- **Sign In (`POST /signin*`)**: 10 attempts / 3 minutes per IP.
-- **Registration (`POST /signup`)**: 10 attempts / 3 minutes per IP.
-- **Code Dispatch (`POST /confirmation/send_code`, `POST /password/forgot`)**: 10 requests / 3 minutes per IP to prevent transactional email bombing.
-- **General Auth Baseline**: 60 requests / minute per IP.
-
-## API surface
-
-The API is broader than a starter CRUD demo. Its main route families are:
-
-| Area             | Representative routes                                                                                                                                                                                                                                                                                                   |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Authentication   | `/signup`, `/signin`, `/signin/google`, `/confirmation/*`, `/password/*`                                                                                                                                                                                                                                                |
-| Users            | `/v1/users/*`                                                                                                                                                                                                                                                                                                           |
-| IAM              | `/v1/iam/*`                                                                                                                                                                                                                                                                                                             |
-| Admin API        | `/v1/admin/*`                                                                                                                                                                                                                                                                                                           |
-| Payments         | `/v1/payment/*` (checkout session, coupon validation with progressive cooldown ladder), `/v1/admin/payment/coupons` (batch generation, redemptions with search & sort, recycle bin purge, hard delete, batch operations, immutable terms, bi-directional Stripe & metadata sync, auto referral coupon creation on signup, and automatic cascade cleanup of Stripe customers, coupons, and subscriptions on deletion), `/v1/admin/payment/user_coupons` (global audit ledger with search & sort), `/webhooks/stripe` (`coupon.created`, `coupon.updated`, `coupon.deleted`) |
-| Entitlements     | `/v1/access/*`                                                                                                                                                                                                                                                                                                          |
-| Media            | `/v1/assets/upload`, `/v1/assets`, `/v1/assets/:id/playback` (with embedded subtitle content & dynamic S3 presigned host), `/v1/assets/:id/subtitles/:subtitle_id` (raw VTT/SRT text streaming with CORS)                                                                                                               |
-| Notifications    | `/v1/admin/notifications`, `/v1/admin/user_notifications` (lifecycle CRUD: active, recycle bin, discard, undiscard, destroy, batch operations)                                                                                                                                                                          |
-| Chat             | `/v1/chat/rooms`, `/v1/chat/messages`, `/v1/chat/messages/destroy_all` (RESTful CRUD + message purge)                                                                                                                                                                                                                   |
-| Admin Chat       | `/v1/admin/chat/rooms`, `/v1/admin/chat/messages` (moderation CRUD: discard, undiscard, destroy)                                                                                                                                                                                                                        |
-| Admin AI         | `/v1/admin/ai/profiles` (index, show, create, update with provider & model filters), `/v1/admin/ai/runs` (execution audit log & diagnostics with sorting/filters)                                                                                                                                                       |
-| Speech           | `/v1/speech/*`, `SpeechLiveChannel` (WS)                                                                                                                                                                                                                                                                                |
-| Client telemetry | `/v1/client/logs`                                                                                                                                                                                                                                                                                                       |
-| App versions     | `/v1/client/versions/current` (semver + platform build comparison), `/v1/client/versions/user-version`, `/v1/admin/client/versions`, `/v1/admin/client/versions/user_versions`, `/admin/client/versions` |
-
-Use `/api-docs` for the interactive OpenAPI view and [`config/routes.rb`](config/routes.rb) for the authoritative route map.
-
-## Deployment
-
-The production image is multi-stage, runs as a non-root user, precompiles Bootsnap, includes health-check dependencies, and prepares the database when the API container starts.
-
-[`docker-compose.yaml`](docker-compose.yaml) separates the API, Solid Queue worker, and PostgreSQL services with health checks and restart policies.
-
-The same image can also be deployed through Coolify, Kamal, or another container platform.
-
-Before production:
-
-1. Supply real secrets through the deployment environment.
-2. Use strong, unique admin credentials and remove development seed accounts.
-3. Configure Stripe webhook signing and provider callback URLs.
-4. Run the API and `bin/jobs` worker as separate processes.
-5. Confirm database pool sizing against API threads and queue concurrency.
-6. Put TLS and a trusted reverse proxy in front of the application.
-7. Review retention, throttling, alerting, and backup policies for your product.
-
-### Production VPS Maintenance & Docker Log Rotation (Coolify)
-
-To keep production and UAT VPS environments fast and prevent disks from filling up:
-
-#### 1. Docker Log Rotation (`/etc/docker/daemon.json`)
-
-Configure Docker daemon log rotation to prevent infinite container log accumulation:
-
-```json
-{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "50m",
-    "max-file": "3"
-  }
-}
-```
-
-Apply via `sudo systemctl restart docker`.
-
-#### 2. Safe Weekly VPS Cleanup (`./scripts/vps_cleanup.sh`)
-
-Add a weekly cron job (`crontab -e`) that prunes only unused deployment images and build cache older than 7 days (168 hours), **never touching persistent volumes or database data**:
+Start the companion **[RexOne Web](https://github.com/rex-9/rexone-web)** client:
 
 ```bash
-# Every Sunday at 03:00 UTC: Safe cleanup of aged deployment images and build cache
-0 3 * * 0 /path/to/rexone-core/scripts/vps_cleanup.sh >> /var/log/rexone_vps_cleanup.log 2>&1
+cd ../rexone-web && ./scripts/dev.sh
 ```
 
-Retention values are easily configurable via environment variables:
+> [!TIP]
+> Testing Stripe payments locally? Forward webhooks in an optional second terminal: `./scripts/listen_webhook.sh`.  
+> For granular debugging commands and manual process supervision, see the **[Ecosystem Quick Start](docs/QUICK_START.md)**.
 
-```bash
-IMAGE_RETENTION_HOURS=168 BUILD_CACHE_RETENTION_HOURS=168 ./scripts/vps_cleanup.sh
-```
+---
 
-## Clients in RexOne Ecosystem
+## 🎛️ Operations & Glass-Box Observability
 
-- [RexOne Web](https://github.com/rex-9/rexone-web) — web client
-- [RexOne Mobile](https://github.com/rex-9/rexone_mobile) — mobile client
+Built-in operational consoles are mounted directly into the engine, secured by administrative RBAC:
+
+- **Resource Administration**: `/admin` (Administrate engine for core models, users, and credentials)
+- **AI Profiles & Diagnostics**: `/admin/ai/profiles` (prompt models) & `/admin/ai/runs` (telemetry audit)
+- **Application Performance Monitoring (APM)**: `/admin/pulse` (request, SQL query, and job latency metrics)
+- **Error Tracking**: `/admin/red` (Rails Error Dashboard with stack traces and request parameters)
+- **Queue & Real-Time Inspection**: `/admin/queue` (Solid Queue), `/admin/cache`, and `/admin/cable`
+- **Interactive API Documentation**: `/api-docs` (Swagger / OpenAPI 3.0 specification)
+- **System Health**: `/up` (automated zero-downtime container health probes)
+
+Client runtime errors are accepted at `POST /v1/client/logs` and correlated with backend traces.
+
+---
+
+## 📚 Technical Documentation & Subsystem Architecture
+
+To maintain high architectural discipline without cluttering the primary showcase, exhaustive technical specifications, API routes, and operational playbooks are organized in **[`docs/`](docs/)**:
+
+| Resource | Scope & Canonical Specification |
+| :--- | :--- |
+| **📖 Master Documentation Hub** | Comprehensive engineering reference and scripts catalog: **[`docs/README.md`](docs/README.md)** |
+| **🚀 Ecosystem Quick Start** | Local Docker setup, database seeding, and startup debugging: **[`docs/QUICK_START.md`](docs/QUICK_START.md)** |
+| **🏛️ Foundation Architecture** | Deep dive into IAM, Devise JWT, Soft Deletion, and JSON:API: **[`docs/FOUNDATION.md`](docs/FOUNDATION.md)** |
+| **🗄️ Database Schema & Models** | Complete database schema, tables, UUID indexes, and associations: **[`docs/SCHEMA.md`](docs/SCHEMA.md)** |
+| **📦 Object Storage (Garage S3)** | Self-hosted S3 Garage setup (port 3100), buckets, and Cyberduck: **[`docs/GARAGE.md`](docs/GARAGE.md)** |
+| **🎬 Media Streaming & Playback** | Progressive video/audio, FFmpeg background compression, and SRT subtitles: **[`docs/MEDIA_PLAYBACK.md`](docs/MEDIA_PLAYBACK.md)** |
+| **🤖 AI Assistant & Speech** | Queued chat, multi-message chunking, DeepSeek/Gemini, and TTS/STT: **[`docs/AI_MANUAL.md`](docs/AI_MANUAL.md)** |
+| **🛡️ Security & Boot Guard** | Zero-trust CORS, startup secret validation, pre-commit scanners: **[`docs/SECURITY.md`](docs/SECURITY.md)** |
+| **🛑 DDoS & Rate Limiting** | Rack::Attack rate-limiting ladders, IP throttling, and abuse defense: **[`docs/DDOS.md`](docs/DDOS.md)** |
+| **🚀 Production Deployment** | Multi-stage Docker, Coolify VPS maintenance, log rotation, and SSL: **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)** |
+
+---
+
+## 🚀 Production Deployment & Security
+
+The production image is multi-stage, runs as an unprivileged non-root user, precompiles Bootsnap, and includes health-check probes.
+
+- **Zero-Trust Boot Guard**: Refuses to boot if production keys (`RAILS_SECRET_KEY_BASE`, `PG_PASSWORD`, `S3_ADMIN_TOKEN`) match placeholders.
+- **Edge Throttling**: Pre-configured `Rack::Attack` defends account peek, sign-in, and code dispatch against brute-force attacks.
+- **Automated VPS Maintenance**: Includes [`./scripts/vps_cleanup.sh`](docs/DEPLOYMENT.md) for recurring Coolify image pruning and Docker log rotation.
+
+For the complete production deployment playbook, see **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)**.
 
 ## 🎨 Rebranding
 
@@ -434,16 +347,17 @@ RexOne is built and maintained by Rex ([@rex-9](https://github.com/rex-9)). If R
 
 ## Author
 
-Built with Clarity & Simplicity Driven Development, by **Rex (Rex9)**.
+Architected with Discipline-Driven Development (DDD), by **Htet Naing (Rex9)**.
 
-A software engineer, full-stack architect, and long-time practitioner of meditation.
+A full-stack architect, product craftsman, and long-time practitioner of meditation.
 
-I build systems the same way I approach the path itself: **with a clear mind, deliberate steps, and no unnecessary weight.**
+I build systems the same way I approach the path itself: **with a clear mind, deliberate steps, and zero unnecessary weight.**
 
-- GitHub: [@rex-9](https://github.com/rex-9)
-- Portfolio: [rex9.me](https://rex9.me)
-- LinkedIn: [rex9](https://www.linkedin.com/in/rex9/)
+- **Creator**: Htet Naing ([@rex-9](https://github.com/rex-9))
+- **Portfolio**: [rex9.me](https://rex9.me)
+- **LinkedIn**: [Htet Naing (rex9)](https://www.linkedin.com/in/rex9/)
+- **X / Twitter**: [@htetnaing0814](https://x.com/htetnaing0814)
 
-_Built with ❤️ by Rex9 on RexOne Ecosystem_
+_Built with ❤️ by Htet Naing (Rex9) on the RexOne Ecosystem_
 
 <p align="right"><a href="#readme-top">Back to top ↑</a></p>
