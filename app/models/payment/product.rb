@@ -52,6 +52,7 @@ class Payment::Product < ApplicationRecord
   validate :prevent_code_update, on: :update
   validate :prevent_free_to_premium_transition, on: :update
   validate :free_product_must_be_one_time
+  validate :validate_stripe_minimum_amount
 
   before_validation :generate_unique_code, on: :create
   before_validation :normalize_free_product
@@ -151,6 +152,15 @@ class Payment::Product < ApplicationRecord
 
     if unit_amount_was.to_i.zero? && unit_amount.to_i.positive?
       errors.add(:unit_amount, "Free products cannot be converted to premium products")
+    end
+  end
+
+  def validate_stripe_minimum_amount
+    return if free? || currency.blank? || unit_amount.blank?
+
+    min_limit = PaymentConstants::StripeMinimumAmount.for(currency)
+    if unit_amount < min_limit
+      errors.add(:unit_amount, "must be at least #{min_limit} for #{currency.to_s.upcase} to satisfy Stripe minimum charge limits")
     end
   end
 

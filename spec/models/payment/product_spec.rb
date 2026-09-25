@@ -112,4 +112,32 @@ RSpec.describe Payment::Product, type: :model do
       }.to raise_error(ActiveRecord::ReadonlyAttributeError)
     end
   end
+
+  describe "Stripe minimum amount validation" do
+    it "allows free products with unit_amount of 0" do
+      product = build(:payment_product, unit_amount: 0, interval: nil)
+      expect(product).to be_valid
+    end
+
+    it "allows premium products meeting or exceeding the Stripe minimum amount" do
+      product = build(:payment_product, unit_amount: 50, currency: "usd")
+      expect(product).to be_valid
+
+      sgd_product = build(:payment_product, unit_amount: 50, currency: "sgd")
+      expect(sgd_product).to be_valid
+    end
+
+    it "rejects premium products below the Stripe minimum amount" do
+      product = build(:payment_product, unit_amount: 49, currency: "usd")
+      expect(product).not_to be_valid
+      expect(product.errors[:unit_amount]).to include("must be at least 50 for USD to satisfy Stripe minimum charge limits")
+    end
+
+    it "enforces minimum limits on product updates" do
+      product = create(:payment_product, unit_amount: 1_000, currency: "usd")
+      product.unit_amount = 25
+      expect(product).not_to be_valid
+      expect(product.errors[:unit_amount]).to include("must be at least 50 for USD to satisfy Stripe minimum charge limits")
+    end
+  end
 end

@@ -197,6 +197,19 @@ RSpec.describe "Admin payment products", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "rejects product creation when unit_amount is below the Stripe minimum limit" do
+      grant_admin_product_permission(:create)
+
+      post "/v1/admin/payment/products",
+           params: { product: valid_product_params.merge(unit_amount: 25) },
+           headers: headers,
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      json = JSON.parse(response.body)
+      expect(json.dig("status", "error")).to include("must be at least 50 for USD")
+    end
   end
 
   def valid_product_params

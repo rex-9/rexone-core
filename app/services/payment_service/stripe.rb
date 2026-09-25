@@ -112,6 +112,22 @@ module PaymentService
     def create_product(attributes)
       with_stripe_error("Create Product") do
         attributes = normalize_product_attributes(attributes)
+
+        preview = Payment::Product.new(
+          name: attributes[:name],
+          description: attributes[:description],
+          unit_amount: attributes[:unit_amount],
+          currency: attributes[:currency],
+          interval: attributes[:interval],
+          active: attributes.fetch(:active, true),
+          code: attributes[:code],
+          stripe_product_id: "preview_prod_#{SecureRandom.hex(8)}",
+          stripe_price_id: "preview_price_#{SecureRandom.hex(8)}"
+        )
+        unless preview.valid?
+          return { error: preview.errors.full_messages.to_sentence }
+        end
+
         stripe_product = nil
         stripe_price = nil
 
@@ -142,6 +158,12 @@ module PaymentService
 
         if product.free? && attributes[:unit_amount].to_i.positive?
           return { error: "Free products cannot be converted to premium products" }
+        end
+
+        check_product = Payment::Product.with_discarded.find(product_id)
+        check_product.assign_attributes(attributes)
+        unless check_product.valid?
+          return { error: check_product.errors.full_messages.to_sentence }
         end
 
         previous_stripe_product_attributes = {
