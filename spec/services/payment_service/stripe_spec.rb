@@ -74,11 +74,11 @@ RSpec.describe PaymentService::Stripe do
       user = create(:user, stripe_customer_id: "cus_sub")
       product = create(:payment_product, unit_amount: 2_000, interval: "month")
       session = instance_double("Stripe::Checkout::Session", url: "https://checkout.stripe.test/sub", id: "cs_sub")
-      
+
       allow(Stripe::Checkout::Session).to receive(:create).and_return(session)
-      
+
       result = service.create_checkout_session(user_id: user.id, product_id: product.id)
-      
+
       expect(result).to eq(checkout_url: "https://checkout.stripe.test/sub", session_id: "cs_sub")
       expect(Stripe::Checkout::Session).to have_received(:create).with(
         hash_including(
@@ -643,13 +643,13 @@ RSpec.describe PaymentService::Stripe do
     it "deactivates Stripe records and discards the local product" do
       service = described_class.new
       product = create(:payment_product, stripe_product_id: "prod_active", stripe_price_id: "price_active")
-      
+
       allow(Stripe::Product).to receive(:update)
       allow(Stripe::Price).to receive(:update)
-      
+
       result = service.discard_product(product.id)
       discarded_product = result[:data]
-      
+
       expect(discarded_product).to be_discarded
       expect(discarded_product.active).to be(false)
       expect(Stripe::Product).to have_received(:update).with("prod_active", active: false)
@@ -662,24 +662,24 @@ RSpec.describe PaymentService::Stripe do
       service = described_class.new
       user = create(:user, stripe_customer_id: nil)
       customer = instance_double("Stripe::Customer", id: "cus_new")
-      
+
       allow(Stripe::Customer).to receive(:create).and_return(customer)
-      
+
       result = service.create_customer(user: user)
-      
+
       expect(result).to eq(customer_id: "cus_new")
       expect(user.reload.stripe_customer_id).to eq("cus_new")
       expect(Stripe::Customer).to have_received(:create).with(hash_including(email: user.email))
     end
-    
+
     it "returns the existing customer ID without calling Stripe" do
       service = described_class.new
       user = create(:user, stripe_customer_id: "cus_existing")
-      
+
       allow(Stripe::Customer).to receive(:create)
-      
+
       result = service.create_customer(user: user)
-      
+
       expect(result).to eq(customer_id: "cus_existing")
       expect(Stripe::Customer).not_to have_received(:create)
     end
@@ -836,7 +836,7 @@ RSpec.describe PaymentService::Stripe do
         ended_at: nil,
         canceled_at: nil,
         metadata: {},
-        items: OpenStruct.new(data: [item_double])
+        items: OpenStruct.new(data: [ item_double ])
       )
     end
 
@@ -890,7 +890,7 @@ RSpec.describe PaymentService::Stripe do
 
     it "resolves user by stripe_customer_id and product by stripe_price_id when metadata is absent" do
       user.update!(stripe_customer_id: "cus_webhook_test")
-      product_record = product
+      product
       stripe_subscription.id = "sub_fallback_resolution"
       stripe_subscription.status = "active"
       stripe_subscription.metadata = {}
@@ -912,6 +912,59 @@ RSpec.describe PaymentService::Stripe do
 
       result = service.send(:sync_subscription, stripe_subscription)
       expect(result).to be_nil
+    end
+  end
+
+  describe "#handle_checkout_completed" do
+    let(:service) { described_class.new }
+    let(:user) { create(:user) }
+    let(:one_time_product) { create(:payment_product, interval: nil, unit_amount: 10_000) }
+    let(:payment_intent) do
+      OpenStruct.new(
+        id: "pi_test_onetime",
+        amount: 10_000,
+        currency: "usd",
+        status: "succeeded",
+        latest_charge: "ch_test_onetime",
+        customer: "cus_webhook_test",
+        client_secret: "secret_123",
+        amount_received: 10_000,
+        amount_capturable: 0,
+        created: Time.current.to_i,
+        payment_method: "pm_test_card",
+        metadata: {}
+      )
+    end
+
+    before do
+      allow(Stripe::PaymentIntent).to receive(:retrieve).with("pi_test_onetime").and_return(payment_intent)
+      allow(Stripe::PaymentMethod).to receive(:retrieve).with("pm_test_card").and_return(
+        OpenStruct.new(
+          id: "pm_test_card",
+          type: "card",
+          card: OpenStruct.new(brand: "visa", last4: "4242", country: "US", exp_year: 2030, exp_month: 12)
+        )
+      )
+      allow(NotificationService::Center).to receive(:payment_success)
+    end
+
+    it "creates a transaction and grants lifetime access for one-time purchase without coupon" do
+      session = OpenStruct.new(
+        id: "cs_test_onetime",
+        mode: "payment",
+        payment_status: "paid",
+        payment_intent: "pi_test_onetime",
+        metadata: { user_id: user.id, product_id: one_time_product.id }
+      )
+
+      expect do
+        service.send(:handle_checkout_completed, session)
+      end.to change(Payment::Transaction, :count).by(1)
+
+      expect(AccessService.has_access?(user_id: user.id, product_id: one_time_product.id)).to be(true)
+      access = Access.find_by(user_id: user.id, product_id: one_time_product.id)
+      expect(access.expires_at).to be_nil
+      expect(access).to be_active
     end
   end
 end

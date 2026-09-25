@@ -985,7 +985,6 @@ module PaymentService
 
         transaction.save!
 
-        coupon_id = session.metadata&.coupon_id
         if coupon_id.present?
           coupon = Payment::Coupon.find_by(id: coupon_id)
           if coupon

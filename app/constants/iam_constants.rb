@@ -83,7 +83,7 @@ module IamConstants
     USER = [
       { resource: Resource::CLIENT_LOGS, actions: [ Action::CREATE ] },
       { resource: Resource::PAYMENT_PRODUCTS, actions: [ Action::READ ] },
-      { resource: Resource::PAYMENT_PAYMENTS, actions: [ Action::CREATE ] },
+      { resource: Resource::PAYMENT_PAYMENTS, actions: [ Action::CREATE, Action::READ ] },
       { resource: Resource::PAYMENT_SUBSCRIPTIONS, actions: [ Action::READ, Action::CREATE ] },
       { resource: Resource::PAYMENT_TRANSACTIONS, actions: [ Action::READ ] },
       { resource: Resource::PAYMENT_COUPONS, actions: [ Action::READ ] },
