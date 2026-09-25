@@ -67,15 +67,12 @@ RSpec.describe Payment::Product, type: :model do
     expect(free_product.errors[:unit_amount]).to include("Free products cannot be converted to premium products")
   end
 
-  it "allows converting a premium product to a free product, but locks it from becoming premium again" do
+  it "prevents converting a premium product to a free product" do
     premium_product = create(:payment_product, unit_amount: 2500)
 
-    premium_product.update!(unit_amount: 0, interval: nil)
-    expect(premium_product.reload).to be_free
-
-    premium_product.unit_amount = 1500
+    premium_product.unit_amount = 0
     expect(premium_product).not_to be_valid
-    expect(premium_product.errors[:unit_amount]).to include("Free products cannot be converted to premium products")
+    expect(premium_product.errors[:unit_amount]).to include("Premium products cannot be converted to free products")
   end
 
   describe "code generation and validation" do

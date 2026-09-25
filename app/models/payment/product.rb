@@ -50,7 +50,7 @@ class Payment::Product < ApplicationRecord
   validates :stripe_price_id, presence: true, uniqueness: true
   validates :currency, presence: true
   validate :prevent_code_update, on: :update
-  validate :prevent_free_to_premium_transition, on: :update
+  validate :prevent_price_mode_transition, on: :update
   validate :free_product_must_be_one_time
   validate :validate_stripe_minimum_amount
 
@@ -147,11 +147,13 @@ class Payment::Product < ApplicationRecord
     end
   end
 
-  def prevent_free_to_premium_transition
+  def prevent_price_mode_transition
     return unless unit_amount_changed?
 
     if unit_amount_was.to_i.zero? && unit_amount.to_i.positive?
       errors.add(:unit_amount, "Free products cannot be converted to premium products")
+    elsif unit_amount_was.to_i.positive? && unit_amount.to_i.zero?
+      errors.add(:unit_amount, "Premium products cannot be converted to free products")
     end
   end
 

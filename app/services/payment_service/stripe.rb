@@ -128,6 +128,9 @@ module PaymentService
           return { error: preview.errors.full_messages.to_sentence }
         end
 
+        product_code = attributes[:code].presence || preview.code
+        attributes = attributes.merge(code: product_code)
+
         stripe_product = nil
         stripe_price = nil
 
@@ -135,7 +138,7 @@ module PaymentService
           name: attributes.fetch(:name),
           description: attributes[:description],
           active: attributes.fetch(:active, true),
-          metadata: {}
+          metadata: { code: product_code, environment: Rails.env }.compact
         )
 
         stripe_price = Stripe::Price.create(
@@ -160,6 +163,10 @@ module PaymentService
           return { error: "Free products cannot be converted to premium products" }
         end
 
+        if product.premium? && attributes[:unit_amount].to_i.zero?
+          return { error: "Premium products cannot be converted to free products" }
+        end
+
         check_product = Payment::Product.with_discarded.find(product_id)
         check_product.assign_attributes(attributes)
         unless check_product.valid?
@@ -169,14 +176,16 @@ module PaymentService
         previous_stripe_product_attributes = {
           name: product.name,
           description: product.description,
-          active: product.active
+          active: product.active,
+          metadata: { code: product.code, environment: Rails.env }.compact
         }
 
         Stripe::Product.update(
           product.stripe_product_id,
           name: attributes.fetch(:name),
           description: attributes[:description],
-          active: attributes[:active]
+          active: attributes[:active],
+          metadata: { code: product.code, environment: Rails.env }.compact
         )
 
         unless price_changed?(product, attributes)
@@ -654,6 +663,26 @@ module PaymentService
     end
 
     def sync_product(product)
+      record = Payment::Product.with_discarded.find_by(stripe_product_id: product.id)
+      if record
+        record.assign_attributes(
+          name: product.name.presence || record.name,
+          description: product.description,
+          active: product.active
+        )
+
+        if record.save
+          if product.active && record.discarded?
+            record.undiscard
+          elsif !product.active && !record.discarded?
+            record.discard
+          end
+          Rails.logger.info("#{STRIPE_LOG_PREFIX} Product synced: #{product.id}")
+        else
+          Rails.logger.error("#{STRIPE_LOG_PREFIX} Product sync failed: #{record.errors.full_messages}")
+        end
+      end
+
       # If we have a default_price from Stripe, try to sync it too
       if product.default_price.present?
         begin
@@ -666,10 +695,25 @@ module PaymentService
     end
 
     def sync_price(price)
+      normalized_currency = price.currency.to_s.downcase
+      unless Payment::Product.currencies.key?(normalized_currency)
+        Rails.logger.warn(
+          "#{STRIPE_LOG_PREFIX} Ignored price sync: Unsupported currency #{price.currency} for price #{price.id}"
+        )
+        return
+      end
+
       stripe_product = Stripe::Product.retrieve(price.product)
       record = Payment::Product.with_discarded.find_or_initialize_by(
         stripe_product_id: price.product
       )
+
+      if record.persisted? && stripe_product.respond_to?(:default_price) && stripe_product.default_price.present? && stripe_product.default_price != price.id
+        Rails.logger.info(
+          "#{STRIPE_LOG_PREFIX} Ignored price sync: Price #{price.id} is not default price (#{stripe_product.default_price}) for product #{stripe_product.id}"
+        )
+        return
+      end
 
       if record.persisted? && record.free? && price.unit_amount.to_i.positive?
         Rails.logger.warn(
@@ -678,20 +722,36 @@ module PaymentService
         return
       end
 
+      if record.persisted? && record.premium? && price.unit_amount.to_i.zero?
+        Rails.logger.warn(
+          "#{STRIPE_LOG_PREFIX} Ignored price sync: Premium product #{record.id} cannot be converted to free via Stripe price #{price.id}"
+        )
+        return
+      end
+
       inactive_in_stripe = !stripe_product&.active || !price.active
+
+      if record.new_record? && stripe_product&.metadata.present?
+        metadata_code = stripe_product.metadata[:code] || stripe_product.metadata["code"]
+        record.code = metadata_code if metadata_code.present?
+      end
 
       record.assign_attributes(
         stripe_price_id: price.id,
-        name: stripe_product&.name || "Product #{price.product}",
+        name: stripe_product&.name.presence || record.name.presence || "Product #{price.product}",
         description: stripe_product&.description,
         unit_amount: price.unit_amount,
-        currency: price.currency,
+        currency: normalized_currency,
         interval: normalized_product_interval(price.unit_amount, price.recurring&.interval),
-        active: record.discarded? ? false : !inactive_in_stripe
+        active: !inactive_in_stripe
       )
 
       if record.save
-        record.discard if inactive_in_stripe && !record.discarded?
+        if inactive_in_stripe && !record.discarded?
+          record.discard
+        elsif !inactive_in_stripe && record.discarded?
+          record.undiscard
+        end
         Rails.logger.info("#{STRIPE_LOG_PREFIX} Price synced: #{price.id} for product #{price.product}")
       else
         Rails.logger.error("#{STRIPE_LOG_PREFIX} Price sync failed: #{record.errors.full_messages}")

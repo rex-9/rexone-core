@@ -272,7 +272,7 @@ RSpec.describe PaymentService::Stripe do
       expect(Stripe::Price).not_to have_received(:update)
     end
 
-    it "creates a zero price when converting a paid product to free" do
+    it "rejects converting a paid product to free" do
       service = described_class.new
       product = create(
         :payment_product,
@@ -280,26 +280,16 @@ RSpec.describe PaymentService::Stripe do
         stripe_price_id: "price_paid",
         unit_amount: 1_000
       )
-      free_price = instance_double("Stripe::Price", id: "price_free")
 
       allow(Stripe::Product).to receive(:update)
-      allow(Stripe::Price).to receive(:create).and_return(free_price)
+      allow(Stripe::Price).to receive(:create)
       allow(Stripe::Price).to receive(:update)
 
       result = service.update_product(product.id, unit_amount: 0)
-      updated_product = result[:data]
 
-      expect(updated_product).to be_free
-      expect(updated_product.interval).to be_nil
-      expect(updated_product.stripe_product_id).to eq("prod_paid")
-      expect(updated_product.stripe_price_id).to eq("price_free")
-      expect(Stripe::Price).to have_received(:create).with(
-        product: "prod_paid",
-        unit_amount: 0,
-        currency: "usd"
-      )
-      expect(Stripe::Product).to have_received(:update).with("prod_paid", hash_including(default_price: "price_free"))
-      expect(Stripe::Price).to have_received(:update).with("price_paid", active: false)
+      expect(result[:error]).to eq("Premium products cannot be converted to free products")
+      expect(product.reload).to be_premium
+      expect(Stripe::Price).not_to have_received(:create)
     end
 
     it "rejects converting a free product to paid" do
@@ -401,6 +391,7 @@ RSpec.describe PaymentService::Stripe do
         name: "Webhook Premium",
         description: "Premium from Stripe",
         active: true,
+        default_price: "price_webhook_premium",
         metadata: {}
       )
       stripe_price = instance_double(
@@ -438,6 +429,7 @@ RSpec.describe PaymentService::Stripe do
         name: product.name,
         description: product.description,
         active: false,
+        default_price: "price_archived",
         metadata: {}
       )
       stripe_price = instance_double(
@@ -466,6 +458,7 @@ RSpec.describe PaymentService::Stripe do
         name: "Webhook Free",
         description: "Free from Stripe",
         active: true,
+        default_price: "price_webhook_free",
         metadata: {}
       )
       stripe_price = instance_double(
@@ -488,6 +481,161 @@ RSpec.describe PaymentService::Stripe do
       expect(product.unit_amount).to eq(0)
       expect(product.interval).to be_nil
       expect(product.period_label).to eq("One-time purchase")
+    end
+
+    it "skips price sync when currency is not supported" do
+      service = described_class.new
+      stripe_price = instance_double(
+        "Stripe::Price",
+        id: "price_unsupported",
+        product: "prod_unsupported",
+        unit_amount: 1_000,
+        currency: "eur",
+        active: true
+      )
+
+      allow(Stripe::Product).to receive(:retrieve)
+
+      service.send(:sync_price, stripe_price)
+
+      expect(Stripe::Product).not_to have_received(:retrieve)
+      expect(Payment::Product.find_by(stripe_product_id: "prod_unsupported")).to be_nil
+    end
+
+    it "skips price sync when price is not default_price on an existing product" do
+      service = described_class.new
+      product = create(
+        :payment_product,
+        stripe_product_id: "prod_multi_price",
+        stripe_price_id: "price_default",
+        unit_amount: 2_000
+      )
+      stripe_product = instance_double(
+        "Stripe::Product",
+        id: "prod_multi_price",
+        name: product.name,
+        description: product.description,
+        default_price: "price_default",
+        active: true,
+        metadata: {}
+      )
+      secondary_price = instance_double(
+        "Stripe::Price",
+        id: "price_secondary",
+        product: "prod_multi_price",
+        unit_amount: 5_000,
+        currency: "usd",
+        recurring: instance_double("Stripe::Recurring", interval: "year"),
+        active: true
+      )
+
+      allow(Stripe::Product).to receive(:retrieve).with("prod_multi_price").and_return(stripe_product)
+
+      service.send(:sync_price, secondary_price)
+
+      expect(product.reload.stripe_price_id).to eq("price_default")
+      expect(product.unit_amount).to eq(2_000)
+    end
+
+    it "skips price sync when trying to convert an existing premium product to free" do
+      service = described_class.new
+      product = create(
+        :payment_product,
+        stripe_product_id: "prod_prem_lock",
+        stripe_price_id: "price_prem_lock",
+        unit_amount: 2_000
+      )
+      stripe_product = instance_double(
+        "Stripe::Product",
+        id: "prod_prem_lock",
+        name: product.name,
+        description: product.description,
+        default_price: "price_prem_to_free",
+        active: true,
+        metadata: {}
+      )
+      zero_price = instance_double(
+        "Stripe::Price",
+        id: "price_prem_to_free",
+        product: "prod_prem_lock",
+        unit_amount: 0,
+        currency: "usd",
+        recurring: nil,
+        active: true
+      )
+
+      allow(Stripe::Product).to receive(:retrieve).with("prod_prem_lock").and_return(stripe_product)
+
+      service.send(:sync_price, zero_price)
+
+      expect(product.reload).to be_premium
+      expect(product.stripe_price_id).to eq("price_prem_lock")
+      expect(product.unit_amount).to eq(2_000)
+    end
+
+    it "undiscards a discarded product when Stripe reactivates product and price" do
+      service = described_class.new
+      product = create(
+        :payment_product,
+        stripe_product_id: "prod_reactivate",
+        stripe_price_id: "price_reactivate",
+        active: false
+      )
+      product.discard!
+
+      stripe_product = instance_double(
+        "Stripe::Product",
+        id: "prod_reactivate",
+        name: product.name,
+        description: product.description,
+        default_price: "price_reactivate",
+        active: true,
+        metadata: {}
+      )
+      stripe_price = instance_double(
+        "Stripe::Price",
+        id: "price_reactivate",
+        product: "prod_reactivate",
+        unit_amount: product.unit_amount,
+        currency: product.currency,
+        recurring: nil,
+        active: true
+      )
+
+      allow(Stripe::Product).to receive(:retrieve).with("prod_reactivate").and_return(stripe_product)
+
+      service.send(:sync_price, stripe_price)
+
+      expect(product.reload).not_to be_discarded
+      expect(product.active).to be(true)
+    end
+
+    it "directly updates product and undiscards via sync_product even if default_price is blank" do
+      service = described_class.new
+      product = create(
+        :payment_product,
+        stripe_product_id: "prod_sync_direct",
+        name: "Old Name",
+        description: "Old Desc",
+        active: false
+      )
+      product.discard!
+
+      stripe_product_obj = instance_double(
+        "Stripe::Product",
+        id: "prod_sync_direct",
+        name: "New Direct Name",
+        description: "New Direct Desc",
+        active: true,
+        default_price: nil
+      )
+
+      service.send(:sync_product, stripe_product_obj)
+
+      expect(product.reload).not_to be_discarded
+      expect(product.active).to be(true)
+      expect(product.name).to eq("New Direct Name")
+      expect(product.description).to eq("New Direct Desc")
     end
   end
 
