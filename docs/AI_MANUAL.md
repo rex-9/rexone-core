@@ -105,3 +105,41 @@ To immediately swap the model or provider for all users:
 2. **Provider Timeout Protection**: Every profile enforces a strict `timeout_seconds` (default 30s). Hanging provider connections are cleanly terminated without locking SolidQueue background workers.
 3. **Room Concurrency Locks**: Multi-turn rooms are locked during AI generation (`room.with_lock`) to prevent race conditions and duplicate concurrent generations.
 4. **Retry Policies**: Background jobs retry transient network errors with exponential backoff on the dedicated `:ai` SolidQueue queue.
+
+---
+
+## ⚡ 6. Universal Bidirectional TOON Pipeline
+
+To achieve 30-60% token savings, lower inference latency, and prevent LLM syntax hallucination, RexOne enforces a universal **Zero-JSON LLM Pipeline**:
+
+```
+User / Client (Sends or Types JSON)
+                ↓
+Chat::MessageService / Chat::ProcessMessageJob
+                ↓
+Ai::RunService.execute_chat / Ai::Providers::Client.chat
+                ↓
+Ai::ToonService.prepare_messages_for_llm
+  • Inbound Conversion: Markdown ```json, bare JSON, & embedded JSON -> TOON
+  • System Directive: Instructs LLM to output strictly in TOON format
+                ↓ (LLM NEVER EATS JSON)
+Upstream Provider (DeepSeek / Gemini)
+                ↓ (LLM NEVER OUTPUTS JSON)
+LLM returns completion in TOON format
+                ↓
+Ai::ToonService.toon_to_json
+  • Outbound Conversion: Markdown ```toon, bare tables, & key-value maps -> Clean JSON
+                ↓
+Server stores standard JSON in Chat::Message & broadcasts via WebSocket
+                ↓
+Web / Mobile UI receives standard JSON (Clean syntax highlighting & rendering)
+```
+
+1. **Inbound JSON Conversion**:
+   - Any JSON payload (in user messages, assistant history, system prompts, or template values) is automatically converted to TOON format before reaching the LLM provider.
+   - Fenced code blocks (` ```json `) become ` ```toon `, bare JSON objects become compact key-value lines, and arrays become tabular `[N]{fields}:` matrices.
+2. **Strict System Prompt Enforcement**:
+   - Models are instructed: `Output all structured data, key-value mappings, and tabular records strictly in Token-Oriented Object Notation (TOON) format inside ```toon code blocks. Never output raw JSON.`
+3. **Outbound Server Conversion**:
+   - When the server receives the completion, `Ai::ToonService.toon_to_json` decodes the TOON structures and transforms them into standard, pretty-printed JSON.
+   - Client web applications, mobile apps, and external consumers receive clean JSON without requiring frontend TOON parsers.

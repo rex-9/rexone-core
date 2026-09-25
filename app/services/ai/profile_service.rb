@@ -107,16 +107,16 @@ module Ai
         return nil if prompt.blank?
 
         formatted_values = values.symbolize_keys.transform_values do |val|
-          if val.is_a?(Array) || val.is_a?(Hash)
-            Ai::ToonService.encode(val)
-          else
-            val
-          end
+          Ai::ToonService.json_to_toon(val)
         end
 
-        prompt % formatted_values
-      rescue KeyError
-        prompt
+        interpolated = begin
+          prompt % formatted_values
+        rescue KeyError
+          prompt
+        end
+
+        Ai::ToonService.json_to_toon(interpolated)
       end
 
       private

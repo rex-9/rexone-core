@@ -221,7 +221,7 @@ flowchart LR
 
 External vendor and provider integrations live behind focused gateway clients (e.g., payment, storage, AI, speech, and notification clients). Swapping or extending an upstream vendor never leaks into controllers or domain logic.
 
-For example, queued AI chat orchestrates message chunking, multi-provider execution (DeepSeek, Google Gemini), and live WebSocket streaming through clean service boundaries with server-owned profiles and run telemetry. For deep implementation details, see the [AI Manual](docs/AI_MANUAL.md) and [Foundation Guide](docs/FOUNDATION.md).
+For example, queued AI chat orchestrates message chunking, multi-provider execution (DeepSeek, Google Gemini), universal bidirectional TOON serialization (30-60% token savings, LLMs never eat or output raw JSON), and live WebSocket streaming through clean service boundaries with server-owned profiles and run telemetry. For deep implementation details, see the [AI Manual](docs/AI_MANUAL.md) and [Foundation Guide](docs/FOUNDATION.md).
 
 The same principle applies to product-specific functionality: the foundation provides the structure, while the product remains free to define its own domain, workflows, and experience.
 

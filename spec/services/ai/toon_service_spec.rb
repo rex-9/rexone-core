@@ -243,27 +243,6 @@ RSpec.describe Ai::ToonService do
     end
   end
 
-  describe ".format_prompt_context" do
-    it "wraps encoded TOON data inside a labeled context block" do
-      users = [
-        { id: 1, name: "Alice" },
-        { id: 2, name: "Bob" }
-      ]
-
-      result = described_class.format_prompt_context("Active Users", users)
-      expect(result).to start_with("[Context: Active Users (TOON)]")
-      expect(result).to include("[2]{id,name}:")
-      expect(result).to include("  1,Alice")
-    end
-  end
-
-  describe ".output_instruction" do
-    it "generates a clean prompt instruction for models" do
-      instruction = described_class.output_instruction(fields: [:id, :title, :priority], array_name: "tasks")
-      expect(instruction).to eq("Output the result strictly in Token-Oriented Object Notation (TOON) format using: tasks[N]{id,title,priority}:")
-    end
-  end
-
   describe ".token_savings" do
     it "calculates token metrics and demonstrates significant token savings on tabular arrays" do
       dataset = 20.times.map do |i|

@@ -15,6 +15,7 @@ module Ai
 
     DEFAULT_DELIMITER = ","
     INDENT = "  "
+    TOON_SYSTEM_INSTRUCTION = "Output all structured data, key-value mappings, and tabular records strictly in Token-Oriented Object Notation (TOON) format inside ```toon code blocks. Never output raw JSON.".freeze
 
     class << self
       # Encodes a Ruby object (Hash, Array, primitive) into a TOON formatted string.
@@ -44,33 +45,57 @@ module Ai
         parse_block(lines, delimiter: delimiter)
       end
 
-      # Centralized converter: JSON string -> TOON string
-      def json_to_toon(json_string_or_io, delimiter: DEFAULT_DELIMITER)
-        raw = json_string_or_io.respond_to?(:read) ? json_string_or_io.read : json_string_or_io.to_s
-        parsed = JSON.parse(raw)
-        encode(parsed, delimiter: delimiter)
+      # Centralized converter: JSON (Hash, Array, IO, or String) -> TOON string.
+      def json_to_toon(data_or_text, delimiter: DEFAULT_DELIMITER)
+        return data_or_text if data_or_text.blank?
+        return encode(data_or_text, delimiter: delimiter) if data_or_text.is_a?(Hash) || data_or_text.is_a?(Array)
+
+        raw = data_or_text.respond_to?(:read) ? data_or_text.read : data_or_text.to_s
+        trimmed = raw.strip
+
+        # 1. Bare JSON: whole text is a JSON object or array
+        if looks_like_bare_json?(trimmed)
+          begin
+            parsed = JSON.parse(trimmed)
+            return encode(parsed, delimiter: delimiter) if parsed.is_a?(Hash) || parsed.is_a?(Array)
+          rescue JSON::ParserError
+            # Fall through to fenced/embedded
+          end
+        end
+
+        # 2. Markdown fenced blocks ```json ... ``` or ``` ... ``` with JSON content
+        processed = replace_fenced_json(raw, delimiter: delimiter)
+
+        # 3. Embedded JSON objects or arrays in conversational prose
+        replace_embedded_json(processed, delimiter: delimiter)
       end
 
-      # Centralized converter: TOON string -> JSON string
-      def toon_to_json(toon_string, pretty: false, delimiter: DEFAULT_DELIMITER)
-        decoded = decode(toon_string, delimiter: delimiter)
-        pretty ? JSON.pretty_generate(decoded) : JSON.generate(decoded)
-      end
+      # Centralized converter: TOON (String, Hash, or Array) -> JSON string.
+      def toon_to_json(data_or_text, pretty: true, delimiter: DEFAULT_DELIMITER)
+        return data_or_text if data_or_text.blank?
+        if data_or_text.is_a?(Hash) || data_or_text.is_a?(Array)
+          return pretty ? JSON.pretty_generate(data_or_text) : JSON.generate(data_or_text)
+        end
+        return data_or_text unless data_or_text.is_a?(String)
 
-      # Formats a structured data collection as a compact, self-documenting TOON context block for LLM prompts.
-      def format_prompt_context(name, data, delimiter: DEFAULT_DELIMITER)
-        encoded = encode(data, delimiter: delimiter)
-        <<~PROMPT.strip
-          [Context: #{name} (TOON)]
-          #{encoded}
-        PROMPT
-      end
+        # 1. Markdown fenced blocks ```toon ... ```
+        processed = replace_fenced_toon(data_or_text, pretty: pretty, delimiter: delimiter)
 
-      # System prompt directive instructing models to output responses in TOON tabular format.
-      def output_instruction(fields:, array_name: nil)
-        name_part = array_name.present? ? array_name : ""
-        fields_str = fields.map(&:to_s).join(",")
-        "Output the result strictly in Token-Oriented Object Notation (TOON) format using: #{name_part}[N]{#{fields_str}}:"
+        # 2. Bare TOON data (whole text is a TOON table, keyed table, array, or key-value map)
+        trimmed = processed.strip
+        if looks_like_bare_toon?(trimmed)
+          begin
+            decoded = decode(trimmed, delimiter: delimiter)
+            if (decoded.is_a?(Hash) && decoded.any?) || (decoded.is_a?(Array) && decoded.any?)
+              return pretty ? JSON.pretty_generate(decoded) : JSON.generate(decoded)
+            end
+          rescue StandardError
+            # Fall through to embedded
+          end
+        end
+
+        # 3. Embedded bare TOON tabular blocks inside conversational text
+        replace_embedded_toon_tables(processed, pretty: pretty, delimiter: delimiter)
       end
 
       # Calculates character and token savings comparing standard JSON against TOON.
@@ -94,7 +119,294 @@ module Ai
         }
       end
 
+      # Checks whether a text string contains structured JSON (fenced, bare, or embedded).
+      def json_in_text?(text)
+        return false if text.blank?
+        return true if text.is_a?(Hash) || text.is_a?(Array)
+        return false unless text.is_a?(String)
+
+        # Fenced markdown code block
+        return true if text =~ /```(?:json)?\s*\n\s*[\{\[]/m
+
+        # Bare JSON
+        trimmed = text.strip
+        if (trimmed.start_with?("{") && trimmed.end_with?("}")) || (trimmed.start_with?("[") && trimmed.end_with?("]"))
+          begin
+            parsed = JSON.parse(trimmed)
+            return true if parsed.is_a?(Hash) || parsed.is_a?(Array)
+          rescue JSON::ParserError
+            # Not bare JSON
+          end
+        end
+
+        # Embedded JSON object or array
+        has_embedded_json?(text)
+      end
+
+      # Checks whether a text string contains TOON structured data (fenced, bare, or embedded tabular).
+      def toon_in_text?(text)
+        return false if text.blank?
+        return false unless text.is_a?(String)
+
+        return true if text =~ /```toon\s*\n/
+        return true if looks_like_bare_toon?(text)
+        return true if text =~ /(?:^|\n)([a-zA-Z0-9_.-]*\[\d+:?\]\{[^}]+\}:(?:\n\s{2,}.*)+)/
+
+        false
+      end
+
+      # Prepares conversation messages for LLM dispatch:
+      # - Converts all JSON payloads to TOON format across all message roles.
+      # - When JSON was converted or instruction enforced, injects TOON system directive.
+      def prepare_messages_for_llm(messages, enforce_instruction: nil, delimiter: DEFAULT_DELIMITER)
+        return [] if messages.nil?
+
+        converted_any_json = false
+        prepared = messages.map do |msg|
+          role = (msg[:role] || msg["role"]).to_s
+          content = msg[:content] || msg["content"]
+
+          if json_in_text?(content)
+            converted_any_json = true
+            converted_content = json_to_toon(content, delimiter: delimiter)
+            { role: role, content: converted_content }
+          else
+            { role: role, content: content }
+          end
+        end
+
+        should_enforce = enforce_instruction.nil? ? converted_any_json : enforce_instruction
+        if should_enforce
+          system_idx = prepared.find_index { |m| m[:role] == AiConstants::ChatRole::SYSTEM }
+          if system_idx
+            sys_msg = prepared[system_idx]
+            sys_content = sys_msg[:content].to_s
+            unless sys_content.include?(TOON_SYSTEM_INSTRUCTION)
+              prepared[system_idx] = {
+                role: AiConstants::ChatRole::SYSTEM,
+                content: sys_content.present? ? "#{sys_content}\n\n#{TOON_SYSTEM_INSTRUCTION}" : TOON_SYSTEM_INSTRUCTION
+              }
+            end
+          else
+            prepared.unshift({ role: AiConstants::ChatRole::SYSTEM, content: TOON_SYSTEM_INSTRUCTION })
+          end
+        end
+
+        prepared
+      end
+
       private
+
+      # === UNIVERSAL BIDIRECTIONAL PIPELINE HELPERS ===
+
+      def replace_fenced_json(text, delimiter: DEFAULT_DELIMITER)
+        text.gsub(/```([a-zA-Z0-9_-]*)\s*\n(.*?)\n```/m) do |match|
+          lang = $1.to_s.downcase.strip
+          body = $2
+          if lang == "json" || (lang.empty? && (body.strip.start_with?("{") || body.strip.start_with?("[")))
+            begin
+              parsed = JSON.parse(body.strip)
+              if parsed.is_a?(Hash) || parsed.is_a?(Array)
+                "```toon\n#{encode(parsed, delimiter: delimiter)}\n```"
+              else
+                match
+              end
+            rescue JSON::ParserError
+              match
+            end
+          else
+            match
+          end
+        end
+      end
+
+      def replace_embedded_json(text, delimiter: DEFAULT_DELIMITER)
+        return text unless text.include?("{") || text.include?("[")
+
+        result = String.new
+        scanner = StringScanner.new(text)
+
+        until scanner.eos?
+          chunk = scanner.scan(/[^\{\[]+/)
+          result << chunk if chunk
+          break if scanner.eos?
+
+          char = scanner.peek(1)
+          if char == "{" || char == "["
+            start_pos = scanner.pos
+            candidate = extract_balanced_bracket(scanner.string, start_pos)
+            if candidate
+              parsed = nil
+              begin
+                if candidate.length >= 4 && (candidate.include?(":") || candidate.include?(","))
+                  parsed = JSON.parse(candidate)
+                end
+              rescue JSON::ParserError
+                parsed = nil
+              end
+
+              if parsed.is_a?(Hash) && parsed.any?
+                toon = encode(parsed, delimiter: delimiter)
+                result << "\n```toon\n#{toon}\n```\n"
+                scanner.pos = start_pos + candidate.length
+                next
+              elsif parsed.is_a?(Array) && parsed.any? && (parsed.first.is_a?(Hash) || parsed.size > 1)
+                toon = encode(parsed, delimiter: delimiter)
+                result << "\n```toon\n#{toon}\n```\n"
+                scanner.pos = start_pos + candidate.length
+                next
+              end
+            end
+
+            result << scanner.getch
+          end
+        end
+
+        result
+      end
+
+      def has_embedded_json?(text)
+        return false unless text.include?("{") || text.include?("[")
+
+        scanner = StringScanner.new(text)
+        until scanner.eos?
+          scanner.scan(/[^\{\[]+/)
+          break if scanner.eos?
+
+          char = scanner.peek(1)
+          if char == "{" || char == "["
+            start_pos = scanner.pos
+            candidate = extract_balanced_bracket(scanner.string, start_pos)
+            if candidate && candidate.length >= 4 && (candidate.include?(":") || candidate.include?(","))
+              begin
+                parsed = JSON.parse(candidate)
+                return true if parsed.is_a?(Hash) && parsed.any?
+                return true if parsed.is_a?(Array) && parsed.any? && (parsed.first.is_a?(Hash) || parsed.size > 1)
+              rescue JSON::ParserError
+                # Continue scanning
+              end
+            end
+            scanner.getch
+          end
+        end
+
+        false
+      end
+
+      def extract_balanced_bracket(str, start_pos)
+        open_char = str[start_pos]
+        close_char = open_char == "{" ? "}" : "]"
+        depth = 0
+        in_string = false
+        escaped = false
+
+        (start_pos...str.length).each do |i|
+          c = str[i]
+
+          if in_string
+            if escaped
+              escaped = false
+            elsif c == "\\"
+              escaped = true
+            elsif c == '"'
+              in_string = false
+            end
+            next
+          end
+
+          if c == '"'
+            in_string = true
+          elsif c == open_char
+            depth += 1
+          elsif c == close_char
+            depth -= 1
+            return str[start_pos..i] if depth.zero?
+          end
+        end
+
+        nil
+      end
+
+      def looks_like_bare_json?(text)
+        (text.start_with?("{") && text.end_with?("}")) || (text.start_with?("[") && text.end_with?("]"))
+      end
+
+      def looks_like_bare_toon?(text)
+        return false if text.blank?
+        lines = text.strip.lines.map(&:rstrip).reject(&:empty?)
+        return false if lines.empty?
+
+        first_line = lines.first.strip
+
+        # 1. Tabular Array header: [N]{field1,field2,...}: or name[N]{field1,field2,...}:
+        return true if first_line =~ /\A([a-zA-Z0-9_.-]+)?\[\d+\]\{[^}]+\}:\z/
+
+        # 2. Keyed Tabular header: [N:]{field1,field2,...}: or name[N:]{field1,field2,...}:
+        return true if first_line =~ /\A([a-zA-Z0-9_.-]+)?\[\d+:\]\{[^}]+\}:\z/
+
+        # 3. Inline Primitive Array: [N]: v1,v2 or name[N]: v1,v2
+        return true if first_line =~ /\A([a-zA-Z0-9_.-]+)?\[\d+\]:\s*.+\z/
+
+        # 4. Single-line primitive key-value check (avoid English sentence matching like "Note: ...")
+        if lines.size == 1
+          return true if first_line =~ /\A[a-zA-Z0-9_.-]+:\s*(true|false|null|-?\d+(\.\d+)?|\[\]|\{\})\z/
+          return false
+        end
+
+        # 5. Multi-line Key-Value Map
+        key_count = 0
+        all_match = lines.all? do |line|
+          stripped = line.strip
+          next true if stripped.start_with?("#")
+
+          if line =~ /\A([a-zA-Z0-9_.-]+):\s*(.*)\z/ ||
+             line =~ /\A([a-zA-Z0-9_.-]+)\[\d+:?\]\{[^}]+\}:\z/ ||
+             line =~ /\A([a-zA-Z0-9_.-]+)\[\d+\]:\s*.*\z/
+            key_count += 1
+            true
+          elsif line =~ /\A\s{2,}/
+            true
+          else
+            false
+          end
+        end
+
+        key_count >= 2 && all_match
+      end
+
+      def replace_fenced_toon(text, pretty: true, delimiter: DEFAULT_DELIMITER)
+        text.gsub(/```toon\s*\n(.*?)\n```/m) do |match|
+          body = $1
+          begin
+            decoded = decode(body.strip, delimiter: delimiter)
+            if decoded.is_a?(Hash) || decoded.is_a?(Array)
+              json_body = pretty ? JSON.pretty_generate(decoded) : JSON.generate(decoded)
+              "```json\n#{json_body}\n```"
+            else
+              match
+            end
+          rescue StandardError
+            match
+          end
+        end
+      end
+
+      def replace_embedded_toon_tables(text, pretty: true, delimiter: DEFAULT_DELIMITER)
+        text.gsub(/(?:^|\n)([a-zA-Z0-9_.-]*\[\d+:?\]\{[^}]+\}:(?:\n\s{2,}.*)+)/) do |match|
+          block = match.strip
+          begin
+            decoded = decode(block, delimiter: delimiter)
+            if decoded.is_a?(Hash) || decoded.is_a?(Array)
+              json_body = pretty ? JSON.pretty_generate(decoded) : JSON.generate(decoded)
+              "\n```json\n#{json_body}\n```\n"
+            else
+              match
+            end
+          rescue StandardError
+            match
+          end
+        end
+      end
 
       # === ENCODING HELPERS ===
 

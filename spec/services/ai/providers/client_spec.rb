@@ -1,6 +1,9 @@
 require "rails_helper"
 
 RSpec.describe Ai::Providers::Client do
+  after do
+    described_class.reset_providers!
+  end
   it "routes to Gemini provider when requested" do
     fake_gemini = instance_double(Ai::Providers::Gemini)
     allow(Ai::Providers::Gemini).to receive(:new).and_return(fake_gemini)

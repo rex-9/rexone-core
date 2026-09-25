@@ -27,12 +27,13 @@ module Ai
       def execute_chat(user:, feature:, profile_key:, messages:, chat_message: nil, prompt_values: {}, request_metadata: {})
         profile = Ai::ProfileService.resolve!(profile_key)
         prepared_messages = with_system_prompt(profile, messages, prompt_values)
-        run = create_run!(user, profile, feature, prepared_messages, chat_message, request_metadata)
+        llm_messages = Ai::ToonService.prepare_messages_for_llm(prepared_messages)
+        run = create_run!(user, profile, feature, llm_messages, chat_message, request_metadata)
         started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
         result = Ai::Providers::Client.chat(
           provider: profile.provider,
-          messages: prepared_messages,
+          messages: llm_messages,
           model: profile.model,
           temperature: profile.temperature.to_f,
           max_tokens: profile.max_output_tokens,
@@ -56,6 +57,8 @@ module Ai
           fail_run!(run, error_msg, latency_ms, result)
           result[:error] = error_msg
         else
+          converted_output = Ai::ToonService.toon_to_json(output)
+          message_obj["content"] = converted_output
           complete_run!(run, result, latency_ms)
         end
         result

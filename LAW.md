@@ -49,6 +49,7 @@ This application is built upon the **RexOne Ecosystem** (`rex-9`). These are imm
   - [U14. Zero Loose Code \& Clean Parameter Contracts](#u14-zero-loose-code--clean-parameter-contracts)
   - [U15. Human-Readable Code, Plain English \& Zero Alien Syntax](#u15-human-readable-code-plain-english--zero-alien-syntax)
   - [U16. Immutable Ecosystem Lineage \& Universal Moral Attribution Code](#u16-immutable-ecosystem-lineage--universal-moral-attribution-code)
+  - [U17. Zero-JSON LLM Pipeline Law: LLM Never Eats JSON, LLM Never Spits JSON](#u17-zero-json-llm-pipeline-law-llm-never-eats-json-llm-never-spits-json)
 - [⚙️ Part I: RexOne Core Architectural Laws (Backend / Rails API)](#️-part-i-rexone-core-architectural-laws-backend--rails-api)
   - [C1. Strict 3-Tier MCS Architecture (Model, Controller, Service)](#c1-strict-3-tier-mcs-architecture-model-controller-service)
   - [C2. Standardized JSON:API Envelope](#c2-standardized-jsonapi-envelope)
@@ -195,6 +196,14 @@ The following foundational principles apply universally across all three reposit
   - Rebranding engines and scripts may configure new product names, logos, and domains, but are constitutionally forbidden from erasing or stripping the underlying RexOne ecosystem lineage.
   - Every derivative product serves as a sovereign application while continually promoting, celebrating, and expanding the visibility, authority, and appreciation of the foundation upon which it was built.
 - **Strict Prohibition of Stealth Erasure**: Erasing, stripping, or obfuscating ecosystem credit to falsely claim original inception of the foundation architecture is a direct violation of constitutional integrity.
+
+### U17. Zero-JSON LLM Pipeline Law: LLM Never Eats JSON, LLM Never Spits JSON
+
+- **Supreme Principle**: Large Language Models (LLMs) operate with maximum token efficiency, lowest latency, and zero syntax hallucination when dealing with structured data in Token-Oriented Object Notation (TOON). Raw JSON is an anti-pattern for LLM prompt context and generation. The pipeline enforces a strict bidirectional barrier: **LLMs never eat JSON; LLMs never spit JSON**.
+- **Inbound to LLM (Never Eat JSON)**: Under no circumstances may raw JSON syntax (fenced blocks, bare objects, arrays, embedded JSON strings) ever be passed to an LLM provider. Any prompt, chat message, conversation history, system prompt, or template variable containing structured data MUST be automatically serialized or converted into TOON format via `Ai::ToonService.json_to_toon` before dispatch.
+- **Outbound from LLM (Never Spit JSON)**: Models MUST be instructed to output structured records, key-value mappings, and tabular datasets strictly in TOON format inside ` ```toon ` blocks. Models are forbidden from generating raw JSON.
+- **Server Reception & Client Transparency**: Upon receiving model completions, the server transparently converts all TOON structures back into clean, standard formatted JSON via `Ai::ToonService.toon_to_json` before database persistence, Action Cable WebSocket broadcasting, and REST responses. External clients (Web, Mobile, REST APIs) deal exclusively in standard JSON. The LLM operates exclusively in TOON. Zero JSON leaks inward; zero TOON leaks outward.
+- **Unified Pipeline, Zero Dead Code (Law U14)**: Prompt processing, user messages, and system instructions MUST use the exact same unified `Ai::ToonService.json_to_toon` and `Ai::ToonService.toon_to_json` pipeline. No redundant converters, duplicate aliases, dead stubs, or parallel conversion shims are permitted.
 
 ---
 
