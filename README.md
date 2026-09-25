@@ -322,10 +322,26 @@ To maintain high architectural discipline without cluttering the primary showcas
 The production image is multi-stage, runs as an unprivileged non-root user, precompiles Bootsnap, and includes health-check probes.
 
 - **Zero-Trust Boot Guard**: Refuses to boot if production keys (`RAILS_SECRET_KEY_BASE`, `PG_PASSWORD`, `S3_ADMIN_TOKEN`) match placeholders.
-- **Edge Throttling**: Pre-configured `Rack::Attack` defends account peek, sign-in, and code dispatch against brute-force attacks.
-- **Automated VPS Maintenance**: Includes [`./scripts/vps_cleanup.sh`](docs/DEPLOYMENT.md) for recurring Coolify image pruning and Docker log rotation.
+- **Automated VPS Maintenance**: Includes [`./scripts/vps_cleanup.sh`](scripts/vps_cleanup.sh) for recurring Coolify image pruning and builder cache recycling.
 
 For the complete production deployment playbook, see **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)**.
+
+### 🧹 Automated Telemetry & Log Retention (At a Glance)
+
+All logs and database monitoring tables are governed by automated retention policies to guarantee zero disk exhaustion. Complete maintenance guide: **[`docs/MAINTENANCE.md`](docs/MAINTENANCE.md)**.
+
+| Target / Subsystem | Retention Window | Schedule / Frequency | Mechanism |
+| :--- | :--- | :--- | :--- |
+| **Docker Container Logs** | Max 30 MB / container (`10m` $\times$ 3 files) | Continuous runtime | Docker `json-file` rotation (prod & dev) |
+| **Rails Pulse (Requests & Queries)** | **1 month** (max 50k req / 250k ops) | Daily at 01:00 AM | `RailsPulse::CleanupJob` |
+| **Rails Pulse (Summary Rollups)** | Permanent aggregated charts | Hourly at minute :05 | `RailsPulse::SummaryJob` |
+| **Solid Queue (Failed Jobs)** | **1 month** (`1.month.ago`) | Sundays at 03:00 AM | `clear_solid_queue_failed_jobs` |
+| **Solid Queue (Finished Jobs)** | Continuous batch clean | Hourly at minute :12 | `clear_solid_queue_finished_jobs` |
+| **Solid Cache (Expired Entries)** | **24 hours** (`1.day.ago`) | Daily at 02:00 AM | `clear_solid_cache_expired_entries` |
+| **AI Telemetry (`Ai::Run`)** | **90 days** (`90.days.ago`) | Sundays at 04:00 AM | `clear_old_ai_runs` |
+| **Stripe Webhook Records** | **30 days** | Daily at 03:30 AM | `clear_old_payment_webhook_events` |
+| **User Notifications** | **30 days** (read / discarded) | Daily at 02:30 AM | `notification_cleanup` |
+| **Docker Images & Build Cache** | **7 days** (168 hours) | Weekly host cron | [`./scripts/vps_cleanup.sh`](scripts/vps_cleanup.sh) |
 
 ## 🎨 Rebranding
 

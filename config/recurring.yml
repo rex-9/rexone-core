@@ -17,21 +17,21 @@ production:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
 
-  # CLEAN FAILED JOBS - Weekly on Sunday at 3am
+  # CLEAN FAILED JOBS - Weekly on Sunday at 3am (1 month retention)
   clear_solid_queue_failed_jobs:
-    command: "SolidQueue::Job.where('finished_at IS NOT NULL AND finished_at < ?', 1.week.ago).delete_all"
+    command: "SolidQueue::Job.where('finished_at IS NOT NULL AND finished_at < ?', 1.month.ago).delete_all"
     schedule: at 3am every Sunday
 
   # ===== RAILS PULSE MAINTENANCE =====
-  # # RAILS PULSE SUMMARY - Every hour at minute 5
-  # rails_pulse_summary:
-  #   class: RailsPulse::SummaryJob
-  #   schedule: every hour at minute 5
+  # RAILS PULSE SUMMARY - Every hour at minute 5
+  rails_pulse_summary:
+    class: RailsPulse::SummaryJob
+    schedule: every hour at minute 5
 
-  # # RAILS PULSE CLEANUP - Daily at 1am
-  # rails_pulse_cleanup:
-  #   class: RailsPulse::CleanupJob
-  #   schedule: at 1am every day
+  # RAILS PULSE CLEANUP - Daily at 1am
+  rails_pulse_cleanup:
+    class: RailsPulse::CleanupJob
+    schedule: at 1am every day
 
   # ===== SOLID CACHE MAINTENANCE =====
   # Optional: Clean up expired cache entries
@@ -56,6 +56,11 @@ production:
     class: Notification::CleanupJob
     schedule: at 2:30am every day
 
+  # Purge old AI execution runs and raw payloads - Weekly on Sunday at 4am (90 days retention)
+  clear_old_ai_runs:
+    command: "Ai::Run.where('created_at < ?', 90.days.ago).delete_all"
+    schedule: at 4am every Sunday
+
   # Example: Send weekly reports
   # weekly_report:
   #   class: WeeklyReportJob
@@ -77,12 +82,19 @@ development:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
-    # command: |
-    #   begin
-    #     SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)
-    #   rescue => e
-    #     Rails.logger.error("Failed to clean Solid Queue jobs: #{e.message}")
-    #   end
+
+  clear_solid_queue_failed_jobs:
+    command: "SolidQueue::Job.where('finished_at IS NOT NULL AND finished_at < ?', 1.month.ago).delete_all"
+    schedule: at 3am every Sunday
+
+  # ===== RAILS PULSE MAINTENANCE =====
+  rails_pulse_summary:
+    class: RailsPulse::SummaryJob
+    schedule: every hour at minute 5
+
+  rails_pulse_cleanup:
+    class: RailsPulse::CleanupJob
+    schedule: every day at 1am
 
   clear_old_payment_webhook_events:
     command: "Payment::WebhookEvent.cleanup_old!"
@@ -97,13 +109,9 @@ development:
     class: Notification::CleanupJob
     schedule: at 2:30am every day
 
-  # rails_pulse_summary:
-  #   class: RailsPulse::SummaryJob
-  #   schedule: every hour at minute 5
-
-  # rails_pulse_cleanup:
-  #   class: RailsPulse::CleanupJob
-  #   schedule: every day at 1am
+  clear_old_ai_runs:
+    command: "Ai::Run.where('created_at < ?', 90.days.ago).delete_all"
+    schedule: at 4am every Sunday
 
 test:
   # No recurring jobs in test

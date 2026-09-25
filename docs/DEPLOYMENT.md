@@ -309,3 +309,4 @@ After deploying all services, verify each component:
 - [ ] **Media Worker Compression:** Upload a video via web/mobile; check `docker logs prod-rexone-media` for `[CompressMediaJob] Compressed ... bytes`.
 - [ ] **Solid Queue Background Jobs:** `docker logs prod-rexone-waka` shows active Solid Queue polling without errors.
 - [ ] **Web SPA Routing:** Visiting deep links (e.g. `https://rexone.me/profile`, `https://rexone.me/ai`) returns HTTP 200 and loads React correctly (not Nginx 404).
+- [ ] **Automated Maintenance & Retention:** Docker log rotation is active (`DOCKER_LOG_MAX_SIZE=10m`, `DOCKER_LOG_MAX_FILE=3`), and recurring cleanup tasks are operational. See **[MAINTENANCE.md](MAINTENANCE.md)**.

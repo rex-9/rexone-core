@@ -1,6 +1,12 @@
 # rexone-core/docker-compose.yaml
 # Production Docker Compose for Coolify Deployment
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "${DOCKER_LOG_MAX_SIZE:-10m}"
+    max-file: "${DOCKER_LOG_MAX_FILE:-3}"
+
 services:
   api:
     container_name: ${RAILS_CONTAINER_NAME:-prod-rexone-api}
@@ -36,6 +42,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 25s
+    logging: *default-logging
     networks:
       - rexone-network
 
@@ -73,6 +80,7 @@ services:
     stop_grace_period: 45s
     labels:
       - traefik.enable=false
+    logging: *default-logging
     networks:
       - rexone-network
 
@@ -111,6 +119,7 @@ services:
           memory: 4096M
     labels:
       - traefik.enable=false
+    logging: *default-logging
     networks:
       - rexone-network
 
@@ -132,6 +141,7 @@ services:
       POSTGRES_DB: ${PG_DATABASE:-rexone_production}
       POSTGRES_USER: ${PG_USER:-postgres}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
+    logging: *default-logging
     networks:
       - rexone-network
 
@@ -153,6 +163,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.services.garage.loadbalancer.server.port=3100
+    logging: *default-logging
     networks:
       - rexone-network
 
