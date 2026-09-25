@@ -57,5 +57,18 @@ RSpec.describe Ai::ProfileService do
       prompt = described_class.prompt_for(profile, language: "Burmese")
       expect(prompt).to include("Burmese")
     end
+
+    it "automatically encodes structured array or hash variables into TOON" do
+      custom_profile = create(:ai_profile, system_prompt: "Here is the data context:\n%{context}\nPlease analyze it.")
+      users = [
+        { id: 1, name: "Alice", role: "admin" },
+        { id: 2, name: "Bob", role: "member" }
+      ]
+
+      result = described_class.prompt_for(custom_profile, context: users)
+      expect(result).to include("[2]{id,name,role}:")
+      expect(result).to include("  1,Alice,admin")
+      expect(result).to include("  2,Bob,member")
+    end
   end
 end

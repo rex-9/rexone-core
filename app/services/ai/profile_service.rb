@@ -106,7 +106,15 @@ module Ai
         prompt = profile.system_prompt.to_s
         return nil if prompt.blank?
 
-        prompt % values.symbolize_keys
+        formatted_values = values.symbolize_keys.transform_values do |val|
+          if val.is_a?(Array) || val.is_a?(Hash)
+            Ai::ToonService.encode(val)
+          else
+            val
+          end
+        end
+
+        prompt % formatted_values
       rescue KeyError
         prompt
       end
