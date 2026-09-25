@@ -53,6 +53,7 @@ module PaymentConstants
 
   module StripeEvent
     CHECKOUT_SESSION_COMPLETED = "checkout.session.completed".freeze
+    SUBSCRIPTION_CREATED       = "customer.subscription.created".freeze
     SUBSCRIPTION_UPDATED       = "customer.subscription.updated".freeze
     SUBSCRIPTION_DELETED       = "customer.subscription.deleted".freeze
     SUBSCRIPTION_PAUSED        = "customer.subscription.paused".freeze
@@ -68,6 +69,7 @@ module PaymentConstants
 
     ALL = [
       CHECKOUT_SESSION_COMPLETED,
+      SUBSCRIPTION_CREATED,
       SUBSCRIPTION_UPDATED, SUBSCRIPTION_DELETED,
       SUBSCRIPTION_PAUSED, SUBSCRIPTION_RESUMED,
       PRODUCT_UPDATED,

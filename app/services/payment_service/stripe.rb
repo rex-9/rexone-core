@@ -41,6 +41,12 @@ module PaymentService
           product_id: product.id
         }
 
+        resolved_success_url = success_url || AppConfig::STRIPE_SUCCESS_URL
+        unless resolved_success_url.include?("{CHECKOUT_SESSION_ID}")
+          delimiter = resolved_success_url.include?("?") ? "&" : "?"
+          resolved_success_url = "#{resolved_success_url}#{delimiter}session_id={CHECKOUT_SESSION_ID}"
+        end
+
         checkout_params = {
           customer: user.stripe_customer,
           line_items: [ {
@@ -48,7 +54,7 @@ module PaymentService
             quantity: 1
           } ],
           mode: product.recurring? ? PaymentConstants::StripeMode::SUBSCRIPTION : PaymentConstants::StripeMode::PAYMENT,
-          success_url: success_url || AppConfig::STRIPE_SUCCESS_URL,
+          success_url: resolved_success_url,
           cancel_url: cancel_url || AppConfig::STRIPE_CANCEL_URL,
           metadata: meta
 
@@ -81,6 +87,9 @@ module PaymentService
     def get_session(session_id)
       with_stripe_error("Get Session") do
         session = Stripe::Checkout::Session.retrieve(session_id)
+        if session.status == "complete" || session.payment_status == PaymentConstants::StripeStatus::PAID
+          handle_checkout_completed(session)
+        end
         { status: session.status, payment_status: session.payment_status }
       end
     end
@@ -375,6 +384,8 @@ module PaymentService
       case event.type
       when PaymentConstants::StripeEvent::CHECKOUT_SESSION_COMPLETED
         handle_checkout_completed(event.data.object)
+      when PaymentConstants::StripeEvent::SUBSCRIPTION_CREATED
+        handle_subscription_updated(event.data.object)
       when PaymentConstants::StripeEvent::SUBSCRIPTION_UPDATED
         handle_subscription_updated(event.data.object)
       when PaymentConstants::StripeEvent::SUBSCRIPTION_DELETED
@@ -619,22 +630,64 @@ module PaymentService
       subscription = Payment::Subscription.find_or_initialize_by(
         stripe_subscription_id: stripe_subscription.id
       )
+      new_subscription = subscription.new_record?
       previous_status = subscription.status
       period = subscription_period(stripe_subscription)
 
-      subscription.update!(
-        **subscription_item_attributes(stripe_subscription),
+      metadata = stripe_subscription.try(:metadata) || {}
+      item_attrs = subscription_item_attributes(stripe_subscription)
+
+      user_candidate_id = subscription.user_id.presence ||
+                          metadata[:user_id] ||
+                          metadata["user_id"] ||
+                          (metadata.respond_to?(:user_id) ? metadata.user_id : nil)
+      user = User.find_by(id: user_candidate_id) if user_candidate_id.present?
+      if user.nil?
+        customer_id = stripe_object_id(stripe_subscription.customer)
+        user = User.find_by(stripe_customer_id: customer_id) if customer_id.present?
+      end
+
+      product_candidate_id = subscription.product_id.presence ||
+                             metadata[:product_id] ||
+                             metadata["product_id"] ||
+                             (metadata.respond_to?(:product_id) ? metadata.product_id : nil)
+      product = Payment::Product.find_by(id: product_candidate_id) if product_candidate_id.present?
+      if product.nil? && item_attrs[:stripe_price_id].present?
+        product = Payment::Product.find_by(stripe_price_id: item_attrs[:stripe_price_id])
+      end
+
+      if user.nil? || product.nil?
+        Rails.logger.warn("#{STRIPE_LOG_PREFIX} Unable to sync subscription #{stripe_subscription.id}: user=#{user&.id || user_candidate_id || 'unknown'}, product=#{product&.id || product_candidate_id || 'unknown'}")
+        return nil
+      end
+
+      payment_method_id = stripe_object_id(stripe_subscription.default_payment_method)
+      payment_info = extract_payment_method_info(payment_method_id) if payment_method_id.present?
+
+      attrs = {
+        **item_attrs,
+        user: user,
+        product: product,
         stripe_customer_id: stripe_object_id(stripe_subscription.customer),
         status: stripe_subscription.status,
         started_at: stripe_time(stripe_subscription.start_date),
         current_period_start: period[:starts_at],
         current_period_end: period[:ends_at],
-        cancel_at_period_end: stripe_subscription.cancel_at_period_end,
+        cancel_at_period_end: stripe_subscription.cancel_at_period_end || false,
         cancel_at: stripe_time(stripe_subscription.cancel_at),
         ended_at: stripe_time(stripe_subscription.ended_at),
         canceled_at: stripe_time(stripe_subscription.canceled_at),
         metadata: stripe_subscription.metadata&.to_h || {}
-      )
+      }
+
+      if payment_info.present?
+        attrs[:payment_method_id] = payment_method_id
+        attrs[:payment_method_type] = payment_info[:type]
+        attrs[:payment_method_details] = payment_info[:details]
+      end
+
+      subscription.assign_attributes(attrs)
+      subscription.save!
 
       if %w[active trialing].include?(subscription.status)
         AccessService.grant(
@@ -642,6 +695,14 @@ module PaymentService
           product_id: subscription.product_id,
           expires_at: period[:ends_at]
         )
+
+        if new_subscription
+          NotificationService::Center.subscription_created(
+            subscription.user,
+            subscription.product,
+            subscription
+          )
+        end
       elsif subscription.past_due? || subscription.canceled? || subscription.unpaid? || subscription.paused?
         AccessService.revoke(
           user_id: subscription.user_id,
@@ -786,10 +847,34 @@ module PaymentService
     end
 
     def handle_checkout_completed(session)
-      user_id = session.metadata.user_id
-      product_id = session.metadata.product_id
-      product = Payment::Product.find(product_id)
-      user = User.find(user_id)
+      metadata = session.try(:metadata) || {}
+      user_id = metadata[:user_id] || metadata["user_id"] || (metadata.respond_to?(:user_id) ? metadata.user_id : nil)
+      product_id = metadata[:product_id] || metadata["product_id"] || (metadata.respond_to?(:product_id) ? metadata.product_id : nil)
+      coupon_id = metadata[:coupon_id] || metadata["coupon_id"] || (metadata.respond_to?(:coupon_id) ? metadata.coupon_id : nil)
+
+      user = User.find_by(id: user_id)
+      if user.nil? && session.customer.present?
+        user = User.find_by(stripe_customer_id: stripe_object_id(session.customer))
+      end
+
+      product = Payment::Product.find_by(id: product_id)
+      if product.nil? && session.mode == PaymentConstants::StripeMode::SUBSCRIPTION && session.subscription.present?
+        begin
+          stripe_sub = Stripe::Subscription.retrieve(session.subscription)
+          price_id = stripe_sub.items&.data&.first&.price&.id
+          product = Payment::Product.find_by(stripe_price_id: price_id) if price_id
+        rescue Stripe::StripeError => e
+          Rails.logger.warn("#{STRIPE_LOG_PREFIX} Could not retrieve subscription #{session.subscription} for product lookup: #{e.message}")
+        end
+      end
+
+      if user.nil? || product.nil?
+        Rails.logger.warn("#{STRIPE_LOG_PREFIX} Unable to handle completed checkout session #{session.id}: user=#{user&.id || user_id || 'unknown'}, product=#{product&.id || product_id || 'unknown'}")
+        return
+      end
+
+      user_id = user.id
+      product_id = product.id
 
       if session.mode == PaymentConstants::StripeMode::SUBSCRIPTION
         stripe_sub = Stripe::Subscription.retrieve(
@@ -816,7 +901,7 @@ module PaymentService
           started_at: stripe_time(stripe_sub.start_date),
           current_period_start: period[:starts_at],
           current_period_end: period[:ends_at],
-          cancel_at_period_end: stripe_sub.cancel_at_period_end,
+          cancel_at_period_end: stripe_sub.cancel_at_period_end || false,
           cancel_at: stripe_time(stripe_sub.cancel_at),
           ended_at: stripe_time(stripe_sub.ended_at),
           canceled_at: stripe_time(stripe_sub.canceled_at),
@@ -828,7 +913,6 @@ module PaymentService
 
         subscription.save!
 
-        coupon_id = session.metadata&.coupon_id
         if coupon_id.present?
           coupon = Payment::Coupon.find_by(id: coupon_id)
           if coupon

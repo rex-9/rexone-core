@@ -875,5 +875,43 @@ RSpec.describe PaymentService::Stripe do
 
       expect(AccessService.has_access?(user_id: user.id, product_id: product.id)).to be(true)
     end
+
+    it "creates new subscription and grants access for active webhook with metadata" do
+      stripe_subscription.id = "sub_brand_new_123"
+      stripe_subscription.status = "active"
+      stripe_subscription.metadata = { user_id: user.id, product_id: product.id }
+
+      expect do
+        service.send(:sync_subscription, stripe_subscription)
+      end.to change(Payment::Subscription, :count).by(1)
+
+      expect(AccessService.has_access?(user_id: user.id, product_id: product.id)).to be(true)
+    end
+
+    it "resolves user by stripe_customer_id and product by stripe_price_id when metadata is absent" do
+      user.update!(stripe_customer_id: "cus_webhook_test")
+      product_record = product
+      stripe_subscription.id = "sub_fallback_resolution"
+      stripe_subscription.status = "active"
+      stripe_subscription.metadata = {}
+
+      expect do
+        service.send(:sync_subscription, stripe_subscription)
+      end.to change(Payment::Subscription, :count).by(1)
+
+      created_sub = Payment::Subscription.find_by(stripe_subscription_id: "sub_fallback_resolution")
+      expect(created_sub.user_id).to eq(user.id)
+      expect(created_sub.product_id).to eq(product.id)
+      expect(AccessService.has_access?(user_id: user.id, product_id: product.id)).to be(true)
+    end
+
+    it "returns nil without raising when user or product cannot be found" do
+      stripe_subscription.id = "sub_unknown_entities"
+      stripe_subscription.customer = "cus_nonexistent"
+      stripe_subscription.metadata = { user_id: SecureRandom.uuid, product_id: SecureRandom.uuid }
+
+      result = service.send(:sync_subscription, stripe_subscription)
+      expect(result).to be_nil
+    end
   end
 end

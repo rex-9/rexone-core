@@ -2,6 +2,8 @@
 class Auth::PasswordsController < Devise::PasswordsController
   respond_to :json
 
+  skip_before_action :enforce_active_platform_session!
+
   # POST /password/forgot
   def create
     email = forgot_password_params[:email].to_s.strip.downcase

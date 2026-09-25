@@ -2,6 +2,8 @@
 class Auth::ConfirmationsController < Devise::ConfirmationsController
   include PlatformSession
 
+  skip_before_action :enforce_active_platform_session!
+
   # GET /confirmation?confirmation_token=abcdef
   def show
     self.resource = resource_class.confirm_by_token(show_params[:confirmation_token])

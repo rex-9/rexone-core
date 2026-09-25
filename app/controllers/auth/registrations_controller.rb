@@ -2,6 +2,7 @@
 class Auth::RegistrationsController < Devise::RegistrationsController
   respond_to :json
 
+  skip_before_action :enforce_active_platform_session!
   before_action :check_email_provider, only: [ :create ]
 
   private

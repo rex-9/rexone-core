@@ -489,9 +489,10 @@ _Version resolution_: Core maps `app_version` to a matching `Client::Version` re
   - **Uniform Error Masking**: Non-existent, expired, maxed-out, or user-restricted coupons all return the identical message `"Coupon is invalid."` to prevent code probing.
   - **Progressive Cooldown Ladder**: 3 attempts $\rightarrow$ 30s, 6 attempts $\rightarrow$ 60s, 9 attempts $\rightarrow$ 120s, 12+ attempts $\rightarrow$ 300s cooldown.
   - **Reset**: Successful redemption or checkout immediately clears attempt and cooldown counters.
-- **Checkout Integration (`POST /v1/payment/session`)**:
-  - If `final_amount > 0`: Creates Stripe Checkout Session with `discounts: [{ coupon: stripe_coupon_id }]`, returning `{ "checkout_url": "...", "session_id": "..." }`.
+- **Checkout Integration (`POST /v1/payment/session`, `GET /v1/payment/session/:session_id`)**:
+  - `POST /v1/payment/session`: If `final_amount > 0`: Creates Stripe Checkout Session with `discounts: [{ coupon: stripe_coupon_id }]`, appending `session_id={CHECKOUT_SESSION_ID}` to `success_url`, returning `{ "checkout_url": "...", "session_id": "..." }`.
   - If `final_amount == 0`: Bypasses Stripe, records `Payment::Transaction` (with `unit_amount: product.unit_amount, amount_received: 0`), creates `Payment::UserCoupon`, and grants access via `AccessService.grant(...)`.
+  - `GET /v1/payment/session/:session_id`: Immediate client fulfillment upon reaching the success return URL. Inspects session status and immediately provisions subscription/transaction records and entitlement grants (`AccessService.grant(...)`) without waiting for background webhook delivery.
 - **Referral Coupons**:
   - Every user signup automatically generates a unique referral code (`REF` + 6 random uppercase alphanumeric characters, e.g. `REF7K9M2P`) offering a 20% discount with `max_usage_per_user: 1`.
 - **Canonical Stripe Minimum Limits**:
