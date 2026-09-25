@@ -58,7 +58,7 @@ gem "sprockets-rails", "~> 3.5"
 gem "sassc-rails", "~> 2.1"
 gem "csv", "~> 3.3"
 
-gem "rails_pulse", "~> 0.3.3"
+gem "rails_pulse", "~> 0.4.0"
 gem "rails_error_dashboard", "~> 0.13.0" # Alternatives: rails_error_dashboard, faultline, https://github.com/dkam/splat
 gem "solid_web_ui", "~> 0.4.0" # Alternatives: mission_control-jobs, solid_observer, solid_queue_monitor
 
