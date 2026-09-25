@@ -802,4 +802,78 @@ RSpec.describe PaymentService::Stripe do
       end
     end
   end
+
+  describe "Subscription Webhooks" do
+    let(:service) { described_class.new }
+    let(:user) { create(:user) }
+    let(:product) { create(:payment_product, stripe_product_id: "prod_sub_spec", stripe_price_id: "price_sub_spec") }
+    let(:price_double) do
+      OpenStruct.new(
+        id: "price_sub_spec",
+        currency: "usd",
+        unit_amount: 1_000,
+        recurring: OpenStruct.new(interval: "month", interval_count: 1)
+      )
+    end
+    let(:item_double) do
+      OpenStruct.new(
+        id: "si_sub_spec",
+        price: price_double,
+        quantity: 1,
+        current_period_start: 1.month.ago.to_i,
+        current_period_end: 1.month.from_now.to_i
+      )
+    end
+    let(:stripe_subscription) do
+      OpenStruct.new(
+        id: "sub_webhook_test",
+        customer: "cus_webhook_test",
+        status: "past_due",
+        start_date: 1.month.ago.to_i,
+        currency: "usd",
+        cancel_at_period_end: false,
+        cancel_at: nil,
+        ended_at: nil,
+        canceled_at: nil,
+        metadata: {},
+        items: OpenStruct.new(data: [item_double])
+      )
+    end
+
+    it "revokes access and dispatches payment_failed notification when status transitions to past_due" do
+      subscription = create(
+        :payment_subscription,
+        stripe_subscription_id: "sub_webhook_test",
+        user: user,
+        product: product,
+        status: "active"
+      )
+      create(:access, user: user, product: product, status: "active")
+      allow(NotificationService::Center).to receive(:payment_failed)
+
+      service.send(:sync_subscription, stripe_subscription)
+
+      expect(AccessService.has_access?(user_id: user.id, product_id: product.id)).to be(false)
+      expect(NotificationService::Center).to have_received(:payment_failed).with(
+        user,
+        product,
+        subscription
+      )
+    end
+
+    it "grants access when subscription status is active" do
+      stripe_subscription.status = "active"
+      create(
+        :payment_subscription,
+        stripe_subscription_id: "sub_webhook_test",
+        user: user,
+        product: product,
+        status: "past_due"
+      )
+
+      service.send(:sync_subscription, stripe_subscription)
+
+      expect(AccessService.has_access?(user_id: user.id, product_id: product.id)).to be(true)
+    end
+  end
 end

@@ -642,7 +642,7 @@ module PaymentService
           product_id: subscription.product_id,
           expires_at: period[:ends_at]
         )
-      elsif subscription.canceled? || subscription.unpaid? || subscription.paused?
+      elsif subscription.past_due? || subscription.canceled? || subscription.unpaid? || subscription.paused?
         AccessService.revoke(
           user_id: subscription.user_id,
           product_id: subscription.product_id
