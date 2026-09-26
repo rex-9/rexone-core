@@ -127,9 +127,9 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       get "/v1/admin/assets/#{asset.id}", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("asset", "id")).to eq(asset.id)
-      expect(response_data.dig("asset", "status")).to eq("ready")
-      expect(response_data.dig("asset")).not_to have_key("created_by_id")
+      expect(response_data["id"]).to eq(asset.id)
+      expect(response_data.dig("attributes", "status")).to eq("ready")
+      expect(response_data["attributes"]).not_to have_key("created_by_id")
     end
 
     it "allows direct access to an asset from another environment partition" do
@@ -139,7 +139,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       get "/v1/admin/assets/#{prod_asset.id}", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("asset", "id")).to eq(prod_asset.id)
+      expect(response_data["id"]).to eq(prod_asset.id)
     end
   end
 
@@ -162,7 +162,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       end.to change(Asset, :count).by(1)
 
       expect(response).to have_http_status(:created)
-      expect(response_data.dig("asset", "type")).to eq("thumbnail")
+      expect(response_data.dig("attributes", "type")).to eq("thumbnail")
       expect(StorageService::Client).to have_received(:upload).with(
         anything,
         hash_including(storage_key: a_string_matching(/^admin\/thumbnail_avatar_\d+\.png$/))
@@ -179,8 +179,8 @@ RSpec.describe "V1 Admin Assets API", type: :request do
         title: "Admin Uploaded Avatar",
         description: "Admin photo"
       )
-      expect(response_data.dig("asset", "title")).to eq("Admin Uploaded Avatar")
-      expect(response_data.dig("asset", "description")).to eq("Admin photo")
+      expect(response_data.dig("attributes", "title")).to eq("Admin Uploaded Avatar")
+      expect(response_data.dig("attributes", "description")).to eq("Admin photo")
     end
 
     it "rejects files exceeding maximum size with localized error message" do
@@ -240,7 +240,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       post "/v1/admin/assets/#{image_asset.id}/compress", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("asset", "status")).to eq("pending")
+      expect(response_data.dig("attributes", "status")).to eq("pending")
       expect(image_asset.reload.status).to eq("pending")
       expect(Media::CompressMediaJob).to have_received(:perform_later).with(
         hash_including(
@@ -249,7 +249,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
           operation_id: start_with("asset_compression:#{image_asset.id}:")
         )
       )
-      expect(response_data["operation_id"]).to start_with("asset_compression:#{image_asset.id}:")
+      expect(response_meta["operation_id"]).to start_with("asset_compression:#{image_asset.id}:")
     end
 
     it "enqueues image compression for webp assets" do
@@ -272,7 +272,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       post "/v1/admin/assets/#{video_asset.id}/compress", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("asset", "status")).to eq("pending")
+      expect(response_data.dig("attributes", "status")).to eq("pending")
       expect(video_asset.reload.status).to eq("pending")
       expect(Media::CompressMediaJob).to have_received(:perform_later).with(
         hash_including(
@@ -281,14 +281,14 @@ RSpec.describe "V1 Admin Assets API", type: :request do
           operation_id: start_with("asset_compression:#{video_asset.id}:")
         )
       )
-      expect(response_data["operation_id"]).to start_with("asset_compression:#{video_asset.id}:")
+      expect(response_meta["operation_id"]).to start_with("asset_compression:#{video_asset.id}:")
     end
 
     it "enqueues audio compression for compressible audio assets" do
       post "/v1/admin/assets/#{audio_asset.id}/compress", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("asset", "status")).to eq("pending")
+      expect(response_data.dig("attributes", "status")).to eq("pending")
       expect(audio_asset.reload.status).to eq("pending")
       expect(Media::CompressMediaJob).to have_received(:perform_later).with(
         hash_including(
@@ -297,7 +297,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
           operation_id: start_with("asset_compression:#{audio_asset.id}:")
         )
       )
-      expect(response_data["operation_id"]).to start_with("asset_compression:#{audio_asset.id}:")
+      expect(response_meta["operation_id"]).to start_with("asset_compression:#{audio_asset.id}:")
     end
 
     it "rejects compression for non-compressible assets with 422" do
@@ -378,7 +378,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
           operation_id: start_with("video_thumbnail:#{video_asset.id}:")
         )
       )
-      expect(response_data["operation_id"]).to start_with("video_thumbnail:#{video_asset.id}:")
+      expect(response_meta["operation_id"]).to start_with("video_thumbnail:#{video_asset.id}:")
     end
 
     it "rejects non-video assets" do
@@ -427,7 +427,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
         id: previous.id,
         storage_key: "dev/admin/thumbnail_replacement.webp"
       )
-      expect(response_data.dig("asset", "children", "thumbnail", "url")).to include("dev/admin/thumbnail_replacement.webp")
+      expect(response_data.dig("attributes", "children", "thumbnail", "url")).to include("dev/admin/thumbnail_replacement.webp")
       expect(StorageService::Client).to have_received(:delete).with(
         "dev/admin/thumbnail_previous.webp",
         resource_type: "image"
@@ -457,7 +457,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(response_status["success"]).to be(true)
       expect(audio_asset.reload.thumbnail.storage_key).to eq("dev/admin/thumbnail_replacement.webp")
       expect(audio_asset.thumbnail).to have_attributes(status: "pending")
-      expect(response_data.dig("asset", "children", "thumbnail", "url")).to include("dev/admin/thumbnail_replacement.webp")
+      expect(response_data.dig("attributes", "children", "thumbnail", "url")).to include("dev/admin/thumbnail_replacement.webp")
       expect(Media::CompressMediaJob).to have_received(:perform_later).with(asset_id: audio_asset.thumbnail.id)
     end
 
@@ -575,8 +575,8 @@ RSpec.describe "V1 Admin Assets API", type: :request do
         status: "ready",
         storage_key: "dev/admin/subtitle_replacement.srt"
       )
-      expect(response_data.dig("asset", "children", "subtitles", 0, "url")).to include("dev/admin/subtitle_replacement.srt")
-      expect(response_data.dig("asset", "children", "subtitles", 0, "status")).to eq("ready")
+      expect(response_data.dig("attributes", "children", "subtitles", 0, "url")).to include("dev/admin/subtitle_replacement.srt")
+      expect(response_data.dig("attributes", "children", "subtitles", 0, "status")).to eq("ready")
       expect(StorageService::Client).to have_received(:upload).with(
         anything,
         hash_including(resource_type: "raw")
@@ -605,10 +605,10 @@ RSpec.describe "V1 Admin Assets API", type: :request do
         "dev/admin/subtitle_previous.srt",
         "dev/admin/subtitle_replacement.srt"
       )
-      expect(response_data.dig("asset", "children", "subtitles").pluck("url")).to include(
+      expect(response_data.dig("attributes", "children", "subtitles").pluck("url")).to include(
         a_string_including("dev/admin/subtitle_replacement.srt")
       )
-      expect(response_data.dig("asset", "children", "subtitles").size).to eq(2)
+      expect(response_data.dig("attributes", "children", "subtitles").size).to eq(2)
       expect(StorageService::Client).not_to have_received(:delete).with(
         "dev/admin/subtitle_previous.srt",
         resource_type: "raw"
@@ -637,7 +637,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response_status["success"]).to be(true)
       expect(audio_asset.reload.subtitles.first.storage_key).to eq("dev/admin/subtitle_replacement.srt")
-      expect(response_data.dig("asset", "children", "subtitles", 0, "url")).to include("dev/admin/subtitle_replacement.srt")
+      expect(response_data.dig("attributes", "children", "subtitles", 0, "url")).to include("dev/admin/subtitle_replacement.srt")
     end
 
     it "rejects a non-audio, non-video parent" do
@@ -690,7 +690,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       get "/v1/admin/assets/storage_stats", headers: headers
 
       expect(response).to have_http_status(:ok)
-      stats = response_data.dig("stats")
+      stats = response_data
       expect(stats["provider"]).to eq("garage")
       expect(stats["bucket"]).to eq("rexone")
       expect(stats["bucket_bytes"]).to eq(5000)
@@ -722,7 +722,7 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       get "/v1/admin/assets/storage_stats", headers: headers
 
       expect(response).to have_http_status(:ok)
-      stats = response_data.dig("stats")
+      stats = response_data
       expect(stats["db_assets_count"]).to eq(2)
       expect(stats["db_assets_bytes"]).to eq(6000)
     end
@@ -776,8 +776,8 @@ RSpec.describe "V1 Admin Assets API", type: :request do
       expect(asset.storage_key).to eq("dev/admin/avatar_company_1788500000.png")
       expect(asset.title).to eq("New Display Name")
       expect(asset.description).to eq("New description")
-      expect(response_data.dig("asset", "title")).to eq("New Display Name")
-      expect(response_data.dig("asset", "description")).to eq("New description")
+      expect(response_data.dig("attributes", "title")).to eq("New Display Name")
+      expect(response_data.dig("attributes", "description")).to eq("New description")
     end
 
     it "renames storage key and name preserving directory path when asset type changes" do

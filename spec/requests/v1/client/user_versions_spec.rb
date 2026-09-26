@@ -35,8 +35,8 @@ RSpec.describe "V1 User Versions API", type: :request do
         build_number: 42,
         version_id: version.id
       )
-      expect(response_data.dig("user_version", "number")).to eq("1.4.0")
-      expect(response_data.dig("user_version", "build_number")).to eq(42)
+      expect(response_data.dig("attributes", "number")).to eq("1.4.0")
+      expect(response_data.dig("attributes", "build_number")).to eq(42)
     end
 
     it "updates the existing user version for the same user and platform" do

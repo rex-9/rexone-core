@@ -150,7 +150,7 @@ class Speech::ProcessTtsJob < ApplicationJob
   end
 
   def serialized_assets(message)
-    AssetSerializer.new(message.assets.reload).serializable_hash[:data].map { |item| item[:attributes] }
+    AssetSerializer.collection_attributes(message.assets.reload)
   end
 
   def speech_message(key)

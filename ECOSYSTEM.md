@@ -174,6 +174,7 @@ Permissions follow a clean, four-level administrative model:
    - Grants access only to specific `/v1/admin/*` resources matching the role's assigned permissions.
    - Non-admin permissions (e.g. from the base `user` role) can never access `/v1/admin/*` endpoints.
 4. **Single-Request IAM Introspection**: `GET /v1/users/current/iam` returns complete role/permission sets (`is_admin`, `is_super_admin`, `roles`, `admin_roles`, `permissions`, `admin_permissions`) so clients evaluate UI permissions immediately without secondary calls.
+5. **Unified Product Entitlements Flow (`UserSerializer.accesses`)**: Just like IAM permissions, active product accesses (`id`, `product_id`, `product_code`, `product_name`, `granted_at`, `expires_at`, `remaining_days`, `active`) are serialized directly into `UserSerializer.accesses` upon authentication (`/signin`, `/signup`, `/confirmation`) and session introspection (`GET /v1/users/me`). Frontends (Web & Mobile) persist this payload locally on boot, evaluate entitlements in-memory with real-time expiration awareness (`useAccess` in Web, `AuthController.hasAccess` in Mobile), and seamlessly refresh via WebSockets (`payment_success`, `subscription_created`, `access_granted`).
 
 ### 🛠️ Core Client-Admin API Endpoints
 
@@ -310,33 +311,65 @@ Permissions follow a clean, four-level administrative model:
   {
     "status": {
       "code": 200,
+      "success": true,
       "message": "Localized status description",
       "error": null
     },
     "data": { ... },
     "meta": {
+      "token": "...",
+      "storage_details": { ... },
       "pagination": {
         "current_page": 1,
         "total_pages": 5,
         "total_count": 50,
-        "per_page": 10
+        "limit": 10,
+        "next_page": 2,
+        "prev_page": null
       }
     }
   }
   ```
+
+- **Strict Separation of Primary Entity (`data`) and Auxiliary Metadata (`meta`) (Law C2, Law U14)**:
+  - `data` strictly encapsulates the primary domain entity (`Serializer.record(record)`) or resource collection (`Serializer.collection(collection)`).
+  - Redundant nested wrapper keys (`{ user: ... }`, `{ asset: ... }`, `{ role: ... }`, `{ product: ... }`, `{ room: ... }`) inside `data` are strictly forbidden and completely eradicated.
+  - `meta` strictly encapsulates all auxiliary metadata and operation context outside of `data`. This includes authentication tokens (`token`), verification states (`otp_sent`, `password_required`, `challenge_token`), rate-limiting feedback (`remaining_attempts`, `cooldown_remaining`), cloud storage upload metrics (`storage_details`), and collection pagination (`pagination`).
+  - **Zero Legacy Fallbacks**: Frontends (Web and Mobile) do not maintain backward-compatibility shims or fallback chains (`meta?.token ?? data?.token`, `data?.user ?? data`). Contracts are deterministic, clean, and unambiguous.
+
+- **Canonical 5 Serializer Standards (`ApplicationSerializer`)**:
+  All serializers inherit from `ApplicationSerializer` (`jsonapi-serializer`). Controllers and services must **never** call raw `.serializable_hash` directly; serialization is strictly centralized through 5 canonical class methods:
+  1. `record(record, options = {})`: Serializes a single JSON:API resource (`{ id, type, attributes }`). Used for single record GET/POST/PATCH responses (`data: Serializer.record(record)`). Redundant top-level entity wrapper hashes (e.g. `{ user: ... }`, `{ asset: ... }`, `{ user_version: ... }`) are strictly forbidden for single-record responses.
+  2. `collection(collection, options = {})`: Serializes a JSON:API resource array (`[{ id, type, attributes }]`).
+  3. `paginated(collection, pagy, options = {})`: Serializes a paginated JSON:API collection with standard `meta.pagination` envelope (`{ data: [...], meta: { pagination: { current_page, total_pages, total_count, limit, next_page, prev_page } } }`).
+  4. `record_attributes(record, options = {})`: Extracts a clean, flat attribute hash (`{ id, ... }`). Used for nested object attributes inside serializers or composite multi-key operation hashes.
+  5. `collection_attributes(collection, options = {})`: Extracts a clean, flat array of attribute hashes (`[{ id, ... }]`). Used for nested collections inside serializers (e.g. `user.accesses`, `asset.subtitles`, `subscription.items`).
+
+- **Universal Collection Pagination & Zero "All" Flags (Law U8)**:
+  - **All Top-Level Collections Are Paginated**: Every list/collection endpoint MUST paginate via `Pagy` (`pagy, records = pagy(scope)`) and return the standardized envelope with `data` array and `meta.pagination`.
+  - **Default Full Collection (Omitted Params)**: If a client omits `page` and `limit`, `PagyHelper#pagy` calculates total count and automatically returns all records on `page: 1` (`limit: [total_count, 1].max`) wrapped inside a compliant pagination envelope. Clients never pass arbitrary string flags (`limit: "all"`).
+  - **Zero Pagination for Nested Collections**: Embedded associations inside serializers (e.g. `UserSerializer.accesses`, `AssetSerializer.subtitles`) MUST NEVER be paginated; they always return all associated items cleanly as flat attribute lists via `collection_attributes`. If a client requires paginated sub-resources, it queries the dedicated top-level collection endpoint with pagination filters (e.g., `GET /v1/admin/accesses?user_id=:id&page=1&limit=20`).
+
+- **Client-Side Centralized Parsing Standard (Law W8)**:
+  - **RexOne Web (React)**: All API consumer controllers MUST use centralized parsers from `@/services/api.service`: `parseRecord<T>(record)` for single entities and `parsePagyList<T>(response)` for paginated collections (returning `{ records, pagination }`). The parsers cleanly unwrap `{ id, type, attributes }` JSON:API envelopes into flat domain entities while handling flat payloads. Controllers must never perform manual `.attributes` drilling.
+  - **RexOne Mobile (Flutter)**: Standardized strictly on two centralized parsers in `ApiService`: `ApiService#parseRecord<T>(response, [T Function(Map<String, dynamic>)? fromJson])` for single entities and `ApiService#parsePagyList<T>(response, T Function(Map<String, dynamic>) fromJson)` for paginated collections (returning `PaginatedResponse<T>` with `records` and `pagination`). Endpoints parse directly into cohesive domain entities (`UserModel`, `CouponModel`, `CouponValidationModel`, `AiMessageModel`, `AssetModel`, `UserPeekModel`, `MediaPlaybackModel`), with operation metadata delivered in `ApiResponse.meta`. All domain models consume flat attribute records directly from `ApiService#flattenRecord`.
+  - **Chat Message Creation Contract (`POST /v1/chat/messages`)**: Responses provide primary user message in `data` (`Chat::MessageSerializer.record`), full messages array in `messages` (`Chat::MessageSerializer.collection`), and metadata in `meta` (`room_id`, `messages`). Both Web and Mobile clients gracefully parse either `data` (single message), `messages` (list), or `meta.messages`.
+  - **Asset Creation & Upload Contract (`POST /v1/admin/assets`, `POST /v1/assets/upload`)**: Single asset responses deliver the record serialized via `AssetSerializer.record` directly in `data`, accompanied by storage metadata in `meta.storage_details`. Frontends parse `data` directly into `AssetModel` and retrieve storage details from `meta`.
+
 
 ### 2. App Version Resolution Protocol
 
 - **Endpoint**: `GET /v1/client/versions/current?version=1.2.0&build_number=42`
   - Headers: `X-Platform: ios | android | web` (No JWT required).
   - Evaluates semantic marketing version first; if equal, evaluates platform build numbers (`ios_build_number` or `android_build_number`).
+  - Response Format: Returns `data` serialized via `Client::VersionSerializer.record` containing standard JSON:API `{ id, type: "client_version", attributes: { number, update_required, must_update, skip_premium, store_url, ... } }`.
 - **Response Flags**:
   - `update_required`: `true` when client version is strictly behind the live published version (triggers non-blocking update prompt).
   - `must_update`: `true` when the live version is flagged as force update and is newer than the client (triggers mandatory blocking modal).
   - `skip_premium`: `true` when client version is strictly newer than the live published version (e.g. app store review builds).
   - `store_url`: Platform store URL configured via `IOS_STORE_URL` or `ANDROID_STORE_URL`.
 - **Client Handling**:
-  - Mobile: When `must_update` is true, `SplashPage` presents an un-bypassable `PopScope(canPop: false)` blocking screen. Optional updates (`update_required: true && !must_update`) prompt on `HomePage` via `AppDialog.update(...)`.
+  - Mobile: When `must_update` is true, `SplashPage` presents an un-bypassable `PopScope(canPop: false)` blocking screen. Optional updates (`update_required: true && !must_update`) prompt on `HomePage` via `AppDialog.update(...)`. `VersionModel.fromJson` and `ApiService#parseRecord` seamlessly resolve both JSON:API attributes envelopes and flat key structures.
   - Device Snapshot: Authenticated clients submit `POST /v1/client/versions/user-version` with `{ user_version: { version, build_number } }` to upsert installation telemetry.
 
 ### 3. Real-Time WebSockets (Action Cable)
@@ -414,11 +447,11 @@ _Version resolution_: Core maps `app_version` to a matching `Client::Version` re
   - 6 failures $\rightarrow$ 60s cooldown
   - 9 failures $\rightarrow$ 120s cooldown
   - 12+ failures $\rightarrow$ 300s (5-minute) cooldown
-  - Clients consume `data.remaining_attempts` and `data.cooldown_remaining` to drive UI timers.
+  - Clients consume `meta.remaining_attempts` and `meta.cooldown_remaining` to drive UI timers.
 - **Password Reset Email Cooldown (`POST /password/forgot`)**:
   - Key: `password_reset:cooldown:{user_id}`.
   - Enforces a **60s cooldown** between consecutive reset requests.
-  - Returns `429 Too Many Requests` with `data.cooldown_remaining`.
+  - Returns `429 Too Many Requests` with `meta.cooldown_remaining`.
 
 ### 6. Dashboard Separation
 
@@ -467,7 +500,7 @@ _Version resolution_: Core maps `app_version` to a matching `Client::Version` re
       "code": 422,
       "message": "Coupon is invalid.",
       "error": "Coupon is invalid.",
-      "data": {
+      "meta": {
         "remaining_attempts": 2,
         "cooldown_remaining": 0
       }
@@ -479,7 +512,7 @@ _Version resolution_: Core maps `app_version` to a matching `Client::Version` re
       "code": 429,
       "message": "Coupon is invalid.",
       "error": "Too many invalid coupon attempts. Please wait 30 seconds before trying again.",
-      "data": {
+      "meta": {
         "remaining_attempts": 0,
         "cooldown_remaining": 30
       }

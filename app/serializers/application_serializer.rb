@@ -8,6 +8,34 @@ class ApplicationSerializer
 
   # Set meta for pagination
   class << self
+    def record(record, options = {})
+      return nil if record.nil?
+
+      new(record, options).serializable_hash[:data]
+    end
+    alias_method :resource, :record
+
+    def collection(collection, options = {})
+      return [] if collection.blank?
+
+      new(collection, options).serializable_hash[:data] || []
+    end
+
+    def record_attributes(record, options = {})
+      return nil if record.nil?
+
+      new(record, options).serializable_hash.dig(:data, :attributes)
+    end
+
+    def collection_attributes(collection, options = {})
+      return [] if collection.blank?
+
+      items = new(collection, options).serializable_hash[:data]
+      return [] unless items.is_a?(Array)
+
+      items.map { |item| item[:attributes] }
+    end
+
     def paginated(collection, pagy, options = {})
       serialized = new(collection, options).serializable_hash
 

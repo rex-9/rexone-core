@@ -43,11 +43,12 @@ RSpec.describe "Email confirmation", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(user.reload).to be_confirmed
-      expect(response_data["token"]).to be_present
+      expect(response_meta["token"]).to be_present
+      expect(response_data["id"]).to eq(user.id)
       expect(NotificationService::Center).to have_received(:welcome).with(user)
       expect(CacheService).to have_received(:write).with(
         "active_session:user:#{user.id}:web",
-        response_data["token"],
+        response_meta["token"],
         expires_in: AppConfig::SESSION_TIMEOUT
       )
     end

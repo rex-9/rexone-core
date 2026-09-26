@@ -72,7 +72,8 @@ RSpec.describe "V1 Admin Versions API", type: :request do
       get "/v1/admin/client/versions/#{version.id}", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response_data).to include(
+      version_attrs = response_data["attributes"] || response_data
+      expect(version_attrs).to include(
         "number" => "1.4.0",
         "title" => "Force",
         "is_force_update" => true,
@@ -80,8 +81,8 @@ RSpec.describe "V1 Admin Versions API", type: :request do
         "android_build_number" => 84,
         "install_count" => 0
       )
-      expect(response_data).not_to have_key("must_update")
-      expect(response_data).not_to have_key("update_required")
+      expect(version_attrs).not_to have_key("must_update")
+      expect(version_attrs).not_to have_key("update_required")
     end
 
     it "returns 404 for a missing version" do
@@ -101,7 +102,8 @@ RSpec.describe "V1 Admin Versions API", type: :request do
 
       expect(response).to have_http_status(:created)
       expect(response_status["message"]).to eq(I18n.t("version.created", locale: :my))
-      expect(response_data).to include("number" => "2.0.0", "title" => "Next", "status" => "draft")
+      version_attrs = response_data["attributes"] || response_data
+      expect(version_attrs).to include("number" => "2.0.0", "title" => "Next", "status" => "draft")
     end
 
     it "stamps released_at when creating as published" do
@@ -111,8 +113,9 @@ RSpec.describe "V1 Admin Versions API", type: :request do
            as: :json
 
       expect(response).to have_http_status(:created)
-      expect(response_data["status"]).to eq("published")
-      expect(response_data["released_at"]).to be_present
+      version_attrs = response_data["attributes"] || response_data
+      expect(version_attrs["status"]).to eq("published")
+      expect(version_attrs["released_at"]).to be_present
     end
 
     it "yanks other published versions when creating as published" do
@@ -162,7 +165,8 @@ RSpec.describe "V1 Admin Versions API", type: :request do
             as: :json
 
       expect(response).to have_http_status(:ok)
-      expect(response_data).to include("title" => "New", "is_force_update" => true)
+      version_attrs = response_data["attributes"] || response_data
+      expect(version_attrs).to include("title" => "New", "is_force_update" => true)
     end
 
     it "yanks other published versions when a version is published" do
@@ -175,7 +179,8 @@ RSpec.describe "V1 Admin Versions API", type: :request do
             as: :json
 
       expect(response).to have_http_status(:ok)
-      expect(response_data["status"]).to eq("published")
+      version_attrs = response_data["attributes"] || response_data
+      expect(version_attrs["status"]).to eq("published")
       expect(previous.reload.status).to eq(VersionConstants::Status::YANKED)
       expect(version.reload.status).to eq(VersionConstants::Status::PUBLISHED)
     end
@@ -271,7 +276,8 @@ RSpec.describe "V1 Admin Versions API", type: :request do
 
       get "/v1/admin/client/versions/#{version.id}", headers: headers
 
-      expect(response_data["install_count"]).to eq(2)
+      version_attrs = response_data["attributes"] || response_data
+      expect(version_attrs["install_count"]).to eq(2)
     end
 
     it "lists installs for a version newest first" do

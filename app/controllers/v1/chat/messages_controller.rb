@@ -13,8 +13,7 @@ class V1::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::CONVERSATION_HISTORY),
-      data: Chat::MessageSerializer.paginated(records, pagy),
-      pagy: pagy
+      **Chat::MessageSerializer.paginated(records, pagy)
     )
   end
 
@@ -23,7 +22,7 @@ class V1::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::MESSAGE_FETCHED),
-      data: Chat::MessageSerializer.new(@message).serializable_hash[:data]
+      data: Chat::MessageSerializer.record(@message)
     )
   end
 
@@ -47,18 +46,15 @@ class V1::Chat::MessagesController < V1::ApplicationController
       )
       all_messages = Array.wrap(result)
       primary_message = all_messages.first
-      serialized_messages = Chat::MessageSerializer.new(all_messages).serializable_hash[:data]
+      serialized_messages = Chat::MessageSerializer.collection(all_messages)
 
       render_json_response(
         status_code: 201,
         message: ai_message(MessageService::Ai::MESSAGE_SENT),
-        data: {
-          data: Chat::MessageSerializer.new(primary_message).serializable_hash[:data],
-          messages: serialized_messages,
-          meta: {
-            room_id: @room.id,
-            messages: serialized_messages
-          }
+        data: Chat::MessageSerializer.record(primary_message),
+        meta: {
+          room_id: @room.id,
+          messages: serialized_messages
         }
       )
     else
@@ -68,23 +64,20 @@ class V1::Chat::MessagesController < V1::ApplicationController
         content: content,
         profile_key: create_params[:profile_key]
       )
-      serialized_messages = Chat::MessageSerializer.new(result.messages).serializable_hash[:data]
+      serialized_messages = Chat::MessageSerializer.collection(result.messages)
 
       render_json_response(
         status_code: 202,
         message: ai_message(MessageService::Ai::RESPONSE_QUEUED),
-        data: {
-          data: Chat::MessageSerializer.new(result.message).serializable_hash[:data],
-          messages: serialized_messages,
-          meta: {
-            room_id: @room.id,
-            status: NotificationConstants::OperationStatus::QUEUED,
-            operation_id: result.operation_id,
-            operation_type: NotificationConstants::OperationType::AI_RESPONSE,
-            link: result.link,
-            job_id: result.job&.job_id,
-            messages: serialized_messages
-          }
+        data: Chat::MessageSerializer.record(result.message),
+        meta: {
+          room_id: @room.id,
+          status: NotificationConstants::OperationStatus::QUEUED,
+          operation_id: result.operation_id,
+          operation_type: NotificationConstants::OperationType::AI_RESPONSE,
+          link: result.link,
+          job_id: result.job&.job_id,
+          messages: serialized_messages
         }
       )
     end
@@ -106,7 +99,7 @@ class V1::Chat::MessagesController < V1::ApplicationController
       status_code: 422,
       message: error.message,
       error: error.message,
-      data: { processing: true, room_id: @room.id }
+      meta: { processing: true, room_id: @room.id }
     )
   end
 
@@ -127,7 +120,7 @@ class V1::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::MESSAGE_UPDATED),
-      data: Chat::MessageSerializer.new(message).serializable_hash[:data]
+      data: Chat::MessageSerializer.record(message)
     )
   end
 

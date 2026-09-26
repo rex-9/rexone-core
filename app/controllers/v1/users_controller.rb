@@ -10,7 +10,7 @@ class V1::UsersController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: user_message(MessageService::User::CURRENT_FETCHED),
-        data: { user: UserSerializer.new(current_user).serializable_hash[:data][:attributes] }
+        data: UserSerializer.record(current_user)
       )
     else
       render_json_response(
@@ -27,7 +27,7 @@ class V1::UsersController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: user_message(MessageService::User::CURRENT_UPDATED),
-        data: { user: UserSerializer.new(current_user).serializable_hash[:data][:attributes] }
+        data: UserSerializer.record(current_user)
       )
     else
       render_json_response(

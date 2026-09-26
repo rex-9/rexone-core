@@ -42,8 +42,8 @@ RSpec.describe "Admin users", type: :request do
           headers: headers
 
     expect(response).to have_http_status(:ok)
-    expect(response_data["avatar_asset_id"]).to eq(avatar_asset.id)
-    expect(response_data["avatar_url"]).to eq(avatar_asset.url)
+    expect(response_data.dig("attributes", "avatar_asset_id")).to eq(avatar_asset.id)
+    expect(response_data.dig("attributes", "avatar_url")).to eq(avatar_asset.url)
     expect(avatar_asset.reload.assetable).to eq(user)
   end
 
@@ -54,14 +54,16 @@ RSpec.describe "Admin users", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("admin.user.user_discarded", locale: :my))
-    expect(response_data).to include("id" => user.id, "discarded_at" => be_present)
+    expect(response_data["id"]).to eq(user.id)
+    expect(response_data.dig("attributes", "discarded_at")).to be_present
     expect(User.with_discarded.find(user.id)).to be_discarded
 
     post "/v1/admin/users/#{user.id}/undiscard", headers: headers
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("admin.user.user_restored"))
-    expect(response_data).to include("id" => user.id, "undiscarded_at" => be_present)
+    expect(response_data["id"]).to eq(user.id)
+    expect(response_data.dig("attributes", "undiscarded_at")).to be_present
     expect(User.find(user.id)).to be_kept
   end
 
@@ -114,7 +116,8 @@ RSpec.describe "Admin users", type: :request do
       grant_admin_user_permission(:read)
       get "/v1/admin/users/#{user.id}", headers: headers
       expect(response).to have_http_status(:ok)
-      expect(response_data).to include("name" => user.name, "email" => user.email)
+      expect(response_data["id"]).to eq(user.id)
+      expect(response_data["attributes"]).to include("name" => user.name, "email" => user.email)
     end
 
     it "returns 404 for non-existent user" do

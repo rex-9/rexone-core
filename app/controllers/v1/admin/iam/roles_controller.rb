@@ -17,8 +17,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USER_ROLES_RETRIEVED),
-      data: ::Iam::RoleSerializer.paginated(records, pagy),
-      pagy: pagy
+      **::Iam::RoleSerializer.paginated(records, pagy)
     )
   end
 
@@ -27,7 +26,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::ROLE_FETCHED),
-      data: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
+      data: ::Iam::RoleSerializer.record(@role)
     )
   end
 
@@ -41,7 +40,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
       render_json_response(
         status_code: 201,
         message: iam_message(MessageService::Iam::ROLE_CREATED),
-        data: ::Iam::RoleSerializer.new(role).serializable_hash[:data][:attributes]
+        data: ::Iam::RoleSerializer.record(role)
       )
     else
       render_json_response(
@@ -70,7 +69,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: iam_message(MessageService::Iam::ROLE_UPDATED),
-        data: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
+        data: ::Iam::RoleSerializer.record(@role)
       )
     else
       render_json_response(
@@ -107,7 +106,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::ROLE_UPDATED),
-      data: ::Iam::RoleSerializer.new(@role).serializable_hash[:data][:attributes]
+      data: ::Iam::RoleSerializer.record(@role)
     )
   end
 

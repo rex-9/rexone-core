@@ -15,7 +15,7 @@ class V1::FeedbacksController < V1::ApplicationController
     render_json_response(
       status_code: 201,
       message: feedback_message(MessageService::Feedback::CREATED),
-      data: FeedbackSerializer.new(feedback).serializable_hash[:data]
+      data: FeedbackSerializer.record(feedback)
     )
   rescue ActiveRecord::RecordInvalid => e
     render_json_response(
@@ -33,8 +33,7 @@ class V1::FeedbacksController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: feedback_message(MessageService::Feedback::FETCHED),
-      data: FeedbackSerializer.paginated(records, pagy),
-      pagy: pagy
+      **FeedbackSerializer.paginated(records, pagy)
     )
   end
 
@@ -45,7 +44,7 @@ class V1::FeedbacksController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: feedback_message(MessageService::Feedback::FETCHED),
-      data: FeedbackSerializer.new(feedback).serializable_hash[:data]
+      data: FeedbackSerializer.record(feedback)
     )
   rescue ActiveRecord::RecordNotFound
     render_json_response(

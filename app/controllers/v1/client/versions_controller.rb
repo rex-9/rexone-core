@@ -15,7 +15,7 @@ class V1::Client::VersionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: version_message(MessageService::Version::CURRENT_FETCHED),
-      data: { version: check_payload(result) }
+      data: check_payload(result)
     )
   end
 
@@ -34,10 +34,13 @@ class V1::Client::VersionsController < V1::ApplicationController
     }
 
     if result.latest
-      Client::VersionSerializer.new(result.latest, params: extras)
-        .serializable_hash[:data][:attributes]
+      Client::VersionSerializer.record(result.latest, params: extras)
     else
-      Client::VersionService::EMPTY_CATALOG.merge(extras)
+      {
+        id: nil,
+        type: "client_version",
+        attributes: Client::VersionService::EMPTY_CATALOG.merge(extras)
+      }
     end
   end
 

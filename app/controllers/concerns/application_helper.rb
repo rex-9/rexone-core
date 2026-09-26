@@ -1,25 +1,17 @@
 # app/controllers/concerns/application_helper.rb
 module ApplicationHelper
-  def render_json_response(status_code:, message:, error: nil, data: nil, pagy: nil)
-    success = status_code.between?(200, 299)
+  def render_json_response(status_code:, message:, error: nil, data: nil, meta: nil)
     response = {
       status: {
         code: status_code,
-        success: success,
+        success: status_code.between?(200, 299),
         message: message
       }
     }
 
     response[:status][:error] = error if error
-
-    # Handle serialized data (already formatted by serializer)
-    if data.is_a?(Hash) && data.key?(:data)
-      response[:data] = data[:data] # The serialized data array
-      response[:meta] = data[:meta] if data[:meta].present? # The pagination meta
-      response[:messages] = data[:messages] if data[:messages].present?
-    else
-      response[:data] = data if data
-    end
+    response[:data] = data if data
+    response[:meta] = meta if meta.present?
 
     render json: response, status: map_status_code(status_code)
   end

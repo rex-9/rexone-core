@@ -29,8 +29,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
       message: payment_message(
         discarded ? MessageService::Payment::DISCARDED_COUPONS_FETCHED : MessageService::Payment::COUPONS_FETCHED
       ),
-      data: ::Payment::CouponSerializer.paginated(records, pagy),
-      pagy: pagy
+      **::Payment::CouponSerializer.paginated(records, pagy)
     )
   end
 
@@ -39,7 +38,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::COUPON_FETCHED),
-      data: ::Payment::CouponSerializer.new(@coupon).serializable_hash[:data][:attributes]
+      data: ::Payment::CouponSerializer.record(@coupon)
     )
   end
 
@@ -57,7 +56,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     render_json_response(
       status_code: 201,
       message: payment_message(MessageService::Payment::COUPON_CREATED),
-      data: ::Payment::CouponSerializer.new(coupon).serializable_hash[:data][:attributes]
+      data: ::Payment::CouponSerializer.record(coupon)
     )
   rescue ActiveRecord::RecordInvalid => e
     render_service_error(MessageService::Payment::COUPON_CREATE_FAILED, e.record.errors.full_messages.to_sentence)
@@ -102,7 +101,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     render_json_response(
       status_code: 201,
       message: payment_message(MessageService::Payment::BATCH_COUPONS_CREATED),
-      data: created_coupons.map { |c| ::Payment::CouponSerializer.new(c).serializable_hash[:data][:attributes] }
+      data: ::Payment::CouponSerializer.collection(created_coupons)
     )
 
   rescue ActiveRecord::RecordInvalid => e
@@ -124,7 +123,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::COUPON_UPDATED),
-      data: ::Payment::CouponSerializer.new(coupon).serializable_hash[:data][:attributes]
+      data: ::Payment::CouponSerializer.record(coupon)
     )
   rescue ActiveRecord::RecordInvalid => e
     render_service_error(MessageService::Payment::COUPON_UPDATE_FAILED, e.record.errors.full_messages.to_sentence)
@@ -139,7 +138,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::COUPON_DISCARDED),
-      data: ::Payment::CouponSerializer.new(coupon).serializable_hash[:data][:attributes]
+      data: ::Payment::CouponSerializer.record(coupon)
     )
   end
 
@@ -152,7 +151,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::COUPON_RESTORED),
-      data: ::Payment::CouponSerializer.new(coupon).serializable_hash[:data][:attributes]
+      data: ::Payment::CouponSerializer.record(coupon)
     )
   end
 
@@ -168,8 +167,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::USER_COUPONS_FETCHED),
-      data: ::Payment::UserCouponSerializer.paginated(redemptions, pagy),
-      pagy: pagy
+      **::Payment::UserCouponSerializer.paginated(redemptions, pagy)
     )
   end
 

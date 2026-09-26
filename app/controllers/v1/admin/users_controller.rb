@@ -31,8 +31,7 @@ class V1::Admin::UsersController < V1::ApplicationController
       message: admin_user_message(
         discarded ? MessageService::Admin::User::DISCARDED_USERS_RETRIEVED : MessageService::Admin::User::USERS_RETRIEVED
       ),
-      data: UserSerializer.paginated(records, pagy),
-      pagy: pagy
+      **UserSerializer.paginated(records, pagy)
     )
   end
 
@@ -41,7 +40,7 @@ class V1::Admin::UsersController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USER_RETRIEVED),
-      data: UserSerializer.new(@user).serializable_hash[:data][:attributes]
+      data: UserSerializer.record(@user)
     )
   end
 
@@ -60,7 +59,7 @@ class V1::Admin::UsersController < V1::ApplicationController
       render_json_response(
         status_code: 201,
         message: admin_user_message(MessageService::Admin::User::USER_CREATED),
-        data: UserSerializer.new(user).serializable_hash[:data][:attributes]
+        data: UserSerializer.record(user)
       )
     else
       render_json_response(
@@ -79,7 +78,7 @@ class V1::Admin::UsersController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: admin_user_message(MessageService::Admin::User::USER_UPDATED),
-        data: UserSerializer.new(@user.reload).serializable_hash[:data][:attributes]
+        data: UserSerializer.record(@user.reload)
       )
     else
       render_json_response(
@@ -99,7 +98,7 @@ class V1::Admin::UsersController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USER_DISCARDED),
-      data: UserSerializer.new(@user).serializable_hash[:data][:attributes]
+      data: UserSerializer.record(@user)
     )
   end
 
@@ -110,7 +109,7 @@ class V1::Admin::UsersController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USER_RESTORED),
-      data: UserSerializer.new(@user).serializable_hash[:data][:attributes]
+      data: UserSerializer.record(@user)
     )
   end
 

@@ -25,10 +25,11 @@ RSpec.describe "Authentication registration", type: :request do
       expect(user).not_to be_confirmed
       expect(user.provider).to eq("email")
       expect(user.name).to eq("New User")
-      expect(user.role_names).to eq([ "user" ])
-      expect(response_data.dig("user", "email")).to eq(user.email)
-      expect(response_data.dig("user", "name")).to eq("New User")
-      expect(response_data.dig("user", "encrypted_password")).to be_nil
+      expect(response_data["id"]).to eq(user.id.to_s)
+      expect(response_data["type"]).to eq("user")
+      expect(response_data.dig("attributes", "email")).to eq(user.email)
+      expect(response_data.dig("attributes", "name")).to eq("New User")
+      expect(response_data.dig("attributes", "encrypted_password")).to be_nil
     end
 
     it "dispatches a 6-digit confirmation code email upon signup" do

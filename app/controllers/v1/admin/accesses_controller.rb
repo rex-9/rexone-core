@@ -17,8 +17,7 @@ class V1::Admin::AccessesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: access_message(MessageService::Access::FETCHED),
-      data: AccessSerializer.paginated(records, pagy),
-      pagy: pagy
+      **AccessSerializer.paginated(records, pagy)
     )
   end
 
@@ -27,7 +26,7 @@ class V1::Admin::AccessesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: access_message(MessageService::Access::FETCHED),
-      data: AccessSerializer.new(@access).serializable_hash[:data]
+      data: AccessSerializer.record(@access)
     )
   end
 
@@ -68,7 +67,7 @@ class V1::Admin::AccessesController < V1::ApplicationController
       )
     end
 
-    data = accesses.map { |a| AccessSerializer.new(a).serializable_hash[:data] }
+    data = AccessSerializer.collection(accesses)
 
     render_json_response(
       status_code: 201,
@@ -111,7 +110,7 @@ class V1::Admin::AccessesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: access_message(MessageService::Access::EXTENDED),
-      data: AccessSerializer.new(access).serializable_hash[:data]
+      data: AccessSerializer.record(access)
     )
   end
 

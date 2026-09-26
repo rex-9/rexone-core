@@ -12,8 +12,7 @@ class V1::Chat::RoomsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::ROOMS_FETCHED),
-      data: Chat::RoomSerializer.paginated(records, pagy),
-      pagy: pagy
+      **Chat::RoomSerializer.paginated(records, pagy)
     )
   end
 
@@ -22,7 +21,7 @@ class V1::Chat::RoomsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::ROOM_FETCHED),
-      data: Chat::RoomSerializer.new(@room).serializable_hash[:data]
+      data: Chat::RoomSerializer.record(@room)
     )
   end
 
@@ -34,7 +33,7 @@ class V1::Chat::RoomsController < V1::ApplicationController
     render_json_response(
       status_code: 201,
       message: ai_message(MessageService::Ai::ROOM_CREATED),
-      data: Chat::RoomSerializer.new(room).serializable_hash[:data]
+      data: Chat::RoomSerializer.record(room)
     )
   end
 
@@ -55,7 +54,7 @@ class V1::Chat::RoomsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::ROOM_RENAMED),
-      data: Chat::RoomSerializer.new(room).serializable_hash[:data]
+      data: Chat::RoomSerializer.record(room)
     )
   end
 

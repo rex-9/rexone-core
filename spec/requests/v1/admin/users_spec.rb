@@ -88,9 +88,9 @@ RSpec.describe "V1 Admin Users API", type: :request do
       get "/v1/admin/users/#{target_user.id}", headers: authorization_headers(admin_token)
 
       expect(response).to have_http_status(:ok)
-      expect(response_data).to include("id" => target_user.id)
-      expect(response_data["confirmed"]).to be true
-      expect(response_data["confirmed_at"]).to be_present
+      expect(response_data["id"]).to eq(target_user.id)
+      expect(response_data.dig("attributes", "confirmed")).to be true
+      expect(response_data.dig("attributes", "confirmed_at")).to be_present
     end
   end
 end

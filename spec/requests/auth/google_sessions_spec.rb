@@ -16,7 +16,8 @@ RSpec.describe "Google authentication", type: :request do
 
       post "/signin/google", params: { token: "google-token" }
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("user", "id")).to eq(user.id)
+      expect(response_data["id"]).to eq(user.id)
+      expect(response_meta["token"]).to be_present
       expect(NotificationService::Center).to have_received(:sign_in_alert)
     end
 
@@ -62,7 +63,7 @@ RSpec.describe "Google authentication", type: :request do
 
       post "/signin/google", params: { token: "google-token" }
       expect(response).to have_http_status(:ok)
-      expect(response_data).to include("password_required" => true, "challenge_token" => "challenge-token")
+      expect(response_meta).to include("password_required" => true, "challenge_token" => "challenge-token")
       expect(CacheService).to have_received(:write).with(
         "google_signin:challenge:challenge-token",
         include('"email":"new.google@example.com"'),
@@ -153,8 +154,8 @@ RSpec.describe "Google authentication", type: :request do
       expect(response).to have_http_status(:ok)
       expect(user.reload).to be_confirmed
       expect(user.provider).to eq("google")
-      expect(response_data.dig("user", "id")).to eq(user.id)
-      expect(response_data["token"]).to be_present
+      expect(response_data["id"]).to eq(user.id)
+      expect(response_meta["token"]).to be_present
       expect(NotificationService::Center).to have_received(:welcome).with(user)
       expect(CacheService).to have_received(:delete).with("google_signin:challenge:challenge")
     end
@@ -179,8 +180,8 @@ RSpec.describe "Google authentication", type: :request do
       end.to change(User, :count).by(1)
 
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("user", "id")).to eq(user.id)
-      expect(response_data["token"]).to be_present
+      expect(response_data["id"]).to eq(user.id)
+      expect(response_meta["token"]).to be_present
       expect(NotificationService::Center).not_to have_received(:welcome)
     end
 

@@ -54,7 +54,7 @@ RSpec.describe "Admin payment products", type: :request do
 
     expect(response).to have_http_status(:created)
     expect(response_status["message"]).to eq(I18n.t("payment.products.created", locale: :my))
-    expect(response_data.fetch("name")).to eq("Premium")
+    expect(response_data.dig("attributes", "name")).to eq("Premium")
     expect(PaymentService::Client).to have_received(:create_product).with(
       hash_including(name: "Premium", unit_amount: 2_500, currency: "usd", interval: "month", active: true)
     )
@@ -77,8 +77,8 @@ RSpec.describe "Admin payment products", type: :request do
          as: :json
 
     expect(response).to have_http_status(:created)
-    expect(response_data.fetch("free")).to eq(true)
-    expect(response_data.fetch("price")).to eq("Free")
+    expect(response_data.dig("attributes", "free")).to eq(true)
+    expect(response_data.dig("attributes", "price")).to eq("Free")
     expect(PaymentService::Client).to have_received(:create_product).with(
       hash_including(name: "Free", unit_amount: 0, currency: "usd", active: true)
     )
@@ -143,8 +143,8 @@ RSpec.describe "Admin payment products", type: :request do
           headers: headers
 
     expect(response).to have_http_status(:ok)
-    expect(response_data["thumbnail_asset_id"]).to eq(thumbnail_asset.id)
-    expect(response_data["thumbnail_url"]).to eq(thumbnail_asset.url)
+    expect(response_data.dig("attributes", "thumbnail_asset_id")).to eq(thumbnail_asset.id)
+    expect(response_data.dig("attributes", "thumbnail_url")).to eq(thumbnail_asset.url)
     expect(thumbnail_asset.reload.assetable).to eq(product)
   end
 
@@ -175,7 +175,8 @@ RSpec.describe "Admin payment products", type: :request do
       grant_admin_product_permission(:read)
       get "/v1/admin/payment/products/#{product.id}", headers: headers
       expect(response).to have_http_status(:ok)
-      expect(response_data).to include("name" => "Starter")
+      expect(response_data["id"]).to eq(product.id)
+      expect(response_data.dig("attributes", "name")).to eq("Starter")
     end
 
     it "returns 404 for non-existent product" do

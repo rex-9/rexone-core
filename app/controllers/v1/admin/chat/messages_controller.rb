@@ -17,8 +17,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGES_RETRIEVED),
-      data: Chat::MessageSerializer.paginated(records, pagy),
-      pagy: pagy
+      **Chat::MessageSerializer.paginated(records, pagy)
     )
   end
 
@@ -27,7 +26,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_RETRIEVED),
-      data: Chat::MessageSerializer.new(@message).serializable_hash[:data]
+      data: Chat::MessageSerializer.record(@message)
     )
   end
 
@@ -37,7 +36,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_UPDATED),
-        data: Chat::MessageSerializer.new(@message).serializable_hash[:data]
+        data: Chat::MessageSerializer.record(@message)
       )
     else
       render_json_response(
@@ -65,7 +64,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGE_UPDATED),
-      data: Chat::MessageSerializer.new(@message).serializable_hash[:data]
+      data: Chat::MessageSerializer.record(@message)
     )
   end
 
@@ -110,13 +109,13 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
   end
 
   def filter_params
-    params.permit(:room_id, :role, :search, :discarded, :sort_by, :sort_order)
+    params.permit(:room_id, "role", :search, :discarded, :sort_by, :sort_order)
   end
 
   def message_params
-    permitted = params.require(:message).permit(:content, :role)
+    permitted = params.require(:message).permit(:content, "role")
     valid_roles = AiConstants::ChatRole.constants.map { |c| AiConstants::ChatRole.const_get(c) }
-    permitted.delete(:role) unless permitted[:role].in?(valid_roles)
+    permitted.delete("role") unless permitted["role"].in?(valid_roles)
     permitted
   end
 

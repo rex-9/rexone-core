@@ -28,4 +28,8 @@ class UserSerializer < ApplicationSerializer
       non_admin_permissions: Iam::PermissionSerializer.new(user.non_admin_permissions).serializable_hash[:data]
     }
   end
+
+  attribute :accesses do |user|
+    AccessSerializer.collection_attributes(AccessService.get_active_access(user.id))
+  end
 end

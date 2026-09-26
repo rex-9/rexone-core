@@ -98,8 +98,6 @@ RSpec.describe "V1 Chat Messages API", type: :request do
       expect(response).to have_http_status(:accepted)
       expect(response_meta["messages"]).to be_an(Array)
       expect(response_meta["messages"].size).to be > 1
-      expect(json_body["messages"]).to be_an(Array)
-      expect(json_body["messages"].size).to be > 1
     end
 
     it "creates a message without queuing AI when ai is false" do

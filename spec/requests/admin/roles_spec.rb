@@ -137,7 +137,9 @@ RSpec.describe "Admin IAM roles", type: :request do
     it "shows a role" do
       get "/v1/admin/iam/roles/#{role.id}", headers: headers
       expect(response).to have_http_status(:ok)
-      expect(response_data).to include("name" => role.name, "description" => role.description)
+      expect(response_data["id"]).to eq(role.id)
+      expect(response_data.dig("attributes", "name")).to eq(role.name)
+      expect(response_data.dig("attributes", "description")).to eq(role.description)
     end
 
     it "returns 404 for non-existent role" do

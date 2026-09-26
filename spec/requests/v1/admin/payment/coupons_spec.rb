@@ -56,7 +56,7 @@ RSpec.describe "Admin payment coupons", type: :request do
            headers: headers
 
       expect(response).to have_http_status(:created)
-      expect(response_data["code"]).to eq("SUMMER50")
+      expect(response_data.dig("attributes", "code")).to eq("SUMMER50")
     end
 
     it "resolves target_user_emails to target_user_ids" do
@@ -81,8 +81,8 @@ RSpec.describe "Admin payment coupons", type: :request do
            headers: headers
 
       expect(response).to have_http_status(:created)
-      expect(response_data["target_user_ids"]).to eq([ target_user.id ])
-      expect(response_data["target_user_emails"]).to eq([ "vip_customer@example.com" ])
+      expect(response_data.dig("attributes", "target_user_ids")).to eq([ target_user.id ])
+      expect(response_data.dig("attributes", "target_user_emails")).to eq([ "vip_customer@example.com" ])
     end
 
     it "rejects non-existent target_user_emails with descriptive 422 error" do
@@ -123,9 +123,11 @@ RSpec.describe "Admin payment coupons", type: :request do
 
       expect(response).to have_http_status(:created)
       expect(response_data.length).to eq(5)
-      expect(response_data.first["code"]).to start_with("VIP")
-      expect(response_data.first["active"]).to be(false)
-      expect(response_data.first.dig("metadata", "status")).to eq("processing")
+      expect(response_data.first["id"]).to be_present
+      expect(response_data.first["type"]).to eq("coupon")
+      expect(response_data.first.dig("attributes", "code")).to start_with("VIP")
+      expect(response_data.first.dig("attributes", "active")).to be(false)
+      expect(response_data.first.dig("attributes", "metadata", "status")).to eq("processing")
 
       expect(Payment::SyncBatchCouponsJob).to have_received(:perform_later).with(
         an_instance_of(Array)
@@ -148,7 +150,7 @@ RSpec.describe "Admin payment coupons", type: :request do
           headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response_data["title"]).to eq("New Title")
+      expect(response_data.dig("attributes", "title")).to eq("New Title")
     end
 
     it "rejects activating a coupon with failed sync status" do
@@ -255,7 +257,7 @@ RSpec.describe "Admin payment coupons", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response_data["id"]).to eq(coupon.id)
-      expect(response_data["discarded_at"]).to be_present
+      expect(response_data.dig("attributes", "discarded_at")).to be_present
     end
   end
 

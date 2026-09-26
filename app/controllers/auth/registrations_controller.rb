@@ -38,7 +38,7 @@ class Auth::RegistrationsController < Devise::RegistrationsController
         render_json_response(
           status_code: 201,
           message: auth_message(MessageService::Auth::SIGNED_UP),
-          data: { user: UserSerializer.new(resource).serializable_hash[:data][:attributes] }
+          data: UserSerializer.record(resource)
         )
       else
         render_json_response(

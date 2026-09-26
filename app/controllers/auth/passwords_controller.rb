@@ -16,7 +16,7 @@ class Auth::PasswordsController < Devise::PasswordsController
         remaining = limiter.reset_cooldown_remaining
         return render_json_response(
           status_code: 429,
-          data: { cooldown_remaining: remaining },
+          meta: { cooldown_remaining: remaining },
           message: auth_message(MessageService::Auth::PASSWORD_RESET_COOLDOWN, seconds: remaining),
           error: auth_message(MessageService::Auth::PASSWORD_RESET_COOLDOWN, seconds: remaining)
         )

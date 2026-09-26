@@ -54,7 +54,7 @@ RSpec.describe "Password recovery", type: :request do
       post "/password/forgot", params: { email: user.email }
       expect(response).to have_http_status(:too_many_requests)
       expect(response_status["message"]).to include("We've sent an email. Please wait")
-      expect(response_data["cooldown_remaining"]).to be_present
+      expect(response_meta["cooldown_remaining"]).to be_present
     end
   end
 

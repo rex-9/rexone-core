@@ -59,8 +59,8 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
         render_json_response(
           status_code: 200,
           message: auth_message(MessageService::Auth::EMAIL_CONFIRMED),
-          data: {
-            user: UserSerializer.new(resource).serializable_hash[:data][:attributes],
+          data: UserSerializer.record(resource),
+          meta: {
             token: token
           }
         )

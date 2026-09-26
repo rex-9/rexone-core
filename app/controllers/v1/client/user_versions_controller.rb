@@ -16,7 +16,7 @@ class V1::Client::UserVersionsController < V1::ApplicationController
       message: user_version_message(
         created ? MessageService::UserVersion::CREATED : MessageService::UserVersion::UPDATED
       ),
-      data: { user_version: Client::UserVersionSerializer.new(record).serializable_hash[:data][:attributes] }
+      data: Client::UserVersionSerializer.record(record)
     )
   rescue ActionController::ParameterMissing, ActiveRecord::RecordInvalid => e
     error = e.respond_to?(:record) ? e.record.errors.full_messages.to_sentence : e.message

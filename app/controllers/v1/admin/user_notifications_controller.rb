@@ -39,8 +39,7 @@ class V1::Admin::UserNotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATIONS_FETCHED),
-      data: UserNotificationAdminSerializer.paginated(records, pagy),
-      pagy: pagy
+      **UserNotificationAdminSerializer.paginated(records, pagy)
     )
   end
 
@@ -49,7 +48,7 @@ class V1::Admin::UserNotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATIONS_FETCHED),
-      data: UserNotificationAdminSerializer.new(@user_notification).serializable_hash[:data]
+      data: UserNotificationAdminSerializer.record(@user_notification)
     )
   end
 
@@ -60,9 +59,7 @@ class V1::Admin::UserNotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATION_DISCARDED),
-      data: {
-        user_notification: UserNotificationAdminSerializer.new(@user_notification).serializable_hash[:data][:attributes]
-      }
+      data: UserNotificationAdminSerializer.record(@user_notification)
     )
   end
 
@@ -73,9 +70,7 @@ class V1::Admin::UserNotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATION_UNDISCARDED),
-      data: {
-        user_notification: UserNotificationAdminSerializer.new(@user_notification).serializable_hash[:data][:attributes]
-      }
+      data: UserNotificationAdminSerializer.record(@user_notification)
     )
   end
 

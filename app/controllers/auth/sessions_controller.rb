@@ -64,7 +64,7 @@ class Auth::SessionsController < Devise::SessionsController
           MessageService::Auth::TOO_MANY_ATTEMPTS_WITH_WAIT,
           seconds: limiter.cooldown_remaining
         ),
-        data: {
+        meta: {
           remaining_attempts: 0,
           cooldown_remaining: limiter.cooldown_remaining
         }
@@ -84,8 +84,8 @@ class Auth::SessionsController < Devise::SessionsController
         render_json_response(
           status_code: 200,
           message: auth_message(MessageService::Auth::SIGNED_IN),
-          data: {
-            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+          data: UserSerializer.record(user),
+          meta: {
             token: token
           }
         )
@@ -98,7 +98,7 @@ class Auth::SessionsController < Devise::SessionsController
             MessageService::Auth::CONFIRMATION_EMAIL_QUEUED,
             email: user.email
           ),
-          data: { otp_sent: true }
+          meta: { otp_sent: true }
         )
       end
     else
@@ -111,7 +111,7 @@ class Auth::SessionsController < Devise::SessionsController
         error: is_cooldown ?
           auth_message(MessageService::Auth::TOO_MANY_ATTEMPTS) :
           auth_message(MessageService::Auth::INVALID_CREDENTIALS),
-        data: {
+        meta: {
           remaining_attempts: failure_data[:remaining_attempts],
           cooldown_remaining: failure_data[:cooldown_remaining] || 0
         }
@@ -144,8 +144,8 @@ class Auth::SessionsController < Devise::SessionsController
       render_json_response(
         status_code: 200,
         message: auth_message(MessageService::Auth::SIGNED_IN),
-        data: {
-          user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+        data: UserSerializer.record(user),
+        meta: {
           token: token
         }
       )
@@ -188,8 +188,8 @@ class Auth::SessionsController < Devise::SessionsController
         render_json_response(
           status_code: 200,
           message: auth_message(MessageService::Auth::SIGNED_IN),
-          data: {
-            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+          data: UserSerializer.record(user),
+          meta: {
             token: token
           }
         )
@@ -211,7 +211,7 @@ class Auth::SessionsController < Devise::SessionsController
     render_json_response(
       status_code: 200,
       message: auth_message(MessageService::Auth::SET_PASSWORD),
-      data: {
+      meta: {
         password_required: true,
         challenge_token: challenge_token
       }
@@ -271,8 +271,8 @@ class Auth::SessionsController < Devise::SessionsController
         render_json_response(
           status_code: 200,
           message: auth_message(MessageService::Auth::ACCOUNT_CREATED_AND_SIGNED_IN),
-          data: {
-            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+          data: UserSerializer.record(user),
+          meta: {
             token: token
           }
         )
@@ -342,8 +342,8 @@ class Auth::SessionsController < Devise::SessionsController
       render_json_response(
         status_code: created_user ? 201 : 200,
         message: auth_message(MessageService::Auth::ACCOUNT_CREATED_AND_SIGNED_IN),
-        data: {
-          user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+        data: UserSerializer.record(user),
+        meta: {
           token: token
         }
       )
@@ -366,8 +366,8 @@ class Auth::SessionsController < Devise::SessionsController
       render_json_response(
         status_code: 200,
         message: auth_message(MessageService::Auth::SIGNED_IN),
-        data: {
-          user: UserSerializer.new(resource).serializable_hash[:data][:attributes],
+        data: UserSerializer.record(resource),
+        meta: {
           token: token
         }
       )

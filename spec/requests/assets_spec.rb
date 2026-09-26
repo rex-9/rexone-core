@@ -68,8 +68,8 @@ RSpec.describe "Asset uploads", type: :request do
       title: "My Avatar",
       description: "Profile photo description"
     )
-    expect(response_data.dig("asset", "title")).to eq("My Avatar")
-    expect(response_data.dig("asset", "description")).to eq("Profile photo description")
+    expect(response_data.dig("attributes", "title")).to eq("My Avatar")
+    expect(response_data.dig("attributes", "description")).to eq("Profile photo description")
   end
 
   it "maps documents and unknown extensions to their storage resource types" do
@@ -355,8 +355,8 @@ RSpec.describe "Asset uploads", type: :request do
       expect(response).to have_http_status(:ok)
       expect(asset.reload.title).to eq("Custom Display Name")
       expect(asset.description).to eq("Updated description text")
-      expect(response_data.dig("asset", "title")).to eq("Custom Display Name")
-      expect(response_data.dig("asset", "description")).to eq("Updated description text")
+      expect(response_data.dig("attributes", "title")).to eq("Custom Display Name")
+      expect(response_data.dig("attributes", "description")).to eq("Updated description text")
     end
   end
 

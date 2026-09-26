@@ -23,8 +23,7 @@ class V1::Admin::Payment::UserCouponsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::USER_COUPONS_FETCHED),
-      data: ::Payment::UserCouponSerializer.paginated(records, pagy),
-      pagy: pagy
+      **::Payment::UserCouponSerializer.paginated(records, pagy)
     )
   end
 
@@ -35,7 +34,7 @@ class V1::Admin::Payment::UserCouponsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::USER_COUPON_FETCHED),
-      data: ::Payment::UserCouponSerializer.new(user_coupon).serializable_hash[:data][:attributes]
+      data: ::Payment::UserCouponSerializer.record(user_coupon)
     )
   end
 

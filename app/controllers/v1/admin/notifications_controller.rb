@@ -17,8 +17,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATIONS_FETCHED),
-      data: NotificationSerializer.paginated(records, pagy),
-      pagy: pagy
+      **NotificationSerializer.paginated(records, pagy)
     )
   end
 
@@ -29,7 +28,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATIONS_FETCHED),
-      data: NotificationSerializer.new(notification).serializable_hash[:data]
+      data: NotificationSerializer.record(notification)
     )
   end
 
@@ -40,7 +39,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 201,
       message: notification_message(MessageService::Notification::NOTIFICATION_CREATED),
-      data: NotificationSerializer.new(notification).serializable_hash[:data]
+      data: NotificationSerializer.record(notification)
     )
   rescue ActiveRecord::RecordInvalid => e
     render_json_response(
@@ -58,7 +57,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATION_UPDATED),
-      data: NotificationSerializer.new(notification).serializable_hash[:data]
+      data: NotificationSerializer.record(notification)
     )
   rescue ActiveRecord::RecordInvalid => e
     render_json_response(
@@ -75,8 +74,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: notification_message(MessageService::Notification::NOTIFICATION_DISCARDED),
-      data: { id: notification.id }
+      message: notification_message(MessageService::Notification::NOTIFICATION_DISCARDED)
     )
   end
 
@@ -88,7 +86,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATION_UNDISCARDED),
-      data: NotificationSerializer.new(notification).serializable_hash[:data]
+      data: NotificationSerializer.record(notification)
     )
   end
 
@@ -136,7 +134,7 @@ class V1::Admin::NotificationsController < V1::ApplicationController
       :category,
       :link,
       :cta_text,
-      :admin,
+      "admin",
       :in_app_title,
       :in_app_body,
       :push_title,

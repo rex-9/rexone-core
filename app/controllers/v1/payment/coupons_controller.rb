@@ -13,7 +13,7 @@ class V1::Payment::CouponsController < V1::ApplicationController
           MessageService::Payment::TOO_MANY_COUPON_ATTEMPTS_WITH_WAIT,
           seconds: remaining
         ),
-        data: {
+        meta: {
           remaining_attempts: 0,
           cooldown_remaining: remaining
         }
@@ -37,7 +37,7 @@ class V1::Payment::CouponsController < V1::ApplicationController
         message: payment_message(MessageService::Payment::COUPON_VALID),
         data: {
           valid: true,
-          coupon: ::Payment::CouponSerializer.new(coupon).serializable_hash[:data][:attributes],
+          coupon: ::Payment::CouponSerializer.record_attributes(coupon),
           original_amount: result[:original_amount],
           discount_amount: result[:discount_amount],
           final_amount: result[:final_amount],
@@ -61,7 +61,7 @@ class V1::Payment::CouponsController < V1::ApplicationController
         status_code: is_cooldown ? 429 : 422,
         message: payment_message(MessageService::Payment::COUPON_INVALID),
         error: error_msg,
-        data: {
+        meta: {
           remaining_attempts: failure_data[:remaining_attempts],
           cooldown_remaining: failure_data[:cooldown_remaining] || 0
         }

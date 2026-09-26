@@ -6,6 +6,18 @@ class Payment::UserCouponSerializer < ApplicationSerializer
              :discount_amount, :original_amount, :final_amount, :currency,
              :created_at, :updated_at
 
+  attribute :code do |user_coupon|
+    user_coupon.coupon&.code
+  end
+
+  attribute :title do |user_coupon|
+    user_coupon.coupon&.title
+  end
+
+  attribute :coupon_type do |user_coupon|
+    user_coupon.coupon&.coupon_type
+  end
+
   attribute :coupon_code do |user_coupon|
     user_coupon.coupon&.code
   end

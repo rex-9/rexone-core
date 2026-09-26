@@ -49,11 +49,11 @@ RSpec.describe "Authentication sessions", type: :request do
       post "/signin", params: { user: { signin_key: user.email, password: "password123" } }
 
       expect(response).to have_http_status(:ok)
-      expect(response_data["token"]).to be_present
-      expect(response_data.dig("user", "id")).to eq(user.id)
+      expect(response_meta["token"]).to be_present
+      expect(response_data["id"]).to eq(user.id)
       expect(CacheService).to have_received(:write).with(
         "active_session:user:#{user.id}:web",
-        response_data["token"],
+        response_meta["token"],
         expires_in: AppConfig::SESSION_TIMEOUT
       )
       expect(NotificationService::Center).to have_received(:sign_in_alert).with(user)
@@ -103,7 +103,7 @@ RSpec.describe "Authentication sessions", type: :request do
       post "/signin", params: { user: { signin_key: user.email, password: "wrong" } }
 
       expect(response).to have_http_status(:unauthorized)
-      expect(response_data).to eq("remaining_attempts" => 2, "cooldown_remaining" => 0)
+      expect(response_meta).to eq("remaining_attempts" => 2, "cooldown_remaining" => 0)
     end
 
     it "returns the active cooldown without checking the password" do
@@ -112,7 +112,7 @@ RSpec.describe "Authentication sessions", type: :request do
       post "/signin", params: { user: { signin_key: user.email, password: "password123" } }
 
       expect(response).to have_http_status(:too_many_requests)
-      expect(response_data).to eq("remaining_attempts" => 0, "cooldown_remaining" => 24)
+      expect(response_meta).to eq("remaining_attempts" => 0, "cooldown_remaining" => 24)
       expect(limiter).not_to have_received(:record_success)
     end
 
@@ -125,7 +125,7 @@ RSpec.describe "Authentication sessions", type: :request do
       post "/signin", params: { user: { signin_key: unconfirmed.email, password: "password123" } }
 
       expect(response).to have_http_status(:ok)
-      expect(response_data).to eq("otp_sent" => true)
+      expect(response_meta).to eq("otp_sent" => true)
       expect(NotificationService::Center).to have_received(:confirmation_email).with(
         email: unconfirmed.email,
         code: match(/\A\d{6}\z/)
@@ -140,7 +140,7 @@ RSpec.describe "Authentication sessions", type: :request do
       token = jwt_for(user)
       post "/signin/token", params: { token: token }
       expect(response).to have_http_status(:ok)
-      expect(response_data["token"]).to be_present
+      expect(response_meta["token"]).to be_present
     end
 
     it "rejects an invalid token" do
@@ -182,7 +182,7 @@ RSpec.describe "Authentication sessions", type: :request do
       create(:role_permission, role: role, permission: permission)
       create(:user_role, user: user, role: role)
       post "/signin", params: { user: { signin_key: user.email, password: "password123" } }
-      token = response_data["token"]
+      token = response_meta["token"]
 
       expect(response).to have_http_status(:ok)
       expect(token).to be_present
@@ -192,8 +192,10 @@ RSpec.describe "Authentication sessions", type: :request do
       get "/v1/users/current", headers: authorization_headers(token)
 
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("user", "iam", "roles").map { |role_data| role_data.dig("attributes", "name") }).to include("current_user_reader")
-      expect(response_data.dig("user", "iam", "permissions").map { |permission_data| permission_data.dig("attributes", "name") }).to include("read_users")
+      roles = response_data.dig("attributes", "iam", "roles")
+      expect(roles.map { |role_data| role_data.dig("attributes", "name") }).to include("current_user_reader")
+      permissions = response_data.dig("attributes", "iam", "permissions")
+      expect(permissions.map { |permission_data| permission_data.dig("attributes", "name") }).to include("read_users")
     end
 
     it "rejects a missing or replaced active session" do
@@ -243,16 +245,16 @@ RSpec.describe "Authentication sessions", type: :request do
       post "/signin/google", params: { token: "valid_google_token" }
 
       expect(response).to have_http_status(:ok)
-      expect(response_data["user"]["id"]).to eq(user.id)
-      expect(response_data["token"]).to be_present
+      expect(response_data["id"]).to eq(user.id)
+      expect(response_meta["token"]).to be_present
     end
 
     it "returns password_required and challenge_token for a new user" do
       post "/signin/google", params: { token: "valid_google_token" }
 
       expect(response).to have_http_status(:ok)
-      expect(response_data["password_required"]).to be true
-      expect(response_data["challenge_token"]).to be_present
+      expect(response_meta["password_required"]).to be true
+      expect(response_meta["challenge_token"]).to be_present
     end
 
     it "requires password setup and confirms a user who dropped previous email onboarding without confirming" do
@@ -263,8 +265,8 @@ RSpec.describe "Authentication sessions", type: :request do
       # 2. Next time user logs in with Google SSO -> returns challenge token
       post "/signin/google", params: { token: "valid_google_token" }
       expect(response).to have_http_status(:ok)
-      expect(response_data["password_required"]).to be true
-      challenge_token = response_data["challenge_token"]
+      expect(response_meta["password_required"]).to be true
+      challenge_token = response_meta["challenge_token"]
 
       # Stub cache read for null_store in test env
       allow(CacheService).to receive(:read).with("google_signin:challenge:#{challenge_token}").and_return(
@@ -278,8 +280,8 @@ RSpec.describe "Authentication sessions", type: :request do
       expect(response).to have_http_status(:ok)
       expect(unconfirmed_user.confirmed?).to be true
       expect(unconfirmed_user.provider).to eq("google")
-      expect(response_data["user"]["id"]).to eq(unconfirmed_user.id)
-      expect(response_data["token"]).to be_present
+      expect(response_data["id"]).to eq(unconfirmed_user.id)
+      expect(response_meta["token"]).to be_present
     end
   end
 

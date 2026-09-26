@@ -27,8 +27,8 @@ RSpec.describe "Admin IAM permissions", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("iam.permissions.fetched_one"))
-    expect(response_data["action"]).to eq("read")
-    expect(response_data["resource"]).to eq("notifications")
+    expect(response_data.dig("attributes", "action")).to eq("read")
+    expect(response_data.dig("attributes", "resource")).to eq("notifications")
   end
 
   it "creates, updates, and deletes a permission with localized messages" do
@@ -38,7 +38,7 @@ RSpec.describe "Admin IAM permissions", type: :request do
 
     expect(response).to have_http_status(:created)
     expect(response_status["message"]).to eq(I18n.t("iam.permissions.created", locale: :my))
-    expect(response_data["name"]).to eq("create_notifications")
+    expect(response_data.dig("attributes", "name")).to eq("create_notifications")
     permission_id = response_data.fetch("id")
 
     patch "/v1/admin/iam/permissions/#{permission_id}",
@@ -47,7 +47,7 @@ RSpec.describe "Admin IAM permissions", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("iam.permissions.updated", locale: :my))
-    expect(response_data["name"]).to eq("update_notifications")
+    expect(response_data.dig("attributes", "name")).to eq("update_notifications")
 
     post "/v1/admin/iam/permissions/#{permission_id}/discard", headers: headers.merge("X-Locale" => "my")
 

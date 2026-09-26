@@ -9,11 +9,13 @@ class V1::Iam::UserRolesController < V1::ApplicationController
     roles = user.roles
     pagy, records = pagy(:offset, roles, limit: index_params[:limit])
 
+    paginated = Iam::RoleSerializer.paginated(records, pagy)
+
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::USER_ROLES_FETCHED),
-      data: Iam::RoleSerializer.paginated(records, pagy).merge(user_id: user.id),
-      pagy: pagy
+      data: paginated[:data],
+      meta: paginated[:meta].merge(user_id: user.id)
     )
   end
 
@@ -31,9 +33,7 @@ class V1::Iam::UserRolesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::ROLE_ASSIGNED),
-      data: {
-        user_role: Iam::UserRoleSerializer.new(user_role).serializable_hash[:data][:attributes]
-      }
+      data: Iam::UserRoleSerializer.record(user_role)
     )
   end
 

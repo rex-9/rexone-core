@@ -18,8 +18,7 @@ class V1::Admin::Payment::TransactionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::TRANSACTIONS_FETCHED),
-      data: ::Payment::TransactionSerializer.paginated(records, pagy),
-      pagy: pagy
+      **::Payment::TransactionSerializer.paginated(records, pagy)
     )
   end
 
@@ -30,7 +29,7 @@ class V1::Admin::Payment::TransactionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::TRANSACTION_FETCHED),
-      data: ::Payment::TransactionSerializer.new(transaction).serializable_hash[:data]
+      data: ::Payment::TransactionSerializer.record(transaction)
     )
   end
 

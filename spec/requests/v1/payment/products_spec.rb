@@ -31,8 +31,8 @@ RSpec.describe "V1 Payment Products API", type: :request do
     it "returns the product details" do
       get "/v1/payment/products/#{product.id}", headers: headers
 
-      expect(response).to have_http_status(:ok)
-      expect(response_data).to include("name" => "Pro Plan")
+      expect(response_data["id"]).to eq(product.id)
+      expect(response_data.dig("attributes", "name")).to eq("Pro Plan")
     end
   end
 end

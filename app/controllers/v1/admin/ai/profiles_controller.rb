@@ -17,8 +17,7 @@ class V1::Admin::Ai::ProfilesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::PROFILES_FETCHED),
-      data: Ai::ProfileSerializer.paginated(records, pagy),
-      pagy: pagy
+      **Ai::ProfileSerializer.paginated(records, pagy)
     )
   end
 
@@ -27,7 +26,7 @@ class V1::Admin::Ai::ProfilesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::PROFILE_FETCHED),
-      data: Ai::ProfileSerializer.new(@profile).serializable_hash[:data]
+      data: Ai::ProfileSerializer.record(@profile)
     )
   end
 
@@ -38,7 +37,7 @@ class V1::Admin::Ai::ProfilesController < V1::ApplicationController
     render_json_response(
       status_code: 201,
       message: ai_message(MessageService::Ai::PROFILE_CREATED),
-      data: Ai::ProfileSerializer.new(profile).serializable_hash[:data]
+      data: Ai::ProfileSerializer.record(profile)
     )
   rescue ActiveRecord::RecordInvalid => error
     render_json_response(
@@ -55,7 +54,7 @@ class V1::Admin::Ai::ProfilesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::PROFILE_UPDATED),
-      data: Ai::ProfileSerializer.new(profile).serializable_hash[:data]
+      data: Ai::ProfileSerializer.record(profile)
     )
   rescue ActiveRecord::RecordInvalid => error
     render_json_response(

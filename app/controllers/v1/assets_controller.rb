@@ -14,8 +14,7 @@ class V1::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: asset_message(MessageService::Asset::FETCHED),
-      data: AssetSerializer.paginated(records, pagy),
-      pagy: pagy
+      **AssetSerializer.paginated(records, pagy)
     )
   end
 
@@ -24,9 +23,7 @@ class V1::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: asset_message(MessageService::Asset::FETCHED_ONE),
-      data: {
-        asset: AssetSerializer.new(@asset).serializable_hash[:data][:attributes]
-      }
+      data: AssetSerializer.record(@asset)
     )
   end
 
@@ -170,8 +167,8 @@ class V1::AssetsController < V1::ApplicationController
         render_json_response(
           status_code: 201,
           message: asset_message(MessageService::Asset::UPLOADED),
-          data: {
-            asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes],
+          data: AssetSerializer.record(asset),
+          meta: {
             storage_details: {
               storage_key: result[:storage_key],
               bytes: result[:bytes],
@@ -210,9 +207,7 @@ class V1::AssetsController < V1::ApplicationController
       render_json_response(
         status_code: 201,
         message: asset_message(MessageService::Asset::CREATED),
-        data: {
-          asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes]
-        }
+        data: AssetSerializer.record(asset)
       )
     else
       render_json_response(
@@ -229,9 +224,7 @@ class V1::AssetsController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: asset_message(MessageService::Asset::UPDATED),
-        data: {
-          asset: AssetSerializer.new(@asset).serializable_hash[:data][:attributes]
-        }
+        data: AssetSerializer.record(@asset)
       )
     else
       render_json_response(
@@ -266,9 +259,7 @@ class V1::AssetsController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: asset_message(MessageService::Asset::URL_REFRESHED),
-        data: {
-          asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes]
-        }
+        data: AssetSerializer.record(@asset.reload)
       )
     else
       render_json_response(
@@ -286,9 +277,7 @@ class V1::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: asset_message(MessageService::Asset::STORAGE_LISTED),
-      data: {
-        assets: assets
-      }
+      data: assets
     )
   rescue StorageService::Error => e
     render_json_response(
@@ -349,7 +338,7 @@ class V1::AssetsController < V1::ApplicationController
         nil
       end
 
-      data = AssetSerializer.new(subtitle).serializable_hash[:data][:attributes]
+      data = AssetSerializer.record_attributes(subtitle)
       # FAST PATH (In-Memory): Pre-fetched subtitle string for zero-latency, zero-CORS browser playback
       data[:content] = content if content.present?
       # FALLBACK PATH (HTTP Endpoint): Streaming route for external players or when content is omitted
@@ -369,7 +358,7 @@ class V1::AssetsController < V1::ApplicationController
         format: asset.extension,
         size_bytes: asset.size_bytes,
         duration_secs: asset.duration_secs,
-        thumbnail: asset.thumbnail ? AssetSerializer.new(asset.thumbnail).serializable_hash[:data][:attributes] : nil,
+        thumbnail: AssetSerializer.record_attributes(asset.thumbnail),
         subtitles: subtitles_list
       }
     }

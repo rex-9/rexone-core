@@ -21,8 +21,7 @@ class V1::Admin::Payment::SubscriptionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::SUBSCRIPTIONS_FETCHED),
-      data: ::Payment::SubscriptionSerializer.paginated(records, pagy),
-      pagy: pagy
+      **::Payment::SubscriptionSerializer.paginated(records, pagy)
     )
   end
 
@@ -33,7 +32,7 @@ class V1::Admin::Payment::SubscriptionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::SUBSCRIPTION_FETCHED),
-      data: ::Payment::SubscriptionSerializer.new(subscription).serializable_hash[:data]
+      data: ::Payment::SubscriptionSerializer.record(subscription)
     )
   end
 

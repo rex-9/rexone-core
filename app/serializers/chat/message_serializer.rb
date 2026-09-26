@@ -8,7 +8,7 @@ class Chat::MessageSerializer < ApplicationSerializer
   end
 
   attribute :assets do |message|
-    AssetSerializer.new(message.assets).serializable_hash[:data].map { |item| item[:attributes] }
+    AssetSerializer.collection_attributes(message.assets)
   end
 
   belongs_to :room, serializer: Chat::RoomSerializer

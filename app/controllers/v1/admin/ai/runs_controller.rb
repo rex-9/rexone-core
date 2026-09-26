@@ -18,8 +18,7 @@ class V1::Admin::Ai::RunsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::RUNS_FETCHED),
-      data: Ai::RunSerializer.paginated(records, pagy),
-      pagy: pagy
+      **Ai::RunSerializer.paginated(records, pagy)
     )
   end
 
@@ -28,7 +27,7 @@ class V1::Admin::Ai::RunsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::RUN_FETCHED),
-      data: Ai::RunSerializer.new(@run).serializable_hash[:data]
+      data: Ai::RunSerializer.record(@run)
     )
   end
 

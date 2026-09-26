@@ -41,8 +41,8 @@ RSpec.describe "V1 Payment Coupons API", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(response_status["success"]).to be(false)
-      expect(response_data["remaining_attempts"]).to eq(2)
-      expect(response_data["cooldown_remaining"]).to eq(0)
+      expect(response_meta["remaining_attempts"]).to eq(2)
+      expect(response_meta["cooldown_remaining"]).to eq(0)
     end
 
     it "triggers 30s cooldown and returns 429 on 3 consecutive failed attempts" do
@@ -51,14 +51,14 @@ RSpec.describe "V1 Payment Coupons API", type: :request do
            params: { code: "BAD1", product_id: product.id },
            headers: headers
       expect(response).to have_http_status(:unprocessable_content)
-      expect(response_data["remaining_attempts"]).to eq(2)
+      expect(response_meta["remaining_attempts"]).to eq(2)
 
       # Attempt 2
       post "/v1/payment/coupons/validate",
            params: { code: "BAD2", product_id: product.id },
            headers: headers
       expect(response).to have_http_status(:unprocessable_content)
-      expect(response_data["remaining_attempts"]).to eq(1)
+      expect(response_meta["remaining_attempts"]).to eq(1)
 
       # Attempt 3 -> 429 Too Many Requests
       post "/v1/payment/coupons/validate",
@@ -66,16 +66,16 @@ RSpec.describe "V1 Payment Coupons API", type: :request do
            headers: headers
       expect(response).to have_http_status(:too_many_requests)
       expect(response_status["success"]).to be(false)
-      expect(response_data["remaining_attempts"]).to eq(0)
-      expect(response_data["cooldown_remaining"]).to eq(30)
+      expect(response_meta["remaining_attempts"]).to eq(0)
+      expect(response_meta["cooldown_remaining"]).to eq(30)
 
       # Attempt 4 while in cooldown -> blocked immediately
       post "/v1/payment/coupons/validate",
            params: { code: "SAVE20", product_id: product.id },
            headers: headers
       expect(response).to have_http_status(:too_many_requests)
-      expect(response_data["remaining_attempts"]).to eq(0)
-      expect(response_data["cooldown_remaining"]).to be > 0
+      expect(response_meta["remaining_attempts"]).to eq(0)
+      expect(response_meta["cooldown_remaining"]).to be > 0
     end
   end
 end

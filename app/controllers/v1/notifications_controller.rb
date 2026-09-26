@@ -18,8 +18,7 @@ class V1::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATIONS_FETCHED),
-      data: UserNotificationSerializer.paginated(records, pagy),
-      pagy: pagy
+      **UserNotificationSerializer.paginated(records, pagy)
     )
   end
 
@@ -42,7 +41,7 @@ class V1::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::MARKED_AS_READ),
-      data: UserNotificationSerializer.new(notification).serializable_hash[:data]
+      data: UserNotificationSerializer.record(notification)
     )
   end
 
@@ -70,8 +69,7 @@ class V1::NotificationsController < V1::ApplicationController
 
     render_json_response(
       status_code: 200,
-      message: notification_message(MessageService::Notification::NOTIFICATION_DELETED),
-      data: { id: notification.id }
+      message: notification_message(MessageService::Notification::NOTIFICATION_DELETED)
     )
   end
 

@@ -116,19 +116,6 @@ class Payment::SubscriptionSerializer < ApplicationSerializer
   end
 
   attribute :coupon do |subscription|
-    user_coupon = subscription.user_coupon
-    if user_coupon.present?
-      coupon = user_coupon.coupon
-      {
-        id: coupon&.id,
-        code: coupon&.code,
-        title: coupon&.title,
-        coupon_type: coupon&.coupon_type,
-        discount_amount: user_coupon.discount_amount,
-        original_amount: user_coupon.original_amount,
-        final_amount: user_coupon.final_amount,
-        currency: user_coupon.currency
-      }
-    end
+    Payment::UserCouponSerializer.record_attributes(subscription.user_coupon)
   end
 end

@@ -56,13 +56,11 @@ class V1::Client::LogsController < V1::ApplicationController
     logs = sort(logs, columns: SortConstants::Columns::CLIENT_LOG)
 
     pagy, records = pagy(logs)
-    serialized = Client::LogSerializer.paginated(records, pagy)
 
     render_json_response(
       status_code: 200,
       message: log_message(MessageService::Log::FETCHED),
-      data: serialized,
-      pagy: pagy
+      **Client::LogSerializer.paginated(records, pagy)
     )
   end
 
@@ -71,7 +69,7 @@ class V1::Client::LogsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: log_message(MessageService::Log::FETCHED_ONE),
-      data: Client::LogSerializer.new(@log_client).serializable_hash[:data]
+      data: Client::LogSerializer.record(@log_client)
     )
   end
 
@@ -82,7 +80,7 @@ class V1::Client::LogsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: log_message(MessageService::Log::RESOLVED),
-      data: Client::LogSerializer.new(@log_client).serializable_hash[:data]
+      data: Client::LogSerializer.record(@log_client)
     )
   end
 
@@ -93,7 +91,7 @@ class V1::Client::LogsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: log_message(MessageService::Log::UNRESOLVED),
-      data: Client::LogSerializer.new(@log_client).serializable_hash[:data]
+      data: Client::LogSerializer.record(@log_client)
     )
   end
 
@@ -114,7 +112,7 @@ class V1::Client::LogsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: log_message(MessageService::Log::RESOLVED),
-      data: Client::LogSerializer.new(@log_client).serializable_hash[:data]
+      data: Client::LogSerializer.record(@log_client)
     )
   end
 

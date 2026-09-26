@@ -25,8 +25,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
       message: admin_asset_message(
         discarded ? MessageService::Admin::Asset::DISCARDED_ASSETS_RETRIEVED : MessageService::Admin::Asset::ASSETS_RETRIEVED
       ),
-      data: AssetSerializer.paginated(records, pagy),
-      pagy: pagy
+      **AssetSerializer.paginated(records, pagy)
     )
   end
 
@@ -38,9 +37,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_asset_message(MessageService::Admin::Asset::ASSET_RETRIEVED),
-      data: {
-        asset: AssetSerializer.new(@asset).serializable_hash[:data][:attributes]
-      }
+      data: AssetSerializer.record(@asset)
     )
   end
 
@@ -124,8 +121,8 @@ class V1::Admin::AssetsController < V1::ApplicationController
         render_json_response(
           status_code: 201,
           message: admin_asset_message(MessageService::Admin::Asset::ASSET_UPLOADED),
-          data: {
-            asset: AssetSerializer.new(asset).serializable_hash[:data][:attributes],
+          data: AssetSerializer.record(asset),
+          meta: {
             storage_details: {
               storage_key: result[:storage_key],
               bytes: result[:bytes],
@@ -205,9 +202,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: admin_asset_message(MessageService::Admin::Asset::ASSET_UPDATED),
-        data: {
-          asset: AssetSerializer.new(@asset).serializable_hash[:data][:attributes]
-        }
+        data: AssetSerializer.record(@asset)
       )
     else
       render_json_response(
@@ -232,9 +227,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_asset_message(MessageService::Admin::Asset::ASSET_DISCARDED),
-      data: {
-        asset: AssetSerializer.new(@asset).serializable_hash[:data][:attributes]
-      }
+      data: AssetSerializer.record(@asset)
     )
   end
 
@@ -245,9 +238,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_asset_message(MessageService::Admin::Asset::ASSET_RESTORED),
-      data: {
-        asset: AssetSerializer.new(@asset).serializable_hash[:data][:attributes]
-      }
+      data: AssetSerializer.record(@asset)
     )
   end
 
@@ -260,12 +251,10 @@ class V1::Admin::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_asset_message(MessageService::Admin::Asset::STORAGE_STATS_RETRIEVED),
-      data: {
-        stats: stats.merge(
-          db_assets_count: db_count,
-          db_assets_bytes: db_bytes
-        )
-      }
+      data: stats.merge(
+        db_assets_count: db_count,
+        db_assets_bytes: db_bytes
+      )
     )
   end
 
@@ -381,9 +370,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
         status_code: 422,
         message: admin_asset_message(MessageService::Admin::Asset::COMPRESSION_ALREADY_OPTIMAL),
         error: admin_asset_message(MessageService::Admin::Asset::COMPRESSION_ALREADY_OPTIMAL),
-        data: {
-          asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes]
-        }
+        data: AssetSerializer.record(@asset.reload)
       )
       return
     end
@@ -434,8 +421,8 @@ class V1::Admin::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_asset_message(MessageService::Admin::Asset::COMPRESSION_ENQUEUED),
-      data: {
-        asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes],
+      data: AssetSerializer.record(@asset.reload),
+      meta: {
         operation_id: operation_id,
         operation_type: NotificationConstants::OperationType::ASSET_COMPRESSION,
         operation_status: NotificationConstants::OperationStatus::QUEUED,
@@ -479,8 +466,8 @@ class V1::Admin::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 202,
       message: admin_asset_message(MessageService::Admin::Asset::THUMBNAIL_REGENERATION_QUEUED),
-      data: {
-        asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes],
+      data: AssetSerializer.record(@asset.reload),
+      meta: {
         operation_id: operation_id,
         operation_type: NotificationConstants::OperationType::VIDEO_THUMBNAIL,
         operation_status: NotificationConstants::OperationStatus::QUEUED,
@@ -524,7 +511,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: admin_asset_message(MessageService::Admin::Asset::THUMBNAIL_REPLACED),
-        data: { asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes] }
+        data: AssetSerializer.record(@asset.reload)
       )
     rescue StandardError
       StorageService::Client.delete(result[:storage_key]) if result&.dig(:storage_key)
@@ -563,7 +550,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: admin_asset_message(MessageService::Admin::Asset::SUBTITLE_UPLOADED),
-        data: { asset: AssetSerializer.new(@asset.reload).serializable_hash[:data][:attributes] }
+        data: AssetSerializer.record(@asset.reload)
       )
     rescue StandardError
       StorageService::Client.delete(result[:storage_key]) if result&.dig(:storage_key)

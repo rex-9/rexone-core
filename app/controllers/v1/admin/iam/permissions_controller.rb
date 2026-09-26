@@ -16,8 +16,7 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::PERMISSIONS_FETCHED),
-      data: ::Iam::PermissionSerializer.paginated(records, pagy),
-      pagy: pagy
+      **::Iam::PermissionSerializer.paginated(records, pagy)
     )
   end
 
@@ -38,7 +37,7 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::PERMISSION_RESTORED),
-      data: ::Iam::PermissionSerializer.new(@permission).serializable_hash[:data][:attributes]
+      data: ::Iam::PermissionSerializer.record(@permission)
     )
   end
 
@@ -47,7 +46,7 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::PERMISSION_FETCHED),
-      data: ::Iam::PermissionSerializer.new(@permission).serializable_hash[:data][:attributes]
+      data: ::Iam::PermissionSerializer.record(@permission)
     )
   end
 
@@ -60,7 +59,7 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
       render_json_response(
         status_code: 201,
         message: iam_message(MessageService::Iam::PERMISSION_CREATED),
-        data: ::Iam::PermissionSerializer.new(permission).serializable_hash[:data][:attributes]
+        data: ::Iam::PermissionSerializer.record(permission)
       )
     else
       render_json_response(
@@ -80,7 +79,7 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
       render_json_response(
         status_code: 200,
         message: iam_message(MessageService::Iam::PERMISSION_UPDATED),
-        data: ::Iam::PermissionSerializer.new(@permission).serializable_hash[:data][:attributes]
+        data: ::Iam::PermissionSerializer.record(@permission)
       )
     else
       render_json_response(

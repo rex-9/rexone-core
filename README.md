@@ -191,7 +191,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 RexOne Core keeps framework concerns conventional and integrations replaceable.
 
-Controllers own HTTP contracts, models own data rules, services own business and provider boundaries, jobs own deferred work, and serializers own response representation.
+Controllers own HTTP contracts, models own data rules, services own business and provider boundaries, jobs own deferred work, and serializers own response representation. Serializers standardize on 5 canonical methods (`record`, `collection`, `paginated`, `record_attributes`, `collection_attributes`), ensuring uniform JSON:API representations and eliminating raw serialization logic from controllers. All collection endpoints enforce Pagy offset pagination (Law U8), returning standard pagination envelopes and defaulting to a complete single page when parameters are omitted.
 
 ```mermaid
 flowchart LR

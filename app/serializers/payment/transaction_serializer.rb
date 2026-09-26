@@ -71,19 +71,6 @@ class Payment::TransactionSerializer < ApplicationSerializer
   end
 
   attribute :coupon do |transaction|
-    user_coupon = transaction.user_coupon
-    if user_coupon.present?
-      coupon = user_coupon.coupon
-      {
-        id: coupon&.id,
-        code: coupon&.code,
-        title: coupon&.title,
-        coupon_type: coupon&.coupon_type,
-        discount_amount: user_coupon.discount_amount,
-        original_amount: user_coupon.original_amount,
-        final_amount: user_coupon.final_amount,
-        currency: user_coupon.currency
-      }
-    end
+    Payment::UserCouponSerializer.record_attributes(transaction.user_coupon)
   end
 end

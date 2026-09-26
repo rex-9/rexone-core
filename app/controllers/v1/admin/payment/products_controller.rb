@@ -18,8 +18,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
       message: payment_message(
         discarded ? MessageService::Payment::DISCARDED_PRODUCTS_FETCHED : MessageService::Payment::PRODUCTS_FETCHED
       ),
-      data: ::Payment::ProductSerializer.paginated(records, pagy),
-      pagy: pagy
+      **::Payment::ProductSerializer.paginated(records, pagy)
     )
   end
 
@@ -28,7 +27,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::PRODUCT_FETCHED),
-      data: ::Payment::ProductSerializer.new(@product).serializable_hash[:data][:attributes]
+      data: ::Payment::ProductSerializer.record(@product)
     )
   end
 
@@ -46,7 +45,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
     render_json_response(
       status_code: 201,
       message: payment_message(MessageService::Payment::PRODUCT_CREATED),
-      data: ::Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
+      data: ::Payment::ProductSerializer.record(product)
     )
   rescue ActiveRecord::RecordInvalid => error
     render_service_error(MessageService::Payment::PRODUCT_CREATE_FAILED, error.record.errors.full_messages.to_sentence)
@@ -66,7 +65,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::PRODUCT_UPDATED),
-      data: ::Payment::ProductSerializer.new(product).serializable_hash[:data][:attributes]
+      data: ::Payment::ProductSerializer.record(product)
     )
   rescue ActiveRecord::RecordInvalid => error
     render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, error.record.errors.full_messages.to_sentence)
@@ -91,7 +90,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::PRODUCT_RESTORED),
-      data: ::Payment::ProductSerializer.new(result[:data]).serializable_hash[:data][:attributes]
+      data: ::Payment::ProductSerializer.record(result[:data])
     )
   end
 
