@@ -1559,6 +1559,7 @@ module Openapi
                        parameters: [
                          query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer, minimum: 1),
+                         query_parameter(:search, type: :string),
                          query_parameter(:discarded, type: :boolean),
                          query_parameter(:sort_by, type: :string),
                          query_parameter(:sort_order, enum: SortConstants::Order::ALL)
@@ -1779,7 +1780,17 @@ module Openapi
       }
 
       paths["/v1/payment/products"] = {
-        get: operation(tags: "Payments", summary: "List active payment products", errors: [ 401 ])
+        get: operation(
+          tags: "Payments",
+          summary: "List active payment products",
+          parameters: [
+            query_parameter(:page, type: :integer),
+            query_parameter(:limit, type: :integer, minimum: 1),
+            query_parameter(:search, type: :string, description: "Filter by product name or description"),
+            query_parameter(:recurring, type: :boolean, description: "Filter by recurring or one-time products")
+          ],
+          errors: [ 401 ]
+        )
       }
       paths["/v1/payment/products/{id}"] = {
         get: operation(tags: "Payments", summary: "Get a payment product",

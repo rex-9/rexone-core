@@ -41,6 +41,39 @@ RSpec.describe "Admin payment products", type: :request do
     expect(response_data.first.dig("attributes", "discarded_at")).to be_present
   end
 
+  it "filters active products by search query matching name, code, or description" do
+    grant_admin_product_permission(:read)
+    target = create(:payment_product, name: "Special Edition", code: "SPECIAL001", description: "VIP plan")
+    other = create(:payment_product, name: "Basic", code: "BASIC00001", description: "Standard")
+
+    get "/v1/admin/payment/products", params: { search: "Special" }, headers: headers
+
+    expect(response).to have_http_status(:ok)
+    ids = response_data.map { |r| r.dig("attributes", "id") }
+    expect(ids).to include(target.id)
+    expect(ids).not_to include(other.id)
+
+    get "/v1/admin/payment/products", params: { search: "SPECIAL001" }, headers: headers
+    ids = response_data.map { |r| r.dig("attributes", "id") }
+    expect(ids).to include(target.id)
+    expect(ids).not_to include(other.id)
+  end
+
+  it "filters discarded products by search query" do
+    grant_admin_product_permission(:read)
+    discarded_target = create(:payment_product, name: "Old Special", code: "OLDSPEC001")
+    discarded_target.discard!
+    discarded_other = create(:payment_product, name: "Old Basic", code: "OLDBASIC01")
+    discarded_other.discard!
+
+    get "/v1/admin/payment/products", params: { discarded: true, search: "Special" }, headers: headers
+
+    expect(response).to have_http_status(:ok)
+    ids = response_data.map { |r| r.dig("attributes", "id") }
+    expect(ids).to include(discarded_target.id)
+    expect(ids).not_to include(discarded_other.id)
+  end
+
   it "creates a Stripe-backed product with localized messages" do
     grant_admin_product_permission(:create)
     product = build(:payment_product, name: "Premium", unit_amount: 2_500)

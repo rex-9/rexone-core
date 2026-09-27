@@ -4,14 +4,16 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # GET /v1/admin/payment/products
   def index
-    discarded = filter_params[:discarded].to_s == "true"
+    filters = filter_params
+    discarded = filters[:discarded].to_s == "true"
     products = discarded ? ::Payment::Product.with_discarded.discarded : ::Payment::Product.all
+    products = search_products(products, search_term: filters[:search])
     products = if discarded
       sort(products, columns: SortConstants::Columns::PRODUCT, default_column: :discarded_at)
     else
       sort(products, columns: SortConstants::Columns::PRODUCT)
     end
-    pagy, records = pagy(products)
+    pagy, records = pagy(products, limit: filters[:limit])
 
     render_json_response(
       status_code: 200,
@@ -105,7 +107,17 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
   end
 
   def filter_params
-    params.permit(:discarded)
+    params.permit(:discarded, :search, :limit, :page)
+  end
+
+  def search_products(scope, search_term: nil)
+    return scope if search_term.blank?
+
+    pattern = "%#{ActiveRecord::Base.sanitize_sql_like(search_term.to_s.strip)}%"
+    scope.where(
+      "payment_products.name ILIKE :search OR payment_products.code ILIKE :search OR payment_products.description ILIKE :search",
+      search: pattern
+    )
   end
 
   def id_params

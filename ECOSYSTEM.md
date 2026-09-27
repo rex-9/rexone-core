@@ -21,7 +21,7 @@ RexOne establishes a disciplined, production-grade foundation for modern digital
 | Resource                     | Scope & Canonical Specification                                                                                                                           |
 | :--------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 📜 **Constitutional Law**    | Strict engineering constraints and architectural rules: **[LAW.md](LAW.md)** _(Zero exceptions)_                                                          |
-| 📖 **API Docs & Swagger**    | Complete OpenAPI v1 schema and interactive Swagger UI at `/api-docs`: **[swagger.yaml](swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`)             |
+| 📖 **API Docs & Swagger**    | Complete OpenAPI v1 schema and interactive Swagger UI at `/api-docs`: **[swagger.yaml](swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`)            |
 | 🌐 **Live Web Demo**         | Production web application preview: **[rexone.rex9.me](https://rexone.rex9.me)** (API: `api.rexone.rex9.me`)                                              |
 | 🗺️ **Visual Walkthrough**    | Screenshot tour across Core, Web, Mobile, and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**                                       |
 | 🛡️ **Production Operations** | Production hardening, Cloudflare edge defense, and DDoS protection: **[Production Deployment](docs/DEPLOYMENT.md)** & **[DDoS Protection](docs/DDOS.md)** |
@@ -184,7 +184,7 @@ Permissions follow a clean, four-level administrative model:
 - **Chat Endpoints**: User API: `GET/POST /v1/chat/rooms`, `GET/PUT/DELETE /v1/chat/rooms/:id`, `GET/POST /v1/chat/messages`, `DELETE /v1/chat/messages/destroy_all`. Admin moderation: `GET/PATCH/DELETE /v1/admin/chat/rooms` and `GET/PATCH/DELETE /v1/admin/chat/messages`.
 - **AI Control Plane & Universal TOON Pipeline**: `GET/PATCH /v1/admin/ai/profiles` (prompt templates, models, token limits, multi-attribute sorting and filters), `GET /v1/admin/ai/runs` (execution telemetry, latency, token consumption). RexOne enforces a universal **Zero-JSON LLM Pipeline**: Large Language Models never receive or output raw JSON. All inbound JSON (in user messages, assistant history, system prompts, or template values) is automatically converted to compact Token-Oriented Object Notation (TOON via `Ai::ToonService`), compressing context by 30–60% over JSON. Models are instructed to output structured data strictly in TOON format (` ```toon `). On receiving completions, the server transparently converts TOON structures back into standard, formatted JSON before database persistence and client WebSocket broadcasting, maintaining 100% standard JSON compatibility across web, mobile, and REST clients without requiring frontend TOON parsers.
 - **Standardized Permissions Protocol**: Strictly 4 canonical CRUD actions (`read`, `create`, `update`, `delete`). Soft deletes map to `:delete`, restores map to `:delete`. Resources are explicitly prefixed (e.g. `ai_profiles`, `chat_rooms`, `payment_products`).
-- **Product Management**: `GET/POST/PATCH/DELETE /v1/admin/payment/products`, Stripe catalog sync, active user access inspection (`GET /v1/admin/accesses?product_id=:id`).
+- **Product Management**: `GET/POST/PATCH/DELETE /v1/admin/payment/products` (supporting ILIKE multi-attribute search across product name, code, and description, sorting, and lifecycle recycle bin pagination), Stripe catalog sync, active user access inspection (`GET /v1/admin/accesses?product_id=:id`).
 - **App Versions**: Super-admin only. `GET/POST /v1/admin/client/versions`, discard/undiscard, and `GET /v1/admin/client/versions/:id/user_versions`.
 - **User Versions**: Super-admin only. `GET /v1/admin/client/versions/user_versions` lists device snapshots with optional platform filtering.
 - **Asset Management**: `GET /v1/assets` (list assets by type), `POST /v1/assets/upload` (direct upload), `GET /v1/assets/:id/playback` (S3 SigV4 signed playback URL), `GET /v1/assets/:id/subtitles/:subtitle_id` (CORS-enabled raw VTT/SRT text). Admin API: `GET/PUT/DELETE /v1/admin/assets`, `GET /v1/admin/assets/storage_stats` (bucket, object, and host disk capacity), manual secondary compression triggers.
@@ -235,7 +235,7 @@ Permissions follow a clean, four-level administrative model:
 
 - **Design System Tokens**: `AppColors`, `AppTypography`, `AppSpacing`, `AppStyles`, `AppIcons`, `AppMedia`, `AppTheme` (Material 3 Light/Dark).
 - **Theme Extensions**: Reactive styling via `context.colors.*` and `context.typo.*`.
-- **UI Components**: `AppButton`, `AppInputField`, `AppPasswordField`, `AppLoading`, `AppSnackbar`, `AppDialog` (with `AppDialog.confirm()` for destructive flows), `AppPage`, `AppListTile`, `AppToggle`, `AppNetworkBanner` ("Offline mode" banner).
+- **UI Components**: `AppButton`, `AppInputField`, `AppPasswordField`, `AppLoading` (dual-mode: modal blocking overlay & non-blocking top linear progress), `AppPagyListView` (infinite scroll lazy loading with automatic next-page trigger, pull-to-refresh, empty/error fallbacks), `AppSearchBar` (debounced search with clear trigger, filter badge, and quick filter chips), `AppSnackbar`, `AppDialog` (with `AppDialog.confirm()` for destructive flows), `AppPage`, `AppListTile`, `AppToggle`, `AppNetworkBanner` ("Offline mode" banner).
 
 ### 🧩 Domain Capabilities
 
@@ -308,6 +308,7 @@ Permissions follow a clean, four-level administrative model:
   ```
 
 - **Standard JSON:API Response Envelope**:
+
   ```json
   {
     "status": {
@@ -356,7 +357,13 @@ Permissions follow a clean, four-level administrative model:
   - **RexOne Mobile (Flutter)**: Standardized strictly on two centralized parsers in `ApiService`: `ApiService#parseRecord<T>(response, [T Function(Map<String, dynamic>)? fromJson])` for single entities and `ApiService#parsePagyList<T>(response, T Function(Map<String, dynamic>) fromJson)` for paginated collections (returning `PaginatedResponse<T>` with `records` and `pagination`). Endpoints parse directly into cohesive domain entities (`UserModel`, `CouponModel`, `CouponValidationModel`, `AiMessageModel`, `AssetModel`, `UserPeekModel`, `MediaPlaybackModel`), with operation metadata delivered in `ApiResponse.meta`. All domain models consume flat attribute records directly from `ApiService#flattenRecord`.
   - **Chat Message Creation Contract (`POST /v1/chat/messages`)**: Responses provide primary user message in `data` (`Chat::MessageSerializer.record`), full messages array in `messages` (`Chat::MessageSerializer.collection`), and metadata in `meta` (`room_id`, `messages`). Both Web and Mobile clients gracefully parse either `data` (single message), `messages` (list), or `meta.messages`.
   - **Asset Creation & Upload Contract (`POST /v1/admin/assets`, `POST /v1/assets/upload`)**: Single asset responses deliver the record serialized via `AssetSerializer.record` directly in `data`, accompanied by storage metadata in `meta.storage_details`. Frontends parse `data` directly into `AssetModel` and retrieve storage details from `meta`.
-
+- **Mobile Pagy Controller & Infinite Scroll Architecture**:
+  - `PagyControllerMixin<T>`: Standardized reactive controller mixin managing `items`, `pagination` (`PaginationMeta`), `isLoading`, `isLoadingMore`, `isRefreshing`, `errorMessage`, `searchQuery`, `activeFilters`, and automatic debounced search. Implements automatic state transitions for `refreshList()`, `loadMore()`, `setFilter()`, and `onSearchChanged()`.
+  - `AppPagyListView<T>`: Reusable infinite scroll list view that monitors scroll offsets (`scrollThreshold: 200px`), displays a non-intrusive bottom loading spinner when fetching subsequent pages, binds to pull-to-refresh (`RefreshIndicator`), and cleanly displays customized initial loading, empty, and retry error states.
+  - `AppSearchBar`: Universal search input with built-in keystroke debouncing, active search in-flight indicator, clear button, filter modal trigger badge, and horizontal quick-filter chip row.
+  - **Unified Centralized Loading Paradigm (`AppLoading`)**: Eliminates redundant, scattered local spinners in favor of unified global loading matching Web's `LoadingContext`:
+    1. **Modal Blocking Overlay** (`AppLoading.showOverlay([message])` / `AppLoading.hideOverlay()`): Used for high-stakes asynchronous mutations (checkout, authentication, cancellations) with backdrop blur and spinner.
+    2. **Non-Blocking Inline Progress** (`AppLoading.showInline()` / `AppLoading.hideInline()`): Renders a sleek top linear progress indicator mounted under `SafeArea` for seamless background or list updates without freezing UI interaction.
 
 ### 2. App Version Resolution Protocol
 
