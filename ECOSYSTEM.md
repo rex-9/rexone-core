@@ -235,12 +235,12 @@ Permissions follow a clean, four-level administrative model:
 
 - **Design System Tokens**: `AppColors`, `AppTypography`, `AppSpacing`, `AppStyles`, `AppIcons`, `AppMedia`, `AppTheme` (Material 3 Light/Dark).
 - **Theme Extensions**: Reactive styling via `context.colors.*` and `context.typo.*`.
-- **UI Components**: `AppButton`, `AppInputField`, `AppPasswordField`, `AppLoading` (dual-mode: modal blocking overlay & non-blocking top linear progress), `AppPagyListView` (infinite scroll lazy loading with automatic next-page trigger, pull-to-refresh, empty/error fallbacks), `AppSearchBar` (debounced search with clear trigger, filter badge, and quick filter chips), `AppSnackbar`, `AppDialog` (with `AppDialog.confirm()` for destructive flows), `AppPage`, `AppListTile`, `AppToggle`, `AppNetworkBanner` ("Offline mode" banner).
+- **UI Components**: `AppAccessGate`, `AppButton`, `AppInputField`, `AppPasswordField`, `AppLoading` (dual-mode: modal blocking overlay & non-blocking top linear progress), `AppPagyListView` (infinite scroll lazy loading with automatic next-page trigger, pull-to-refresh, empty/error fallbacks), `AppSearchBar` (debounced search with clear trigger, filter badge, and quick filter chips), `AppSnackbar`, `AppDialog` (with `AppDialog.confirm()` for destructive flows), `AppPage`, `AppListTile`, `AppToggle`, `AppNetworkBanner` ("Offline mode" banner).
 
 ### 🧩 Domain Capabilities
 
 - **Auth Flow**: Parity with Web & Core (email peek, 6-digit passcode, OTP verification, Google OAuth, session invalidation).
-- **Push Notifications**: OneSignal integration (`PushNotiService`). Syncs user ID and tags on login, clears on logout. Deletions confirmed via `AppDialog.confirm()`.
+- **Push Notifications**: OneSignal integration (`PushNotificationService`). Syncs user ID and tags on login, clears on logout. Deletions confirmed via `AppDialog.confirm()`.
 - **Email Delivery**: Multi-channel templates rendered through a responsive email layout (`TemplateRenderer`) with dynamic variables and normalized absolute client URLs (`AppConfig.client_url`).
 - **Product Analytics**: Firebase GA4 integration using constantized `action_noun` events (`sign_up`, `sign_in`, `view_product`, `purchase_product`, `open_notification`) tagged with platform (`android`, `ios`).
 - **Stripe & Billing**: In-app Stripe Checkout WebView (`CheckoutPage`), subscription management cards, cancellation confirmation, canonical currency minimum charge limits (`StripeMinimumAmounts`).
