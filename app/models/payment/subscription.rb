@@ -7,9 +7,9 @@ class Payment::Subscription < ApplicationRecord
   # ===== ASSOCIATIONS =====
   belongs_to :user
   belongs_to :product, class_name: "Payment::Product", inverse_of: :subscriptions
-  has_one :user_coupon, -> { where(purchase_type: :sbs) },
+  has_one :user_coupon, -> { where(payment_type: :subscription) },
           class_name: "Payment::UserCoupon",
-          foreign_key: :purchase_id,
+          foreign_key: :payment_id,
           dependent: :nullify,
           inverse_of: false
   has_one :coupon, through: :user_coupon, class_name: "Payment::Coupon"

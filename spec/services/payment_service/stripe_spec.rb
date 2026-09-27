@@ -948,7 +948,7 @@ RSpec.describe PaymentService::Stripe do
       allow(NotificationService::Center).to receive(:payment_success)
     end
 
-    it "creates a transaction and grants lifetime access for one-time purchase without coupon" do
+    it "creates a purchase and grants lifetime access for one-time purchase without coupon" do
       session = OpenStruct.new(
         id: "cs_test_onetime",
         mode: "payment",
@@ -959,7 +959,7 @@ RSpec.describe PaymentService::Stripe do
 
       expect do
         service.send(:handle_checkout_completed, session)
-      end.to change(Payment::Transaction, :count).by(1)
+      end.to change(Payment::Purchase, :count).by(1)
 
       expect(AccessService.has_access?(user_id: user.id, product_id: one_time_product.id)).to be(true)
       access = Access.find_by(user_id: user.id, product_id: one_time_product.id)

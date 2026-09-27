@@ -28,6 +28,37 @@ All visual captures reflect live, production-grade system interactions:
 
 ---
 
+## ⚡ The Timeline Delusion: Why Every Team Burns 9 Months on Foundation Plumbing
+
+Before inspecting the live visual evidence across Web, Mobile, and Core, consider the uncomfortable reality of modern software engineering:
+
+> **85% of what product teams build in their first 9 months has zero to do with their business.**
+
+Teams routinely burn $150,000–$300,000 in runway reinventing password resets, wrestling Stripe webhook race conditions, constructing yet another CRUD admin panel, configuring S3 pre-signed upload tickets, and arguing over JSON payloads between React and Flutter.
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  THE 9-MONTH PLUMBING TRAP (STARTING FROM ZERO)                                        │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  Month 1–2: Auth, JWT revocation, email verification, password reset flows             │
+│  Month 3–4: Stripe subscription machine, webhook reconciliation & coupon ledgers       │
+│  Month 5:   S3 storage pipeline, pre-signed upload tickets & variant processing        │
+│  Month 6–7: Admin dashboard, analytics charts & Action Cable WebSockets                │
+│  Month 8:   Flutter cross-platform client, GetX reactive state & contract parity       │
+│  Month 9:   The Tech Debt Wall: Zero tests, fear of refactoring & brittle glue code    │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### The RexOne Difference: Day-One Sovereign Reality
+RexOne delivers this entire tri-platform foundation on **Day One**:
+- **1,690+ Automated Tests** (1,020 RSpec + 371 Vitest + 304 Flutter) guaranteeing unbreakable architectural integrity.
+- **Strict Constitutional Law (`LAW.md`)** enforcing pure parameter contracts, plain English, and zero dead code.
+- **Sovereign & Self-Hostable**: PostgreSQL 18, self-hosted Garage S3, native Solid Queue. Zero vendor hostage bills.
+
+**Your time to launch drops from 9 months to 2–3 weeks.**
+
+---
+
 ## Contents
 
 1. [Ecosystem at a glance](#1-ecosystem-at-a-glance)

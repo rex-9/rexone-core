@@ -8,10 +8,10 @@ class Payment::Product < ApplicationRecord
   has_many :subscriptions,
           class_name: "Payment::Subscription",
           foreign_key: :product_id,
-          dependent: :restrict_with_exception # Prevent deleting a Product if it has any connected subscriptions, transactions, or accesses.
+          dependent: :restrict_with_exception # Prevent deleting a Product if it has any connected subscriptions, purchases, or accesses.
 
-  has_many :transactions,
-          class_name: "Payment::Transaction",
+  has_many :purchases,
+          class_name: "Payment::Purchase",
           foreign_key: :product_id,
           dependent: :restrict_with_exception
 

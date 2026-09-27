@@ -2,7 +2,7 @@
 
 # app/serializers/payment/user_coupon_serializer.rb
 class Payment::UserCouponSerializer < ApplicationSerializer
-  attributes :id, :coupon_id, :user_id, :product_id, :purchase_id, :purchase_type,
+  attributes :id, :coupon_id, :user_id, :product_id, :payment_id, :payment_type,
              :discount_amount, :original_amount, :final_amount, :currency,
              :created_at, :updated_at
 
@@ -38,7 +38,7 @@ class Payment::UserCouponSerializer < ApplicationSerializer
     user_coupon.product&.name
   end
 
-  attribute :purchase_type_label do |user_coupon|
-    user_coupon.purchase_type
+  attribute :payment_type_label do |user_coupon|
+    user_coupon.payment_type
   end
 end

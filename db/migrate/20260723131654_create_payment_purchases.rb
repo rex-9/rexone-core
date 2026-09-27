@@ -1,7 +1,9 @@
-# db/migrate/xxxx_create_payment_transactions.rb
-class CreatePaymentTransactions < ActiveRecord::Migration[8.1]
+# frozen_string_literal: true
+
+# db/migrate/20260723131654_create_payment_purchases.rb
+class CreatePaymentPurchases < ActiveRecord::Migration[8.1]
   def change
-    create_table :payment_transactions, id: :uuid do |t|
+    create_table :payment_purchases, id: :uuid do |t|
       t.references :user, null: false, type: :uuid, foreign_key: true
       t.references :product, null: false, type: :uuid, foreign_key: { to_table: :payment_products }
 
@@ -58,12 +60,12 @@ class CreatePaymentTransactions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :payment_transactions, :stripe_payment_intent_id, unique: true
-    add_index :payment_transactions, :stripe_charge_id, unique: true
-    add_index :payment_transactions, :status
-    add_index :payment_transactions, :created_at
-    add_index :payment_transactions, :payment_method_type
-    add_index :payment_transactions, [ :user_id, :created_at ]
-    add_index :payment_transactions, :discarded_at
+    add_index :payment_purchases, :stripe_payment_intent_id, unique: true
+    add_index :payment_purchases, :stripe_charge_id, unique: true
+    add_index :payment_purchases, :status
+    add_index :payment_purchases, :created_at
+    add_index :payment_purchases, :payment_method_type
+    add_index :payment_purchases, [ :user_id, :created_at ]
+    add_index :payment_purchases, :discarded_at
   end
 end

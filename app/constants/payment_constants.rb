@@ -29,7 +29,7 @@ module PaymentConstants
     ALL   = [ DAY, WEEK, MONTH, YEAR ].freeze
   end
 
-  module TransactionStatus
+  module PurchaseStatus
     SUCCEEDED               = "succeeded".freeze
     PROCESSING              = "processing".freeze
     REQUIRES_ACTION         = "requires_action".freeze
@@ -101,13 +101,13 @@ module PaymentConstants
     }.freeze
   end
 
-  module PurchaseType
-    TRX = "trx".freeze
-    SBS = "sbs".freeze
-    ALL = [ TRX, SBS ].freeze
+  module PaymentType
+    PURCHASE     = "purchase".freeze
+    SUBSCRIPTION = "subscription".freeze
+    ALL          = [ PURCHASE, SUBSCRIPTION ].freeze
     INTEGER_MAPPING = {
-      trx: 0,
-      sbs: 1
+      purchase: 0,
+      subscription: 1
     }.freeze
   end
 

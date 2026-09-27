@@ -12,8 +12,8 @@ class Payment::UserCouponDashboard < Administrate::BaseDashboard
     coupon: Field::BelongsTo.with_options(class_name: "Payment::Coupon"),
     user: Field::BelongsTo,
     product: Field::BelongsTo.with_options(class_name: "Payment::Product"),
-    purchase_id: Field::String,
-    purchase_type: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
+    payment_id: Field::String,
+    payment_type: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
     discount_amount: Field::Number,
     original_amount: Field::Number,
     final_amount: Field::Number,
@@ -28,7 +28,7 @@ class Payment::UserCouponDashboard < Administrate::BaseDashboard
     product
     discount_amount
     final_amount
-    purchase_type
+    payment_type
     created_at
   ].freeze
 
@@ -37,8 +37,8 @@ class Payment::UserCouponDashboard < Administrate::BaseDashboard
     coupon
     user
     product
-    purchase_id
-    purchase_type
+    payment_id
+    payment_type
     discount_amount
     original_amount
     final_amount
@@ -51,8 +51,8 @@ class Payment::UserCouponDashboard < Administrate::BaseDashboard
     coupon
     user
     product
-    purchase_id
-    purchase_type
+    payment_id
+    payment_type
     discount_amount
     original_amount
     final_amount

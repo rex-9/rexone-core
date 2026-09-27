@@ -87,15 +87,15 @@ RSpec.describe CouponService, type: :service do
   describe ".apply_to_checkout!" do
     it "increments used_count and creates a user_coupon record" do
       coupon = create(:payment_coupon, max_usage: 10, used_count: 0)
-      trx = create(:payment_transaction, user: user, product: product)
+      purchase = create(:payment_purchase, user: user, product: product)
 
       expect {
         described_class.apply_to_checkout!(
           user: user,
           product: product,
           coupon: coupon,
-          purchase_id: trx.id,
-          purchase_type: :trx
+          payment_id: purchase.id,
+          payment_type: :purchase
         )
       }.to change { Payment::UserCoupon.count }.by(1)
 
@@ -103,38 +103,38 @@ RSpec.describe CouponService, type: :service do
       user_coupon = Payment::UserCoupon.last
       expect(user_coupon.coupon_id).to eq(coupon.id)
       expect(user_coupon.user_id).to eq(user.id)
-      expect(user_coupon.purchase_id).to eq(trx.id)
-      expect(user_coupon).to be_trx
+      expect(user_coupon.payment_id).to eq(purchase.id)
+      expect(user_coupon).to be_purchase
     end
 
     it "raises an error if max usage has already been reached" do
       coupon = create(:payment_coupon, max_usage: 1, used_count: 1)
-      trx = create(:payment_transaction, user: user, product: product)
+      purchase = create(:payment_purchase, user: user, product: product)
 
       expect {
         described_class.apply_to_checkout!(
           user: user,
           product: product,
           coupon: coupon,
-          purchase_id: trx.id,
-          purchase_type: :trx
+          payment_id: purchase.id,
+          payment_type: :purchase
         )
       }.to raise_error(PaymentService::Error)
     end
 
     it "raises an error if max_usage_per_user has already been reached for the user" do
       coupon = create(:payment_coupon, max_usage: 10, max_usage_per_user: 1)
-      trx1 = create(:payment_transaction, user: user, product: product)
-      create(:payment_user_coupon, coupon: coupon, user: user, product: product, purchase_id: trx1.id, purchase_type: :trx)
+      purchase1 = create(:payment_purchase, user: user, product: product)
+      create(:payment_user_coupon, coupon: coupon, user: user, product: product, payment_id: purchase1.id, payment_type: :purchase)
 
-      trx2 = create(:payment_transaction, user: user, product: product)
+      purchase2 = create(:payment_purchase, user: user, product: product)
       expect {
         described_class.apply_to_checkout!(
           user: user,
           product: product,
           coupon: coupon,
-          purchase_id: trx2.id,
-          purchase_type: :trx
+          payment_id: purchase2.id,
+          payment_type: :purchase
         )
       }.to raise_error(PaymentService::Error)
     end

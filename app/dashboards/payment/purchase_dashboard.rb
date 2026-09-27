@@ -1,6 +1,6 @@
 require "administrate/base_dashboard"
 
-class Payment::TransactionDashboard < Administrate::BaseDashboard
+class Payment::PurchaseDashboard < Administrate::BaseDashboard
   # ATTRIBUTE_TYPES
   # a hash that describes the type of each of the model's fields.
   #
@@ -141,10 +141,10 @@ class Payment::TransactionDashboard < Administrate::BaseDashboard
   #   }.freeze
   COLLECTION_FILTERS = {}.freeze
 
-  # Overwrite this method to customize how transactions are displayed
+  # Overwrite this method to customize how purchases are displayed
   # across all pages of the admin dashboard.
   #
-  # def display_resource(transaction)
-  #   "Payment::Transaction ##{transaction.id}"
+  # def display_resource(purchase)
+  #   "Payment::Purchase ##{purchase.id}"
   # end
 end

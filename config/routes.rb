@@ -55,7 +55,7 @@ Rails.application.routes.draw do
     namespace :payment do
       resources :products, only: %i[index show new create edit update destroy]
       resources :subscriptions, only: %i[index show new create edit update destroy]
-      resources :transactions, only: %i[index show new create edit update destroy]
+      resources :purchases, only: %i[index show new create edit update destroy]
       resources :coupons, only: %i[index show new create edit update destroy]
       resources :user_coupons, only: %i[index show new create edit update destroy]
       resources :webhook_events, only: %i[index show]
@@ -211,7 +211,7 @@ Rails.application.routes.draw do
           end
         end
 
-        resources :transactions, only: %i[index show]
+        resources :purchases, only: %i[index show]
         resources :subscriptions, only: %i[index show]
 
         resources :coupons, only: %i[index show create update destroy] do
@@ -336,7 +336,7 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :transactions, only: %i[index show] do
+      resources :purchases, only: %i[index show] do
         collection do
           get :read_recent, path: "recent"
         end

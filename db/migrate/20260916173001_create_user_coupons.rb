@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # db/migrate/20260916173001_create_user_coupons.rb
 class CreateUserCoupons < ActiveRecord::Migration[8.1]
   def change
@@ -6,8 +8,8 @@ class CreateUserCoupons < ActiveRecord::Migration[8.1]
       t.references :user, null: false, type: :uuid, foreign_key: { to_table: :users }
       t.references :product, null: false, type: :uuid, foreign_key: { to_table: :payment_products }
 
-      t.uuid :purchase_id, null: false
-      t.integer :purchase_type, null: false, default: 0 # 0: trx, 1: sbs
+      t.uuid :payment_id, null: false
+      t.integer :payment_type, null: false, default: 0 # 0: purchase, 1: subscription
 
       t.integer :discount_amount, null: false, default: 0
       t.integer :original_amount, null: false, default: 0
@@ -27,7 +29,7 @@ class CreateUserCoupons < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :user_coupons, [ :purchase_id, :purchase_type ]
+    add_index :user_coupons, [ :payment_id, :payment_type ]
     add_index :user_coupons, [ :coupon_id, :user_id ]
     add_index :user_coupons, :discarded_at
   end

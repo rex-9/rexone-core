@@ -46,7 +46,7 @@ class UserDashboard < Administrate::BaseDashboard
     sign_in_count: Field::Number,
     stripe_customer_id: Field::String,
     subscriptions: Field::HasMany,
-    transactions: Field::HasMany,
+    purchases: Field::HasMany,
     unconfirmed_email: Field::String,
     undiscarded_at: Field::DateTime,
     undiscarded_by_id: Field::String,
@@ -109,7 +109,7 @@ class UserDashboard < Administrate::BaseDashboard
     sign_in_count
     stripe_customer_id
     subscriptions
-    transactions
+    purchases
     unconfirmed_email
     undiscarded_at
     undiscarded_by_id
@@ -158,7 +158,7 @@ class UserDashboard < Administrate::BaseDashboard
     sign_in_count
     stripe_customer_id
     subscriptions
-    transactions
+    purchases
     unconfirmed_email
     undiscarded_at
     undiscarded_by_id

@@ -57,12 +57,12 @@ erDiagram
   iam_permissions ||--o{ iam_role_permissions : "included_in"
 
   users ||--o{ payment_subscriptions : "subscribes"
-  users ||--o{ payment_transactions : "pays"
+  users ||--o{ payment_purchases : "pays"
   users ||--o{ accesses : "holds"
   users ||--o{ coupons : "refers"
   users ||--o{ user_coupons : "redeems"
   payment_products ||--o{ payment_subscriptions : "defines_tier"
-  payment_products ||--o{ payment_transactions : "purchased_in"
+  payment_products ||--o{ payment_purchases : "purchased_in"
   payment_products ||--o{ accesses : "grants_access_to"
   payment_products ||--o{ user_coupons : "applied_to"
   coupons ||--o{ user_coupons : "tracks_redemptions"
@@ -194,7 +194,7 @@ erDiagram
 | `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                      |
 | `name`              | `string`   |    ❌    | —                   | Unique identifier (e.g. `read_users`, `create_payments`)         |
 | `action`            | `string`   |    ❌    | —                   | Enum: `read`, `create`, `update`, `delete`                       |
-| `resource`          | `string`   |    ❌    | —                   | Enum of 23 canonical resources (`users`, `accesses`, `assets`, `notifications`, `feedbacks`, `analytics`, `speech`, `ai_profiles`, `ai_runs`, `chat_rooms`, `chat_messages`, `client_logs`, `client_versions`, `client_user_versions`, `iam_roles`, `iam_permissions`, `iam_user_roles`, `payment_products`, `payment_payments`, `payment_subscriptions`, `payment_transactions`, `payment_coupons`, `payment_user_coupons`) |
+| `resource`          | `string`   |    ❌    | —                   | Enum of 23 canonical resources (`users`, `accesses`, `assets`, `notifications`, `feedbacks`, `analytics`, `speech`, `ai_profiles`, `ai_runs`, `chat_rooms`, `chat_messages`, `client_logs`, `client_versions`, `client_user_versions`, `iam_roles`, `iam_permissions`, `iam_user_roles`, `payment_products`, `payment_payments`, `payment_subscriptions`, `payment_purchases`, `payment_coupons`, `payment_user_coupons`) |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                               |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                              |
@@ -373,9 +373,9 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 ---
 
-### 4.3. `payment_transactions`
+### 4.3. `payment_purchases`
 
-- **Model**: [`Payment::Transaction`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/transaction.rb)
+- **Model**: [`Payment::Purchase`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/purchase.rb)
 - **Description**: One-time purchases synchronized from Stripe PaymentIntent objects.
 
 | Column                     | Type       | Nullable | Default                     | Description / Notes                            |
@@ -398,7 +398,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `processing_at`            | `datetime` |    ✔️    | `NULL`                      | When processing began                          |
 | `paid_at`                  | `datetime` |    ✔️    | `NULL`                      | When payment succeeded                         |
 | `canceled_at`              | `datetime` |    ✔️    | `NULL`                      | When payment was canceled                      |
-| `refunded_at`              | `datetime` |    ✔️    | `NULL`                      | When transaction was refunded                  |
+| `refunded_at`              | `datetime` |    ✔️    | `NULL`                      | When purchase was refunded                     |
 | `metadata`                 | `jsonb`    |    ✔️    | `{}`                        | Arbitrary Stripe metadata                      |
 | `created_by_id`            | `uuid`     |    ✔️    | `NULL`                      | Auditing: Creator                              |
 | `updated_by_id`            | `uuid`     |    ✔️    | `NULL`                      | Auditing: Modifier                             |
@@ -411,13 +411,13 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 **Indexes & Foreign Keys**:
 
-- `index_payment_transactions_on_stripe_payment_intent_id` (UNIQUE: `stripe_payment_intent_id`)
-- `index_payment_transactions_on_stripe_charge_id` (UNIQUE: `stripe_charge_id`)
-- `index_payment_transactions_on_user_id_and_created_at` (`user_id`, `created_at`)
-- `index_payment_transactions_on_user_id` (`user_id`)
-- `index_payment_transactions_on_product_id` (`product_id`)
-- `index_payment_transactions_on_status` (`status`)
-- `index_payment_transactions_on_payment_method_type` (`payment_method_type`)
+- `index_payment_purchases_on_stripe_payment_intent_id` (UNIQUE: `stripe_payment_intent_id`)
+- `index_payment_purchases_on_stripe_charge_id` (UNIQUE: `stripe_charge_id`)
+- `index_payment_purchases_on_user_id_and_created_at` (`user_id`, `created_at`)
+- `index_payment_purchases_on_user_id` (`user_id`)
+- `index_payment_purchases_on_product_id` (`product_id`)
+- `index_payment_purchases_on_status` (`status`)
+- `index_payment_purchases_on_payment_method_type` (`payment_method_type`)
 - FKs to `users(id)` and `payment_products(id)`.
 
 ---
@@ -532,7 +532,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 ### 4.6. `user_coupons`
 
 - **Model**: [`Payment::UserCoupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/user_coupon.rb)
-- **Description**: Immutable audit ledger recording each coupon redemption associated with a purchase transaction or subscription.
+- **Description**: Immutable audit ledger recording each coupon redemption associated with a purchase or subscription.
 
 | Column             | Type       | Nullable | Default             | Description / Notes                                        |
 | :----------------- | :--------- | :------: | :------------------ | :--------------------------------------------------------- |
@@ -540,8 +540,8 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `coupon_id`        | `uuid`     |    ❌    | —                   | FK to `coupons.id`                                         |
 | `user_id`          | `uuid`     |    ❌    | —                   | FK to `users.id`                                           |
 | `product_id`       | `uuid`     |    ❌    | —                   | FK to `payment_products.id`                                |
-| `purchase_id`      | `uuid`     |    ❌    | —                   | FK to `payment_transactions.id` or `payment_subscriptions.id`|
-| `purchase_type`    | `integer`  |    ❌    | `0`                 | Enum: `0: trx`, `1: sbs`                                   |
+| `payment_id`       | `uuid`     |    ❌    | —                   | FK to `payment_purchases.id` or `payment_subscriptions.id` |
+| `payment_type`     | `integer`  |    ❌    | `0`                 | Enum: `0: purchase`, `1: subscription`                     |
 | `discount_amount`  | `integer`  |    ❌    | `0`                 | Actual discount deducted in minor currency units           |
 | `original_amount`  | `integer`  |    ❌    | `0`                 | Product original price before discount                     |
 | `final_amount`     | `integer`  |    ❌    | `0`                 | Net amount billed after coupon discount                    |
@@ -557,7 +557,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 **Indexes & Foreign Keys**:
 
-- `index_user_coupons_on_purchase_id_and_purchase_type` (`purchase_id`, `purchase_type`)
+- `index_user_coupons_on_payment_id_and_payment_type` (`payment_id`, `payment_type`)
 - `index_user_coupons_on_coupon_id_and_user_id` (`coupon_id`, `user_id`)
 - `index_user_coupons_on_discarded_at` (`discarded_at`)
 - FKs to `coupons(id)`, `users(id)`, and `payment_products(id)`.
@@ -1086,7 +1086,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `iam_role_permissions`   | [`Iam::RolePermission`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/role_permission.rb)     | IAM            |      ✔️       |   ✔️    | —                                    |
 | `payment_products`       | [`Payment::Product`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/product.rb)            | Billing        |      ✔️       |   ✔️    | `assets` (`assetable`)               |
 | `payment_subscriptions`  | [`Payment::Subscription`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/subscription.rb)  | Billing        |      ✔️       |   ✔️    | —                                    |
-| `payment_transactions`   | [`Payment::Transaction`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/transaction.rb)    | Billing        |      ✔️       |   ✔️    | —                                    |
+| `payment_purchases`      | [`Payment::Purchase`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/purchase.rb)          | Billing        |      ✔️       |   ✔️    | —                                    |
 | `payment_webhook_events` | [`Payment::WebhookEvent`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/webhook_event.rb) | Billing        |      ✔️       |   ✔️    | —                                    |
 | `coupons`                | [`Payment::Coupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/coupon.rb)              | Billing        |      ✔️       |   ✔️    | —                                    |
 | `user_coupons`           | [`Payment::UserCoupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/user_coupon.rb)      | Billing        |      ✔️       |   ✔️    | —                                    |

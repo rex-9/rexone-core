@@ -10,28 +10,28 @@ RSpec.describe "Admin payment records", type: :request do
     allow(CacheService).to receive(:write)
   end
 
-  describe "transactions" do
-    before { grant_admin_permissions(admin, "transactions", :read) }
+  describe "purchases" do
+    before { grant_admin_permissions(admin, "purchases", :read) }
 
-    it "lists transactions across users and exposes admin display fields" do
-      transaction = create(:payment_transaction)
+    it "lists purchases across users and exposes admin display fields" do
+      purchase = create(:payment_purchase)
 
-      get "/v1/admin/payment/transactions", headers: headers
+      get "/v1/admin/payment/purchases", headers: headers
 
       expect(response).to have_http_status(:ok)
       attributes = response_data.first.fetch("attributes")
-      expect(attributes.fetch("id")).to eq(transaction.id)
-      expect(attributes.fetch("user_email")).to eq(transaction.user.email)
-      expect(attributes.fetch("product_name")).to eq(transaction.product.name)
+      expect(attributes.fetch("id")).to eq(purchase.id)
+      expect(attributes.fetch("user_email")).to eq(purchase.user.email)
+      expect(attributes.fetch("product_name")).to eq(purchase.product.name)
     end
 
-    it "shows a transaction" do
-      transaction = create(:payment_transaction)
+    it "shows a purchase" do
+      purchase = create(:payment_purchase)
 
-      get "/v1/admin/payment/transactions/#{transaction.id}", headers: headers
+      get "/v1/admin/payment/purchases/#{purchase.id}", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response_data.dig("attributes", "id")).to eq(transaction.id)
+      expect(response_data.dig("attributes", "id")).to eq(purchase.id)
     end
   end
 
@@ -61,7 +61,7 @@ RSpec.describe "Admin payment records", type: :request do
   end
 
   it "requires matching admin read permission" do
-    get "/v1/admin/payment/transactions", headers: headers
+    get "/v1/admin/payment/purchases", headers: headers
     expect(response).to have_http_status(:forbidden)
 
     get "/v1/admin/payment/subscriptions", headers: headers

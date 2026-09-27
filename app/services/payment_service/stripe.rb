@@ -920,8 +920,8 @@ module PaymentService
               user: user,
               product: product,
               coupon: coupon,
-              purchase_id: subscription.id,
-              purchase_type: :sbs
+              payment_id: subscription.id,
+              payment_type: :subscription
             )
           end
         end
@@ -959,13 +959,13 @@ module PaymentService
         payment_method_id = stripe_object_id(pi.payment_method)
         payment_info = extract_payment_method_info(payment_method_id)
 
-        # Create or update transaction from Payment Intent
-        transaction = Payment::Transaction.find_or_initialize_by(
+        # Create or update purchase from Payment Intent
+        purchase = Payment::Purchase.find_or_initialize_by(
           stripe_payment_intent_id: payment_intent_id
         )
-        new_transaction = transaction.new_record?
+        new_purchase = purchase.new_record?
 
-        transaction.assign_attributes(
+        purchase.assign_attributes(
           user_id: user_id,
           product_id: product_id,
           unit_amount: pi.amount,
@@ -983,7 +983,7 @@ module PaymentService
           metadata: pi.metadata&.to_h || {}
         )
 
-        transaction.save!
+        purchase.save!
 
         if coupon_id.present?
           coupon = Payment::Coupon.find_by(id: coupon_id)
@@ -992,22 +992,22 @@ module PaymentService
               user: user,
               product: product,
               coupon: coupon,
-              purchase_id: transaction.id,
-              purchase_type: :trx
+              payment_id: purchase.id,
+              payment_type: :purchase
             )
           end
         end
 
-        if transaction.succeeded?
+        if purchase.succeeded?
           AccessService.grant(
             user_id: user_id,
             product_id: product_id,
             expires_at: nil  # Lifetime
           )
 
-          if new_transaction
+          if new_purchase
             NotificationService::Center.payment_success(
-              user, product, transaction
+              user, product, purchase
             )
           end
         end

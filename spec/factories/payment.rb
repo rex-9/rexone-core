@@ -27,7 +27,7 @@ FactoryBot.define do
     started_at { Time.current }
   end
 
-  factory :payment_transaction, class: "Payment::Transaction" do
+  factory :payment_purchase, class: "Payment::Purchase" do
     user
     association :product, factory: :payment_product
     sequence(:stripe_payment_intent_id) { |n| "pi_#{n}" }
@@ -69,8 +69,8 @@ FactoryBot.define do
     association :coupon, factory: :payment_coupon
     user
     association :product, factory: :payment_product
-    purchase_id { SecureRandom.uuid }
-    purchase_type { :trx }
+    payment_id { SecureRandom.uuid }
+    payment_type { :purchase }
     discount_amount { 200 }
     original_amount { 1_000 }
     final_amount { 800 }

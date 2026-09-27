@@ -48,7 +48,7 @@ Every analytics query flows through [`AnalyticsService::Overview`](file:///Users
 
 | Section         | Method              | Output Shape            | Existing Models Queried                                                                                                                         |
 | --------------- | ------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| **KPIs**        | `build_kpis`        | `Hash<Symbol, Numeric>` | `User.kept`, `Payment::Transaction.kept`, `Payment::Subscription.kept`, `Chat::Message.kept`, `Feedback.kept`, `Client::Log.kept`, `Asset.all`. |
+| **KPIs**        | `build_kpis`        | `Hash<Symbol, Numeric>` | `User.kept`, `Payment::Purchase.kept`, `Payment::Subscription.kept`, `Chat::Message.kept`, `Feedback.kept`, `Client::Log.kept`, `Asset.all`. |
 | **Time Series** | `build_time_series` | `Array<Hash>`           | Chronological data points grouped by UTC buckets (`hourly`, `daily`, `monthly`) based on date range duration.                                   |
 | **Breakdowns**  | `build_breakdowns`  | `Hash<Symbol, Hash>`    | Categorical distributions (e.g. feedback ratings 1..10, subscriptions by interval, client errors by platform).                                  |
 
@@ -161,7 +161,7 @@ export interface IAnalyticsTimeSeriesPoint {
   date: string;
   key: string;
   revenue: number;
-  transactions: number;
+  purchases: number;
   new_users: number;
   user_messages: number;
   ai_messages: number;
@@ -308,19 +308,19 @@ The analytics engine automatically maps presets defined in `AnalyticsConstants::
 ## 🛡️ 5. Golden Rules for Analytics
 
 1. **Always Use `.kept` for Soft-Deleted Models**:
-   - `User.kept`, `Payment::Transaction.kept`, `Payment::Subscription.kept`, `Chat::Message.kept`, `Feedback.kept`, `Client::Log.kept`.
+   - `User.kept`, `Payment::Purchase.kept`, `Payment::Subscription.kept`, `Chat::Message.kept`, `Feedback.kept`, `Client::Log.kept`.
    - Never query discarded records in operational KPIs unless explicitly auditing the recycle bin.
 2. **Never Perform N+1 Queries**:
    - Always group using database aggregations (`group_count`, `group_sum`, `group(:column).count`).
    - Disambiguate column names in joined tables (e.g. `payment_subscriptions: { created_at: time_range }`).
    - Never fetch ActiveRecord models into Ruby memory (`.all.map`) to calculate sums or counts.
 3. **Keep Currency Amounts & Revenue Models Consistent**:
-   - `Payment::Transaction#unit_amount` and `Payment::Product#unit_amount` are stored in integer minor currency units.
-   - Always combine both one-time transactions (`PaymentConstants::TransactionStatus::SUCCEEDED`) and active subscriptions (`PaymentConstants::SubscriptionStatus::ACTIVE`, `TRIALING`) when computing gross revenue.
+   - `Payment::Purchase#unit_amount` and `Payment::Product#unit_amount` are stored in integer minor currency units.
+   - Always combine both one-time purchases (`PaymentConstants::PurchaseStatus::SUCCEEDED`) and active subscriptions (`PaymentConstants::SubscriptionStatus::ACTIVE`, `TRIALING`) when computing gross revenue.
    - Always divide cents by `100.0` when formatting revenue output.
 4. **Always Use Domain Constants for Statuses, Roles, and Periods**:
    - Periods & Grains: `AnalyticsConstants::Period::*`, `AnalyticsConstants::Grain::*`.
-   - Payments: `PaymentConstants::TransactionStatus::SUCCEEDED`, `PaymentConstants::SubscriptionStatus::ACTIVE`, `PaymentConstants::SubscriptionStatus::TRIALING`.
+   - Payments: `PaymentConstants::PurchaseStatus::SUCCEEDED`, `PaymentConstants::SubscriptionStatus::ACTIVE`, `PaymentConstants::SubscriptionStatus::TRIALING`.
    - Chat & AI: `AiConstants::ChatRole::USER`, `AiConstants::ChatRole::ASSISTANT`.
    - Feedback: `FeedbackConstants::Status::*`, `FeedbackConstants::Category::*`, `FeedbackConstants::Priority::*`.
    - Logs: `LogConstants::Severity::*`, `LogConstants::Platform::*`.

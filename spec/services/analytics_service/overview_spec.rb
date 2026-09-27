@@ -7,7 +7,7 @@ RSpec.describe AnalyticsService::Overview, type: :service do
     it "returns calculated KPIs, time-series data, and breakdowns for 30d default" do
       user = create(:user)
       product = create(:payment_product, unit_amount: 5000)
-      create(:payment_transaction, user: user, product: product, unit_amount: 5000, status: PaymentConstants::TransactionStatus::SUCCEEDED)
+      create(:payment_purchase, user: user, product: product, unit_amount: 5000, status: PaymentConstants::PurchaseStatus::SUCCEEDED)
       create(:payment_subscription, user: user, product: product, status: PaymentConstants::SubscriptionStatus::ACTIVE, unit_amount: 5000, interval: PaymentConstants::BillingInterval::MONTH)
       room = create(:chat_room, user: user)
       create(:chat_message, room: room, role: AiConstants::ChatRole::USER, content: "Hello AI")
@@ -23,7 +23,7 @@ RSpec.describe AnalyticsService::Overview, type: :service do
       expect(result[:kpis][:new_users]).to be >= 1
       expect(result[:kpis][:total_revenue]).to eq(100.0) # $50 one-time + $50 recurring
       expect(result[:kpis][:period_revenue]).to eq(100.0) # $50 one-time + $50 recurring
-      expect(result[:kpis][:period_transactions]).to eq(1)
+      expect(result[:kpis][:period_purchases]).to eq(1)
       expect(result[:kpis][:active_subscriptions]).to eq(1)
       expect(result[:kpis][:total_messages]).to eq(2)
       expect(result[:kpis][:user_messages]).to eq(1)

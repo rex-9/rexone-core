@@ -1058,7 +1058,7 @@ module Openapi
         created_at: DATE_TIME,
         updated_at: DATE_TIME
       ),
-      transaction: object(
+      purchase: object(
         required: %i[
           id user_id stripe_payment_intent_id status unit_amount currency
           amount_received amount_capturable paid pending failed requires_action
@@ -1070,7 +1070,7 @@ module Openapi
         stripe_payment_intent_id: { type: :string },
         stripe_charge_id: { type: :string, nullable: true },
         stripe_customer_id: { type: :string, nullable: true },
-        status: { type: :string, enum: PaymentConstants::TransactionStatus::ALL },
+        status: { type: :string, enum: PaymentConstants::PurchaseStatus::ALL },
         payment_method_id: { type: :string, nullable: true },
         payment_method_type: { type: :string, nullable: true },
         unit_amount: { type: :integer, minimum: 1, description: "PaymentIntent amount in minor currency units" },
@@ -1811,18 +1811,18 @@ module Openapi
                           parameters: [ path_parameter(:id) ], errors: [ 401, 404, 422 ])
         }
       end
-      paths["/v1/payment/transactions"] = {
-        get: operation(tags: "Payments", summary: "List the current user's transactions", errors: [ 401 ])
+      paths["/v1/payment/purchases"] = {
+        get: operation(tags: "Payments", summary: "List the current user's purchases", errors: [ 401 ])
       }
-      paths["/v1/payment/transactions/recent"] = {
-        get: operation(tags: "Payments", summary: "List recent successful transactions", errors: [ 401 ])
+      paths["/v1/payment/purchases/recent"] = {
+        get: operation(tags: "Payments", summary: "List recent successful purchases", errors: [ 401 ])
       }
-      paths["/v1/payment/transactions/{id}"] = {
-        get: operation(tags: "Payments", summary: "Get a transaction",
+      paths["/v1/payment/purchases/{id}"] = {
+        get: operation(tags: "Payments", summary: "Get a purchase",
                        parameters: [ path_parameter(:id) ], errors: [ 401, 404 ])
       }
-      paths["/v1/admin/payment/transactions"] = {
-        get: operation(tags: "Admin / Payments", summary: "List all payment transactions",
+      paths["/v1/admin/payment/purchases"] = {
+        get: operation(tags: "Admin / Payments", summary: "List all payment purchases",
                        parameters: [
                          query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer),
@@ -1835,8 +1835,8 @@ module Openapi
                          query_parameter(:user_id, type: :string, format: :uuid)
                        ], errors: [ 401, 403 ])
       }
-      paths["/v1/admin/payment/transactions/{id}"] = {
-        get: operation(tags: "Admin / Payments", summary: "Get a payment transaction",
+      paths["/v1/admin/payment/purchases/{id}"] = {
+        get: operation(tags: "Admin / Payments", summary: "Get a payment purchase",
                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ])
       }
       paths["/v1/admin/payment/subscriptions"] = {
@@ -1929,7 +1929,7 @@ module Openapi
         get: operation(tags: "Admin / Coupons", summary: "List coupon redemptions",
                        parameters: [
                          path_parameter(:id),
-                         query_parameter(:purchase_type, type: :string),
+                         query_parameter(:payment_type, type: :string),
                          query_parameter(:search, type: :string),
                          query_parameter(:page, type: :integer),
                          query_parameter(:limit, type: :integer),
@@ -1942,7 +1942,7 @@ module Openapi
         query_parameter(:coupon_id, format: :uuid),
         query_parameter(:user_id, format: :uuid),
         query_parameter(:product_id, format: :uuid),
-        query_parameter(:purchase_type, type: :string),
+        query_parameter(:payment_type, type: :string),
         query_parameter(:search, type: :string),
         query_parameter(:page, type: :integer),
         query_parameter(:limit, type: :integer),

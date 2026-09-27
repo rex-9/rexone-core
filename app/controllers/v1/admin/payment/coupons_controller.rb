@@ -159,7 +159,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
   def read_redemptions
     filters = redemptions_params
     records = @coupon.user_coupons.includes(:coupon, :user, :product)
-    records = records.where(purchase_type: filters[:purchase_type]) if filters[:purchase_type].present?
+    records = records.where(payment_type: filters[:payment_type]) if filters[:payment_type].present?
     records = search_redemptions(records, search_term: filters[:search])
     records = sort(records, columns: SortConstants::Columns::USER_COUPON, default_column: :created_at)
     pagy, redemptions = pagy(:offset, records, limit: filters[:limit])
@@ -296,7 +296,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
   end
 
   def redemptions_params
-    params.permit(:limit, :page, :search, :sort_by, :sort_order, :purchase_type)
+    params.permit(:limit, :page, :search, :sort_by, :sort_order, :payment_type)
   end
 
   def batch_params

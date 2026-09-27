@@ -131,8 +131,8 @@ RSpec.describe NotificationService::Center do
   it "fans payment success out to socket, push, and template email" do
     user = create(:user)
     product = create(:payment_product)
-    transaction = create(:payment_transaction, user: user, product: product, paid_at: Time.current)
-    described_class.payment_success(user, product, transaction)
+    purchase = create(:payment_purchase, user: user, product: product, paid_at: Time.current)
+    described_class.payment_success(user, product, purchase)
     expect(Notification::DeliverJob).to have_been_enqueued.exactly(:thrice)
   end
 

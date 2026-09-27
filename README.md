@@ -28,15 +28,15 @@ Built under an immutable creed: **Start from One. Not from Zero. Clear in though
 
 ### 🏛️ Unified Ecosystem & Constitutional Directives
 
-| Resource | Purpose & Canonical Specification |
-| :--- | :--- |
-| **🏛️ Unified Ecosystem** | Complete cross-platform architecture, feature parity matrix, and communication protocols across Core, Web, and Mobile: **[ECOSYSTEM.md](ECOSYSTEM.md)** |
-| **📖 Interactive API Docs & Swagger** | Full OpenAPI 3.0 specification & interactive Swagger UI explorer at `/api-docs`: **[swagger.yaml](swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`) |
-| **🗺️ Visual Walkthrough** | Screenshot-driven, feature-by-feature tour of RexOne across all surfaces and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)** |
-| **📜 Constitutional Law** | Non-negotiable architecture, pure parameter contracts, zero legacy shims, and plain English laws: **[LAW.md](LAW.md)** *(Zero exceptions)* |
-| **🤖 Operational Agent Governance** | Immutable operational rules for AI coding assistants (secret isolation, git safety, synchronous doc sync): **[AGENTS.md](AGENTS.md)** |
-| **🛡️ Production Security** | Origin isolation, Cloudflare edge defense, and rate-limiting protocols: **[Production DDoS & API Abuse Protection](docs/DDOS.md)** |
-| **🌐 AI Discovery & GEO** | Generative Engine Optimization, crawler allowlists, and LLM context files: **[AI Discovery & GEO Guide](https://github.com/rex-9/rexone-web/blob/dev/docs/SEO_GEO.md)** |
+| Resource                              | Purpose & Canonical Specification                                                                                                                                       |
+| :------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **🏛️ Unified Ecosystem**              | Complete cross-platform architecture, feature parity matrix, and communication protocols across Core, Web, and Mobile: **[ECOSYSTEM.md](ECOSYSTEM.md)**                 |
+| **📖 Interactive API Docs & Swagger** | Full OpenAPI 3.0 specification & interactive Swagger UI explorer at `/api-docs`: **[swagger.yaml](swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`)               |
+| **🗺️ Visual Walkthrough**             | Screenshot-driven, feature-by-feature tour of RexOne across all surfaces and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**                      |
+| **📜 Constitutional Law**             | Non-negotiable architecture, pure parameter contracts, zero legacy shims, and plain English laws: **[LAW.md](LAW.md)** _(Zero exceptions)_                              |
+| **🤖 Operational Agent Governance**   | Immutable operational rules for AI coding assistants (secret isolation, git safety, synchronous doc sync): **[AGENTS.md](AGENTS.md)**                                   |
+| **🛡️ Production Security**            | Origin isolation, Cloudflare edge defense, and rate-limiting protocols: **[Production DDoS & API Abuse Protection](docs/DDOS.md)**                                      |
+| **🌐 AI Discovery & GEO**             | Generative Engine Optimization, crawler allowlists, and LLM context files: **[AI Discovery & GEO Guide](https://github.com/rex-9/rexone-web/blob/dev/docs/SEO_GEO.md)** |
 
 ---
 
@@ -54,39 +54,104 @@ RexOne turns that repeated, expensive grind into a battle-tested, sovereign base
 
 ### Discipline-Driven Development (DDD): The Unvarnished Truth
 
-RexOne pioneers **Discipline-Driven Development (DDD)**. While legacy paradigms spent decades debating Domain-Driven Design or Test-Driven Development, the AI era created a fundamentally different reality: **typing code is free**. Generating 10,000 lines of code takes 30 seconds. 
+RexOne pioneers **Discipline-Driven Development (DDD)**. While legacy paradigms spent decades debating Domain-Driven Design or Test-Driven Development, the AI era created a fundamentally different reality: **typing code is free**. Generating 10,000 lines of code takes 30 seconds.
 
 90% of modern software projects never survive to master the business domain because their architecture collapses first under an avalanche of hallucinatory abstractions, conflicting shims, and zombie code. Tests cannot save a rotten architecture.
 
 Discipline-Driven Development establishes that **architectural discipline, sovereign foundation, and constitutional law are the primary drivers of sustainable engineering**.
 
-> *You bring the idea. AI writes the code. RexOne keeps both of you from destroying the foundation.*
+> _You bring the idea. AI writes the code. RexOne keeps both of you from destroying the foundation._
 
 #### The Brutal Realities Others Hesitate to Reveal:
+
 1. **The Vibe-Coding Delusion**: Prompting an AI to generate code without an immutable constitution isn't velocity; it's compounding debt at 100x speed. Speed without discipline is just accelerating toward a brick wall.
 2. **The BaaS Trap**: Serverless "5-minute backends" lure developers in with toys, then slap them with a $5,000/mo cloud hostage bill when they need relational integrity, background queues, or compliance audits. Real software runs sovereign PostgreSQL, native queues (Solid Queue), and self-hosted S3 (Garage).
 3. **The Full-Stack Monolith Lie**: Stuffing API controllers, database queries, background tasks, and client hydration into a single node runtime creates fragile, unmaintainable monoliths. True engineering enforces client-server separation.
 4. **Deprecation Cowardice & Zombie Code**: Retaining dead code, backwards-compatibility shims, and duplicate parameter aliases is cowardice. Under Constitutional Law U14, if code is replaced, the old code is wiped out completely. No shims. No legacy bloat.
-5. **100% Free Sovereignty**: Unlike commercial boilerplates charging $300–$800 for basic auth or gating features behind "pro licenses", RexOne is 100% free, MIT/open, and sovereign. You own your code, your data, and your infrastructure.
+5. **100% Free Sovereignty**: Unlike commercial boilerplates charging $300–$800 for basic auth or gating features behind "pro licenses", RexOne is 100% free, Apache 2.0 open-source, and sovereign. You own your code, your data, and your infrastructure.
+
+### ⏱️ The 9-Month Delusion: How Teams Waste $200,000 Rebuilding the Exact Same Wheel
+
+Every software founder and engineering lead tells themselves the exact same comfortable lie:
+
+> _“We just need a lightweight MVP. We’ll build our core feature in 4 weeks, and worry about infrastructure later.”_
+
+Here is the unvarnished, brutal truth of what actually happens over the subsequent 9 months:
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  THE TRADITIONAL 9-MONTH ROADMAP TO TECH DEBT COLLAPSE                                 │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  Month 1–2:  Auth & Identity Hell                                                      │
+│              JWT tokens, refresh cycles, email confirmation codes, password resets,    │
+│              and basic RBAC. The "4-week MVP" is already 100% consumed by login screens.│
+│                                                                                        │
+│  Month 3–4:  Stripe & Billing Agony                                                    │
+│              Checkout sessions seem simple until edge cases hit: webhook reconciliation,│
+│              subscription cancellations, proration races, coupon discounts, failed    │
+│              invoices, and idempotent state transitions. Two months gone.               │
+│                                                                                        │
+│  Month 5:    Storage, Media & Async Jobs                                               │
+│              S3 bucket credentials, presigned upload tickets, image/video variant      │
+│              resizing, Redis broker configuration, and bloated hosting bills.          │
+│                                                                                        │
+│  Month 6–7:  Web Admin & Real-Time Sync                                                │
+│              Operations needs an admin portal. Engineers scramble to build CRUD tables,│
+│              metrics charts, and WebSocket event channels from scratch.                │
+│                                                                                        │
+│  Month 8:    Mobile Client Frustration                                                 │
+│              Connecting Flutter or React Native exposes 50 mismatched JSON keys,       │
+│              missing endpoints, and fragile auth persistence between Web and Mobile.   │
+│                                                                                        │
+│  Month 9:    The Tech Debt Wall & Refactoring Paralysis                                │
+│              Zero automated tests. Spaghetti code. The team is terrified to touch      │
+│              a single line because changing one model breaks 4 disparate screens.      │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 💸 The Harsh Financial Math:
+
+- **Small Team (2–3 Engineers)**: 9 months of payroll = **$150,000 – $300,000 burned**.
+- **Solo Founder / Indie Hacker**: 9 months of lost market opportunity, cognitive fatigue, and zero customer validation.
+- **The Tragedy**: **85% of that code had NOTHING to do with the proprietary product idea.** It was just the generic, universal plumbing required to run any commercial software.
+
+#### ⚡ The RexOne Day-One Reality:
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  STARTING FROM ONE (REXONE SOVEREIGN FOUNDATION)                                      │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  Day 1:   Spin up Docker. Rails 8 + React 19 + Flutter 3 + Garage S3 + Postgres 18.   │
+│           Full Auth, 96 IAM permissions, Stripe billing, and WebSockets live.          │
+│                                                                                        │
+│  Week 1:  Define your proprietary domain entities and customize brand styling.         │
+│                                                                                        │
+│  Week 2:  Wire your business logic to existing, fully-tested controllers.              │
+│                                                                                        │
+│  Week 3:  Run 1,690+ passing automated tests. Deploy staging. Ship to production.      │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+Result: 8 to 11 months of soul-crushing plumbing deleted. You launch in weeks.
+```
 
 ### 📊 Architectural Comparison: Why RexOne Wins
 
-| Dimension / Capability | 🛡️ **RexOne Sovereign Trinity** | 📦 **Next.js Full-Stack Boilerplates** | 🔥 **Firebase / Cloud Serverless** | 🪤 **Supabase / BaaS Starter Kits** | 🚂 **Rails & Laravel Monoliths** |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Architectural Model** | ✅ **Sovereign Tri-Platform**: Rails 8 API + React 19 SPA + pure Flutter 3 native client | ❌ **Node Monolith**: API, DB, jobs & DOM crammed into 1 fragile runtime | ❌ **Serverless Spaghetti**: Disconnected Cloud Functions + NoSQL Firestore | ⚠️ **Client-Heavy BaaS**: Direct client DB queries + scattered edge functions | ⚠️ **HTML Monolith**: Server-rendered HTML with Turbo/Livewire |
-| **Native Mobile App** | ✅ **Native 60fps Flutter**: Shared contracts, biometrics, hardware media & push | ❌ **None or Webview Shell**: Sluggish Capacitor/Cordova wrapper | ⚠️ **Fragmented SDKs**: Direct NoSQL queries from mobile with zero encapsulation | ⚠️ **Raw Client SDK**: Mobile apps directly expose database tables via client key | ⚠️ **Turbo / Webview**: Web pages wrapped in a native navigation shell |
-| **Offline-First Durability** | ✅ **Drift SQLite (`rexone_offline`)**: Schema mirroring, offline subtitles & AES-256 saves | ❌ **None**: Application breaks entirely on network disconnect | ⚠️ **Flaky Document Cache**: Primitive document cache prone to sync desync | ⚠️ **No Relational Offline**: Unreliable offline sync across foreign keys | ❌ **None**: Server-rendered pages require constant connectivity |
-| **Database Integrity** | ✅ **Strict Relational PostgreSQL**: Foreign keys, ACID, UUIDs, soft-deletes | ⚠️ **ORM Inconsistencies**: Serverless connection pool limits on Prisma/Drizzle | ❌ **NoSQL Hell**: No joins, no cascading deletes, data duplication nightmare | ✅ **PostgreSQL**: Relational integrity via managed Postgres instance | ✅ **PostgreSQL / MySQL**: Mature relational ORM (ActiveRecord / Eloquent) |
-| **Background Processing** | ✅ **Solid Queue (Fibers + Threads)**: Workload pooling, recurring cron, zero Redis costs | ❌ **Serverless Timeouts**: Forced into third-party Inngest, QStash, or Celery ($$$) | ❌ **Execution Timeouts**: Severe execution limits, cold starts & high invocation bills | ⚠️ **Edge Functions**: Strict 10s CPU limits, no persistent background workers | ⚠️ **Redis Dependency**: Requires external Redis broker & extra hosting RAM |
-| **Real-Time Delivery** | ✅ **Native Action Cable**: Persistent WebSockets, auto-reconnect & binary STT/TTS | ❌ **Broken on Serverless**: Forced into expensive Pusher / Ably tiers ($$$) | ⚠️ **Firestore Listeners**: Pay-per-document-read billing nightmare under active polling | ⚠️ **Supabase Realtime**: Row-level broadcast, high connection pricing tiers | ⚠️ **External Broker**: Requires Redis/Reverb/Soketi daemon configuration |
-| **Object Storage** | ✅ **Self-Hosted Garage S3**: High-performance local S3, zero egress bills | ❌ **Vendor Cloud**: AWS S3 / Cloudflare R2 egress fees | ❌ **Google Cloud Storage**: Proprietary bucket pricing & steep download egress fees | ⚠️ **Proprietary Storage**: Vendor-locked BaaS pricing ladders | ⚠️ **ActiveStorage / Flysystem**: Tied to third-party cloud S3 bucket bills |
-| **AI Workflows & Speech** | ✅ **Durable Queued AI**: Chunked streaming, 16kHz live STT, binary MP3 TTS | ⚠️ **Edge Timeouts**: LLM streams crash on cold starts or Vercel limits | ❌ **Synchronous Timeouts**: Long-running LLM inferences hit function deadlines | ❌ **Client Leaks**: Client-side API keys or basic Edge Function calls | ⚠️ **Basic Wrappers**: Simple synchronous chat endpoints |
-| **Anti-Vibe Governance** | ✅ **Constitutional Law (`LAW.md`)**: Laws U14/U15 stop AI tech debt and zombie code | ❌ **Unguided Vibe-Coding**: Fragile abstractions, dead shims & runaway debt | ❌ **Scattered Cloud Logic**: Code fragmented across dozens of uncoordinated functions | ❌ **RLS Spaghetti**: 100+ line SQL security policies prone to data leaks | ⚠️ **Conventions Only**: No explicit constitutional AI agent rules |
-| **Cost & Sovereignty** | ✅ **100% Free & Open (MIT)**: Zero paywalls, zero "Pro" upsells, sovereign VPS deploy | ❌ **$199–$499 Paid License**: Features gated behind tier paywalls | ❌ **Google Vendor Trap**: Massive cloud bills as user volume scales ($5k–$20k/mo) | ❌ **Monthly Cloud Lock-in**: Free tier lulls you into $5,000/mo hostage bill | ❌ **$299–$799 Paid License**: Commercial starter kit paywalls (Jumpstart, Spark) |
+| Dimension / Capability       | 🛡️ **RexOne Sovereign Trinity**                                                               | 📦 **Next.js Full-Stack Boilerplates**                                               | 🔥 **Firebase / Cloud Serverless**                                                       | 🪤 **Supabase / BaaS Starter Kits**                                               | 🚂 **Rails & Laravel Monoliths**                                                  |
+| :--------------------------- | :-------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------- |
+| **Architectural Model**      | ✅ **Sovereign Tri-Platform**: Rails 8 API + React 19 SPA + pure Flutter 3 native client      | ❌ **Node Monolith**: API, DB, jobs & DOM crammed into 1 fragile runtime             | ❌ **Serverless Spaghetti**: Disconnected Cloud Functions + NoSQL Firestore              | ⚠️ **Client-Heavy BaaS**: Direct client DB queries + scattered edge functions     | ⚠️ **HTML Monolith**: Server-rendered HTML with Turbo/Livewire                    |
+| **Native Mobile App**        | ✅ **Native 60fps Flutter**: Shared contracts, biometrics, hardware media & push              | ❌ **None or Webview Shell**: Sluggish Capacitor/Cordova wrapper                     | ⚠️ **Fragmented SDKs**: Direct NoSQL queries from mobile with zero encapsulation         | ⚠️ **Raw Client SDK**: Mobile apps directly expose database tables via client key | ⚠️ **Turbo / Webview**: Web pages wrapped in a native navigation shell            |
+| **Offline-First Durability** | ✅ **Drift SQLite (`rexone_offline`)**: Schema mirroring, offline subtitles & AES-256 saves   | ❌ **None**: Application breaks entirely on network disconnect                       | ⚠️ **Flaky Document Cache**: Primitive document cache prone to sync desync               | ⚠️ **No Relational Offline**: Unreliable offline sync across foreign keys         | ❌ **None**: Server-rendered pages require constant connectivity                  |
+| **Database Integrity**       | ✅ **Strict Relational PostgreSQL**: Foreign keys, ACID, UUIDs, soft-deletes                  | ⚠️ **ORM Inconsistencies**: Serverless connection pool limits on Prisma/Drizzle      | ❌ **NoSQL Hell**: No joins, no cascading deletes, data duplication nightmare            | ✅ **PostgreSQL**: Relational integrity via managed Postgres instance             | ✅ **PostgreSQL / MySQL**: Mature relational ORM (ActiveRecord / Eloquent)        |
+| **Background Processing**    | ✅ **Solid Queue (Fibers + Threads)**: Workload pooling, recurring cron, zero Redis costs     | ❌ **Serverless Timeouts**: Forced into third-party Inngest, QStash, or Celery ($$$) | ❌ **Execution Timeouts**: Severe execution limits, cold starts & high invocation bills  | ⚠️ **Edge Functions**: Strict 10s CPU limits, no persistent background workers    | ⚠️ **Redis Dependency**: Requires external Redis broker & extra hosting RAM       |
+| **Real-Time Delivery**       | ✅ **Native Action Cable**: Persistent WebSockets, auto-reconnect & binary STT/TTS            | ❌ **Broken on Serverless**: Forced into expensive Pusher / Ably tiers ($$$)         | ⚠️ **Firestore Listeners**: Pay-per-document-read billing nightmare under active polling | ⚠️ **Supabase Realtime**: Row-level broadcast, high connection pricing tiers      | ⚠️ **External Broker**: Requires Redis/Reverb/Soketi daemon configuration         |
+| **Object Storage**           | ✅ **Self-Hosted Garage S3**: High-performance local S3, zero egress bills                    | ❌ **Vendor Cloud**: AWS S3 / Cloudflare R2 egress fees                              | ❌ **Google Cloud Storage**: Proprietary bucket pricing & steep download egress fees     | ⚠️ **Proprietary Storage**: Vendor-locked BaaS pricing ladders                    | ⚠️ **ActiveStorage / Flysystem**: Tied to third-party cloud S3 bucket bills       |
+| **AI Workflows & Speech**    | ✅ **Durable Queued AI**: Chunked streaming, 16kHz live STT, binary MP3 TTS                   | ⚠️ **Edge Timeouts**: LLM streams crash on cold starts or Vercel limits              | ❌ **Synchronous Timeouts**: Long-running LLM inferences hit function deadlines          | ❌ **Client Leaks**: Client-side API keys or basic Edge Function calls            | ⚠️ **Basic Wrappers**: Simple synchronous chat endpoints                          |
+| **Anti-Vibe Governance**     | ✅ **Constitutional Law (`LAW.md`)**: Laws U14/U15 stop AI tech debt and zombie code          | ❌ **Unguided Vibe-Coding**: Fragile abstractions, dead shims & runaway debt         | ❌ **Scattered Cloud Logic**: Code fragmented across dozens of uncoordinated functions   | ❌ **RLS Spaghetti**: 100+ line SQL security policies prone to data leaks         | ⚠️ **Conventions Only**: No explicit constitutional AI agent rules                |
+| **Cost & Sovereignty**       | ✅ **100% Free & Open (Apache 2.0)**: Zero paywalls, zero "Pro" upsells, sovereign VPS deploy | ❌ **$199–$499 Paid License**: Features gated behind tier paywalls                   | ❌ **Google Vendor Trap**: Massive cloud bills as user volume scales ($5k–$20k/mo)       | ❌ **Monthly Cloud Lock-in**: Free tier lulls you into $5,000/mo hostage bill     | ❌ **$299–$799 Paid License**: Commercial starter kit paywalls (Jumpstart, Spark) |
 
 ### The Reality: The Exponential AI Tech Debt Cycle
 
 Without immutable architectural boundaries:
+
 ```text
 Agent 1 invents Pattern A
    ↓
@@ -103,15 +168,17 @@ Exponential technical debt & token burn before the product even launches
 ```
 
 RexOne breaks this cycle decisively:
-* **Constitutional Law (`LAW.md`)**: Law U14 enforces *zero loose code, zero backward-compatibility shims, complete wipeout and replacement*. If code deviates from the law, the code is wrong—fix the code. Law U15 enforces human-readable plain English with zero esoteric syntax.
-* **Operational Agent Governance (`AGENTS.md`)**: Strict guidelines for AI coding tools—never read `.env` secrets, never run destructive git operations, and synchronize documentation in the exact same turn as code changes.
-* **AI Turns from an Architect into a Worker**: The architecture has already been decided. AI works cleanly inside it.
+
+- **Constitutional Law (`LAW.md`)**: Law U14 enforces _zero loose code, zero backward-compatibility shims, complete wipeout and replacement_. If code deviates from the law, the code is wrong—fix the code. Law U15 enforces human-readable plain English with zero esoteric syntax.
+- **Operational Agent Governance (`AGENTS.md`)**: Strict guidelines for AI coding tools—never read `.env` secrets, never run destructive git operations, and synchronize documentation in the exact same turn as code changes.
+- **AI Turns from an Architect into a Worker**: The architecture has already been decided. AI works cleanly inside it.
 
 ### Born from Battle-Tested Production Reality
 
 RexOne was not born from framework fandom or an abstract weekend thought experiment. It is the hard-won distillation of years of shipping real-world production systems across:
-* **Firebase & Google Ecosystem**: Battle-tested as a founding engineer at **js.eco** (a 3-person team: CEO, CTO, and Htet Naing, scaling rapidly in the US EV charging market). While one of the most systematic, high-growth Google-centric architectures, it proved that proprietary ecosystem lock-in and scattered functions still create immense friction.
-* **Multi-Cloud & Polyglot Background**: Extensive real-world production engineering across AWS SAM, Microsoft Azure, FastAPI (Python), Laravel & TALL/Filament (PHP), NestJS & Next.js (Node/TypeScript), Go, Prisma, MongoDB, MySQL, and PostgreSQL.
+
+- **Firebase & Google Ecosystem**: Battle-tested as a founding engineer at **js.eco** (a 3-person team: CEO, CTO, and Htet Naing, scaling rapidly in the US EV charging market). While one of the most systematic, high-growth Google-centric architectures, it proved that proprietary ecosystem lock-in and scattered functions still create immense friction.
+- **Multi-Cloud & Polyglot Background**: Extensive real-world production engineering across AWS SAM, Microsoft Azure, FastAPI (Python), Laravel & TALL/Filament (PHP), NestJS & Next.js (Node/TypeScript), Go, Prisma, MongoDB, MySQL, and PostgreSQL.
 
 **The Golden Architectural Rule**:
 Server frameworks on the frontend create clumsy UX; client languages on the backend create loose, messy architectures. RexOne combines the strongest technologies that survived this crucible—**Rails 8 API Core + React 19 Web + Flutter 3 Mobile**—with crystal-clear boundaries, workload-separated queues, self-hosted S3 storage (Garage), full-stack observability, and constitutional laws.
@@ -169,24 +236,24 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 ## Feature map
 
-| Foundation     | What is ready                                                                                                                   | Details                                                                               |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                                          | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
-| Authorization  | Roles, permissions, user-role and role-permission assignments                                                                   | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
-| Commerce       | Stripe Checkout, products, transactions, subscriptions, coupons & randomized referrals (with cooldown ladder), access grants, Stripe minimum currency limits | [Payments & entitlements](docs/FOUNDATION.md#payments-and-entitlements)               |
-| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                                 | [Background processing](#background-processing)                                       |
-| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo (Master Shell & client URL normalization)       | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
-| Media          | Provider-neutral storage (Garage S3), silent background optimization (FFmpeg + libvips), SVG conversion, posters, SRT subtitle tracks, and progressive playback | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
-| Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                                     | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| AI             | Durable queued chat, Telegram-style multi-message chunking, persisted history, completion alerts, and language tools            | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| Localization   | Request-scoped English and Myanmar responses with modular domain translations                                                   | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                                  | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                                           | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
+| Foundation     | What is ready                                                                                                                                                        | Details                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                                                                               | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
+| Authorization  | Roles, permissions, user-role and role-permission assignments                                                                                                        | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
+| Commerce       | Stripe Checkout, products, purchases, subscriptions, coupons & randomized referrals (with cooldown ladder), access grants, Stripe minimum currency limits            | [Payments & entitlements](docs/FOUNDATION.md#payments-and-entitlements)               |
+| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                                                                      | [Background processing](#background-processing)                                       |
+| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo (Master Shell & client URL normalization)                                            | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
+| Media          | Provider-neutral storage (Garage S3), silent background optimization (FFmpeg + libvips), SVG conversion, posters, SRT subtitle tracks, and progressive playback      | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
+| Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                                                                          | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
+| AI             | Durable queued chat, Telegram-style multi-message chunking, persisted history, completion alerts, and language tools                                                 | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
+| Localization   | Request-scoped English and Myanmar responses with modular domain translations                                                                                        | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
+| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                                                                       | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
+| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                                                                                | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
 | Administration | Administrate for Server plus Client Admin API for users (with quick confirmation), IAM, products (with access inspection), chat, assets, notifications, app versions | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
-| Security       | Boot Guard, Zero-Trust CORS, Rate Limiting (Rack::Attack), Pre-Commit Secret Scanner                                            | [Security Architecture](docs/SECURITY.md)                                             |
-| Governance     | Constitutional Law (LAW.md: pure deterministic contracts, zero legacy shims) & Agent Operations (AGENTS.md)                     | [LAW.md](LAW.md) · [AGENTS.md](AGENTS.md)                                              |
-| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                               | [Deployment](#deployment)                                                             |
-| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                               | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
+| Security       | Boot Guard, Zero-Trust CORS, Rate Limiting (Rack::Attack), Pre-Commit Secret Scanner                                                                                 | [Security Architecture](docs/SECURITY.md)                                             |
+| Governance     | Constitutional Law (LAW.md: pure deterministic contracts, zero legacy shims) & Agent Operations (AGENTS.md)                                                          | [LAW.md](LAW.md) · [AGENTS.md](AGENTS.md)                                             |
+| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                                                                    | [Deployment](#deployment)                                                             |
+| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                                                                    | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
 
 ## Architecture
 
@@ -230,14 +297,14 @@ The same principle applies to product-specific functionality: the foundation pro
 
 Solid Queue is part of the application architecture, not an afterthought. RexOne leverages a **hybrid Fiber + Thread concurrency model** powered by Ruby Fibers (`async`), Rails 8 fiber isolation (`config.active_support.isolation_level = :fiber`), and Solid Queue 1.7.0:
 
-| Work | Queue | Concurrency Engine | Why |
-| ---- | ----- | ------------------ | --- |
-| Stripe webhook processing & batch coupon sync | `payments` | **Fibers** (50 concurrent) | Durable ingestion, idempotency, non-blocking HTTP verification, async Stripe coupon generation (`Payment::SyncBatchCouponsJob`) |
-| AI completions & TTS synthesis | `ai` | **Fibers** (50 concurrent) | I/O-bound LLM socket streaming; 50 in-flight requests without thread exhaustion |
-| Socket, push, and email delivery | `notifications` | **Fibers** (50 concurrent) | Provider latency (OneSignal, Brevo, ActionCable) must not block OS threads |
-| Default application tasks | `default` | **Fibers** (50 concurrent) | Dynamic shared capacity with instant failover |
-| System maintenance & recurring cron | `solid_queue_recurring` | **Threads** (2 isolated OS threads) | Sequential, transactional DB table maintenance ([`config/recurring.yml`](config/recurring.yml)) |
-| Media transcoding & image processing | `media` | **Threads** (2 isolated OS threads) | Isolated in dedicated `media` worker/container; prevents CPU-heavy libvips/FFmpeg from starving I/O |
+| Work                                          | Queue                   | Concurrency Engine                  | Why                                                                                                                             |
+| --------------------------------------------- | ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Stripe webhook processing & batch coupon sync | `payments`              | **Fibers** (50 concurrent)          | Durable ingestion, idempotency, non-blocking HTTP verification, async Stripe coupon generation (`Payment::SyncBatchCouponsJob`) |
+| AI completions & TTS synthesis                | `ai`                    | **Fibers** (50 concurrent)          | I/O-bound LLM socket streaming; 50 in-flight requests without thread exhaustion                                                 |
+| Socket, push, and email delivery              | `notifications`         | **Fibers** (50 concurrent)          | Provider latency (OneSignal, Brevo, ActionCable) must not block OS threads                                                      |
+| Default application tasks                     | `default`               | **Fibers** (50 concurrent)          | Dynamic shared capacity with instant failover                                                                                   |
+| System maintenance & recurring cron           | `solid_queue_recurring` | **Threads** (2 isolated OS threads) | Sequential, transactional DB table maintenance ([`config/recurring.yml`](config/recurring.yml))                                 |
+| Media transcoding & image processing          | `media`                 | **Threads** (2 isolated OS threads) | Isolated in dedicated `media` worker/container; prevents CPU-heavy libvips/FFmpeg from starving I/O                             |
 
 #### Dynamic Workload Elasticity Under All Conditions
 
@@ -251,7 +318,6 @@ Solid Queue is part of the application architecture, not an afterthought. RexOne
    [`config/queue.yml`](config/queue.yml) maintains the exact same fiber + thread configuration in both `development` and `production`, allowing engineers to observe and benchmark real-world concurrent execution locally.
 
 The API, worker (`waka`), and media processor run as separate services in Docker, keeping request handling, async I/O, and CPU-intensive operations independently scalable.
-
 
 ## ⚡ Quick Start
 
@@ -278,7 +344,7 @@ cd ../rexone-web && ./scripts/dev.sh
 ```
 
 > [!TIP]
-> Testing Stripe payments locally? Forward webhooks in an optional second terminal: `./scripts/listen_webhook.sh`.  
+> Testing Stripe payments locally? Forward webhooks in an optional second terminal: `./scripts/listen_webhook.sh`.
 > For granular debugging commands and manual process supervision, see the **[Ecosystem Quick Start](docs/QUICK_START.md)**.
 
 ---
@@ -303,19 +369,19 @@ Client runtime errors are accepted at `POST /v1/client/logs` and correlated with
 
 To maintain high architectural discipline without cluttering the primary showcase, exhaustive technical specifications, API routes, and operational playbooks are organized in **[`docs/`](docs/)**:
 
-| Resource | Scope & Canonical Specification |
-| :--- | :--- |
-| **📖 Master Documentation Hub** | Comprehensive engineering reference and scripts catalog: **[`docs/README.md`](docs/README.md)** |
+| Resource                               | Scope & Canonical Specification                                                                                                                           |
+| :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **📖 Master Documentation Hub**        | Comprehensive engineering reference and scripts catalog: **[`docs/README.md`](docs/README.md)**                                                           |
 | **📑 OpenAPI & Swagger Documentation** | Interactive Swagger UI at `/api-docs` and live API schema: **[`swagger/v1/swagger.yaml`](swagger/v1/swagger.yaml)** (Rake: `rake rswag:specs:swaggerize`) |
-| **🚀 Ecosystem Quick Start** | Local Docker setup, database seeding, and startup debugging: **[`docs/QUICK_START.md`](docs/QUICK_START.md)** |
-| **🏛️ Foundation Architecture** | Deep dive into IAM, Devise JWT, Soft Deletion, and JSON:API: **[`docs/FOUNDATION.md`](docs/FOUNDATION.md)** |
-| **🗄️ Database Schema & Models** | Complete database schema, tables, UUID indexes, and associations: **[`docs/SCHEMA.md`](docs/SCHEMA.md)** |
-| **📦 Object Storage (Garage S3)** | Self-hosted S3 Garage setup (port 3100), buckets, and Cyberduck: **[`docs/GARAGE.md`](docs/GARAGE.md)** |
-| **🎬 Media Streaming & Playback** | Progressive video/audio, FFmpeg background compression, and SRT subtitles: **[`docs/MEDIA_PLAYBACK.md`](docs/MEDIA_PLAYBACK.md)** |
-| **🤖 AI Assistant & Speech** | Queued chat, multi-message chunking, DeepSeek/Gemini, and TTS/STT: **[`docs/AI_MANUAL.md`](docs/AI_MANUAL.md)** |
-| **🛡️ Security & Boot Guard** | Zero-trust CORS, startup secret validation, pre-commit scanners: **[`docs/SECURITY.md`](docs/SECURITY.md)** |
-| **🛑 DDoS & Rate Limiting** | Rack::Attack rate-limiting ladders, IP throttling, and abuse defense: **[`docs/DDOS.md`](docs/DDOS.md)** |
-| **🚀 Production Deployment** | Multi-stage Docker, Coolify VPS maintenance, log rotation, and SSL: **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)** |
+| **🚀 Ecosystem Quick Start**           | Local Docker setup, database seeding, and startup debugging: **[`docs/QUICK_START.md`](docs/QUICK_START.md)**                                             |
+| **🏛️ Foundation Architecture**         | Deep dive into IAM, Devise JWT, Soft Deletion, and JSON:API: **[`docs/FOUNDATION.md`](docs/FOUNDATION.md)**                                               |
+| **🗄️ Database Schema & Models**        | Complete database schema, tables, UUID indexes, and associations: **[`docs/SCHEMA.md`](docs/SCHEMA.md)**                                                  |
+| **📦 Object Storage (Garage S3)**      | Self-hosted S3 Garage setup (port 3100), buckets, and Cyberduck: **[`docs/GARAGE.md`](docs/GARAGE.md)**                                                   |
+| **🎬 Media Streaming & Playback**      | Progressive video/audio, FFmpeg background compression, and SRT subtitles: **[`docs/MEDIA_PLAYBACK.md`](docs/MEDIA_PLAYBACK.md)**                         |
+| **🤖 AI Assistant & Speech**           | Queued chat, multi-message chunking, DeepSeek/Gemini, and TTS/STT: **[`docs/AI_MANUAL.md`](docs/AI_MANUAL.md)**                                           |
+| **🛡️ Security & Boot Guard**           | Zero-trust CORS, startup secret validation, pre-commit scanners: **[`docs/SECURITY.md`](docs/SECURITY.md)**                                               |
+| **🛑 DDoS & Rate Limiting**            | Rack::Attack rate-limiting ladders, IP throttling, and abuse defense: **[`docs/DDOS.md`](docs/DDOS.md)**                                                  |
+| **🚀 Production Deployment**           | Multi-stage Docker, Coolify VPS maintenance, log rotation, and SSL: **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)**                                        |
 
 ---
 
@@ -332,18 +398,18 @@ For the complete production deployment playbook, see **[`docs/DEPLOYMENT.md`](do
 
 All logs and database monitoring tables are governed by automated retention policies to guarantee zero disk exhaustion. Complete maintenance guide: **[`docs/MAINTENANCE.md`](docs/MAINTENANCE.md)**.
 
-| Target / Subsystem | Retention Window | Schedule / Frequency | Mechanism |
-| :--- | :--- | :--- | :--- |
-| **Docker Container Logs** | Max 30 MB / container (`10m` $\times$ 3 files) | Continuous runtime | Docker `json-file` rotation (prod & dev) |
-| **Rails Pulse (Requests & Queries)** | **1 month** (max 50k req / 250k ops) | Daily at 01:00 AM | `RailsPulse::CleanupJob` |
-| **Rails Pulse (Summary Rollups)** | Permanent aggregated charts | Hourly at minute :05 | `RailsPulse::SummaryJob` |
-| **Solid Queue (Failed Jobs)** | **1 month** (`1.month.ago`) | Sundays at 03:00 AM | `clear_solid_queue_failed_jobs` |
-| **Solid Queue (Finished Jobs)** | Continuous batch clean | Hourly at minute :12 | `clear_solid_queue_finished_jobs` |
-| **Solid Cache (Expired Entries)** | **24 hours** (`1.day.ago`) | Daily at 02:00 AM | `clear_solid_cache_expired_entries` |
-| **AI Telemetry (`Ai::Run`)** | **90 days** (`90.days.ago`) | Sundays at 04:00 AM | `clear_old_ai_runs` |
-| **Stripe Webhook Records** | **30 days** | Daily at 03:30 AM | `clear_old_payment_webhook_events` |
-| **User Notifications** | **30 days** (read / discarded) | Daily at 02:30 AM | `notification_cleanup` |
-| **Docker Images & Build Cache** | **7 days** (168 hours) | Weekly host cron | [`./scripts/vps_cleanup.sh`](scripts/vps_cleanup.sh) |
+| Target / Subsystem                   | Retention Window                               | Schedule / Frequency | Mechanism                                            |
+| :----------------------------------- | :--------------------------------------------- | :------------------- | :--------------------------------------------------- |
+| **Docker Container Logs**            | Max 30 MB / container (`10m` $\times$ 3 files) | Continuous runtime   | Docker `json-file` rotation (prod & dev)             |
+| **Rails Pulse (Requests & Queries)** | **1 month** (max 50k req / 250k ops)           | Daily at 01:00 AM    | `RailsPulse::CleanupJob`                             |
+| **Rails Pulse (Summary Rollups)**    | Permanent aggregated charts                    | Hourly at minute :05 | `RailsPulse::SummaryJob`                             |
+| **Solid Queue (Failed Jobs)**        | **1 month** (`1.month.ago`)                    | Sundays at 03:00 AM  | `clear_solid_queue_failed_jobs`                      |
+| **Solid Queue (Finished Jobs)**      | Continuous batch clean                         | Hourly at minute :12 | `clear_solid_queue_finished_jobs`                    |
+| **Solid Cache (Expired Entries)**    | **24 hours** (`1.day.ago`)                     | Daily at 02:00 AM    | `clear_solid_cache_expired_entries`                  |
+| **AI Telemetry (`Ai::Run`)**         | **90 days** (`90.days.ago`)                    | Sundays at 04:00 AM  | `clear_old_ai_runs`                                  |
+| **Stripe Webhook Records**           | **30 days**                                    | Daily at 03:30 AM    | `clear_old_payment_webhook_events`                   |
+| **User Notifications**               | **30 days** (read / discarded)                 | Daily at 02:30 AM    | `notification_cleanup`                               |
+| **Docker Images & Build Cache**      | **7 days** (168 hours)                         | Weekly host cron     | [`./scripts/vps_cleanup.sh`](scripts/vps_cleanup.sh) |
 
 ## 🎨 Rebranding
 
@@ -371,12 +437,24 @@ This API core is built on top of the **RexOne Ecosystem** (`rex-9`). When creati
 
 ## 💖 Sponsor & Support RexOne
 
-RexOne is built and maintained by Rex ([@rex-9](https://github.com/rex-9)). If RexOne saves you engineering weeks, AI tokens, or cloud compute costs, consider supporting the foundation!
+> _"I'm not a wealthy founder or a venture-backed company ~ I'm an independent developer and meditator who built RexOne with my own hands. I could have easily closed-sourced this enterprise foundation or charged $800+ behind a commercial paywall. Instead, out of pure loving-kindness (mettā) cultivated through my meditation journey under Theravada Buddhist teachings, I chose to gift RexOne 100% free and open-source under Apache 2.0 to empower builders, indie hackers, and learners worldwide._
+>
+> _If this foundation saves you months of engineering, thousands of dollars, or sparks your product journey, please consider supporting me so I can sustain my life and craft. Kindly return the loving-kindness: [Sponsor Rex on GitHub](https://github.com/sponsors/rex-9) and star the repositories. Thank you so much for your generosity and kindness. 🙏"_
+
+RexOne is architected, forged, and maintained by Rex ([@rex-9](https://github.com/rex-9)). If RexOne saves you engineering months, AI tokens, or cloud compute costs, please consider supporting the foundation!
 
 [![Sponsor rex-9](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/rex-9)
 [![GitHub Stars](https://img.shields.io/github/stars/rex-9/rexone-core.svg?style=social&label=Star)](https://github.com/rex-9/rexone-core)
 
 👉 **[Sponsor Rex on GitHub](https://github.com/sponsors/rex-9)**
+
+---
+
+## 🕯️ The Candle Philosophy of Open Source
+
+> _"Sharing is like lighting candles from one candle to another: sharing one's light does not make its own flame dimmer or weaker, but the world illuminates more and more with each light shared... making the world more and more beautiful... one light at a time..."_
+>
+> — **Htet Naing (Rex9)**, _Creator of RexOne_
 
 ## Author
 

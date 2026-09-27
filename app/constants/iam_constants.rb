@@ -50,7 +50,7 @@ module IamConstants
     PAYMENT_PRODUCTS      = "payment_products".freeze
     PAYMENT_PAYMENTS      = "payment_payments".freeze
     PAYMENT_SUBSCRIPTIONS = "payment_subscriptions".freeze
-    PAYMENT_TRANSACTIONS  = "payment_transactions".freeze
+    PAYMENT_PURCHASES     = "payment_purchases".freeze
     PAYMENT_COUPONS       = "payment_coupons".freeze
     PAYMENT_USER_COUPONS  = "payment_user_coupons".freeze
     USER_NOTIFICATIONS    = "user_notifications".freeze
@@ -60,7 +60,7 @@ module IamConstants
       AI_PROFILES, AI_RUNS, CHAT_ROOMS, CHAT_MESSAGES,
       CLIENT_LOGS, CLIENT_VERSIONS, CLIENT_USER_VERSIONS,
       IAM_ROLES, IAM_PERMISSIONS, IAM_USER_ROLES,
-      PAYMENT_PRODUCTS, PAYMENT_PAYMENTS, PAYMENT_SUBSCRIPTIONS, PAYMENT_TRANSACTIONS,
+      PAYMENT_PRODUCTS, PAYMENT_PAYMENTS, PAYMENT_SUBSCRIPTIONS, PAYMENT_PURCHASES,
       PAYMENT_COUPONS, PAYMENT_USER_COUPONS
     ].freeze
 
@@ -71,7 +71,7 @@ module IamConstants
     PRODUCTS      = PAYMENT_PRODUCTS
     PAYMENTS      = PAYMENT_PAYMENTS
     SUBSCRIPTIONS = PAYMENT_SUBSCRIPTIONS
-    TRANSACTIONS  = PAYMENT_TRANSACTIONS
+    PURCHASES     = PAYMENT_PURCHASES
     COUPONS       = PAYMENT_COUPONS
     USER_COUPONS  = PAYMENT_USER_COUPONS
     LOGS          = CLIENT_LOGS
@@ -85,7 +85,7 @@ module IamConstants
       { resource: Resource::PAYMENT_PRODUCTS, actions: [ Action::READ ] },
       { resource: Resource::PAYMENT_PAYMENTS, actions: [ Action::CREATE, Action::READ ] },
       { resource: Resource::PAYMENT_SUBSCRIPTIONS, actions: [ Action::READ, Action::CREATE ] },
-      { resource: Resource::PAYMENT_TRANSACTIONS, actions: [ Action::READ ] },
+      { resource: Resource::PAYMENT_PURCHASES, actions: [ Action::READ ] },
       { resource: Resource::PAYMENT_COUPONS, actions: [ Action::READ ] },
       { resource: Resource::PAYMENT_USER_COUPONS, actions: [ Action::READ ] },
       { resource: Resource::ACCESSES, actions: [ Action::READ ] },

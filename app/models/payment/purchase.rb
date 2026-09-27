@@ -1,16 +1,18 @@
-# app/models/payment/transaction.rb
+# frozen_string_literal: true
+
+# app/models/payment/purchase.rb
 # Synced with Stripe Payment Intent Object
 # https://docs.stripe.com/api/payment_intents/object
 
-class Payment::Transaction < ApplicationRecord
-  self.table_name = "payment_transactions"
+class Payment::Purchase < ApplicationRecord
+  self.table_name = "payment_purchases"
 
   # ===== ASSOCIATIONS =====
   belongs_to :user
-  belongs_to :product, class_name: "Payment::Product", optional: true, inverse_of: :transactions
-  has_one :user_coupon, -> { where(purchase_type: :trx) },
+  belongs_to :product, class_name: "Payment::Product", optional: true, inverse_of: :purchases
+  has_one :user_coupon, -> { where(payment_type: :purchase) },
           class_name: "Payment::UserCoupon",
-          foreign_key: :purchase_id,
+          foreign_key: :payment_id,
           dependent: :nullify,
           inverse_of: false
   has_one :coupon, through: :user_coupon, class_name: "Payment::Coupon"
@@ -18,13 +20,13 @@ class Payment::Transaction < ApplicationRecord
   # ===== ENUMS =====
   # Stripe Payment Intent statuses (sync with Stripe)
   enum :status, {
-    canceled: PaymentConstants::TransactionStatus::CANCELED,
-    processing: PaymentConstants::TransactionStatus::PROCESSING,
-    requires_action: PaymentConstants::TransactionStatus::REQUIRES_ACTION,
-    requires_capture: PaymentConstants::TransactionStatus::REQUIRES_CAPTURE,
-    requires_confirmation: PaymentConstants::TransactionStatus::REQUIRES_CONFIRMATION,
-    requires_payment_method: PaymentConstants::TransactionStatus::REQUIRES_PAYMENT_METHOD,
-    succeeded: PaymentConstants::TransactionStatus::SUCCEEDED
+    canceled: PaymentConstants::PurchaseStatus::CANCELED,
+    processing: PaymentConstants::PurchaseStatus::PROCESSING,
+    requires_action: PaymentConstants::PurchaseStatus::REQUIRES_ACTION,
+    requires_capture: PaymentConstants::PurchaseStatus::REQUIRES_CAPTURE,
+    requires_confirmation: PaymentConstants::PurchaseStatus::REQUIRES_CONFIRMATION,
+    requires_payment_method: PaymentConstants::PurchaseStatus::REQUIRES_PAYMENT_METHOD,
+    succeeded: PaymentConstants::PurchaseStatus::SUCCEEDED
   }
 
   # ===== VALIDATIONS =====
@@ -32,15 +34,15 @@ class Payment::Transaction < ApplicationRecord
   validates :unit_amount, numericality: { greater_than: 0 }
 
   # ===== SCOPES =====
-  scope :successful, -> { where(status: PaymentConstants::TransactionStatus::SUCCEEDED) }
-  scope :pending, -> { where(status: [ PaymentConstants::TransactionStatus::PROCESSING, PaymentConstants::TransactionStatus::REQUIRES_ACTION, PaymentConstants::TransactionStatus::REQUIRES_CONFIRMATION, PaymentConstants::TransactionStatus::REQUIRES_PAYMENT_METHOD ]) }
-  scope :failed, -> { where(status: [ PaymentConstants::TransactionStatus::CANCELED ]) }
+  scope :successful, -> { where(status: PaymentConstants::PurchaseStatus::SUCCEEDED) }
+  scope :pending, -> { where(status: [ PaymentConstants::PurchaseStatus::PROCESSING, PaymentConstants::PurchaseStatus::REQUIRES_ACTION, PaymentConstants::PurchaseStatus::REQUIRES_CONFIRMATION, PaymentConstants::PurchaseStatus::REQUIRES_PAYMENT_METHOD ]) }
+  scope :failed, -> { where(status: [ PaymentConstants::PurchaseStatus::CANCELED ]) }
   scope :recent, -> { order(created_at: :desc).limit(10) }
   scope :by_user, ->(user_id) { where(user_id: user_id) }
 
   # ===== INSTANCE METHODS =====
   def succeeded?
-    status == PaymentConstants::TransactionStatus::SUCCEEDED
+    status == PaymentConstants::PurchaseStatus::SUCCEEDED
   end
 
   def paid?

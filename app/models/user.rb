@@ -4,7 +4,7 @@ class User < ApplicationRecord
   include Devise::JWT::RevocationStrategies::JTIMatcher
   has_many :assets, as: :assetable, dependent: :nullify
   has_many :subscriptions, class_name: "Payment::Subscription", dependent: :destroy
-  has_many :transactions, class_name: "Payment::Transaction", dependent: :destroy
+  has_many :purchases, class_name: "Payment::Purchase", dependent: :destroy
   has_many :accesses, dependent: :destroy
   has_many :user_coupons, class_name: "Payment::UserCoupon", dependent: :nullify
   has_many :referred_coupons, class_name: "Payment::Coupon", foreign_key: :referrer_id, dependent: :destroy

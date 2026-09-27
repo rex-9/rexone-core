@@ -59,14 +59,14 @@ class V1::Payment::PaymentsController < V1::ApplicationController
       }
 
       if coupon.present?
-        transaction = Payment::Transaction.create!(
+        purchase = Payment::Purchase.create!(
           user: current_user,
           product: product,
           unit_amount: product.unit_amount,
           amount_received: 0,
           amount_capturable: 0,
           currency: product.currency,
-          status: PaymentConstants::TransactionStatus::SUCCEEDED,
+          status: PaymentConstants::PurchaseStatus::SUCCEEDED,
           stripe_payment_intent_id: "free_coupon_#{SecureRandom.hex(12)}",
           paid_at: Time.current
         )
@@ -75,8 +75,8 @@ class V1::Payment::PaymentsController < V1::ApplicationController
           user: current_user,
           product: product,
           coupon: coupon,
-          purchase_id: transaction.id,
-          purchase_type: :trx
+          payment_id: purchase.id,
+          payment_type: :purchase
         )
 
         response_data[:coupon_code] = coupon.code

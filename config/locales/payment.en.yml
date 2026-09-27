@@ -48,10 +48,10 @@ en:
     user_coupons:
       fetched: "Coupon redemptions fetched successfully."
       fetched_one: "Coupon redemption fetched successfully."
-    transactions:
-      fetched: "Transactions fetched successfully."
-      fetched_one: "Transaction fetched successfully."
-      recent_fetched: "Recent transactions fetched successfully."
+    purchases:
+      fetched: "Purchases fetched successfully."
+      fetched_one: "Purchase fetched successfully."
+      recent_fetched: "Recent purchases fetched successfully."
     checkout:
       already_subscribed: "Already subscribed"
       active_subscription_exists: "You already have an active subscription to this product. You can cancel it first."

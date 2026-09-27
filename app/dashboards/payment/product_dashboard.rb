@@ -29,7 +29,7 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
     stripe_price_id: Field::String,
     stripe_product_id: Field::String,
     subscriptions: Field::HasMany,
-    transactions: Field::HasMany,
+    purchases: Field::HasMany,
     undiscarded_at: Field::DateTime,
     undiscarded_by_id: Field::String,
     undiscarder: Field::BelongsTo,
@@ -71,7 +71,7 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
     stripe_price_id
     stripe_product_id
     subscriptions
-    transactions
+    purchases
     undiscarded_at
     undiscarded_by_id
     undiscarder
@@ -100,7 +100,7 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
     stripe_price_id
     stripe_product_id
     subscriptions
-    transactions
+    purchases
     undiscarded_at
     undiscarded_by_id
     undiscarder

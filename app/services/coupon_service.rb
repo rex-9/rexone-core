@@ -81,7 +81,7 @@ class CouponService
       "coupon:cooldown:#{user_id}"
     end
 
-    def apply_to_checkout!(user:, product:, coupon:, purchase_id:, purchase_type:)
+    def apply_to_checkout!(user:, product:, coupon:, payment_id:, payment_type:)
       ActiveRecord::Base.transaction do
         # Acquire lock on user to serialize concurrent checkout requests for the same user
         user.lock!
@@ -109,8 +109,8 @@ class CouponService
           coupon: coupon,
           user: user,
           product: product,
-          purchase_id: purchase_id,
-          purchase_type: purchase_type,
+          payment_id: payment_id,
+          payment_type: payment_type,
           discount_amount: discount_info[:discount_amount],
           original_amount: product.unit_amount.to_i,
           final_amount: discount_info[:final_amount],

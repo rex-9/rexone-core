@@ -10,7 +10,7 @@ class V1::Admin::Payment::UserCouponsController < V1::ApplicationController
     user_coupons = user_coupons.where(coupon_id: filters[:coupon_id]) if filters[:coupon_id].present?
     user_coupons = user_coupons.where(user_id: filters[:user_id]) if filters[:user_id].present?
     user_coupons = user_coupons.where(product_id: filters[:product_id]) if filters[:product_id].present?
-    user_coupons = user_coupons.where(purchase_type: filters[:purchase_type]) if filters[:purchase_type].present?
+    user_coupons = user_coupons.where(payment_type: filters[:payment_type]) if filters[:payment_type].present?
 
     user_coupons = search(user_coupons, search_term: filters[:search])
     user_coupons = sort(
@@ -45,7 +45,7 @@ class V1::Admin::Payment::UserCouponsController < V1::ApplicationController
   end
 
   def filter_params
-    params.permit(:coupon_id, :user_id, :product_id, :purchase_type, :search, :limit, :page)
+    params.permit(:coupon_id, :user_id, :product_id, :payment_type, :search, :limit, :page)
   end
 
   def search(scope, search_term: nil)

@@ -12,9 +12,9 @@ module MessageService
     DISCARDED_PRODUCTS_FETCHED = "payment.products.discarded_fetched"
     PRODUCT_RESTORED = "payment.products.restored"
     PRODUCT_RESTORE_FAILED = "payment.products.restore_failed"
-    TRANSACTIONS_FETCHED = "payment.transactions.fetched"
-    TRANSACTION_FETCHED = "payment.transactions.fetched_one"
-    RECENT_TRANSACTIONS_FETCHED = "payment.transactions.recent_fetched"
+    PURCHASES_FETCHED = "payment.purchases.fetched"
+    PURCHASE_FETCHED = "payment.purchases.fetched_one"
+    RECENT_PURCHASES_FETCHED = "payment.purchases.recent_fetched"
     SUBSCRIPTIONS_FETCHED = "payment.subscriptions.fetched"
     SUBSCRIPTION_FETCHED = "payment.subscriptions.fetched_one"
 

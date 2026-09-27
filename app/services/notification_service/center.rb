@@ -176,12 +176,12 @@ module NotificationService
 
       # ===== PAYMENT NOTIFICATIONS =====
 
-      def payment_success(user, product, transaction, **kwargs)
+      def payment_success(user, product, purchase, **kwargs)
         template = template_for(NotificationConstants::NotificationType::PAYMENT_SUCCESS)
         context = {
           product_name: product.name,
           amount: product.display_price,
-          date: transaction.paid_at.strftime("%B %d, %Y")
+          date: purchase.paid_at.strftime("%B %d, %Y")
         }
 
         title = template ? template.render_text(template.in_app_title, user: user, context: context) : payment_message(MessageService::Payment::PAYMENT_SUCCESS_TITLE)
@@ -209,7 +209,7 @@ module NotificationService
             user_name: user.name || user.username,
             product_name: product.name,
             amount: product.display_price,
-            date: transaction.paid_at.strftime("%B %d, %Y")
+            date: purchase.paid_at.strftime("%B %d, %Y")
           },
           **kwargs
         )
