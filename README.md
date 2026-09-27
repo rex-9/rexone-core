@@ -31,6 +31,7 @@ Built under an immutable creed: **Start from One. Not from Zero. Clear in though
 | Resource | Purpose & Canonical Specification |
 | :--- | :--- |
 | **🏛️ Unified Ecosystem** | Complete cross-platform architecture, feature parity matrix, and communication protocols across Core, Web, and Mobile: **[ECOSYSTEM.md](ECOSYSTEM.md)** |
+| **📖 Interactive API Docs & Swagger** | Full OpenAPI 3.0 specification & interactive Swagger UI explorer at `/api-docs`: **[swagger.yaml](swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`) |
 | **🗺️ Visual Walkthrough** | Screenshot-driven, feature-by-feature tour of RexOne across all surfaces and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)** |
 | **📜 Constitutional Law** | Non-negotiable architecture, pure parameter contracts, zero legacy shims, and plain English laws: **[LAW.md](LAW.md)** *(Zero exceptions)* |
 | **🤖 Operational Agent Governance** | Immutable operational rules for AI coding assistants (secret isolation, git safety, synchronous doc sync): **[AGENTS.md](AGENTS.md)** |
@@ -305,6 +306,7 @@ To maintain high architectural discipline without cluttering the primary showcas
 | Resource | Scope & Canonical Specification |
 | :--- | :--- |
 | **📖 Master Documentation Hub** | Comprehensive engineering reference and scripts catalog: **[`docs/README.md`](docs/README.md)** |
+| **📑 OpenAPI & Swagger Documentation** | Interactive Swagger UI at `/api-docs` and live API schema: **[`swagger/v1/swagger.yaml`](swagger/v1/swagger.yaml)** (Rake: `rake rswag:specs:swaggerize`) |
 | **🚀 Ecosystem Quick Start** | Local Docker setup, database seeding, and startup debugging: **[`docs/QUICK_START.md`](docs/QUICK_START.md)** |
 | **🏛️ Foundation Architecture** | Deep dive into IAM, Devise JWT, Soft Deletion, and JSON:API: **[`docs/FOUNDATION.md`](docs/FOUNDATION.md)** |
 | **🗄️ Database Schema & Models** | Complete database schema, tables, UUID indexes, and associations: **[`docs/SCHEMA.md`](docs/SCHEMA.md)** |

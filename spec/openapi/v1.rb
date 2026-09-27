@@ -62,6 +62,19 @@ module Openapi
       { type: :object, properties: properties, required: required }
     end
 
+    def json_api_resource(type, attributes_schema, relationships: nil)
+      props = {
+        id: UUID,
+        type: { type: :string, example: type.to_s },
+        attributes: attributes_schema
+      }
+      props[:relationships] = relationships if relationships
+      object(
+        required: %i[id type attributes],
+        **props
+      )
+    end
+
     def path_parameter(name, description = nil)
       {
         name: name,
@@ -786,21 +799,54 @@ module Openapi
         success: { type: :boolean, example: true },
         message: { type: :string }
       ),
+      user_resource: json_api_resource(:user, ref(:user)),
+      asset_resource: json_api_resource(:asset, ref(:asset)),
+      message_resource: json_api_resource(:message, ref(:message)),
+      user_response: object(
+        required: %i[status data],
+        status: ref(:response_status),
+        data: ref(:user_resource)
+      ),
       current_user_response: object(
         required: %i[status data],
         status: ref(:response_status),
-        data: object(required: [ :user ], user: ref(:user))
+        data: ref(:user_resource)
+      ),
+      auth_session_response: object(
+        required: [ :status ],
+        status: ref(:response_status),
+        data: { nullable: true, oneOf: [ ref(:user_resource) ] },
+        meta: object(
+          token: { type: :string, description: "JWT bearer authentication token.", nullable: true },
+          otp_sent: { type: :boolean, description: "Indicates confirmation code/email was queued.", nullable: true },
+          password_required: { type: :boolean, description: "Indicates Google OAuth signup requires a password.", nullable: true },
+          challenge_token: { type: :string, description: "One-time challenge token for completing registration.", nullable: true }
+        )
       ),
       asset_operation_response: object(
-        required: %i[status data],
+        required: %i[status data meta],
         status: ref(:response_status),
-        data: object(
-          required: %i[asset operation_id operation_type operation_status link],
-          asset: ref(:asset),
+        data: ref(:asset_resource),
+        meta: object(
+          required: %i[operation_id operation_type operation_status link],
           operation_id: { type: :string },
           operation_type: { type: :string, enum: NotificationConstants::OperationType::ALL },
           operation_status: { type: :string, enum: NotificationConstants::OperationStatus::ALL },
           link: { type: :string }
+        )
+      ),
+      asset_upload_response: object(
+        required: %i[status data meta],
+        status: ref(:response_status),
+        data: ref(:asset_resource),
+        meta: object(
+          required: [ :storage_details ],
+          storage_details: object(
+            required: %i[storage_key bytes format],
+            storage_key: { type: :string },
+            bytes: { type: :integer },
+            format: { type: :string }
+          )
         )
       ),
       asset_playback_response: object(
@@ -830,28 +876,42 @@ module Openapi
         )
       ),
       ai_chat_response: object(
-        required: %i[status data],
+        required: %i[status data meta],
         status: ref(:response_status),
-        data: object(
-          required: %i[messages room_id status operation_id operation_type link job_id],
+        data: ref(:message_resource),
+        meta: object(
+          required: %i[room_id messages],
+          room_id: UUID,
           messages: {
             type: :array,
-            items: ref(:message),
+            items: ref(:message_resource),
             description: "List of messages created in the room."
           },
-          room_id: UUID,
-          status: { type: :string, enum: NotificationConstants::OperationStatus::ALL },
-          operation_id: { type: :string },
-          operation_type: { type: :string, enum: NotificationConstants::OperationType::ALL },
-          link: { type: :string },
-          job_id: { type: :string }
+          status: { type: :string, enum: NotificationConstants::OperationStatus::ALL, nullable: true },
+          operation_id: { type: :string, nullable: true },
+          operation_type: { type: :string, enum: NotificationConstants::OperationType::ALL, nullable: true },
+          link: { type: :string, nullable: true },
+          job_id: { type: :string, nullable: true }
         )
       ),
       response: object(
         required: [ :status ],
         status: ref(:response_status),
         data: { nullable: true },
-        meta: object(pagination: ref(:pagination))
+        meta: object(
+          pagination: ref(:pagination),
+          token: { type: :string, nullable: true },
+          cooldown_remaining: { type: :integer, nullable: true },
+          remaining_attempts: { type: :integer, nullable: true },
+          otp_sent: { type: :boolean, nullable: true },
+          password_required: { type: :boolean, nullable: true },
+          challenge_token: { type: :string, nullable: true },
+          storage_details: object(
+            storage_key: { type: :string },
+            bytes: { type: :integer },
+            format: { type: :string }
+          )
+        )
       ),
       error_response: object(
         required: [ :status ],
@@ -862,7 +922,11 @@ module Openapi
           message: { type: :string },
           error: { type: :string }
         ),
-        data: { nullable: true }
+        data: { nullable: true },
+        meta: object(
+          remaining_attempts: { type: :integer, nullable: true },
+          cooldown_remaining: { type: :integer, nullable: true }
+        )
       ),
       pagination: object(
         current_page: { type: :integer },
@@ -879,7 +943,10 @@ module Openapi
         username: { type: :string },
         name: { type: :string, nullable: true },
         provider: { type: :string, enum: %w[email google] },
+        confirmed: { type: :boolean },
+        confirmed_at: DATE_TIME,
         avatar_url: { type: :string, format: :uri, nullable: true },
+        avatar_asset_id: UUID.merge(nullable: true),
         iam: object(
           is_admin: { type: :boolean },
           is_super_admin: { type: :boolean },
@@ -890,6 +957,10 @@ module Openapi
           admin_permissions: { type: :array, items: { type: :object } },
           non_admin_permissions: { type: :array, items: { type: :object } }
         ),
+        accesses: {
+          type: :array,
+          items: ref(:access)
+        },
         created_at: DATE_TIME,
         updated_at: DATE_TIME,
         discarded_at: { type: :string, format: :"date-time", nullable: true },
@@ -1027,10 +1098,16 @@ module Openapi
       access: object(
         id: UUID,
         product_id: UUID,
+        product_code: { type: :string, nullable: true },
         product_name: { type: :string, nullable: true },
+        user_id: UUID,
+        user_email: { type: :string, format: :email, nullable: true },
+        username: { type: :string, nullable: true },
+        user_name: { type: :string, nullable: true },
         status: { type: :string },
         granted_at: DATE_TIME,
         expires_at: DATE_TIME,
+        revoked_at: DATE_TIME,
         remaining_days: { type: :integer, nullable: true },
         active: { type: :boolean },
         created_at: DATE_TIME,
@@ -1160,29 +1237,34 @@ module Openapi
         },
         "/signup" => {
           post: operation(tags: "Authentication", summary: "Create an email account", success: 201,
-                          security: nil, body: ref(:signup_request), errors: [ 400, 422 ]),
+                          security: nil, body: ref(:signup_request), errors: [ 400, 422 ],
+                          success_schema: ref(:user_response)),
           delete: operation(tags: "Authentication", summary: "Delete the current account", errors: [ 401 ])
         },
         "/signin" => {
           post: operation(tags: "Authentication", summary: "Sign in with email or username",
-                          security: nil, body: ref(:signin_request), errors: [ 401, 403, 429 ])
+                          security: nil, body: ref(:signin_request), errors: [ 401, 403, 429 ],
+                          success_schema: ref(:auth_session_response))
         },
         "/signout" => {
           delete: operation(tags: "Authentication", summary: "Sign out the active platform session", errors: [ 401 ])
         },
         "/signin/token" => {
           post: operation(tags: "Authentication", summary: "Exchange a one-time account token for a JWT",
-                          security: nil, body: ref(:token_signin_request), errors: [ 401, 403 ])
+                          security: nil, body: ref(:token_signin_request), errors: [ 401, 403 ],
+                          success_schema: ref(:auth_session_response))
         },
         "/signin/google" => {
           post: operation(tags: "Authentication", summary: "Start Google sign-in",
-                          security: nil, body: ref(:google_signin_request), errors: [ 401, 403 ])
+                          security: nil, body: ref(:google_signin_request), errors: [ 401, 403 ],
+                          success_schema: ref(:auth_session_response))
         },
         "/signin/google/complete" => {
           post: operation(
             tags: "Authentication", summary: "Complete Google registration with a passcode", security: nil,
             body: ref(:google_registration_request),
-            errors: [ 401, 403, 422 ]
+            errors: [ 401, 403, 422 ],
+            success_schema: ref(:auth_session_response)
           )
         },
         "/confirmation" => {
@@ -1198,7 +1280,8 @@ module Openapi
         "/confirmation/confirm_code" => {
           post: operation(
             tags: "Authentication", summary: "Confirm an account using its email code", security: nil,
-            body: ref(:confirmation_verify_request), errors: [ 422 ]
+            body: ref(:confirmation_verify_request), errors: [ 422 ],
+            success_schema: ref(:auth_session_response)
           )
         },
         "/password/forgot" => {
@@ -1593,7 +1676,8 @@ module Openapi
         post: operation(tags: "Media", summary: "Upload and persist an asset",
                         description: "Stores the upload immediately. Compressible media and SVG-to-PNG conversion are processed asynchronously by the dedicated media queue. Upload limits are selected independently for video, audio, image, and other formats.",
                         success: 201,
-                        body: ref(:asset_upload_request), errors: [ 401, 422, 500 ])
+                        body: ref(:asset_upload_request), errors: [ 401, 422, 500 ],
+                        success_schema: ref(:asset_upload_response))
       }
       paths["/v1/assets/upload"][:post][:requestBody] = {
         required: true,
@@ -1938,7 +2022,8 @@ module Openapi
         post: operation(tags: "Admin / Assets", summary: "Upload and persist an asset via admin",
                         description: "Stores the upload immediately. Compressible media and SVG-to-PNG conversion are processed asynchronously by the dedicated media queue. Upload limits are selected independently for video, audio, image, and other formats.",
                         success: 201,
-                        body: ref(:asset_upload_request), errors: [ 401, 403, 422, 500 ])
+                        body: ref(:asset_upload_request), errors: [ 401, 403, 422, 500 ],
+                        success_schema: ref(:asset_upload_response))
       }
       paths["/v1/admin/assets/upload"][:post][:requestBody] = {
         required: true,

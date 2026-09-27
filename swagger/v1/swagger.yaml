@@ -1768,31 +1768,112 @@ components:
         - code
         - success
         - message
+    user_resource:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          example: user
+        attributes:
+          "$ref": "#/components/schemas/user"
+      required:
+        - id
+        - type
+        - attributes
+    asset_resource:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          example: asset
+        attributes:
+          "$ref": "#/components/schemas/asset"
+      required:
+        - id
+        - type
+        - attributes
+    message_resource:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          example: message
+        attributes:
+          "$ref": "#/components/schemas/message"
+      required:
+        - id
+        - type
+        - attributes
+    user_response:
+      type: object
+      properties:
+        status:
+          "$ref": "#/components/schemas/response_status"
+        data:
+          "$ref": "#/components/schemas/user_resource"
+      required:
+        - status
+        - data
     current_user_response:
       type: object
       properties:
         status:
           "$ref": "#/components/schemas/response_status"
         data:
-          type: object
-          properties:
-            user:
-              "$ref": "#/components/schemas/user"
-          required:
-            - user
+          "$ref": "#/components/schemas/user_resource"
       required:
         - status
         - data
+    auth_session_response:
+      type: object
+      properties:
+        status:
+          "$ref": "#/components/schemas/response_status"
+        data:
+          nullable: true
+          oneOf:
+            - "$ref": "#/components/schemas/user_resource"
+        meta:
+          type: object
+          properties:
+            token:
+              type: string
+              description: JWT bearer authentication token.
+              nullable: true
+            otp_sent:
+              type: boolean
+              description: Indicates confirmation code/email was queued.
+              nullable: true
+            password_required:
+              type: boolean
+              description: Indicates Google OAuth signup requires a password.
+              nullable: true
+            challenge_token:
+              type: string
+              description: One-time challenge token for completing registration.
+              nullable: true
+          required: []
+      required:
+        - status
     asset_operation_response:
       type: object
       properties:
         status:
           "$ref": "#/components/schemas/response_status"
         data:
+          "$ref": "#/components/schemas/asset_resource"
+        meta:
           type: object
           properties:
-            asset:
-              "$ref": "#/components/schemas/asset"
             operation_id:
               type: string
             operation_type:
@@ -1813,7 +1894,6 @@ components:
             link:
               type: string
           required:
-            - asset
             - operation_id
             - operation_type
             - operation_status
@@ -1821,6 +1901,36 @@ components:
       required:
         - status
         - data
+        - meta
+    asset_upload_response:
+      type: object
+      properties:
+        status:
+          "$ref": "#/components/schemas/response_status"
+        data:
+          "$ref": "#/components/schemas/asset_resource"
+        meta:
+          type: object
+          properties:
+            storage_details:
+              type: object
+              properties:
+                storage_key:
+                  type: string
+                bytes:
+                  type: integer
+                format:
+                  type: string
+              required:
+                - storage_key
+                - bytes
+                - format
+          required:
+            - storage_details
+      required:
+        - status
+        - data
+        - meta
     asset_playback_response:
       type: object
       properties:
@@ -1892,16 +2002,18 @@ components:
         status:
           "$ref": "#/components/schemas/response_status"
         data:
+          "$ref": "#/components/schemas/message_resource"
+        meta:
           type: object
           properties:
-            messages:
-              type: array
-              items:
-                "$ref": "#/components/schemas/message"
-              description: List of messages created in the room.
             room_id:
               type: string
               format: uuid
+            messages:
+              type: array
+              items:
+                "$ref": "#/components/schemas/message_resource"
+              description: List of messages created in the room.
             status:
               type: string
               enum:
@@ -1909,8 +2021,10 @@ components:
                 - processing
                 - completed
                 - failed
+              nullable: true
             operation_id:
               type: string
+              nullable: true
             operation_type:
               type: string
               enum:
@@ -1919,21 +2033,20 @@ components:
                 - video_thumbnail
                 - notification_delivery
                 - payment_webhook
+              nullable: true
             link:
               type: string
+              nullable: true
             job_id:
               type: string
+              nullable: true
           required:
-            - messages
             - room_id
-            - status
-            - operation_id
-            - operation_type
-            - link
-            - job_id
+            - messages
       required:
         - status
         - data
+        - meta
     response:
       type: object
       properties:
@@ -1946,6 +2059,34 @@ components:
           properties:
             pagination:
               "$ref": "#/components/schemas/pagination"
+            token:
+              type: string
+              nullable: true
+            cooldown_remaining:
+              type: integer
+              nullable: true
+            remaining_attempts:
+              type: integer
+              nullable: true
+            otp_sent:
+              type: boolean
+              nullable: true
+            password_required:
+              type: boolean
+              nullable: true
+            challenge_token:
+              type: string
+              nullable: true
+            storage_details:
+              type: object
+              properties:
+                storage_key:
+                  type: string
+                bytes:
+                  type: integer
+                format:
+                  type: string
+              required: []
           required: []
       required:
         - status
@@ -1971,6 +2112,16 @@ components:
             - message
         data:
           nullable: true
+        meta:
+          type: object
+          properties:
+            remaining_attempts:
+              type: integer
+              nullable: true
+            cooldown_remaining:
+              type: integer
+              nullable: true
+          required: []
       required:
         - status
     pagination:
@@ -2010,9 +2161,19 @@ components:
           enum:
             - email
             - google
+        confirmed:
+          type: boolean
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
         avatar_url:
           type: string
           format: uri
+          nullable: true
+        avatar_asset_id:
+          type: string
+          format: uuid
           nullable: true
         iam:
           type: object
@@ -2046,6 +2207,10 @@ components:
               items:
                 type: object
           required: []
+        accesses:
+          type: array
+          items:
+            "$ref": "#/components/schemas/access"
         created_at:
           type: string
           format: date-time
@@ -2480,7 +2645,23 @@ components:
         product_id:
           type: string
           format: uuid
+        product_code:
+          type: string
+          nullable: true
         product_name:
+          type: string
+          nullable: true
+        user_id:
+          type: string
+          format: uuid
+        user_email:
+          type: string
+          format: email
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        user_name:
           type: string
           nullable: true
         status:
@@ -2490,6 +2671,10 @@ components:
           format: date-time
           nullable: true
         expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        revoked_at:
           type: string
           format: date-time
           nullable: true
@@ -2885,7 +3070,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/response"
+                "$ref": "#/components/schemas/user_response"
         "400":
           description: Bad Request
           content:
@@ -2978,7 +3163,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/response"
+                "$ref": "#/components/schemas/auth_session_response"
         "401":
           description: Unauthorized
           content:
@@ -3078,7 +3263,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/response"
+                "$ref": "#/components/schemas/auth_session_response"
         "401":
           description: Unauthorized
           content:
@@ -3130,7 +3315,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/response"
+                "$ref": "#/components/schemas/auth_session_response"
         "401":
           description: Unauthorized
           content:
@@ -3182,7 +3367,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/response"
+                "$ref": "#/components/schemas/auth_session_response"
         "401":
           description: Unauthorized
           content:
@@ -3331,7 +3516,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/response"
+                "$ref": "#/components/schemas/auth_session_response"
         "422":
           description: Unprocessable Content
           content:
@@ -8019,7 +8204,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/response"
+                "$ref": "#/components/schemas/asset_upload_response"
         "401":
           description: Unauthorized
           content:
@@ -12314,7 +12499,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/response"
+                "$ref": "#/components/schemas/asset_upload_response"
         "401":
           description: Unauthorized
           content:

@@ -126,19 +126,59 @@ RSpec.describe "OpenAPI V1 document" do
     expect(metadata.dig(:tts_status, :enum)).to eq(Chat::Message::STATUSES.values)
   end
 
-  it "uses explicit response contracts for current-user and queued-operation endpoints" do
+  it "uses explicit response contracts for current-user, authentication, upload, and queued-operation endpoints" do
     expected = {
+      [ "/signup", :post ] => :user_response,
+      [ "/signin", :post ] => :auth_session_response,
+      [ "/signin/token", :post ] => :auth_session_response,
+      [ "/signin/google", :post ] => :auth_session_response,
+      [ "/signin/google/complete", :post ] => :auth_session_response,
+      [ "/confirmation/confirm_code", :post ] => :auth_session_response,
       [ "/v1/users/current", :get ] => :current_user_response,
       [ "/v1/users/current", :put ] => :current_user_response,
+      [ "/v1/assets/upload", :post ] => :asset_upload_response,
+      [ "/v1/admin/assets/upload", :post ] => :asset_upload_response,
       [ "/v1/admin/assets/{id}/compress", :post ] => :asset_operation_response,
       [ "/v1/admin/assets/{id}/thumbnail/regenerate", :post ] => :asset_operation_response,
       [ "/v1/chat/messages", :post ] => :ai_chat_response
     }
 
     expected.each do |(path, method), schema|
-      success_response = document.dig(:paths, path, method, :responses).values_at("200", "202").compact.first
+      success_response = document.dig(:paths, path, method, :responses).values_at("200", "201", "202").compact.first
       expect(success_response.dig(:content, Openapi::V1::JSON_CONTENT, :schema)).to eq(Openapi::V1.ref(schema))
     end
+  end
+
+  it "documents live user and access serializer attributes and envelopes" do
+    user_props = document.dig(:components, :schemas, :user, :properties)
+    expect(user_props.keys).to include(
+      :id, :email, :username, :name, :provider, :confirmed, :confirmed_at,
+      :avatar_url, :avatar_asset_id, :iam, :accesses, :created_at, :updated_at
+    )
+    expect(user_props.dig(:confirmed, :type)).to eq(:boolean)
+    expect(user_props.dig(:accesses, :type)).to eq(:array)
+    expect(user_props.dig(:accesses, :items)).to eq(Openapi::V1.ref(:access))
+
+    access_props = document.dig(:components, :schemas, :access, :properties)
+    expect(access_props.keys).to include(
+      :id, :product_id, :product_code, :product_name, :user_id, :user_email,
+      :username, :user_name, :status, :granted_at, :expires_at, :revoked_at,
+      :remaining_days, :active
+    )
+
+    current_user_data = document.dig(:components, :schemas, :current_user_response, :properties, :data)
+    expect(current_user_data).to eq(Openapi::V1.ref(:user_resource))
+
+    auth_meta = document.dig(:components, :schemas, :auth_session_response, :properties, :meta, :properties)
+    expect(auth_meta.keys).to include(:token, :otp_sent, :password_required, :challenge_token)
+
+    chat_response = document.dig(:components, :schemas, :ai_chat_response, :properties)
+    expect(chat_response.dig(:data)).to eq(Openapi::V1.ref(:message_resource))
+    expect(chat_response.dig(:meta, :properties, :messages, :items)).to eq(Openapi::V1.ref(:message_resource))
+
+    asset_op = document.dig(:components, :schemas, :asset_operation_response, :properties)
+    expect(asset_op.dig(:data)).to eq(Openapi::V1.ref(:asset_resource))
+    expect(asset_op.dig(:meta, :properties).keys).to include(:operation_id, :operation_type, :operation_status, :link)
   end
 
   it "documents query parameters for AI admin profiles and runs" do
