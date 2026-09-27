@@ -8,7 +8,7 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::SUBSCRIPTIONS_FETCHED),
-      **Payment::SubscriptionSerializer.paginated(records, pagy)
+      **Payment::SubscriptionSerializer.collection_pagy(records, pagy)
     )
   end
 

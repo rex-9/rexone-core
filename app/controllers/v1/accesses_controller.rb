@@ -8,7 +8,7 @@ class V1::AccessesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: access_message(MessageService::Access::FETCHED),
-      **AccessSerializer.paginated(records, pagy)
+      **AccessSerializer.collection_pagy(records, pagy)
     )
   end
 
@@ -20,7 +20,7 @@ class V1::AccessesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: access_message(MessageService::Access::ACTIVE_FETCHED),
-      **AccessSerializer.paginated(records, pagy)
+      **AccessSerializer.collection_pagy(records, pagy)
     )
   end
 

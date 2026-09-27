@@ -21,7 +21,7 @@ class V1::Admin::Client::VersionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: version_message(discarded ? MessageService::Version::DISCARDED_FETCHED : MessageService::Version::FETCHED),
-      **Client::VersionAdminSerializer.paginated(records, pagy)
+      **Client::VersionAdminSerializer.collection_pagy(records, pagy)
     )
   end
 
@@ -101,7 +101,7 @@ class V1::Admin::Client::VersionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: user_version_message(MessageService::UserVersion::FETCHED),
-      **Client::UserVersionAdminSerializer.paginated(page_records, pagy)
+      **Client::UserVersionAdminSerializer.collection_pagy(page_records, pagy)
     )
   end
 

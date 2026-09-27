@@ -12,7 +12,7 @@ class V1::Chat::RoomsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::ROOMS_FETCHED),
-      **Chat::RoomSerializer.paginated(records, pagy)
+      **Chat::RoomSerializer.collection_pagy(records, pagy)
     )
   end
 

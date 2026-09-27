@@ -17,7 +17,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_user_message(MessageService::Admin::User::USER_ROLES_RETRIEVED),
-      **::Iam::RoleSerializer.paginated(records, pagy)
+      **::Iam::RoleSerializer.collection_pagy(records, pagy)
     )
   end
 

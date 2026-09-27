@@ -16,7 +16,7 @@ class V1::Admin::FeedbacksController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: feedback_message(MessageService::Feedback::FETCHED),
-      **FeedbackSerializer.paginated(records, pagy)
+      **FeedbackSerializer.collection_pagy(records, pagy)
     )
   end
 

@@ -18,7 +18,7 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::ROOMS_RETRIEVED),
-      **Chat::RoomSerializer.paginated(records, pagy)
+      **Chat::RoomSerializer.collection_pagy(records, pagy)
     )
   end
 

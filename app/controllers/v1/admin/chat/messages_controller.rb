@@ -17,7 +17,7 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: admin_chat_message(MessageService::Admin::Chat::MESSAGES_RETRIEVED),
-      **Chat::MessageSerializer.paginated(records, pagy)
+      **Chat::MessageSerializer.collection_pagy(records, pagy)
     )
   end
 

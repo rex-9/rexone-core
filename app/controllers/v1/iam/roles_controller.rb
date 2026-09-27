@@ -8,7 +8,7 @@ class V1::Iam::RolesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: user_message(MessageService::User::IAM_FETCHED),
-      **Iam::RoleSerializer.paginated(records, pagy)
+      **Iam::RoleSerializer.collection_pagy(records, pagy)
     )
   end
 

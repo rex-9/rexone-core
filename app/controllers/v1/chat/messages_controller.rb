@@ -13,7 +13,7 @@ class V1::Chat::MessagesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::CONVERSATION_HISTORY),
-      **Chat::MessageSerializer.paginated(records, pagy)
+      **Chat::MessageSerializer.collection_pagy(records, pagy)
     )
   end
 

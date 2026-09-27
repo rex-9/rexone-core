@@ -25,7 +25,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
       message: admin_asset_message(
         discarded ? MessageService::Admin::Asset::DISCARDED_ASSETS_RETRIEVED : MessageService::Admin::Asset::ASSETS_RETRIEVED
       ),
-      **AssetSerializer.paginated(records, pagy)
+      **AssetSerializer.collection_pagy(records, pagy)
     )
   end
 

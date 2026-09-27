@@ -31,7 +31,7 @@ class V1::Admin::UsersController < V1::ApplicationController
       message: admin_user_message(
         discarded ? MessageService::Admin::User::DISCARDED_USERS_RETRIEVED : MessageService::Admin::User::USERS_RETRIEVED
       ),
-      **UserSerializer.paginated(records, pagy)
+      **UserSerializer.collection_pagy(records, pagy)
     )
   end
 

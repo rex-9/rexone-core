@@ -60,7 +60,7 @@ class V1::Client::LogsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: log_message(MessageService::Log::FETCHED),
-      **Client::LogSerializer.paginated(records, pagy)
+      **Client::LogSerializer.collection_pagy(records, pagy)
     )
   end
 

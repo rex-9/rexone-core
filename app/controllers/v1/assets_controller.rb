@@ -14,7 +14,7 @@ class V1::AssetsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: asset_message(MessageService::Asset::FETCHED),
-      **AssetSerializer.paginated(records, pagy)
+      **AssetSerializer.collection_pagy(records, pagy)
     )
   end
 

@@ -18,7 +18,7 @@ class V1::NotificationsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: notification_message(MessageService::Notification::NOTIFICATIONS_FETCHED),
-      **UserNotificationSerializer.paginated(records, pagy)
+      **UserNotificationSerializer.collection_pagy(records, pagy)
     )
   end
 

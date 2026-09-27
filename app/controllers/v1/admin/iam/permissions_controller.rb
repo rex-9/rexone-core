@@ -16,7 +16,7 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: iam_message(MessageService::Iam::PERMISSIONS_FETCHED),
-      **::Iam::PermissionSerializer.paginated(records, pagy)
+      **::Iam::PermissionSerializer.collection_pagy(records, pagy)
     )
   end
 

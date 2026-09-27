@@ -17,7 +17,7 @@ class V1::Admin::Ai::ProfilesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::PROFILES_FETCHED),
-      **Ai::ProfileSerializer.paginated(records, pagy)
+      **Ai::ProfileSerializer.collection_pagy(records, pagy)
     )
   end
 

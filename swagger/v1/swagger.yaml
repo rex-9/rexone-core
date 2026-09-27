@@ -638,6 +638,7 @@ components:
                 type: string
                 format: uuid
               default: []
+          required: []
       required:
         - coupon
     admin_coupon_batch_request:

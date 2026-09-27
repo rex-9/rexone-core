@@ -341,7 +341,7 @@ Permissions follow a clean, four-level administrative model:
   All serializers inherit from `ApplicationSerializer` (`jsonapi-serializer`). Controllers and services must **never** call raw `.serializable_hash` directly; serialization is strictly centralized through 5 canonical class methods:
   1. `record(record, options = {})`: Serializes a single JSON:API resource (`{ id, type, attributes }`). Used for single record GET/POST/PATCH responses (`data: Serializer.record(record)`). Redundant top-level entity wrapper hashes (e.g. `{ user: ... }`, `{ asset: ... }`, `{ user_version: ... }`) are strictly forbidden for single-record responses.
   2. `collection(collection, options = {})`: Serializes a JSON:API resource array (`[{ id, type, attributes }]`).
-  3. `paginated(collection, pagy, options = {})`: Serializes a paginated JSON:API collection with standard `meta.pagination` envelope (`{ data: [...], meta: { pagination: { current_page, total_pages, total_count, limit, next_page, prev_page } } }`).
+  3. `collection_pagy(collection, pagy, options = {})`: Serializes a paginated JSON:API collection with standard `meta.pagination` envelope (`{ data: [...], meta: { pagination: { current_page, total_pages, total_count, limit, next_page, prev_page } } }`).
   4. `record_attributes(record, options = {})`: Extracts a clean, flat attribute hash (`{ id, ... }`). Used for nested object attributes inside serializers or composite multi-key operation hashes.
   5. `collection_attributes(collection, options = {})`: Extracts a clean, flat array of attribute hashes (`[{ id, ... }]`). Used for nested collections inside serializers (e.g. `user.accesses`, `asset.subtitles`, `subscription.items`).
 

@@ -29,7 +29,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
       message: payment_message(
         discarded ? MessageService::Payment::DISCARDED_COUPONS_FETCHED : MessageService::Payment::COUPONS_FETCHED
       ),
-      **::Payment::CouponSerializer.paginated(records, pagy)
+      **::Payment::CouponSerializer.collection_pagy(records, pagy)
     )
   end
 
@@ -167,7 +167,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::USER_COUPONS_FETCHED),
-      **::Payment::UserCouponSerializer.paginated(redemptions, pagy)
+      **::Payment::UserCouponSerializer.collection_pagy(redemptions, pagy)
     )
   end
 

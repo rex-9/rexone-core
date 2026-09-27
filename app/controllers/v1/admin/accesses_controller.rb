@@ -17,7 +17,7 @@ class V1::Admin::AccessesController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: access_message(MessageService::Access::FETCHED),
-      **AccessSerializer.paginated(records, pagy)
+      **AccessSerializer.collection_pagy(records, pagy)
     )
   end
 

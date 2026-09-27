@@ -23,7 +23,7 @@ class V1::Admin::Payment::UserCouponsController < V1::ApplicationController
     render_json_response(
       status_code: 200,
       message: payment_message(MessageService::Payment::USER_COUPONS_FETCHED),
-      **::Payment::UserCouponSerializer.paginated(records, pagy)
+      **::Payment::UserCouponSerializer.collection_pagy(records, pagy)
     )
   end
 

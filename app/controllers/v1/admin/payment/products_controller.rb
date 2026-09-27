@@ -18,7 +18,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
       message: payment_message(
         discarded ? MessageService::Payment::DISCARDED_PRODUCTS_FETCHED : MessageService::Payment::PRODUCTS_FETCHED
       ),
-      **::Payment::ProductSerializer.paginated(records, pagy)
+      **::Payment::ProductSerializer.collection_pagy(records, pagy)
     )
   end
 

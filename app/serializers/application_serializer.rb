@@ -13,7 +13,6 @@ class ApplicationSerializer
 
       new(record, options).serializable_hash[:data]
     end
-    alias_method :resource, :record
 
     def collection(collection, options = {})
       return [] if collection.blank?
@@ -36,7 +35,7 @@ class ApplicationSerializer
       items.map { |item| item[:attributes] }
     end
 
-    def paginated(collection, pagy, options = {})
+    def collection_pagy(collection, pagy, options = {})
       serialized = new(collection, options).serializable_hash
 
       serialized.merge(
