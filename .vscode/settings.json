@@ -1,0 +1,10 @@
+{
+  "[ruby]": {
+    "editor.defaultFormatter": "misogi.ruby-rubocop",
+    "editor.formatOnSave": true
+  },
+  "ruby.rubocop.executePath": "./bin/",
+  "ruby.rubocop.useBundler": false,
+  "ruby.rubocop.onSave": true,
+  "ruby.rubocop.suppressRubocopWarnings": true
+}

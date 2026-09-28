@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Ensure standard binary paths are in PATH when invoked by GUI editors (e.g. VS Code on macOS)
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:$HOME/.docker/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
 # Resolve project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -16,6 +19,9 @@ CONTAINER_ROOT="/rails"
 
 ARGS=()
 for arg in "$@"; do
+  if [ "$arg" = "--auto-correct" ]; then
+    arg="--autocorrect"
+  fi
   arg="${arg/$PROJECT_ROOT/$CONTAINER_ROOT}"
   ARGS+=("$arg")
 done

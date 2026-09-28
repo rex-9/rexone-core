@@ -17,6 +17,9 @@
 
 set -u
 
+# Ensure standard binary paths are in PATH when invoked by GUI git clients
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:${HOME:-}/.docker/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+
 COMPOSE_FILE="docker-compose.dev.yaml"
 SERVICE="api"
 
