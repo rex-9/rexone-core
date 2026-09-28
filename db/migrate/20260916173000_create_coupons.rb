@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # db/migrate/20260916173000_create_coupons.rb
 class CreateCoupons < ActiveRecord::Migration[8.1]
   def change
@@ -22,7 +24,8 @@ class CreateCoupons < ActiveRecord::Migration[8.1]
       t.uuid :target_user_ids, array: true, default: []
       t.uuid :target_product_ids, array: true, default: []
 
-      t.string :stripe_coupon_id
+      t.string :provider, default: "stripe", null: false
+      t.string :provider_coupon_id
       t.boolean :active, null: false, default: true
 
       # ===== AUDIT =====
@@ -39,7 +42,8 @@ class CreateCoupons < ActiveRecord::Migration[8.1]
     end
 
     add_index :coupons, :code, unique: true
-    add_index :coupons, :stripe_coupon_id
+    add_index :coupons, :provider
+    add_index :coupons, :provider_coupon_id
     add_index :coupons, :expires_at
     add_index :coupons, :discarded_at
     add_index :coupons, :target_role_ids, using: :gin

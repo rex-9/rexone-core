@@ -29,9 +29,10 @@ class Payment::PurchaseDashboard < Administrate::BaseDashboard
     product: Field::BelongsTo,
     refunded_at: Field::DateTime,
     status: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
-    stripe_charge_id: Field::String,
-    stripe_customer_id: Field::String,
-    stripe_payment_intent_id: Field::String,
+    provider: Field::String,
+    provider_payment_id: Field::String,
+    provider_charge_id: Field::String,
+    provider_customer_id: Field::String,
     undiscarded_at: Field::DateTime,
     undiscarded_by_id: Field::String,
     undiscarder: Field::BelongsTo,
@@ -81,9 +82,10 @@ class Payment::PurchaseDashboard < Administrate::BaseDashboard
     product
     refunded_at
     status
-    stripe_charge_id
-    stripe_customer_id
-    stripe_payment_intent_id
+    provider
+    provider_payment_id
+    provider_charge_id
+    provider_customer_id
     undiscarded_at
     undiscarded_by_id
     undiscarder
@@ -118,9 +120,10 @@ class Payment::PurchaseDashboard < Administrate::BaseDashboard
     product
     refunded_at
     status
-    stripe_charge_id
-    stripe_customer_id
-    stripe_payment_intent_id
+    provider
+    provider_payment_id
+    provider_charge_id
+    provider_customer_id
     undiscarded_at
     undiscarded_by_id
     undiscarder

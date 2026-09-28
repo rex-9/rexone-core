@@ -2,6 +2,14 @@
 
 # app/constants/payment_constants.rb
 module PaymentConstants
+  module Provider
+    STRIPE      = "stripe".freeze
+    GOOGLE_PLAY = "google_play".freeze
+    APP_STORE   = "app_store".freeze
+    IN_APP      = [ GOOGLE_PLAY, APP_STORE ].freeze
+    ALL         = [ STRIPE, GOOGLE_PLAY, APP_STORE ].freeze
+  end
+
   module StripeApi
     VERSION = "2026-08-26.dahlia".freeze
   end
@@ -77,6 +85,78 @@ module PaymentConstants
       COUPON_CREATED, COUPON_UPDATED, COUPON_DELETED
     ].freeze
   end
+
+  module AppStoreNotificationType
+    SUBSCRIBED                = "SUBSCRIBED".freeze
+    DID_CHANGE_RENEWAL_PREF   = "DID_CHANGE_RENEWAL_PREF".freeze
+    DID_CHANGE_RENEWAL_STATUS = "DID_CHANGE_RENEWAL_STATUS".freeze
+    OFFER_REDEEMED            = "OFFER_REDEEMED".freeze
+    DID_RENEW                 = "DID_RENEW".freeze
+    EXPIRED                   = "EXPIRED".freeze
+    DID_FAIL_TO_RENEW         = "DID_FAIL_TO_RENEW".freeze
+    GRACE_PERIOD_EXPIRED      = "GRACE_PERIOD_EXPIRED".freeze
+    PRICE_INCREASE            = "PRICE_INCREASE".freeze
+    REFUND                    = "REFUND".freeze
+    REFUND_DECLINED           = "REFUND_DECLINED".freeze
+    CONSUMPTION_REQUEST       = "CONSUMPTION_REQUEST".freeze
+    RENEWAL_EXTENDED          = "RENEWAL_EXTENDED".freeze
+    REVOKE                    = "REVOKE".freeze
+    TEST                      = "TEST".freeze
+
+    ALL = [
+      SUBSCRIBED,
+      DID_CHANGE_RENEWAL_PREF,
+      DID_CHANGE_RENEWAL_STATUS,
+      OFFER_REDEEMED,
+      DID_RENEW,
+      EXPIRED,
+      DID_FAIL_TO_RENEW,
+      GRACE_PERIOD_EXPIRED,
+      PRICE_INCREASE,
+      REFUND,
+      REFUND_DECLINED,
+      CONSUMPTION_REQUEST,
+      RENEWAL_EXTENDED,
+      REVOKE,
+      TEST
+    ].freeze
+  end
+  AppStoreEvent = AppStoreNotificationType
+
+  module GooglePlayNotificationType
+    SUBSCRIPTION_RECOVERED              = "SUBSCRIPTION_RECOVERED".freeze
+    SUBSCRIPTION_RENEWED                = "SUBSCRIPTION_RENEWED".freeze
+    SUBSCRIPTION_CANCELED               = "SUBSCRIPTION_CANCELED".freeze
+    SUBSCRIPTION_PURCHASED              = "SUBSCRIPTION_PURCHASED".freeze
+    SUBSCRIPTION_ON_HOLD                = "SUBSCRIPTION_ON_HOLD".freeze
+    SUBSCRIPTION_IN_GRACE_PERIOD        = "SUBSCRIPTION_IN_GRACE_PERIOD".freeze
+    SUBSCRIPTION_RESTARTED              = "SUBSCRIPTION_RESTARTED".freeze
+    SUBSCRIPTION_PRICE_CHANGE_CONFIRMED = "SUBSCRIPTION_PRICE_CHANGE_CONFIRMED".freeze
+    SUBSCRIPTION_DEFERRED               = "SUBSCRIPTION_DEFERRED".freeze
+    SUBSCRIPTION_PAUSED                 = "SUBSCRIPTION_PAUSED".freeze
+    SUBSCRIPTION_REVOKED                = "SUBSCRIPTION_REVOKED".freeze
+    SUBSCRIPTION_EXPIRED                = "SUBSCRIPTION_EXPIRED".freeze
+    ONE_TIME_PRODUCT_PURCHASED          = "ONE_TIME_PRODUCT_PURCHASED".freeze
+    ONE_TIME_PRODUCT_CANCELED           = "ONE_TIME_PRODUCT_CANCELED".freeze
+
+    ALL = [
+      SUBSCRIPTION_RECOVERED,
+      SUBSCRIPTION_RENEWED,
+      SUBSCRIPTION_CANCELED,
+      SUBSCRIPTION_PURCHASED,
+      SUBSCRIPTION_ON_HOLD,
+      SUBSCRIPTION_IN_GRACE_PERIOD,
+      SUBSCRIPTION_RESTARTED,
+      SUBSCRIPTION_PRICE_CHANGE_CONFIRMED,
+      SUBSCRIPTION_DEFERRED,
+      SUBSCRIPTION_PAUSED,
+      SUBSCRIPTION_REVOKED,
+      SUBSCRIPTION_EXPIRED,
+      ONE_TIME_PRODUCT_PURCHASED,
+      ONE_TIME_PRODUCT_CANCELED
+    ].freeze
+  end
+  GooglePlayEvent = GooglePlayNotificationType
 
   module StripeMode
     SUBSCRIPTION = "subscription".freeze

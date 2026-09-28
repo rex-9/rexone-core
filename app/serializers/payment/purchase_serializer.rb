@@ -2,7 +2,7 @@
 
 # app/serializers/payment/purchase_serializer.rb
 class Payment::PurchaseSerializer < ApplicationSerializer
-  attributes :id, :stripe_payment_intent_id, :stripe_charge_id, :stripe_customer_id,
+  attributes :id, :provider, :provider_payment_id, :provider_charge_id, :provider_customer_id,
              :status, :payment_method_id, :payment_method_type,
              :unit_amount, :currency, :client_secret,
              :paid_at, :refunded_at, :canceled_at, :processing_at,

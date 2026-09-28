@@ -52,8 +52,8 @@ RSpec.describe "V1 Payment Subscriptions API", type: :request do
     end
 
     it "schedules cancellation and notifies" do
-      allow(PaymentService::Client).to receive(:cancel_subscription)
-        .with(subscription.stripe_subscription_id)
+      allow(Payment::Providers::Client).to receive(:cancel_subscription)
+        .with(subscription.provider_subscription_id)
         .and_return(
           status: "active",
           cancel_at_period_end: true,
@@ -91,8 +91,8 @@ RSpec.describe "V1 Payment Subscriptions API", type: :request do
     end
 
     it "resumes cancellation and notifies" do
-      allow(PaymentService::Client).to receive(:resume_subscription)
-        .with(subscription.stripe_subscription_id)
+      allow(Payment::Providers::Client).to receive(:resume_subscription)
+        .with(subscription.provider_subscription_id)
         .and_return(
           status: "active",
           cancel_at_period_end: false,

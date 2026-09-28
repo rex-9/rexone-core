@@ -265,7 +265,7 @@ Service Layer (app/services/)
 
 - Third-party SDK integrations MUST be encapsulated behind generic service client boundaries:
   - `StorageService::Client` $\rightarrow$ `StorageService::Cloudinary` / `StorageService::Local` / `StorageService::Garage`
-  - `PaymentService::Client` $\rightarrow$ `PaymentService::Stripe`
+  - `Payment::Providers::Client` $\rightarrow$ `Payment::Providers::Stripe` / `Payment::Providers::GooglePlay` / `Payment::Providers::AppStore`
   - `Ai::Providers::Client` $\rightarrow$ `Ai::Providers::DeepSeek` / `Ai::Providers::Gemini`
   - `EmailService::Client` $\rightarrow$ `EmailService::OneSignal`
   - `PushNotiService::Client` $\rightarrow$ `PushNotiService::OneSignal`

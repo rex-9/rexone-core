@@ -74,7 +74,7 @@ class User < ApplicationRecord
   end
 
   def stripe_customer
-    result = PaymentService::Client.create_customer(user: self)
+    result = Payment::Providers::Client.create_customer(user: self)
     result[:customer_id]
   end
 

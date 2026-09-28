@@ -9,8 +9,10 @@ class CreatePaymentProducts < ActiveRecord::Migration[8.1]
       t.string :currency, null: false
       t.string :interval
 
-      t.string :stripe_product_id, null: false
-      t.string :stripe_price_id, null: false
+      t.string :stripe_product_id
+      t.string :stripe_price_id
+      t.string :google_play_product_id
+      t.string :app_store_product_id
 
       t.boolean :active, default: true, null: false
 
@@ -41,6 +43,8 @@ class CreatePaymentProducts < ActiveRecord::Migration[8.1]
     add_index :payment_products, :code, unique: true
     add_index :payment_products, :stripe_product_id, unique: true
     add_index :payment_products, :stripe_price_id, unique: true
+    add_index :payment_products, :google_play_product_id, unique: true
+    add_index :payment_products, :app_store_product_id, unique: true
     add_index :payment_products, :discarded_at
   end
 end

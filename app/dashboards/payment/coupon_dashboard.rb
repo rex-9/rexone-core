@@ -20,7 +20,7 @@ class Payment::CouponDashboard < Administrate::BaseDashboard
     used_count: Field::Number,
     expires_at: Field::DateTime,
     referrer: Field::BelongsTo.with_options(class_name: "User"),
-    stripe_coupon_id: Field::String,
+    provider_coupon_id: Field::String,
     active: Field::Boolean,
     metadata: Field::String.with_options(searchable: false),
     user_coupons: Field::HasMany.with_options(class_name: "Payment::UserCoupon"),
@@ -54,7 +54,7 @@ class Payment::CouponDashboard < Administrate::BaseDashboard
     used_count
     expires_at
     referrer
-    stripe_coupon_id
+    provider_coupon_id
     active
     metadata
     user_coupons

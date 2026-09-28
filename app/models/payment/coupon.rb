@@ -29,6 +29,7 @@ class Payment::Coupon < ApplicationRecord
               with: /\A[A-Z0-9]+\z/,
               message: "must contain only uppercase letters and numbers (no hyphens or special characters)"
             }
+  validates :provider, presence: true, inclusion: { in: PaymentConstants::Provider::ALL }
   validates :amount, numericality: { greater_than: 0 }
   validates :coupon_type, presence: true
   validates :max_usage, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
@@ -195,20 +196,20 @@ class Payment::Coupon < ApplicationRecord
   end
 
   def cleanup_stripe_coupon
-    stripe_id = stripe_coupon_id.presence || (sync_succeeded? ? code : nil)
-    return if stripe_id.blank?
+    provider_id = provider_coupon_id.presence || (sync_succeeded? ? code : nil)
+    return if provider_id.blank?
 
     begin
-      Stripe::Coupon.delete(stripe_id)
-      Rails.logger.info("[Coupon] Deleted Stripe coupon: #{stripe_id}")
+      Stripe::Coupon.delete(provider_id)
+      Rails.logger.info("[Coupon] Deleted Stripe coupon: #{provider_id}")
     rescue Stripe::InvalidRequestError => e
-      Rails.logger.info("[Coupon] Stripe coupon #{stripe_id} not found or already deleted: #{e.message}")
+      Rails.logger.info("[Coupon] Stripe coupon #{provider_id} not found or already deleted: #{e.message}")
     rescue => e
-      Rails.logger.warn("[Coupon] Could not delete Stripe coupon #{stripe_id}: #{e.message}")
+      Rails.logger.warn("[Coupon] Could not delete Stripe coupon #{provider_id}: #{e.message}")
     end
   end
 
   def stripe_coupon_present?
-    stripe_coupon_id.present? || sync_succeeded?
+    provider == PaymentConstants::Provider::STRIPE && (provider_coupon_id.present? || sync_succeeded?)
   end
 end

@@ -35,7 +35,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # POST /v1/admin/payment/products
   def create
-    result = PaymentService::Client.create_product(product_params.except(:thumbnail_asset_id))
+    result = Payment::Providers::Client.create_product(product_params.except(:thumbnail_asset_id))
     return render_service_error(MessageService::Payment::PRODUCT_CREATE_FAILED, result[:error]) if result[:error]
 
     product = result[:data]
@@ -55,7 +55,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # PATCH/PUT /v1/admin/payment/products/:id
   def update
-    result = PaymentService::Client.update_product(@product.id, product_params.except(:thumbnail_asset_id))
+    result = Payment::Providers::Client.update_product(@product.id, product_params.except(:thumbnail_asset_id))
     return render_service_error(MessageService::Payment::PRODUCT_UPDATE_FAILED, result[:error]) if result[:error]
 
     product = result[:data]
@@ -75,7 +75,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # POST /v1/admin/payment/products/:id/discard
   def discard
-    result = PaymentService::Client.discard_product(@product.id)
+    result = Payment::Providers::Client.discard_product(@product.id)
     return render_service_error(MessageService::Payment::PRODUCT_DISCARD_FAILED, result[:error]) if result[:error]
 
     render_json_response(
@@ -86,7 +86,7 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   # POST /v1/admin/payment/products/:id/undiscard
   def undiscard
-    result = PaymentService::Client.undiscard_product(@product.id)
+    result = Payment::Providers::Client.undiscard_product(@product.id)
     return render_service_error(MessageService::Payment::PRODUCT_RESTORE_FAILED, result[:error]) if result[:error]
 
     render_json_response(
@@ -126,7 +126,11 @@ class V1::Admin::Payment::ProductsController < V1::ApplicationController
 
   def product_params
     params.require(:product)
-          .permit(:code, :name, :description, :unit_amount, :currency, :interval, :active, :thumbnail_asset_id)
+          .permit(
+            :code, :name, :description, :unit_amount, :currency, :interval, :active,
+            :thumbnail_asset_id, :stripe_product_id, :stripe_price_id,
+            :google_play_product_id, :app_store_product_id
+          )
           .to_h
           .symbolize_keys
   end

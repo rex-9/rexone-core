@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -270,6 +270,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.datetime "released_at"
     t.integer "ios_build_number"
     t.integer "android_build_number"
+    t.jsonb "metadata", default: {}
     t.uuid "created_by_id"
     t.uuid "updated_by_id"
     t.uuid "discarded_by_id"
@@ -278,7 +279,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.datetime "undiscarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.jsonb "metadata", default: {}, null: false
     t.index ["android_build_number"], name: "index_client_versions_on_android_build_number_kept", unique: true, where: "((discarded_at IS NULL) AND (android_build_number IS NOT NULL))"
     t.index ["created_by_id"], name: "index_client_versions_on_created_by_id"
     t.index ["discarded_at"], name: "index_client_versions_on_discarded_at"
@@ -299,6 +299,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.integer "coupon_type", default: 0, null: false
     t.integer "amount", null: false
     t.string "currency"
+    t.jsonb "metadata", default: {}
     t.integer "max_usage", default: 0
     t.integer "max_usage_per_user", default: 1
     t.integer "used_count", default: 0, null: false
@@ -307,7 +308,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.uuid "target_role_ids", default: [], array: true
     t.uuid "target_user_ids", default: [], array: true
     t.uuid "target_product_ids", default: [], array: true
-    t.string "stripe_coupon_id"
+    t.string "provider", default: "stripe", null: false
+    t.string "provider_coupon_id"
     t.boolean "active", default: true, null: false
     t.uuid "created_by_id"
     t.uuid "updated_by_id"
@@ -317,14 +319,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.datetime "undiscarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.jsonb "metadata", default: {}, null: false
     t.index ["code"], name: "index_coupons_on_code", unique: true
     t.index ["created_by_id"], name: "index_coupons_on_created_by_id"
     t.index ["discarded_at"], name: "index_coupons_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_coupons_on_discarded_by_id"
     t.index ["expires_at"], name: "index_coupons_on_expires_at"
+    t.index ["provider"], name: "index_coupons_on_provider"
+    t.index ["provider_coupon_id"], name: "index_coupons_on_provider_coupon_id"
     t.index ["referrer_id"], name: "index_coupons_on_referrer_id"
-    t.index ["stripe_coupon_id"], name: "index_coupons_on_stripe_coupon_id"
     t.index ["target_product_ids"], name: "index_coupons_on_target_product_ids", using: :gin
     t.index ["target_role_ids"], name: "index_coupons_on_target_role_ids", using: :gin
     t.index ["target_user_ids"], name: "index_coupons_on_target_user_ids", using: :gin
@@ -458,8 +460,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.text "description"
     t.string "category", default: "broadcast", null: false
     t.string "link"
+    t.string "cta_text"
     t.string "clients", default: ["web", "mobile"], null: false, array: true
     t.boolean "admin", default: true, null: false
+    t.jsonb "metadata", default: {}
     t.string "in_app_title"
     t.text "in_app_body"
     t.jsonb "in_app_data", default: {}
@@ -479,8 +483,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.datetime "undiscarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "cta_text"
-    t.jsonb "metadata", default: {}, null: false
     t.index ["category"], name: "index_notifications_on_category"
     t.index ["clients"], name: "index_notifications_on_clients", using: :gin
     t.index ["created_by_id"], name: "index_notifications_on_created_by_id"
@@ -498,8 +500,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.integer "unit_amount", null: false
     t.string "currency", null: false
     t.string "interval"
-    t.string "stripe_product_id", null: false
-    t.string "stripe_price_id", null: false
+    t.string "stripe_product_id"
+    t.string "stripe_price_id"
+    t.string "google_play_product_id"
+    t.string "app_store_product_id"
     t.boolean "active", default: true, null: false
     t.uuid "created_by_id"
     t.uuid "updated_by_id"
@@ -509,10 +513,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.datetime "undiscarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["app_store_product_id"], name: "index_payment_products_on_app_store_product_id", unique: true
     t.index ["code"], name: "index_payment_products_on_code", unique: true
     t.index ["created_by_id"], name: "index_payment_products_on_created_by_id"
     t.index ["discarded_at"], name: "index_payment_products_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_payment_products_on_discarded_by_id"
+    t.index ["google_play_product_id"], name: "index_payment_products_on_google_play_product_id", unique: true
     t.index ["stripe_price_id"], name: "index_payment_products_on_stripe_price_id", unique: true
     t.index ["stripe_product_id"], name: "index_payment_products_on_stripe_product_id", unique: true
     t.index ["undiscarded_by_id"], name: "index_payment_products_on_undiscarded_by_id"
@@ -522,9 +528,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
   create_table "payment_purchases", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id", null: false
     t.uuid "product_id", null: false
-    t.string "stripe_payment_intent_id", null: false
-    t.string "stripe_charge_id"
-    t.string "stripe_customer_id"
+    t.string "provider", default: "stripe", null: false
+    t.string "provider_payment_id", null: false
+    t.string "provider_charge_id"
+    t.string "provider_customer_id"
     t.string "payment_method_id"
     t.string "payment_method_type"
     t.jsonb "payment_method_details", default: {}
@@ -553,9 +560,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.index ["discarded_by_id"], name: "index_payment_purchases_on_discarded_by_id"
     t.index ["payment_method_type"], name: "index_payment_purchases_on_payment_method_type"
     t.index ["product_id"], name: "index_payment_purchases_on_product_id"
+    t.index ["provider"], name: "index_payment_purchases_on_provider"
+    t.index ["provider_charge_id"], name: "index_payment_purchases_on_provider_charge_id", unique: true
+    t.index ["provider_payment_id"], name: "index_payment_purchases_on_provider_payment_id", unique: true
     t.index ["status"], name: "index_payment_purchases_on_status"
-    t.index ["stripe_charge_id"], name: "index_payment_purchases_on_stripe_charge_id", unique: true
-    t.index ["stripe_payment_intent_id"], name: "index_payment_purchases_on_stripe_payment_intent_id", unique: true
     t.index ["undiscarded_by_id"], name: "index_payment_purchases_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_payment_purchases_on_updated_by_id"
     t.index ["user_id", "created_at"], name: "index_payment_purchases_on_user_id_and_created_at"
@@ -565,10 +573,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
   create_table "payment_subscriptions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id", null: false
     t.uuid "product_id", null: false
-    t.string "stripe_subscription_id", null: false
-    t.string "stripe_customer_id"
-    t.string "stripe_subscription_item_id", null: false
-    t.string "stripe_price_id", null: false
+    t.string "provider", default: "stripe", null: false
+    t.string "provider_subscription_id", null: false
+    t.string "provider_customer_id"
+    t.string "provider_subscription_item_id"
+    t.string "provider_price_id"
     t.jsonb "metadata", default: {}
     t.string "status", default: "incomplete", null: false
     t.string "currency", null: false
@@ -599,10 +608,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.index ["discarded_at"], name: "index_payment_subscriptions_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_payment_subscriptions_on_discarded_by_id"
     t.index ["product_id"], name: "index_payment_subscriptions_on_product_id"
+    t.index ["provider"], name: "index_payment_subscriptions_on_provider"
+    t.index ["provider_price_id"], name: "index_payment_subscriptions_on_provider_price_id"
+    t.index ["provider_subscription_id"], name: "index_payment_subscriptions_on_provider_subscription_id", unique: true
+    t.index ["provider_subscription_item_id"], name: "index_payment_subscriptions_on_provider_subscription_item_id"
     t.index ["status"], name: "index_payment_subscriptions_on_status"
-    t.index ["stripe_price_id"], name: "index_payment_subscriptions_on_stripe_price_id"
-    t.index ["stripe_subscription_id"], name: "index_payment_subscriptions_on_stripe_subscription_id", unique: true
-    t.index ["stripe_subscription_item_id"], name: "index_payment_subscriptions_on_stripe_subscription_item_id"
     t.index ["undiscarded_by_id"], name: "index_payment_subscriptions_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_payment_subscriptions_on_updated_by_id"
     t.index ["user_id", "status"], name: "index_payment_subscriptions_on_user_id_and_status"
@@ -610,7 +620,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
   end
 
   create_table "payment_webhook_events", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "stripe_event_id", null: false
+    t.string "provider", default: "stripe", null: false
+    t.string "provider_event_id", null: false
     t.string "event_type", null: false
     t.boolean "livemode", default: false, null: false
     t.string "status", default: "pending", null: false
@@ -631,10 +642,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_123000) do
     t.index ["created_by_id"], name: "index_payment_webhook_events_on_created_by_id"
     t.index ["discarded_by_id"], name: "index_payment_webhook_events_on_discarded_by_id"
     t.index ["event_type"], name: "index_payment_webhook_events_on_event_type"
+    t.index ["provider"], name: "index_payment_webhook_events_on_provider"
+    t.index ["provider_event_id"], name: "index_payment_webhook_events_on_provider_event_id", unique: true
     t.index ["received_at"], name: "index_payment_webhook_events_on_received_at"
     t.index ["status", "received_at"], name: "index_payment_webhook_events_on_status_and_received_at"
     t.index ["status"], name: "index_payment_webhook_events_on_status"
-    t.index ["stripe_event_id"], name: "index_payment_webhook_events_on_stripe_event_id", unique: true
     t.index ["undiscarded_by_id"], name: "index_payment_webhook_events_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_payment_webhook_events_on_updated_by_id"
   end

@@ -62,12 +62,13 @@ class V1::Payment::PaymentsController < V1::ApplicationController
         purchase = Payment::Purchase.create!(
           user: current_user,
           product: product,
+          provider: PaymentConstants::Provider::STRIPE,
+          provider_payment_id: "free_coupon_#{SecureRandom.hex(12)}",
           unit_amount: product.unit_amount,
           amount_received: 0,
           amount_capturable: 0,
           currency: product.currency,
           status: PaymentConstants::PurchaseStatus::SUCCEEDED,
-          stripe_payment_intent_id: "free_coupon_#{SecureRandom.hex(12)}",
           paid_at: Time.current
         )
 
@@ -99,7 +100,7 @@ class V1::Payment::PaymentsController < V1::ApplicationController
     }
     checkout_kwargs[:coupon] = coupon if coupon.present?
 
-    result = PaymentService::Client.create_checkout_session(**checkout_kwargs)
+    result = Payment::Providers::Client.create_checkout_session(**checkout_kwargs)
 
     if result[:error]
       render_json_response(
@@ -121,7 +122,7 @@ class V1::Payment::PaymentsController < V1::ApplicationController
 
   # GET /payment/session/:session_id
   def read_status
-    result = PaymentService::Client.get_session(status_params[:session_id])
+    result = Payment::Providers::Client.get_session(status_params[:session_id])
 
     if result[:error]
       render_json_response(
@@ -138,6 +139,50 @@ class V1::Payment::PaymentsController < V1::ApplicationController
     end
   end
 
+  # POST /payment/verify
+  def create_verify
+    product = Payment::Product.active.find(verify_params[:product_id])
+
+    result = Payment::IapService.verify_and_provision(
+      user: current_user,
+      product: product,
+      provider: verify_params[:provider],
+      transaction_id: verify_params[:transaction_id],
+      purchase_token: verify_params[:purchase_token],
+      receipt_data: verify_params[:receipt_data],
+      package_name: verify_params[:package_name],
+      coupon_code: verify_params[:coupon_code],
+      raw_payload: verify_params[:metadata] || {}
+    )
+
+    if result[:error]
+      render_json_response(
+        status_code: 422,
+        message: payment_message(MessageService::Payment::VERIFICATION_FAILED),
+        error: result[:error]
+      )
+    else
+      data = {
+        verified: true,
+        product_id: product.id,
+        provider: result[:provider],
+        purchase_id: result[:purchase]&.id,
+        subscription_id: result[:subscription]&.id,
+        access_id: result[:access]&.id,
+        expires_at: result[:access]&.expires_at
+      }
+      data[:coupon_code] = result[:coupon_code] if result[:coupon_code].present?
+      data[:discount_amount] = result[:discount_amount] if result[:discount_amount].present?
+      data[:final_amount] = result[:final_amount] if result[:final_amount].present?
+
+      render_json_response(
+        status_code: 200,
+        message: payment_message(MessageService::Payment::VERIFIED_AND_GRANTED),
+        data: data
+      )
+    end
+  end
+
   private
 
   def payment_message(key, **options)
@@ -150,5 +195,18 @@ class V1::Payment::PaymentsController < V1::ApplicationController
 
   def status_params
     params.permit(:session_id)
+  end
+
+  def verify_params
+    params.permit(
+      :product_id,
+      :provider,
+      :transaction_id,
+      :purchase_token,
+      :receipt_data,
+      :package_name,
+      :coupon_code,
+      metadata: {}
+    )
   end
 end

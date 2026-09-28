@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe Payment::Subscription, type: :model do
   it "validates identity and status" do
     expect(build(:payment_subscription)).to be_valid
-    expect(build(:payment_subscription, stripe_subscription_id: nil)).not_to be_valid
+    expect(build(:payment_subscription, provider_subscription_id: nil)).not_to be_valid
     expect(build(:payment_subscription, status: nil)).not_to be_valid
   end
 

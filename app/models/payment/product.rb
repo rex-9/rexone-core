@@ -46,20 +46,28 @@ class Payment::Product < ApplicationRecord
   validates :code, presence: true, uniqueness: { case_sensitive: true }, format: { with: /\A[A-Za-z0-9]{10}\z/, message: "must be 10 alphanumeric characters" }
   validates :name, presence: true
   validates :unit_amount, numericality: { greater_than_or_equal_to: 0 }
-  validates :stripe_product_id, presence: true, uniqueness: true
-  validates :stripe_price_id, presence: true, uniqueness: true
   validates :currency, presence: true
+  validates :stripe_product_id, uniqueness: true, allow_nil: true
+  validates :stripe_price_id, uniqueness: true, allow_nil: true
+  validates :google_play_product_id, uniqueness: true, allow_nil: true
+  validates :app_store_product_id, uniqueness: true, allow_nil: true
   validate :prevent_code_update, on: :update
   validate :prevent_price_mode_transition, on: :update
   validate :free_product_must_be_one_time
-  validate :validate_stripe_minimum_amount
+  validate :validate_store_identifiers
+  validate :validate_stripe_minimum_amount, if: -> { premium? && stripe_price_id.present? }
 
   before_validation :generate_unique_code, on: :create
   before_validation :normalize_free_product
+
   # ===== SCOPES =====
   scope :active, -> { where(active: true) }
   scope :one_time, -> { where(interval: nil) }
   scope :recurring, -> { where.not(interval: nil) }
+  scope :for_stripe, -> { where.not(stripe_price_id: nil) }
+  scope :for_google_play, -> { where.not(google_play_product_id: nil) }
+  scope :for_app_store, -> { where.not(app_store_product_id: nil) }
+  scope :for_in_app, -> { where.not(google_play_product_id: nil).or(where.not(app_store_product_id: nil)) }
 
   before_discard :deactivate
 
@@ -78,6 +86,38 @@ class Payment::Product < ApplicationRecord
 
   def premium?
     !free?
+  end
+
+  def available_on_stripe?
+    stripe_price_id.present?
+  end
+
+  def available_on_google_play?
+    google_play_product_id.present?
+  end
+
+  def available_on_app_store?
+    app_store_product_id.present?
+  end
+
+  def in_app?
+    available_on_google_play? || available_on_app_store?
+  end
+
+  def supported_providers
+    providers = []
+    providers << PaymentConstants::Provider::STRIPE if available_on_stripe?
+    providers << PaymentConstants::Provider::GOOGLE_PLAY if available_on_google_play?
+    providers << PaymentConstants::Provider::APP_STORE if available_on_app_store?
+    providers
+  end
+
+  def store_id_for(provider_name)
+    case provider_name.to_s
+    when PaymentConstants::Provider::STRIPE then stripe_price_id
+    when PaymentConstants::Provider::GOOGLE_PLAY then google_play_product_id
+    when PaymentConstants::Provider::APP_STORE then app_store_product_id
+    end
   end
 
   def display_price
@@ -138,12 +178,22 @@ class Payment::Product < ApplicationRecord
   end
 
   def normalize_free_product
-    self.interval = nil if free?
+    return unless free?
+
+    self.interval = nil
   end
 
   def free_product_must_be_one_time
     if free? && interval.present?
       errors.add(:interval, "Free products must be one-time and cannot have a recurring billing interval")
+    end
+  end
+
+  def validate_store_identifiers
+    return if free?
+
+    if stripe_price_id.blank? && google_play_product_id.blank? && app_store_product_id.blank?
+      errors.add(:base, "Premium products must define at least one store identifier (Stripe, Google Play, or App Store)")
     end
   end
 

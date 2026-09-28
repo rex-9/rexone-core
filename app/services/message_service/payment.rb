@@ -82,6 +82,15 @@ module MessageService
     WEBHOOK_PERSIST_FAILED = "payment.webhooks.persist_failed"
     WEBHOOK_PROCESSING_FAILED = "payment.webhooks.processing_failed"
 
+    # In-App Purchase Verification
+    VERIFICATION_FAILED = "payment.verification.failed"
+    VERIFIED_AND_GRANTED = "payment.verification.verified_and_granted"
+    UNSUPPORTED_PROVIDER = "payment.verification.unsupported_provider"
+    FREE_PRODUCT_NOT_SUPPORTED = "payment.verification.free_product_not_supported"
+    IN_APP_NOT_SUPPORTED = "payment.verification.in_app_not_supported"
+    GOOGLE_PLAY_NOT_SUPPORTED = "payment.verification.google_play_not_supported"
+    APP_STORE_NOT_SUPPORTED = "payment.verification.app_store_not_supported"
+
     # Notifications
     PAYMENT_SUCCESS_TITLE = "payment.notifications.payment_success.title"
     PAYMENT_SUCCESS_BODY = "payment.notifications.payment_success.body"

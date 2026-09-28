@@ -78,7 +78,7 @@ RSpec.describe "Admin payment products", type: :request do
     grant_admin_product_permission(:create)
     product = build(:payment_product, name: "Premium", unit_amount: 2_500)
 
-    allow(PaymentService::Client).to receive(:create_product).and_return(data: product)
+    allow(Payment::Providers::Client).to receive(:create_product).and_return(data: product)
 
     post "/v1/admin/payment/products",
          params: { product: valid_product_params },
@@ -88,7 +88,7 @@ RSpec.describe "Admin payment products", type: :request do
     expect(response).to have_http_status(:created)
     expect(response_status["message"]).to eq(I18n.t("payment.products.created", locale: :my))
     expect(response_data.dig("attributes", "name")).to eq("Premium")
-    expect(PaymentService::Client).to have_received(:create_product).with(
+    expect(Payment::Providers::Client).to have_received(:create_product).with(
       hash_including(name: "Premium", unit_amount: 2_500, currency: "usd", interval: "month", active: true)
     )
   end
@@ -97,7 +97,7 @@ RSpec.describe "Admin payment products", type: :request do
     grant_admin_product_permission(:create)
     product = build(:payment_product, name: "Free", unit_amount: 0, interval: nil)
 
-    allow(PaymentService::Client).to receive(:create_product).and_return(data: product)
+    allow(Payment::Providers::Client).to receive(:create_product).and_return(data: product)
 
     post "/v1/admin/payment/products",
          params: {
@@ -112,7 +112,7 @@ RSpec.describe "Admin payment products", type: :request do
     expect(response).to have_http_status(:created)
     expect(response_data.dig("attributes", "free")).to eq(true)
     expect(response_data.dig("attributes", "price")).to eq("Free")
-    expect(PaymentService::Client).to have_received(:create_product).with(
+    expect(Payment::Providers::Client).to have_received(:create_product).with(
       hash_including(name: "Free", unit_amount: 0, currency: "usd", active: true)
     )
   end
@@ -121,7 +121,7 @@ RSpec.describe "Admin payment products", type: :request do
     grant_admin_product_permission(:create)
     product = build(:payment_product, name: "One Time", unit_amount: 2_500, interval: nil)
 
-    allow(PaymentService::Client).to receive(:create_product).and_return(data: product)
+    allow(Payment::Providers::Client).to receive(:create_product).and_return(data: product)
 
     post "/v1/admin/payment/products",
          params: {
@@ -131,7 +131,7 @@ RSpec.describe "Admin payment products", type: :request do
          as: :json
 
     expect(response).to have_http_status(:created)
-    expect(PaymentService::Client).to have_received(:create_product).with(
+    expect(Payment::Providers::Client).to have_received(:create_product).with(
       hash_including(name: "One Time", unit_amount: 2_500, currency: "usd", active: true)
     )
   end
@@ -140,7 +140,7 @@ RSpec.describe "Admin payment products", type: :request do
     grant_admin_product_permission(:update)
     product = create(:payment_product)
 
-    allow(PaymentService::Client).to receive(:update_product).and_return(data: product.tap { |record| record.name = "Updated" })
+    allow(Payment::Providers::Client).to receive(:update_product).and_return(data: product.tap { |record| record.name = "Updated" })
 
     patch "/v1/admin/payment/products/#{product.id}",
           params: { product: { name: "Updated" } },
@@ -148,20 +148,20 @@ RSpec.describe "Admin payment products", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("payment.products.updated"))
-    expect(PaymentService::Client).to have_received(:update_product).with(product.id, hash_including(name: "Updated"))
+    expect(Payment::Providers::Client).to have_received(:update_product).with(product.id, hash_including(name: "Updated"))
   end
 
   it "discards a Stripe-backed product" do
     grant_admin_product_permission(:delete)
     product = create(:payment_product)
 
-    allow(PaymentService::Client).to receive(:discard_product).and_return(data: product)
+    allow(Payment::Providers::Client).to receive(:discard_product).and_return(data: product)
 
     post "/v1/admin/payment/products/#{product.id}/discard", headers: headers
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("payment.products.discarded"))
-    expect(PaymentService::Client).to have_received(:discard_product).with(product.id)
+    expect(Payment::Providers::Client).to have_received(:discard_product).with(product.id)
   end
 
   it "assigns a thumbnail to a product" do
@@ -169,7 +169,7 @@ RSpec.describe "Admin payment products", type: :request do
     product = create(:payment_product)
     thumbnail_asset = create(:asset, type: AssetConstants::AssetType::THUMBNAIL, format: "image", assetable: nil)
 
-    allow(PaymentService::Client).to receive(:update_product).and_return(data: product)
+    allow(Payment::Providers::Client).to receive(:update_product).and_return(data: product)
 
     patch "/v1/admin/payment/products/#{product.id}",
           params: { product: { thumbnail_asset_id: thumbnail_asset.id } },
@@ -186,13 +186,13 @@ RSpec.describe "Admin payment products", type: :request do
     product = create(:payment_product)
     product.discard!
 
-    allow(PaymentService::Client).to receive(:undiscard_product).and_return(data: product.undiscard! && product)
+    allow(Payment::Providers::Client).to receive(:undiscard_product).and_return(data: product.undiscard! && product)
 
     post "/v1/admin/payment/products/#{product.id}/undiscard", headers: headers
 
     expect(response).to have_http_status(:ok)
     expect(response_status["message"]).to eq(I18n.t("payment.products.restored"))
-    expect(PaymentService::Client).to have_received(:undiscard_product).with(product.id)
+    expect(Payment::Providers::Client).to have_received(:undiscard_product).with(product.id)
   end
 
   it "requires product permissions" do
@@ -222,7 +222,7 @@ RSpec.describe "Admin payment products", type: :request do
   describe "POST /v1/admin/payment/products error" do
     it "returns 422 when service error occurs" do
       grant_admin_product_permission(:create)
-      allow(PaymentService::Client).to receive(:create_product).and_return(error: "Stripe error")
+      allow(Payment::Providers::Client).to receive(:create_product).and_return(error: "Stripe error")
 
       post "/v1/admin/payment/products",
            params: { product: valid_product_params },

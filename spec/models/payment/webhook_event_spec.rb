@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe Payment::WebhookEvent, type: :model do
   it "validates persisted event identity and payload" do
     expect(build(:payment_webhook_event)).to be_valid
-    expect(build(:payment_webhook_event, stripe_event_id: nil)).not_to be_valid
+    expect(build(:payment_webhook_event, provider_event_id: nil)).not_to be_valid
     expect(build(:payment_webhook_event, payload: {})).not_to be_valid
     expect(build(:payment_webhook_event, attempt_count: -1)).not_to be_valid
   end

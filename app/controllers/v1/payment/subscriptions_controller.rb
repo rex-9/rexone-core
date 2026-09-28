@@ -45,8 +45,8 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
       return
     end
 
-    result = PaymentService::Client.cancel_subscription(
-      subscription.stripe_subscription_id
+    result = Payment::Providers::Client.cancel_subscription(
+      subscription.provider_subscription_id
     )
 
     if result[:error]
@@ -96,8 +96,8 @@ class V1::Payment::SubscriptionsController < V1::ApplicationController
       return
     end
 
-    result = PaymentService::Client.resume_subscription(
-      subscription.stripe_subscription_id
+    result = Payment::Providers::Client.resume_subscription(
+      subscription.provider_subscription_id
     )
 
     if result[:error]

@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe PaymentService::Stripe do
+RSpec.describe Payment::Providers::Stripe do
   describe "Stripe 2026-08-26.dahlia subscription mapping" do
     let(:service) { described_class.new }
     let(:stripe_subscription) do
@@ -37,8 +37,8 @@ RSpec.describe PaymentService::Stripe do
         ends_at: Time.at(1_791_478_400).utc
       )
       expect(service.send(:subscription_item_attributes, stripe_subscription)).to eq(
-        stripe_subscription_item_id: "si_snapshot",
-        stripe_price_id: "price_snapshot",
+        provider_subscription_item_id: "si_snapshot",
+        provider_price_id: "price_snapshot",
         currency: "usd",
         unit_amount: 2_500,
         quantity: 2,
@@ -116,6 +116,38 @@ RSpec.describe PaymentService::Stripe do
       expect(product.stripe_price_id).to eq("price_new")
       expect(Payment::Product.count).to eq(1)
       expect(Stripe::Product).to have_received(:update).with("prod_new", default_price: "price_new")
+    end
+
+    it "transmits in-app store IDs to Stripe product metadata and persists them" do
+      service = described_class.new
+      stripe_product = instance_double("Stripe::Product", id: "prod_omni")
+      stripe_price = instance_double("Stripe::Price", id: "price_omni")
+
+      allow(Stripe::Product).to receive(:create).and_return(stripe_product)
+      allow(Stripe::Product).to receive(:update)
+      allow(Stripe::Price).to receive(:create).and_return(stripe_price)
+
+      result = service.create_product(
+        name: "Omni Pro",
+        description: "Multi-platform plan",
+        unit_amount: 1_500,
+        currency: "usd",
+        interval: "month",
+        active: true,
+        google_play_product_id: "com.rexone.omni.play",
+        app_store_product_id: "com.rexone.omni.store"
+      )
+      product = result[:data]
+
+      expect(product).to be_persisted
+      expect(product.google_play_product_id).to eq("com.rexone.omni.play")
+      expect(product.app_store_product_id).to eq("com.rexone.omni.store")
+      expect(Stripe::Product).to have_received(:create).with(hash_including(
+        metadata: hash_including(
+          google_play_product_id: "com.rexone.omni.play",
+          app_store_product_id: "com.rexone.omni.store"
+        )
+      ))
     end
 
     it "creates Stripe records and persists the free product with a zero lifetime price" do
@@ -483,6 +515,42 @@ RSpec.describe PaymentService::Stripe do
       expect(product.period_label).to eq("One-time purchase")
     end
 
+    it "syncs in-app store IDs from Stripe product metadata into the database product via price webhook" do
+      service = described_class.new
+      stripe_product = instance_double(
+        "Stripe::Product",
+        id: "prod_webhook_omni",
+        name: "Webhook Omni Tier",
+        description: "Synced with store IDs",
+        active: true,
+        default_price: "price_webhook_omni",
+        metadata: {
+          "google_play_product_id" => "com.rexone.omni.play",
+          "app_store_product_id" => "com.rexone.omni.store"
+        }
+      )
+      stripe_price = instance_double(
+        "Stripe::Price",
+        id: "price_webhook_omni",
+        product: "prod_webhook_omni",
+        unit_amount: 999,
+        currency: "usd",
+        recurring: instance_double("Stripe::Recurring", interval: "month"),
+        active: true
+      )
+
+      allow(Stripe::Product).to receive(:retrieve).with("prod_webhook_omni").and_return(stripe_product)
+
+      service.send(:sync_price, stripe_price)
+
+      product = Payment::Product.find_by!(stripe_product_id: "prod_webhook_omni")
+      expect(product.google_play_product_id).to eq("com.rexone.omni.play")
+      expect(product.app_store_product_id).to eq("com.rexone.omni.store")
+      expect(product.stripe_price_id).to eq("price_webhook_omni")
+      expect(product.in_app?).to be(true)
+      expect(product.supported_providers).to contain_exactly("stripe", "google_play", "app_store")
+    end
+
     it "skips price sync when currency is not supported" do
       service = described_class.new
       stripe_price = instance_double(
@@ -703,7 +771,7 @@ RSpec.describe PaymentService::Stripe do
         )
 
         expect(result[:data]).to be_a(Payment::Coupon)
-        expect(result[:data].stripe_coupon_id).to eq("WELCOME20")
+        expect(result[:data].provider_coupon_id).to eq("WELCOME20")
         expect(Stripe::Coupon).to have_received(:create).with(
           hash_including(
             id: "WELCOME20",
@@ -716,8 +784,8 @@ RSpec.describe PaymentService::Stripe do
     end
 
     describe "#update_coupon" do
-      it "updates title and metadata on Stripe when stripe_coupon_id is present" do
-        coupon = create(:payment_coupon, stripe_coupon_id: "STRIPE_CPN_1", title: "Old Title")
+      it "updates title and metadata on Stripe when provider_coupon_id is present" do
+        coupon = create(:payment_coupon, provider_coupon_id: "STRIPE_CPN_1", title: "Old Title")
         allow(Stripe::Coupon).to receive(:update)
 
         result = service.update_coupon(coupon.id, title: "New Title", metadata: { "env" => "staging" })
@@ -733,7 +801,7 @@ RSpec.describe PaymentService::Stripe do
 
     describe "#destroy_coupon" do
       it "deletes the coupon from Stripe and permanently destroys the local record" do
-        coupon = create(:payment_coupon, stripe_coupon_id: "STRIPE_CPN_DEL")
+        coupon = create(:payment_coupon, provider_coupon_id: "STRIPE_CPN_DEL")
         allow(Stripe::Coupon).to receive(:delete)
 
         service.destroy_coupon(coupon.id)
@@ -769,17 +837,17 @@ RSpec.describe PaymentService::Stripe do
       end
 
       it "links existing coupon by code on coupon.created webhook without error" do
-        existing = create(:payment_coupon, code: "SUMMER50", stripe_coupon_id: nil, title: "Draft Summer")
+        existing = create(:payment_coupon, code: "SUMMER50", provider_coupon_id: nil, title: "Draft Summer")
 
         service.send(:handle_coupon_created, stripe_coupon_object)
 
-        expect(existing.reload.stripe_coupon_id).to eq("SUMMER50")
+        expect(existing.reload.provider_coupon_id).to eq("SUMMER50")
         expect(existing.title).to eq("Summer 50% Off")
         expect(existing.metadata).to eq({ "channel" => "email" })
       end
 
       it "updates coupon from coupon.updated webhook" do
-        coupon = create(:payment_coupon, code: "SUMMER50", stripe_coupon_id: "SUMMER50", title: "Old Title")
+        coupon = create(:payment_coupon, code: "SUMMER50", provider_coupon_id: "SUMMER50", title: "Old Title")
         updated_obj = OpenStruct.new(
           id: "SUMMER50",
           name: "Updated Summer Title",
@@ -794,7 +862,7 @@ RSpec.describe PaymentService::Stripe do
       end
 
       it "permanently deletes coupon from coupon.deleted webhook" do
-        coupon = create(:payment_coupon, code: "SUMMER50", stripe_coupon_id: "SUMMER50")
+        coupon = create(:payment_coupon, code: "SUMMER50", provider_coupon_id: "SUMMER50")
 
         service.send(:handle_coupon_deleted, stripe_coupon_object)
 
@@ -843,7 +911,7 @@ RSpec.describe PaymentService::Stripe do
     it "revokes access and dispatches payment_failed notification when status transitions to past_due" do
       subscription = create(
         :payment_subscription,
-        stripe_subscription_id: "sub_webhook_test",
+        provider_subscription_id: "sub_webhook_test",
         user: user,
         product: product,
         status: "active"
@@ -865,7 +933,7 @@ RSpec.describe PaymentService::Stripe do
       stripe_subscription.status = "active"
       create(
         :payment_subscription,
-        stripe_subscription_id: "sub_webhook_test",
+        provider_subscription_id: "sub_webhook_test",
         user: user,
         product: product,
         status: "past_due"
@@ -888,7 +956,7 @@ RSpec.describe PaymentService::Stripe do
       expect(AccessService.has_access?(user_id: user.id, product_id: product.id)).to be(true)
     end
 
-    it "resolves user by stripe_customer_id and product by stripe_price_id when metadata is absent" do
+    it "resolves user by stripe_customer_id and product by provider_price_id when metadata is absent" do
       user.update!(stripe_customer_id: "cus_webhook_test")
       product
       stripe_subscription.id = "sub_fallback_resolution"
@@ -899,7 +967,7 @@ RSpec.describe PaymentService::Stripe do
         service.send(:sync_subscription, stripe_subscription)
       end.to change(Payment::Subscription, :count).by(1)
 
-      created_sub = Payment::Subscription.find_by(stripe_subscription_id: "sub_fallback_resolution")
+      created_sub = Payment::Subscription.find_by(provider_subscription_id: "sub_fallback_resolution")
       expect(created_sub.user_id).to eq(user.id)
       expect(created_sub.product_id).to eq(product.id)
       expect(AccessService.has_access?(user_id: user.id, product_id: product.id)).to be(true)

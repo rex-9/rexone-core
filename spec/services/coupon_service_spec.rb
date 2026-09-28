@@ -119,7 +119,7 @@ RSpec.describe CouponService, type: :service do
           payment_id: purchase.id,
           payment_type: :purchase
         )
-      }.to raise_error(PaymentService::Error)
+      }.to raise_error(Payment::Providers::Error)
     end
 
     it "raises an error if max_usage_per_user has already been reached for the user" do
@@ -136,7 +136,7 @@ RSpec.describe CouponService, type: :service do
           payment_id: purchase2.id,
           payment_type: :purchase
         )
-      }.to raise_error(PaymentService::Error)
+      }.to raise_error(Payment::Providers::Error)
     end
   end
 end

@@ -12,8 +12,8 @@ RSpec.describe "Stripe webhooks", type: :request do
   end
 
   before do
-    allow(PaymentService::Client).to receive(:verify_webhook).and_return(event)
-    allow(PaymentService::Client).to receive(:supported_webhook_event?).and_return(true)
+    allow(Payment::Providers::Client).to receive(:verify_webhook).and_return(event)
+    allow(Payment::Providers::Client).to receive(:supported_webhook_event?).and_return(true)
   end
 
   it "verifies, persists, and queues a supported event" do
@@ -23,11 +23,11 @@ RSpec.describe "Stripe webhooks", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(JSON.parse(response.body)).to include("received" => true, "event_id" => "evt_test", "status" => "queued")
-    expect(PaymentService::Client).to have_received(:verify_webhook).with(payload, "signature")
+    expect(Payment::Providers::Client).to have_received(:verify_webhook).with(payload, "signature")
   end
 
   it "acknowledges unsupported events without persistence or queueing" do
-    allow(PaymentService::Client).to receive(:supported_webhook_event?).and_return(false)
+    allow(Payment::Providers::Client).to receive(:supported_webhook_event?).and_return(false)
     post "/webhooks/stripe", params: payload, headers: { "CONTENT_TYPE" => "application/json" }
     expect(response).to have_http_status(:ok)
     expect(JSON.parse(response.body)["status"]).to eq("ignored")
@@ -36,7 +36,7 @@ RSpec.describe "Stripe webhooks", type: :request do
   end
 
   it "does not requeue an already processed duplicate" do
-    create(:payment_webhook_event, stripe_event_id: "evt_test", status: "processed", processed_at: Time.current)
+    create(:payment_webhook_event, provider_event_id: "evt_test", status: "processed", processed_at: Time.current)
     post "/webhooks/stripe", params: payload, headers: { "CONTENT_TYPE" => "application/json" }
     expect(response).to have_http_status(:ok)
     expect(JSON.parse(response.body)["status"]).to eq("already_processed")
@@ -45,7 +45,7 @@ RSpec.describe "Stripe webhooks", type: :request do
 
   it "returns bad request for an invalid signature" do
     error = Stripe::SignatureVerificationError.new("bad signature", "header")
-    allow(PaymentService::Client).to receive(:verify_webhook).and_raise(error)
+    allow(Payment::Providers::Client).to receive(:verify_webhook).and_raise(error)
     post "/webhooks/stripe", params: payload, headers: { "CONTENT_TYPE" => "application/json" }
     expect(response).to have_http_status(:bad_request)
     expect(JSON.parse(response.body)["received"]).to be(false)
@@ -55,6 +55,6 @@ RSpec.describe "Stripe webhooks", type: :request do
     allow(Payment::ProcessWebhookJob).to receive(:perform_later).and_raise(SolidQueue::Job::EnqueueError.new("queue down"))
     post "/webhooks/stripe", params: payload, headers: { "CONTENT_TYPE" => "application/json" }
     expect(response).to have_http_status(:service_unavailable)
-    expect(Payment::WebhookEvent.find_by(stripe_event_id: "evt_test")).to be_present
+    expect(Payment::WebhookEvent.find_by(provider_event_id: "evt_test")).to be_present
   end
 end

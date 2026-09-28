@@ -1,8 +1,12 @@
+# frozen_string_literal: true
+
+# db/migrate/20260815084100_create_payment_webhook_events.rb
 class CreatePaymentWebhookEvents < ActiveRecord::Migration[8.1]
   def change
     create_table :payment_webhook_events, id: :uuid do |t|
-      # Stripe event identity
-      t.string :stripe_event_id, null: false
+      # Provider event identity
+      t.string :provider, default: "stripe", null: false
+      t.string :provider_event_id, null: false
       t.string :event_type, null: false
       t.boolean :livemode, null: false, default: false
 
@@ -41,10 +45,8 @@ class CreatePaymentWebhookEvents < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :payment_webhook_events,
-              :stripe_event_id,
-              unique: true
-
+    add_index :payment_webhook_events, :provider
+    add_index :payment_webhook_events, :provider_event_id, unique: true
     add_index :payment_webhook_events, :event_type
     add_index :payment_webhook_events, :status
     add_index :payment_webhook_events, :received_at

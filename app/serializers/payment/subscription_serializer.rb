@@ -1,10 +1,11 @@
 # app/serializers/payment/subscription_serializer.rb
 class Payment::SubscriptionSerializer < ApplicationSerializer
   attributes :id,
-            :stripe_subscription_id,
-            :stripe_customer_id,
-            :stripe_subscription_item_id,
-            :stripe_price_id,
+            :provider,
+            :provider_subscription_id,
+            :provider_customer_id,
+            :provider_subscription_item_id,
+            :provider_price_id,
             :status,
             :currency,
             :unit_amount,

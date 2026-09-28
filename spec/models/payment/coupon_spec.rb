@@ -159,7 +159,7 @@ RSpec.describe Payment::Coupon, type: :model do
   end
 
   it "cleans up Stripe coupon when destroyed" do
-    coupon = create(:payment_coupon, stripe_coupon_id: "STRIPE_CLEANUP_123")
+    coupon = create(:payment_coupon, provider_coupon_id: "STRIPE_CLEANUP_123")
     allow(Stripe::Coupon).to receive(:delete)
 
     coupon.destroy!

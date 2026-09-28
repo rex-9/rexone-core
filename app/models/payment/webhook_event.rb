@@ -1,7 +1,7 @@
 # app/models/payment/webhook_event.rb
 
 class Payment::WebhookEvent < ApplicationRecord
-  STRIPE_LOG_PREFIX = PaymentService::Stripe::STRIPE_LOG_PREFIX
+  STRIPE_LOG_PREFIX = Payment::Providers::Stripe::STRIPE_LOG_PREFIX
 
   self.table_name = "payment_webhook_events"
 
@@ -19,7 +19,8 @@ class Payment::WebhookEvent < ApplicationRecord
   }
 
   # ===== VALIDATIONS =====
-  validates :stripe_event_id, presence: true, uniqueness: true
+  validates :provider, presence: true, inclusion: { in: PaymentConstants::Provider::ALL }
+  validates :provider_event_id, presence: true, uniqueness: true
   validates :event_type, presence: true
   validates :status, presence: true
   validates :payload, presence: true

@@ -10,11 +10,11 @@ RSpec.describe Payment::Product, type: :model do
     expect(product.active).to be(false)
   end
 
-  it "validates Stripe identifiers, price, currency, and name" do
+  it "validates store identifiers, price, currency, and name" do
     expect(build(:payment_product)).to be_valid
     expect(build(:payment_product, name: nil)).not_to be_valid
     expect(build(:payment_product, unit_amount: -1)).not_to be_valid
-    expect(build(:payment_product, stripe_product_id: nil)).not_to be_valid
+    expect(build(:payment_product, stripe_price_id: nil, google_play_product_id: nil, app_store_product_id: nil)).not_to be_valid
   end
 
   it "treats zero-priced products as free" do
@@ -29,10 +29,29 @@ RSpec.describe Payment::Product, type: :model do
     expect(product.display_price).to eq("Free")
   end
 
-  it "enforces unique Stripe product and price identifiers" do
+  it "enforces unique store product and price identifiers" do
     product = create(:payment_product)
     expect(build(:payment_product, stripe_product_id: product.stripe_product_id)).not_to be_valid
     expect(build(:payment_product, stripe_price_id: product.stripe_price_id)).not_to be_valid
+  end
+
+  it "supports multi-store omnichannel products" do
+    product = create(
+      :payment_product,
+      stripe_product_id: "prod_omni",
+      stripe_price_id: "price_omni",
+      google_play_product_id: "com.rexone.omni.play",
+      app_store_product_id: "com.rexone.omni.store"
+    )
+
+    expect(product).to be_available_on_stripe
+    expect(product).to be_available_on_google_play
+    expect(product).to be_available_on_app_store
+    expect(product).to be_in_app
+    expect(product.supported_providers).to contain_exactly("stripe", "google_play", "app_store")
+    expect(product.store_id_for("google_play")).to eq("com.rexone.omni.play")
+    expect(product.store_id_for("app_store")).to eq("com.rexone.omni.store")
+    expect(product.store_id_for("stripe")).to eq("price_omni")
   end
 
   it "describes recurring and one-time pricing" do

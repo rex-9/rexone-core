@@ -80,6 +80,14 @@ en:
       queue_failed: "Webhook could not be queued"
       persist_failed: "Webhook could not be persisted"
       processing_failed: "Webhook processing failed"
+    verification:
+      failed: "Payment verification failed"
+      verified_and_granted: "Payment verified and access granted successfully"
+      unsupported_provider: "Unsupported payment provider: %{provider}"
+      free_product_not_supported: "Free products do not require in-app purchase verification"
+      in_app_not_supported: "Product does not support in-app purchases"
+      google_play_not_supported: "Product does not support Google Play purchases"
+      app_store_not_supported: "Product does not support Apple App Store purchases"
     notifications:
       payment_success:
         title: "Payment Successful! 🎉"

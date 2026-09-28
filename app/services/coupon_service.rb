@@ -90,7 +90,7 @@ class CouponService
         if coupon.max_usage_per_user.to_i.positive?
           user_redemption_count = Payment::UserCoupon.where(user_id: user.id, coupon_id: coupon.id).count
           if user_redemption_count >= coupon.max_usage_per_user
-            raise PaymentService::Error, MessageService::Payment.t(MessageService::Payment::COUPON_USER_LIMIT_REACHED)
+            raise Payment::Providers::Error, MessageService::Payment.t(MessageService::Payment::COUPON_USER_LIMIT_REACHED)
           end
         end
 
@@ -100,7 +100,7 @@ class CouponService
                                       .update_all("used_count = used_count + 1")
 
         if updated_rows.zero?
-          raise PaymentService::Error, MessageService::Payment.t(MessageService::Payment::COUPON_USAGE_LIMIT_REACHED)
+          raise Payment::Providers::Error, MessageService::Payment.t(MessageService::Payment::COUPON_USAGE_LIMIT_REACHED)
         end
 
         discount_info = coupon.calculate_discount(product)
@@ -120,7 +120,7 @@ class CouponService
     end
 
     def ensure_stripe_coupon(coupon, raise_on_error: false)
-      return coupon.stripe_coupon_id if coupon.stripe_coupon_id.present?
+      return coupon.provider_coupon_id if coupon.provider_coupon_id.present?
 
       stripe_params = {
         id: coupon.code,
@@ -145,11 +145,11 @@ class CouponService
 
       begin
         stripe_coupon = Stripe::Coupon.create(stripe_params)
-        coupon.update_column(:stripe_coupon_id, stripe_coupon.id)
+        coupon.update_column(:provider_coupon_id, stripe_coupon.id)
         stripe_coupon.id
       rescue Stripe::InvalidRequestError => e
         if e.message.include?("already exists")
-          coupon.update_column(:stripe_coupon_id, coupon.code)
+          coupon.update_column(:provider_coupon_id, coupon.code)
           coupon.code
         else
           Rails.logger.error("#{LOG_PREFIX} Failed to create Stripe coupon: #{e.message}")

@@ -344,6 +344,7 @@ Rails.application.routes.draw do
 
       post "session", to: "payments#create"
       get "session/:session_id", to: "payments#read_status"
+      post "verify", to: "payments#create_verify"
       post "coupons/validate", to: "coupons#validate_coupon"
     end
 

@@ -291,6 +291,8 @@ module Openapi
             enum: Payment::Product.intervals.values + [ nil ],
             description: "Use null for one-time products."
           },
+          google_play_product_id: { type: :string, nullable: true, example: "monthly_tier1" },
+          app_store_product_id: { type: :string, nullable: true, example: "monthly_tier1" },
           active: { type: :boolean, default: true }
         )
       ),
@@ -612,6 +614,21 @@ module Openapi
         code: { type: :string, example: "SAVE20", description: "Coupon or promo code." },
         product_id: UUID.merge(description: "Target product UUID.")
       ),
+      payment_verify_request: object(
+        required: %i[product_id provider],
+        product_id: UUID.merge(description: "Target product UUID."),
+        provider: {
+          type: :string,
+          enum: [ PaymentConstants::Provider::GOOGLE_PLAY, PaymentConstants::Provider::APP_STORE ],
+          description: "In-app purchase provider."
+        },
+        transaction_id: { type: :string, nullable: true, description: "Transaction ID (required for App Store)." },
+        purchase_token: { type: :string, nullable: true, description: "Purchase token (required for Google Play)." },
+        receipt_data: { type: :string, nullable: true, description: "Receipt payload or signed data." },
+        package_name: { type: :string, nullable: true, description: "App package identifier." },
+        coupon_code: { type: :string, nullable: true, description: "Optional coupon or promo code applied." },
+        metadata: { type: :object, nullable: true, description: "Optional raw metadata or client payload." }
+      ),
       ai_chat_request: object(
         required: [ :message ],
         message: { type: :string, minLength: 1 },
@@ -894,6 +911,24 @@ module Openapi
           job_id: { type: :string, nullable: true }
         )
       ),
+      payment_verify_data: object(
+        required: %i[verified product_id provider],
+        verified: { type: :boolean, example: true },
+        product_id: UUID,
+        provider: { type: :string, enum: [ PaymentConstants::Provider::GOOGLE_PLAY, PaymentConstants::Provider::APP_STORE ] },
+        purchase_id: UUID.merge(nullable: true),
+        subscription_id: UUID.merge(nullable: true),
+        access_id: UUID.merge(nullable: true),
+        expires_at: DATE_TIME,
+        coupon_code: { type: :string, nullable: true },
+        discount_amount: { type: :integer, nullable: true },
+        final_amount: { type: :integer, nullable: true }
+      ),
+      payment_verify_response: object(
+        required: %i[status data],
+        status: ref(:response_status),
+        data: ref(:payment_verify_data)
+      ),
       response: object(
         required: [ :status ],
         status: ref(:response_status),
@@ -998,8 +1033,12 @@ module Openapi
         recurring: { type: :boolean },
         free: { type: :boolean },
         active: { type: :boolean },
-        stripe_product_id: { type: :string },
-        stripe_price_id: { type: :string },
+        stripe_product_id: { type: :string, nullable: true },
+        stripe_price_id: { type: :string, nullable: true },
+        google_play_product_id: { type: :string, nullable: true },
+        app_store_product_id: { type: :string, nullable: true },
+        in_app: { type: :boolean },
+        supported_providers: { type: :array, items: { type: :string } },
         thumbnail_url: { type: :string, format: :uri, nullable: true },
         thumbnail_asset_id: UUID.merge(nullable: true),
         created_at: DATE_TIME,
@@ -1009,9 +1048,8 @@ module Openapi
       ),
       subscription: object(
         required: %i[
-          id user_id product_id stripe_subscription_id
-          stripe_subscription_item_id stripe_price_id status currency
-          unit_amount quantity interval interval_count
+          id user_id product_id provider provider_subscription_id
+          status currency unit_amount quantity interval interval_count
           current_period_start current_period_end started_at cancel_at_period_end
           active canceled past_due ended expired scheduled_for_cancellation
           cancelable renewing created_at updated_at
@@ -1019,10 +1057,11 @@ module Openapi
         id: UUID,
         user_id: UUID,
         product_id: UUID,
-        stripe_subscription_id: { type: :string },
-        stripe_customer_id: { type: :string, nullable: true },
-        stripe_subscription_item_id: { type: :string },
-        stripe_price_id: { type: :string },
+        provider: { type: :string },
+        provider_subscription_id: { type: :string },
+        provider_customer_id: { type: :string, nullable: true },
+        provider_subscription_item_id: { type: :string, nullable: true },
+        provider_price_id: { type: :string, nullable: true },
         status: { type: :string, enum: PaymentConstants::SubscriptionStatus::ALL },
         currency: { type: :string, pattern: "^[a-z]{3}$" },
         unit_amount: { type: :integer, minimum: 0, description: "Price amount in minor currency units" },
@@ -1060,16 +1099,17 @@ module Openapi
       ),
       purchase: object(
         required: %i[
-          id user_id stripe_payment_intent_id status unit_amount currency
+          id user_id provider provider_payment_id status unit_amount currency
           amount_received amount_capturable paid pending failed requires_action
           created_at updated_at
         ],
         id: UUID,
         user_id: UUID,
         product_id: UUID.merge(nullable: true),
-        stripe_payment_intent_id: { type: :string },
-        stripe_charge_id: { type: :string, nullable: true },
-        stripe_customer_id: { type: :string, nullable: true },
+        provider: { type: :string },
+        provider_payment_id: { type: :string },
+        provider_charge_id: { type: :string, nullable: true },
+        provider_customer_id: { type: :string, nullable: true },
         status: { type: :string, enum: PaymentConstants::PurchaseStatus::ALL },
         payment_method_id: { type: :string, nullable: true },
         payment_method_type: { type: :string, nullable: true },
@@ -1870,6 +1910,14 @@ module Openapi
                        parameters: [ { name: :session_id, in: :path, required: true,
                                        schema: { type: :string, example: "cs_test_123" } } ],
                        errors: [ 401, 404 ])
+      }
+      paths["/v1/payment/verify"] = {
+        post: operation(
+          tags: "Payments", summary: "Verify in-app purchase and grant product access",
+          body: ref(:payment_verify_request),
+          success_schema: ref(:payment_verify_response),
+          errors: [ 401, 404, 422 ]
+        )
       }
       paths["/v1/payment/coupons/validate"] = {
         post: operation(

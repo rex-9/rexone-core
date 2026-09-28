@@ -1,9 +1,9 @@
 # Database Schema Documentation (`rexone-core`)
 
-| Parameter | Configuration |
-| :--- | :--- |
-| **Database Engine** | PostgreSQL 18 |
-| **Schema Version** | `2026_09_16_173001` |
+| Parameter           | Configuration                                                                                                   |
+| :------------------ | :-------------------------------------------------------------------------------------------------------------- |
+| **Database Engine** | PostgreSQL 18                                                                                                   |
+| **Schema Version**  | `2026_09_16_173001`                                                                                             |
 | **Key Conventions** | UUID v4 Primary Keys (`gen_random_uuid()`), Soft Deletion (`discard` gem), Audit Tracking (`Auditable` concern) |
 
 ### 🏛️ Mandatory Synchronization Law (LAW.md #12)
@@ -189,20 +189,20 @@ erDiagram
 - **Model**: [`Iam::Permission`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/permission.rb)
 - **Description**: Granular permissions composed of an action (`read`, `create`, `update`, `delete`) and a resource.
 
-| Column              | Type       | Nullable | Default             | Description / Notes                                              |
-| :------------------ | :--------- | :------: | :------------------ | :--------------------------------------------------------------- |
-| `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                      |
-| `name`              | `string`   |    ❌    | —                   | Unique identifier (e.g. `read_users`, `create_payments`)         |
-| `action`            | `string`   |    ❌    | —                   | Enum: `read`, `create`, `update`, `delete`                       |
+| Column              | Type       | Nullable | Default             | Description / Notes                                                                                                                                                                                                                                                                                                                                                                                                       |
+| :------------------ | :--------- | :------: | :------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `name`              | `string`   |    ❌    | —                   | Unique identifier (e.g. `read_users`, `create_payments`)                                                                                                                                                                                                                                                                                                                                                                  |
+| `action`            | `string`   |    ❌    | —                   | Enum: `read`, `create`, `update`, `delete`                                                                                                                                                                                                                                                                                                                                                                                |
 | `resource`          | `string`   |    ❌    | —                   | Enum of 23 canonical resources (`users`, `accesses`, `assets`, `notifications`, `feedbacks`, `analytics`, `speech`, `ai_profiles`, `ai_runs`, `chat_rooms`, `chat_messages`, `client_logs`, `client_versions`, `client_user_versions`, `iam_roles`, `iam_permissions`, `iam_user_roles`, `payment_products`, `payment_payments`, `payment_subscriptions`, `payment_purchases`, `payment_coupons`, `payment_user_coupons`) |
-| `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                |
-| `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                               |
-| `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                              |
-| `undiscarded_by_id` | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                               |
-| `discarded_at`      | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                            |
-| `undiscarded_at`    | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                |
-| `created_at`        | `datetime` |    ❌    | —                   | Timestamp                                                        |
-| `updated_at`        | `datetime` |    ❌    | —                   | Timestamp                                                        |
+| `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `undiscarded_by_id` | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `discarded_at`      | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `undiscarded_at`    | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                                                                                                                                                                                                                                                                                                                                                                         |
+| `created_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `updated_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 **Indexes**:
 
@@ -285,34 +285,38 @@ erDiagram
 ### 4.1. `payment_products`
 
 - **Model**: [`Payment::Product`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/product.rb)
-- **Description**: Catalog of purchasable tiers and items, synchronized with Stripe Product & Price objects.
+- **Description**: Catalog of purchasable tiers and items across payment providers (Stripe, Google Play, Apple App Store) or free products.
 
-| Column              | Type       | Nullable | Default             | Description / Notes                                                    |
-| :------------------ | :--------- | :------: | :------------------ | :--------------------------------------------------------------------- |
-| `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                            |
-| `code`              | `string`   |    ❌    | —                   | Immutable unique product code (10 alphanumeric chars)                  |
-| `name`              | `string`   |    ❌    | —                   | Product display name                                                   |
-| `description`       | `text`     |    ✔️    | `NULL`              | Marketing / plan description                                           |
-| `unit_amount`       | `integer`  |    ❌    | —                   | Price in smallest currency unit (cents, 0 = Free)                      |
-| `currency`          | `string`   |    ❌    | —                   | Currency code (e.g. `usd`)                                             |
-| `interval`          | `string`   |    ✔️    | `NULL`              | Billing interval: `day`, `week`, `month`, `year`, or `NULL` (one-time) |
-| `active`            | `boolean`  |    ❌    | `true`              | Availability status                                                    |
-| `stripe_product_id` | `string`   |    ❌    | —                   | Stripe Product ID (`prod_...`)                                         |
-| `stripe_price_id`   | `string`   |    ❌    | —                   | Stripe Price ID (`price_...`)                                          |
-| `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                      |
-| `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                     |
-| `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                    |
-| `undiscarded_by_id` | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                                     |
-| `discarded_at`      | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                  |
-| `undiscarded_at`    | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                      |
-| `created_at`        | `datetime` |    ❌    | —                   | Timestamp                                                              |
-| `updated_at`        | `datetime` |    ❌    | —                   | Timestamp                                                              |
+| Column                   | Type       | Nullable | Default             | Description / Notes                                                                                         |
+| :----------------------- | :--------- | :------: | :------------------ | :---------------------------------------------------------------------------------------------------------- |
+| `id`                     | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                                                 |
+| `code`                   | `string`   |    ❌    | —                   | Immutable unique product code (10 alphanumeric chars)                                                       |
+| `name`                   | `string`   |    ❌    | —                   | Product display name                                                                                        |
+| `description`            | `text`     |    ✔️    | `NULL`              | Marketing / plan description                                                                                |
+| `unit_amount`            | `integer`  |    ❌    | —                   | Price in smallest currency unit (cents, 0 = Free)                                                           |
+| `currency`               | `string`   |    ❌    | —                   | Currency code (e.g. `usd`)                                                                                  |
+| `interval`               | `string`   |    ✔️    | `NULL`              | Billing interval: `day`, `week`, `month`, `year`, or `NULL` (one-time / free)                               |
+| `active`                 | `boolean`  |    ❌    | `true`              | Availability status                                                                                         |
+| `stripe_product_id`      | `string`   |    ✔️    | `NULL`              | Stripe product identifier (`prod_...`). NULL if unavailable on Stripe / free                                |
+| `stripe_price_id`        | `string`   |    ✔️    | `NULL`              | Stripe price/plan identifier (`price_...`). NULL if unavailable on Stripe / free                            |
+| `google_play_product_id` | `string`   |    ✔️    | `NULL`              | Google Play product/SKU identifier (e.g. `com.rexone.pro.monthly`). NULL if unavailable on Play Store       |
+| `app_store_product_id`   | `string`   |    ✔️    | `NULL`              | Apple App Store product/in-app identifier (e.g. `com.rexone.pro.monthly`). NULL if unavailable on App Store |
+| `created_by_id`          | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                           |
+| `updated_by_id`          | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                          |
+| `discarded_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                                         |
+| `undiscarded_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                                                                          |
+| `discarded_at`           | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                                                       |
+| `undiscarded_at`         | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                                                           |
+| `created_at`             | `datetime` |    ❌    | —                   | Timestamp                                                                                                   |
+| `updated_at`             | `datetime` |    ❌    | —                   | Timestamp                                                                                                   |
 
 **Indexes**:
 
 - `index_payment_products_on_code` (UNIQUE: `code`)
 - `index_payment_products_on_stripe_product_id` (UNIQUE: `stripe_product_id`)
 - `index_payment_products_on_stripe_price_id` (UNIQUE: `stripe_price_id`)
+- `index_payment_products_on_google_play_product_id` (UNIQUE: `google_play_product_id`)
+- `index_payment_products_on_app_store_product_id` (UNIQUE: `app_store_product_id`)
 - `index_payment_products_on_discarded_at` (`discarded_at`)
 
 ---
@@ -320,48 +324,50 @@ erDiagram
 ### 4.2. `payment_subscriptions`
 
 - **Model**: [`Payment::Subscription`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/subscription.rb)
-- **Description**: Recurring user subscription instances synchronized with Stripe Subscription objects.
+- **Description**: Recurring user subscription instances across payment providers (Stripe, Google Play, Apple App Store).
 
-| Column                        | Type       | Nullable | Default             | Description / Notes                                                      |
-| :---------------------------- | :--------- | :------: | :------------------ | :----------------------------------------------------------------------- |
-| `id`                          | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                              |
-| `user_id`                     | `uuid`     |    ❌    | —                   | FK to `users.id`                                                         |
-| `product_id`                  | `uuid`     |    ❌    | —                   | FK to `payment_products.id`                                              |
-| `stripe_subscription_id`      | `string`   |    ❌    | —                   | Stripe Subscription ID (`sub_...`)                                       |
-| `stripe_customer_id`          | `string`   |    ✔️    | `NULL`              | Stripe Customer ID (`cus_...`)                                           |
-| `stripe_subscription_item_id` | `string`   |    ❌    | —                   | Stripe Subscription Item ID (`si_...`)                                   |
-| `stripe_price_id`             | `string`   |    ❌    | —                   | Price snapshot ID (`price_...`)                                          |
-| `status`                      | `string`   |    ❌    | `"incomplete"`      | Status: `incomplete`, `active`, `past_due`, `canceled`, `trialing`, etc. |
-| `currency`                    | `string`   |    ❌    | —                   | Lowercase ISO currency code from Stripe                                  |
-| `unit_amount`                 | `integer`  |    ❌    | —                   | Price snapshot in minor currency units                                   |
-| `quantity`                    | `integer`  |    ❌    | `1`                 | Subscription item quantity                                               |
-| `interval`                    | `string`   |    ❌    | —                   | Stripe recurring interval: `day`, `week`, `month`, or `year`             |
-| `interval_count`              | `integer`  |    ❌    | `1`                 | Number of intervals between billings                                     |
-| `current_period_start`        | `datetime` |    ❌    | —                   | Subscription Item period start, converted from epoch seconds to UTC      |
-| `current_period_end`          | `datetime` |    ❌    | —                   | Subscription Item period end, converted from epoch seconds to UTC        |
-| `started_at`                  | `datetime` |    ❌    | —                   | Stripe Subscription `start_date` converted from epoch seconds to UTC     |
-| `ended_at`                    | `datetime` |    ✔️    | `NULL`              | When subscription ceased                                                 |
-| `cancel_at`                   | `datetime` |    ✔️    | `NULL`              | Scheduled future cancellation time                                       |
-| `canceled_at`                 | `datetime` |    ✔️    | `NULL`              | Timestamp cancellation was requested                                     |
-| `cancel_at_period_end`        | `boolean`  |    ❌    | `false`             | Whether cancel occurs at period boundary                                 |
-| `payment_method_id`           | `string`   |    ✔️    | `NULL`              | ID from Stripe Subscription `default_payment_method`                     |
-| `payment_method_type`         | `string`   |    ✔️    | `NULL`              | Stripe PaymentMethod `type` (for example `card`, `us_bank_account`)      |
-| `payment_method_details`      | `jsonb`    |    ✔️    | `{}`                | Brand, last4, exp details                                                |
-| `metadata`                    | `jsonb`    |    ✔️    | `{}`                | Metadata payload                                                         |
-| `created_by_id`               | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                        |
-| `updated_by_id`               | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                       |
-| `discarded_by_id`             | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                      |
-| `undiscarded_by_id`           | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                                       |
-| `discarded_at`                | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                    |
-| `undiscarded_at`              | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                        |
-| `created_at`                  | `datetime` |    ❌    | —                   | Timestamp                                                                |
-| `updated_at`                  | `datetime` |    ❌    | —                   | Timestamp                                                                |
+| Column                          | Type       | Nullable | Default             | Description / Notes                                                        |
+| :------------------------------ | :--------- | :------: | :------------------ | :------------------------------------------------------------------------- |
+| `id`                            | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                |
+| `user_id`                       | `uuid`     |    ❌    | —                   | FK to `users.id`                                                           |
+| `product_id`                    | `uuid`     |    ❌    | —                   | FK to `payment_products.id`                                                |
+| `provider`                      | `string`   |    ❌    | `"stripe"`          | Payment provider: `stripe`, `google_play`, `app_store`                     |
+| `provider_subscription_id`      | `string`   |    ❌    | —                   | Universal provider subscription identifier (e.g. `sub_...` or store token) |
+| `provider_customer_id`          | `string`   |    ✔️    | `NULL`              | Provider Customer ID (e.g. `cus_...`)                                      |
+| `provider_subscription_item_id` | `string`   |    ✔️    | `NULL`              | Provider Subscription Item ID (e.g. `si_...`)                              |
+| `provider_price_id`             | `string`   |    ✔️    | `NULL`              | Universal provider price / plan identifier (e.g. `price_...`)              |
+| `status`                        | `string`   |    ❌    | `"incomplete"`      | Status: `incomplete`, `active`, `past_due`, `canceled`, `trialing`, etc.   |
+| `currency`                      | `string`   |    ❌    | —                   | Lowercase ISO currency code                                                |
+| `unit_amount`                   | `integer`  |    ❌    | —                   | Price snapshot in minor currency units                                     |
+| `quantity`                      | `integer`  |    ❌    | `1`                 | Subscription item quantity                                                 |
+| `interval`                      | `string`   |    ❌    | —                   | Recurring interval: `day`, `week`, `month`, or `year`                      |
+| `interval_count`                | `integer`  |    ❌    | `1`                 | Number of intervals between billings                                       |
+| `current_period_start`          | `datetime` |    ❌    | —                   | Subscription period start in UTC                                           |
+| `current_period_end`            | `datetime` |    ❌    | —                   | Subscription period end in UTC                                             |
+| `started_at`                    | `datetime` |    ❌    | —                   | Subscription start timestamp in UTC                                        |
+| `ended_at`                      | `datetime` |    ✔️    | `NULL`              | When subscription ceased                                                   |
+| `cancel_at`                     | `datetime` |    ✔️    | `NULL`              | Scheduled future cancellation time                                         |
+| `canceled_at`                   | `datetime` |    ✔️    | `NULL`              | Timestamp cancellation was requested                                       |
+| `cancel_at_period_end`          | `boolean`  |    ❌    | `false`             | Whether cancel occurs at period boundary                                   |
+| `payment_method_id`             | `string`   |    ✔️    | `NULL`              | Payment method identifier                                                  |
+| `payment_method_type`           | `string`   |    ✔️    | `NULL`              | Payment method type (e.g. `card`, `in_app`)                                |
+| `payment_method_details`        | `jsonb`    |    ✔️    | `{}`                | Brand, last4, provider details                                             |
+| `metadata`                      | `jsonb`    |    ✔️    | `{}`                | Metadata payload                                                           |
+| `created_by_id`                 | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                          |
+| `updated_by_id`                 | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                         |
+| `discarded_by_id`               | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                        |
+| `undiscarded_by_id`             | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                                         |
+| `discarded_at`                  | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                      |
+| `undiscarded_at`                | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                          |
+| `created_at`                    | `datetime` |    ❌    | —                   | Timestamp                                                                  |
+| `updated_at`                    | `datetime` |    ❌    | —                   | Timestamp                                                                  |
 
 **Indexes & Foreign Keys**:
 
-- `index_payment_subscriptions_on_stripe_subscription_id` (UNIQUE: `stripe_subscription_id`)
-- `index_payment_subscriptions_on_stripe_subscription_item_id` (`stripe_subscription_item_id`)
-- `index_payment_subscriptions_on_stripe_price_id` (`stripe_price_id`)
+- `index_payment_subscriptions_on_provider_and_provider_sub_id` (UNIQUE: `["provider", "provider_subscription_id"]`)
+- `index_payment_subscriptions_on_provider_subscription_item_id` (`provider_subscription_item_id`)
+- `index_payment_subscriptions_on_provider_price_id` (`provider_price_id`)
+- `index_payment_subscriptions_on_provider` (`provider`)
 - `index_payment_subscriptions_on_user_id_and_status` (`user_id`, `status`)
 - `index_payment_subscriptions_on_user_id` (`user_id`)
 - `index_payment_subscriptions_on_product_id` (`product_id`)
@@ -369,50 +375,52 @@ erDiagram
 - `index_payment_subscriptions_on_current_period_end` (`current_period_end`)
 - FKs to `users(id)` and `payment_products(id)`.
 
-Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the contract shipped by Stripe Ruby `19.6.1`). Billing periods are read from the single `SubscriptionItem`; integer price fields are stored as a subscription snapshot rather than read later from the mutable product row. Decimal prices are intentionally unsupported.
+Subscription synchronization supports Stripe, Google Play, and Apple App Store. Integer price fields are stored as a subscription snapshot rather than read later from the mutable product row. Decimal prices are intentionally unsupported.
 
 ---
 
 ### 4.3. `payment_purchases`
 
 - **Model**: [`Payment::Purchase`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/purchase.rb)
-- **Description**: One-time purchases synchronized from Stripe PaymentIntent objects.
+- **Description**: One-time purchases across payment providers (Stripe, Google Play, Apple App Store).
 
-| Column                     | Type       | Nullable | Default                     | Description / Notes                            |
-| :------------------------- | :--------- | :------: | :-------------------------- | :--------------------------------------------- |
-| `id`                       | `uuid`     |    ❌    | `gen_random_uuid()`         | Primary Key                                    |
-| `user_id`                  | `uuid`     |    ❌    | —                           | FK to `users.id`                               |
-| `product_id`               | `uuid`     |    ❌    | —                           | FK to `payment_products.id`                    |
-| `stripe_payment_intent_id` | `string`   |    ❌    | —                           | Stripe Payment Intent ID (`pi_...`)            |
-| `stripe_charge_id`         | `string`   |    ✔️    | `NULL`                      | Stripe Charge ID (`ch_...`)                    |
-| `stripe_customer_id`       | `string`   |    ✔️    | `NULL`                      | Stripe Customer ID (`cus_...`)                 |
-| `client_secret`            | `string`   |    ✔️    | `NULL`                      | Stripe client secret for FE SDK                |
-| `unit_amount`              | `integer`  |    ❌    | —                           | PaymentIntent `amount` in minor currency units |
-| `amount_received`          | `integer`  |    ✔️    | `0`                         | Actual captured amount in cents                |
-| `amount_capturable`        | `integer`  |    ✔️    | `0`                         | Authorized amount ready for capture            |
-| `currency`                 | `string`   |    ❌    | —                           | Currency code (e.g. `usd`)                     |
-| `status`                   | `string`   |    ❌    | `"requires_payment_method"` | Stripe status: `succeeded`, `processing`, etc. |
-| `payment_method_id`        | `string`   |    ✔️    | `NULL`                      | Stripe PaymentMethod ID                        |
-| `payment_method_type`      | `string`   |    ✔️    | `NULL`                      | Payment method category                        |
-| `payment_method_details`   | `jsonb`    |    ✔️    | `{}`                        | Detailed card/account summary                  |
-| `processing_at`            | `datetime` |    ✔️    | `NULL`                      | When processing began                          |
-| `paid_at`                  | `datetime` |    ✔️    | `NULL`                      | When payment succeeded                         |
-| `canceled_at`              | `datetime` |    ✔️    | `NULL`                      | When payment was canceled                      |
-| `refunded_at`              | `datetime` |    ✔️    | `NULL`                      | When purchase was refunded                     |
-| `metadata`                 | `jsonb`    |    ✔️    | `{}`                        | Arbitrary Stripe metadata                      |
-| `created_by_id`            | `uuid`     |    ✔️    | `NULL`                      | Auditing: Creator                              |
-| `updated_by_id`            | `uuid`     |    ✔️    | `NULL`                      | Auditing: Modifier                             |
-| `discarded_by_id`          | `uuid`     |    ✔️    | `NULL`                      | Auditing: Discarder                            |
-| `undiscarded_by_id`        | `uuid`     |    ✔️    | `NULL`                      | Auditing: Restorer                             |
-| `discarded_at`             | `datetime` |    ✔️    | `NULL`                      | Soft delete timestamp                          |
-| `undiscarded_at`           | `datetime` |    ✔️    | `NULL`                      | Soft delete restoration timestamp              |
-| `created_at`               | `datetime` |    ❌    | —                           | Timestamp                                      |
-| `updated_at`               | `datetime` |    ❌    | —                           | Timestamp                                      |
+| Column                   | Type       | Nullable | Default                     | Description / Notes                                    |
+| :----------------------- | :--------- | :------: | :-------------------------- | :----------------------------------------------------- |
+| `id`                     | `uuid`     |    ❌    | `gen_random_uuid()`         | Primary Key                                            |
+| `user_id`                | `uuid`     |    ❌    | —                           | FK to `users.id`                                       |
+| `product_id`             | `uuid`     |    ❌    | —                           | FK to `payment_products.id`                            |
+| `provider`               | `string`   |    ❌    | `"stripe"`                  | Payment provider: `stripe`, `google_play`, `app_store` |
+| `provider_payment_id`    | `string`   |    ❌    | —                           | Universal provider payment/order/transaction ID        |
+| `provider_charge_id`     | `string`   |    ✔️    | `NULL`                      | Universal provider charge identifier                   |
+| `provider_customer_id`   | `string`   |    ✔️    | `NULL`                      | Universal provider customer identifier                 |
+| `client_secret`          | `string`   |    ✔️    | `NULL`                      | Client secret for frontend SDK                         |
+| `unit_amount`            | `integer`  |    ❌    | —                           | Amount in minor currency units                         |
+| `amount_received`        | `integer`  |    ✔️    | `0`                         | Actual captured amount in cents                        |
+| `amount_capturable`      | `integer`  |    ✔️    | `0`                         | Authorized amount ready for capture                    |
+| `currency`               | `string`   |    ❌    | —                           | Currency code (e.g. `usd`)                             |
+| `status`                 | `string`   |    ❌    | `"requires_payment_method"` | Payment status: `succeeded`, `processing`, etc.        |
+| `payment_method_id`      | `string`   |    ✔️    | `NULL`                      | Payment method identifier                              |
+| `payment_method_type`    | `string`   |    ✔️    | `NULL`                      | Payment method category (e.g. `card`, `in_app`)        |
+| `payment_method_details` | `jsonb`    |    ✔️    | `{}`                        | Detailed payment summary                               |
+| `processing_at`          | `datetime` |    ✔️    | `NULL`                      | When processing began                                  |
+| `paid_at`                | `datetime` |    ✔️    | `NULL`                      | When payment succeeded                                 |
+| `canceled_at`            | `datetime` |    ✔️    | `NULL`                      | When payment was canceled                              |
+| `refunded_at`            | `datetime` |    ✔️    | `NULL`                      | When purchase was refunded                             |
+| `metadata`               | `jsonb`    |    ✔️    | `{}`                        | Arbitrary metadata payload                             |
+| `created_by_id`          | `uuid`     |    ✔️    | `NULL`                      | Auditing: Creator                                      |
+| `updated_by_id`          | `uuid`     |    ✔️    | `NULL`                      | Auditing: Modifier                                     |
+| `discarded_by_id`        | `uuid`     |    ✔️    | `NULL`                      | Auditing: Discarder                                    |
+| `undiscarded_by_id`      | `uuid`     |    ✔️    | `NULL`                      | Auditing: Restorer                                     |
+| `discarded_at`           | `datetime` |    ✔️    | `NULL`                      | Soft delete timestamp                                  |
+| `undiscarded_at`         | `datetime` |    ✔️    | `NULL`                      | Soft delete restoration timestamp                      |
+| `created_at`             | `datetime` |    ❌    | —                           | Timestamp                                              |
+| `updated_at`             | `datetime` |    ❌    | —                           | Timestamp                                              |
 
 **Indexes & Foreign Keys**:
 
-- `index_payment_purchases_on_stripe_payment_intent_id` (UNIQUE: `stripe_payment_intent_id`)
-- `index_payment_purchases_on_stripe_charge_id` (UNIQUE: `stripe_charge_id`)
+- `index_payment_purchases_on_provider_and_provider_payment_id` (UNIQUE: `["provider", "provider_payment_id"]`)
+- `index_payment_purchases_on_provider_charge_id` (UNIQUE: `provider_charge_id`)
+- `index_payment_purchases_on_provider` (`provider`)
 - `index_payment_purchases_on_user_id_and_created_at` (`user_id`, `created_at`)
 - `index_payment_purchases_on_user_id` (`user_id`)
 - `index_payment_purchases_on_product_id` (`product_id`)
@@ -425,15 +433,16 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 ### 4.4. `payment_webhook_events`
 
 - **Model**: [`Payment::WebhookEvent`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/webhook_event.rb)
-- **Description**: Idempotent audit log and processing buffer for incoming Stripe webhook payloads.
+- **Description**: Idempotent audit log and processing buffer for incoming webhook payloads across payment providers (Stripe, Google Play, Apple App Store).
 
 | Column                  | Type       | Nullable | Default             | Description / Notes                            |
 | :---------------------- | :--------- | :------: | :------------------ | :--------------------------------------------- |
 | `id`                    | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                    |
-| `stripe_event_id`       | `string`   |    ❌    | —                   | Unique Stripe event ID (`evt_...`)             |
-| `event_type`            | `string`   |    ❌    | —                   | Stripe event name (e.g. `invoice.paid`)        |
+| `provider`              | `string`   |    ❌    | `"stripe"`          | Provider: `stripe`, `google_play`, `app_store` |
+| `provider_event_id`     | `string`   |    ❌    | —                   | Unique provider event ID (e.g. `evt_...`)      |
+| `event_type`            | `string`   |    ❌    | —                   | Provider event name (e.g. `invoice.paid`)      |
 | `status`                | `string`   |    ❌    | `"pending"`         | `pending`, `processing`, `processed`, `failed` |
-| `livemode`              | `boolean`  |    ❌    | `false`             | True if production Stripe mode                 |
+| `livemode`              | `boolean`  |    ❌    | `false`             | True if production mode                        |
 | `payload`               | `jsonb`    |    ❌    | `{}`                | Complete raw event payload                     |
 | `attempt_count`         | `integer`  |    ❌    | `0`                 | Number of processing attempts                  |
 | `received_at`           | `datetime` |    ❌    | —                   | When HTTP webhook was received                 |
@@ -451,7 +460,8 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 
 **Indexes**:
 
-- `index_payment_webhook_events_on_stripe_event_id` (UNIQUE: `stripe_event_id`)
+- `index_payment_webhook_events_on_provider_event_id` (UNIQUE: `provider_event_id`)
+- `index_payment_webhook_events_on_provider` (`provider`)
 - `index_payment_webhook_events_on_status_and_received_at` (`status`, `received_at`)
 - `index_payment_webhook_events_on_event_type` (`event_type`)
 - `index_payment_webhook_events_on_received_at` (`received_at`)
@@ -463,39 +473,41 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - **Model**: [`Payment::Coupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/coupon.rb)
 - **Description**: Promotional discount codes and user referral coupons that can be applied during checkout. Supports percentage or fixed-amount discounts, currency restrictions, global and per-user redemption limits, expiration dates, and multi-tenant targeting restrictions (`target_role_ids`, `target_user_ids`, `target_product_ids`).
 
-| Column                | Type        | Nullable | Default             | Description / Notes                                         |
-| :-------------------- | :---------- | :------: | :------------------ | :---------------------------------------------------------- |
-| `id`                  | `uuid`      |    ❌    | `gen_random_uuid()` | Primary Key                                                 |
-| `title`               | `string`    |    ❌    | —                   | Marketing title / description of the promotion              |
-| `description`         | `text`      |    ✔️    | `NULL`              | Detailed promo terms or campaign notes                      |
-| `code`                | `string`    |    ❌    | —                   | Uppercase unique promo code (e.g. `SAVE20`, `REF-ALICE`)     |
-| `coupon_type`         | `integer`   |    ❌    | `0`                 | Enum: `0: percentage` (1-100%), `1: fixed` (minor units)    |
-| `amount`              | `integer`   |    ❌    | —                   | Discount magnitude: percentage (1-100) or fixed minor units |
-| `currency`            | `string`    |    ✔️    | `NULL`              | Minor units currency (e.g. `usd`). Nullable for percentage  |
-| `metadata`            | `jsonb`     |    ❌    | `{}`                | Arbitrary JSONB metadata payload                            |
-| `max_usage`           | `integer`   |    ❌    | `0`                 | Total allowable redemptions across all users (0 = unlimited)|
-| `max_usage_per_user`  | `integer`   |    ❌    | `1`                 | Maximum redemptions per individual user                     |
-| `used_count`          | `integer`   |    ❌    | `0`                 | Atomic redemption counter (reconciled by weekly DataSync)   |
-| `expires_at`          | `datetime`  |    ✔️    | `NULL`              | UTC expiration timestamp (NULL = never expires)             |
-| `referrer_id`         | `uuid`      |    ✔️    | `NULL`              | FK to `users.id` (user whose referral code this is)         |
-| `target_role_ids`     | `uuid[]`    |    ❌    | `[]`                | Array of `iam_roles.id` that are eligible                   |
-| `target_user_ids`     | `uuid[]`    |    ❌    | `[]`                | Array of `users.id` that are eligible                       |
-| `target_product_ids`  | `uuid[]`    |    ❌    | `[]`                | Array of `payment_products.id` that are eligible            |
-| `stripe_coupon_id`    | `string`    |    ✔️    | `NULL`              | Remote Stripe coupon identifier (synchronized bi-directionally) |
-| `active`              | `boolean`   |    ❌    | `true`              | Operational availability flag (deactivated upon soft-discard)|
-| `created_by_id`       | `uuid`      |    ✔️    | `NULL`              | Auditing: Creator                                           |
-| `updated_by_id`       | `uuid`      |    ✔️    | `NULL`              | Auditing: Modifier                                          |
-| `discarded_by_id`     | `uuid`      |    ✔️    | `NULL`              | Auditing: Discarder                                         |
-| `undiscarded_by_id`   | `uuid`      |    ✔️    | `NULL`              | Auditing: Restorer                                          |
-| `discarded_at`        | `datetime`  |    ✔️    | `NULL`              | Soft delete timestamp                                       |
-| `undiscarded_at`      | `datetime`  |    ✔️    | `NULL`              | Soft delete restoration timestamp                           |
-| `created_at`          | `datetime`  |    ❌    | —                   | Timestamp                                                   |
-| `updated_at`          | `datetime`  |    ❌    | —                   | Timestamp                                                   |
+| Column               | Type       | Nullable | Default             | Description / Notes                                           |
+| :------------------- | :--------- | :------: | :------------------ | :------------------------------------------------------------ |
+| `id`                 | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                   |
+| `title`              | `string`   |    ❌    | —                   | Marketing title / description of the promotion                |
+| `description`        | `text`     |    ✔️    | `NULL`              | Detailed promo terms or campaign notes                        |
+| `code`               | `string`   |    ❌    | —                   | Uppercase unique promo code (e.g. `SAVE20`, `REF-ALICE`)      |
+| `coupon_type`        | `integer`  |    ❌    | `0`                 | Enum: `0: percentage` (1-100%), `1: fixed` (minor units)      |
+| `amount`             | `integer`  |    ❌    | —                   | Discount magnitude: percentage (1-100) or fixed minor units   |
+| `currency`           | `string`   |    ✔️    | `NULL`              | Minor units currency (e.g. `usd`). Nullable for percentage    |
+| `metadata`           | `jsonb`    |    ❌    | `{}`                | Arbitrary JSONB metadata payload                              |
+| `max_usage`          | `integer`  |    ❌    | `0`                 | Total allowable redemptions across all users (0 = unlimited)  |
+| `max_usage_per_user` | `integer`  |    ❌    | `1`                 | Maximum redemptions per individual user                       |
+| `used_count`         | `integer`  |    ❌    | `0`                 | Atomic redemption counter (reconciled by weekly DataSync)     |
+| `expires_at`         | `datetime` |    ✔️    | `NULL`              | UTC expiration timestamp (NULL = never expires)               |
+| `referrer_id`        | `uuid`     |    ✔️    | `NULL`              | FK to `users.id` (user whose referral code this is)           |
+| `target_role_ids`    | `uuid[]`   |    ❌    | `[]`                | Array of `iam_roles.id` that are eligible                     |
+| `target_user_ids`    | `uuid[]`   |    ❌    | `[]`                | Array of `users.id` that are eligible                         |
+| `target_product_ids` | `uuid[]`   |    ❌    | `[]`                | Array of `payment_products.id` that are eligible              |
+| `provider`           | `string`   |    ❌    | `"stripe"`          | Payment provider identifier (`stripe`)                        |
+| `provider_coupon_id` | `string`   |    ✔️    | `NULL`              | Remote provider coupon identifier (e.g. Stripe coupon ID)     |
+| `active`             | `boolean`  |    ❌    | `true`              | Operational availability flag (deactivated upon soft-discard) |
+| `created_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                             |
+| `updated_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                            |
+| `discarded_by_id`    | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                           |
+| `undiscarded_by_id`  | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                            |
+| `discarded_at`       | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                         |
+| `undiscarded_at`     | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                             |
+| `created_at`         | `datetime` |    ❌    | —                   | Timestamp                                                     |
+| `updated_at`         | `datetime` |    ❌    | —                   | Timestamp                                                     |
 
 **Indexes & Foreign Keys**:
 
 - `index_coupons_on_code` (UNIQUE: `code`)
-- `index_coupons_on_stripe_coupon_id` (`stripe_coupon_id`)
+- `index_coupons_on_provider_coupon_id` (`provider_coupon_id`)
+- `index_coupons_on_provider` (`provider`)
 - `index_coupons_on_referrer_id` (`referrer_id`)
 - `index_coupons_on_expires_at` (`expires_at`)
 - `index_coupons_on_coupon_type` (`coupon_type`)
@@ -506,6 +518,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - FK to `users(id)` via `referrer_id`.
 
 **Stripe Synchronization & Immutability Invariants**:
+
 - **Immutability of Financial Terms**: Financial parameters (`code`, `coupon_type`, `amount`, `currency`, `max_usage`, `expires_at`) are strictly immutable once created, ensuring deterministic parity with Stripe coupons. To alter terms, coupons must be destroyed and recreated.
 - **Bi-Directional Metadata Sync**: `metadata` JSONB is converted to string maps and synced to Stripe upon creation and update.
 - **Soft Delete vs Hard Delete**:
@@ -534,26 +547,26 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - **Model**: [`Payment::UserCoupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/user_coupon.rb)
 - **Description**: Immutable audit ledger recording each coupon redemption associated with a purchase or subscription.
 
-| Column             | Type       | Nullable | Default             | Description / Notes                                        |
-| :----------------- | :--------- | :------: | :------------------ | :--------------------------------------------------------- |
-| `id`               | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                |
-| `coupon_id`        | `uuid`     |    ❌    | —                   | FK to `coupons.id`                                         |
-| `user_id`          | `uuid`     |    ❌    | —                   | FK to `users.id`                                           |
-| `product_id`       | `uuid`     |    ❌    | —                   | FK to `payment_products.id`                                |
-| `payment_id`       | `uuid`     |    ❌    | —                   | FK to `payment_purchases.id` or `payment_subscriptions.id` |
-| `payment_type`     | `integer`  |    ❌    | `0`                 | Enum: `0: purchase`, `1: subscription`                     |
-| `discount_amount`  | `integer`  |    ❌    | `0`                 | Actual discount deducted in minor currency units           |
-| `original_amount`  | `integer`  |    ❌    | `0`                 | Product original price before discount                     |
-| `final_amount`     | `integer`  |    ❌    | `0`                 | Net amount billed after coupon discount                    |
-| `currency`         | `string`   |    ❌    | `"usd"`             | Currency identifier (e.g. `usd`, `mmk`, `sgd`)             |
-| `created_by_id`    | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                          |
-| `updated_by_id`    | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                         |
-| `discarded_by_id`  | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                        |
-| `undiscarded_by_id`| `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                         |
-| `discarded_at`     | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                      |
-| `undiscarded_at`   | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                          |
-| `created_at`       | `datetime` |    ❌    | —                   | Timestamp                                                  |
-| `updated_at`       | `datetime` |    ❌    | —                   | Timestamp                                                  |
+| Column              | Type       | Nullable | Default             | Description / Notes                                        |
+| :------------------ | :--------- | :------: | :------------------ | :--------------------------------------------------------- |
+| `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                |
+| `coupon_id`         | `uuid`     |    ❌    | —                   | FK to `coupons.id`                                         |
+| `user_id`           | `uuid`     |    ❌    | —                   | FK to `users.id`                                           |
+| `product_id`        | `uuid`     |    ❌    | —                   | FK to `payment_products.id`                                |
+| `payment_id`        | `uuid`     |    ❌    | —                   | FK to `payment_purchases.id` or `payment_subscriptions.id` |
+| `payment_type`      | `integer`  |    ❌    | `0`                 | Enum: `0: purchase`, `1: subscription`                     |
+| `discount_amount`   | `integer`  |    ❌    | `0`                 | Actual discount deducted in minor currency units           |
+| `original_amount`   | `integer`  |    ❌    | `0`                 | Product original price before discount                     |
+| `final_amount`      | `integer`  |    ❌    | `0`                 | Net amount billed after coupon discount                    |
+| `currency`          | `string`   |    ❌    | `"usd"`             | Currency identifier (e.g. `usd`, `mmk`, `sgd`)             |
+| `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                          |
+| `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                         |
+| `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                        |
+| `undiscarded_by_id` | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                         |
+| `discarded_at`      | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                      |
+| `undiscarded_at`    | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                          |
+| `created_at`        | `datetime` |    ❌    | —                   | Timestamp                                                  |
+| `updated_at`        | `datetime` |    ❌    | —                   | Timestamp                                                  |
 
 **Indexes & Foreign Keys**:
 
@@ -638,22 +651,22 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - **Model**: [`Chat::Message`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/message.rb)
 - **Description**: Individual dialogue turns (user prompt or AI assistant response) with metadata and attached assets (e.g. TTS audio).
 
-| Column              | Type       | Nullable | Default             | Description / Notes                                                                 |
-| :------------------ | :--------- | :------: | :------------------ | :---------------------------------------------------------------------------------- |
-| `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                         |
-| `room_id`           | `uuid`     |    ❌    | —                   | FK to `chat_rooms.id`                                                               |
-| `ai_profile_id`     | `uuid`     |    ✔️    | `NULL`              | Optional FK to `ai_profiles.id` used for provider/model/prompt controls             |
-| `role`              | `string`   |    ❌    | —                   | Role: `user` or `assistant`                                                         |
-| `content`           | `text`     |    ❌    | —                   | Message text content                                                                |
+| Column              | Type       | Nullable | Default             | Description / Notes                                                                                                            |
+| :------------------ | :--------- | :------: | :------------------ | :----------------------------------------------------------------------------------------------------------------------------- |
+| `id`                | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                                                                                                    |
+| `room_id`           | `uuid`     |    ❌    | —                   | FK to `chat_rooms.id`                                                                                                          |
+| `ai_profile_id`     | `uuid`     |    ✔️    | `NULL`              | Optional FK to `ai_profiles.id` used for provider/model/prompt controls                                                        |
+| `role`              | `string`   |    ❌    | —                   | Role: `user` or `assistant`                                                                                                    |
+| `content`           | `text`     |    ❌    | —                   | Message text content                                                                                                           |
 | `metadata`          | `jsonb`    |    ✔️    | `{}`                | Store accessor: `ai_status`, `model`, `usage`, `temperature`, `tts_status`, `error`, `split_id`, `chunk_index`, `total_chunks` |
-| `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                   |
-| `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                  |
-| `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                 |
-| `undiscarded_by_id` | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                                                  |
-| `discarded_at`      | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                               |
-| `undiscarded_at`    | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                                   |
-| `created_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                           |
-| `updated_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                           |
+| `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                                              |
+| `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                                             |
+| `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                                                            |
+| `undiscarded_by_id` | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                                                                                             |
+| `discarded_at`      | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                                                                          |
+| `undiscarded_at`    | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                                                                                              |
+| `created_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                                                                      |
+| `updated_at`        | `datetime` |    ❌    | —                   | Timestamp                                                                                                                      |
 
 **Indexes & Foreign Keys**:
 
@@ -665,6 +678,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 - FK to `ai_profiles(id)`.
 
 **Chunking & Invariants**:
+
 - Long messages (> 2,000 chars) from users or assistant responses are split across sequential messages sharing `split_id` with `chunk_index` (0-based) and `total_chunks`.
 - Consecutive user message chunks sharing `split_id` are stitched before AI runner execution so LLM receives complete context.
 
@@ -1089,7 +1103,7 @@ Subscription synchronization is pinned to Stripe API `2026-08-26.dahlia` (the co
 | `payment_purchases`      | [`Payment::Purchase`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/purchase.rb)          | Billing        |      ✔️       |   ✔️    | —                                    |
 | `payment_webhook_events` | [`Payment::WebhookEvent`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/webhook_event.rb) | Billing        |      ✔️       |   ✔️    | —                                    |
 | `coupons`                | [`Payment::Coupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/coupon.rb)              | Billing        |      ✔️       |   ✔️    | —                                    |
-| `user_coupons`           | [`Payment::UserCoupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/user_coupon.rb)      | Billing        |      ✔️       |   ✔️    | —                                    |
+| `user_coupons`           | [`Payment::UserCoupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/user_coupon.rb)     | Billing        |      ✔️       |   ✔️    | —                                    |
 | `accesses`               | [`Access`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/access.rb)                               | Access Control |      ✔️       |   ✔️    | —                                    |
 | `chat_rooms`             | [`Chat::Room`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/room.rb)                        | AI / Chat      |      ✔️       |   ✔️    | —                                    |
 | `chat_messages`          | [`Chat::Message`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/message.rb)                  | AI / Chat      |      ✔️       |   ✔️    | `assets` (`assetable`)               |

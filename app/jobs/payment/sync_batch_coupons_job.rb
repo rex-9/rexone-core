@@ -27,7 +27,7 @@ module Payment
 
       coupons = ::Payment::Coupon.where(id: coupon_ids)
       coupons.find_each do |coupon|
-        next if coupon.sync_succeeded? && coupon.stripe_coupon_id.present?
+        next if coupon.sync_succeeded? && coupon.provider_coupon_id.present?
         next if coupon.sync_failed?
 
         sync_coupon(coupon)

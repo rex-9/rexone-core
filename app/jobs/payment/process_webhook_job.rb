@@ -1,7 +1,7 @@
 # app/jobs/payment/process_webhook_job.rb
 
 class Payment::ProcessWebhookJob < ApplicationJob
-  STRIPE_LOG_PREFIX = PaymentService::Stripe::STRIPE_LOG_PREFIX
+  STRIPE_LOG_PREFIX = Payment::Providers::Stripe::STRIPE_LOG_PREFIX
 
   queue_as :payments
 
@@ -41,7 +41,7 @@ class Payment::ProcessWebhookJob < ApplicationJob
       webhook_event.start_processing!
     end
 
-    PaymentService::Client.process_webhook(webhook_event.payload)
+    Payment::Providers::Client.process_webhook(webhook_event.payload)
 
     webhook_event.mark_as_processed!
 

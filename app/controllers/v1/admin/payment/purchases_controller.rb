@@ -47,7 +47,7 @@ class V1::Admin::Payment::PurchasesController < V1::ApplicationController
     term = "%#{ActiveRecord::Base.sanitize_sql_like(search_term.strip)}%"
     scope.left_joins(:user, :product).where(
       "users.email ILIKE :term OR users.username ILIKE :term OR payment_products.name ILIKE :term " \
-      "OR payment_purchases.stripe_payment_intent_id ILIKE :term OR payment_purchases.stripe_charge_id ILIKE :term",
+      "OR payment_purchases.provider_payment_id ILIKE :term",
       term: term
     )
   end

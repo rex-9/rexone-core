@@ -80,6 +80,14 @@ my:
       queue_failed: "Webhook တန်းစီ၍ မရပါ"
       persist_failed: "Webhook သိမ်းဆည်း၍ မရပါ"
       processing_failed: "Webhook လုပ်ဆောင်၍ မရပါ"
+    verification:
+      failed: "ငွေပေးချေမှု အတည်ပြုခြင်း မအောင်မြင်ပါ"
+      verified_and_granted: "ငွေပေးချေမှု အတည်ပြုပြီး အသုံးပြုခွင့် ပေးအပ်ပြီးပါပြီ"
+      unsupported_provider: "မထောက်ပံ့ထားသော ငွေပေးချေမှု ဝန်ဆောင်မှု: %{provider}"
+      free_product_not_supported: "အခမဲ့ ထုတ်ကုန်များအတွက် အတည်ပြုရန် မလိုအပ်ပါ"
+      in_app_not_supported: "ထုတ်ကုန်သည် အက်ပ်တွင်း ဝယ်ယူမှုကို မထောက်ပံ့ပါ"
+      google_play_not_supported: "ထုတ်ကုန်သည် Google Play ဝယ်ယူမှုကို မထောက်ပံ့ပါ"
+      app_store_not_supported: "ထုတ်ကုန်သည် Apple App Store ဝယ်ယူမှုကို မထောက်ပံ့ပါ"
     notifications:
       payment_success:
         title: "ငွေပေးချေမှု အောင်မြင်သည်! 🎉"

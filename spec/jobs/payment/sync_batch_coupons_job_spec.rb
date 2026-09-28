@@ -5,15 +5,15 @@ require "rails_helper"
 RSpec.describe Payment::SyncBatchCouponsJob, type: :job do
   describe "#perform" do
     it "synchronizes batch coupons, activates them, and updates metadata to succeeded" do
-      coupon1 = create(:payment_coupon, active: false, stripe_coupon_id: nil, metadata: { "status" => "processing" })
-      coupon2 = create(:payment_coupon, active: false, stripe_coupon_id: nil, metadata: { "status" => "processing" })
+      coupon1 = create(:payment_coupon, active: false, provider_coupon_id: nil, metadata: { "status" => "processing" })
+      coupon2 = create(:payment_coupon, active: false, provider_coupon_id: nil, metadata: { "status" => "processing" })
 
       allow(CouponService).to receive(:ensure_stripe_coupon).with(coupon1, raise_on_error: true) do
-        coupon1.update_column(:stripe_coupon_id, coupon1.code)
+        coupon1.update_column(:provider_coupon_id, coupon1.code)
         coupon1.code
       end
       allow(CouponService).to receive(:ensure_stripe_coupon).with(coupon2, raise_on_error: true) do
-        coupon2.update_column(:stripe_coupon_id, coupon2.code)
+        coupon2.update_column(:provider_coupon_id, coupon2.code)
         coupon2.code
       end
 
@@ -32,12 +32,12 @@ RSpec.describe Payment::SyncBatchCouponsJob, type: :job do
     end
 
     it "marks coupon as failed and leaves active: false on non-retryable error" do
-      failed_coupon = create(:payment_coupon, active: false, stripe_coupon_id: nil, metadata: { "status" => "processing" })
-      success_coupon = create(:payment_coupon, active: false, stripe_coupon_id: nil, metadata: { "status" => "processing" })
+      failed_coupon = create(:payment_coupon, active: false, provider_coupon_id: nil, metadata: { "status" => "processing" })
+      success_coupon = create(:payment_coupon, active: false, provider_coupon_id: nil, metadata: { "status" => "processing" })
 
       allow(CouponService).to receive(:ensure_stripe_coupon).with(failed_coupon, raise_on_error: true).and_raise(StandardError, "Stripe coupon creation failed")
       allow(CouponService).to receive(:ensure_stripe_coupon).with(success_coupon, raise_on_error: true) do
-        success_coupon.update_column(:stripe_coupon_id, success_coupon.code)
+        success_coupon.update_column(:provider_coupon_id, success_coupon.code)
         success_coupon.code
       end
 
@@ -56,7 +56,7 @@ RSpec.describe Payment::SyncBatchCouponsJob, type: :job do
     end
 
     it "skips coupons that have already succeeded or already failed" do
-      synced_coupon = create(:payment_coupon, active: true, stripe_coupon_id: "SYNCED123", metadata: { "status" => "succeeded" })
+      synced_coupon = create(:payment_coupon, active: true, provider_coupon_id: "SYNCED123", metadata: { "status" => "succeeded" })
       failed_coupon = create(:payment_coupon, active: false, metadata: { "status" => "failed" })
 
       expect(CouponService).not_to receive(:ensure_stripe_coupon)
@@ -65,7 +65,7 @@ RSpec.describe Payment::SyncBatchCouponsJob, type: :job do
     end
 
     it "retries on Stripe rate limit or connection errors" do
-      coupon = create(:payment_coupon, active: false, stripe_coupon_id: nil, metadata: { "status" => "processing" })
+      coupon = create(:payment_coupon, active: false, provider_coupon_id: nil, metadata: { "status" => "processing" })
 
       allow(CouponService).to receive(:ensure_stripe_coupon).with(coupon, raise_on_error: true).and_raise(Stripe::RateLimitError.new("Rate limit exceeded"))
 
@@ -74,7 +74,7 @@ RSpec.describe Payment::SyncBatchCouponsJob, type: :job do
     end
 
     it "marks coupon as failed when retries are exhausted" do
-      coupon = create(:payment_coupon, active: false, stripe_coupon_id: nil, metadata: { "status" => "processing" })
+      coupon = create(:payment_coupon, active: false, provider_coupon_id: nil, metadata: { "status" => "processing" })
 
       job = described_class.new([coupon.id])
       error = Stripe::RateLimitError.new("Rate limit exceeded")

@@ -1,17 +1,17 @@
 # app/controllers/webhooks/stripe_controller.rb
 class Webhooks::StripeController < ActionController::API
-  STRIPE_LOG_PREFIX = PaymentService::Stripe::STRIPE_LOG_PREFIX
+  STRIPE_LOG_PREFIX = Payment::Providers::Stripe::STRIPE_LOG_PREFIX
 
   def create
     payload = request.raw_post
     signature = request.headers[AuthConstants::Headers::STRIPE_SIGNATURE]
 
-    stripe_event = PaymentService::Client.verify_webhook(
+    stripe_event = Payment::Providers::Client.verify_webhook(
       payload,
       signature
     )
 
-    unless PaymentService::Client.supported_webhook_event?(
+    unless Payment::Providers::Client.supported_webhook_event?(
       stripe_event.type
     )
       Rails.logger.info(
@@ -35,7 +35,7 @@ class Webhooks::StripeController < ActionController::API
     if webhook_event.processed?
       render json: {
         received: true,
-        event_id: webhook_event.stripe_event_id,
+        event_id: webhook_event.provider_event_id,
         status: "already_processed"
       }, status: :ok
 
@@ -48,14 +48,14 @@ class Webhooks::StripeController < ActionController::API
 
     Rails.logger.info(
       "#{STRIPE_LOG_PREFIX} Webhook queued: " \
-      "event_id=#{webhook_event.stripe_event_id} " \
+      "event_id=#{webhook_event.provider_event_id} " \
       "event_type=#{webhook_event.event_type} " \
       "job_id=#{job.job_id}"
     )
 
     render json: {
       received: true,
-      event_id: webhook_event.stripe_event_id,
+      event_id: webhook_event.provider_event_id,
       status: NotificationConstants::OperationStatus::QUEUED,
       operation_id: "#{NotificationConstants::OperationType::PAYMENT_WEBHOOK}:#{webhook_event.id}",
       operation_type: NotificationConstants::OperationType::PAYMENT_WEBHOOK,
@@ -121,7 +121,8 @@ class Webhooks::StripeController < ActionController::API
 
   def persist_webhook_event!(stripe_event, raw_payload)
     Payment::WebhookEvent.find_or_create_by!(
-      stripe_event_id: stripe_event.id
+      provider: PaymentConstants::Provider::STRIPE,
+      provider_event_id: stripe_event.id
     ) do |webhook_event|
       webhook_event.event_type = stripe_event.type
       webhook_event.livemode = stripe_event.livemode || false
@@ -129,6 +130,6 @@ class Webhooks::StripeController < ActionController::API
       webhook_event.received_at = Time.current
     end
   rescue ActiveRecord::RecordNotUnique
-    Payment::WebhookEvent.find_by!(stripe_event_id: stripe_event.id)
+    Payment::WebhookEvent.find_by!(provider: PaymentConstants::Provider::STRIPE, provider_event_id: stripe_event.id)
   end
 end

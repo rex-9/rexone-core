@@ -544,7 +544,7 @@ _Version resolution_: Core maps `app_version` to a matching `Client::Version` re
   - **Progressive Cooldown Ladder**: 3 attempts $\rightarrow$ 30s, 6 attempts $\rightarrow$ 60s, 9 attempts $\rightarrow$ 120s, 12+ attempts $\rightarrow$ 300s cooldown.
   - **Reset**: Successful redemption or checkout immediately clears attempt and cooldown counters.
 - **Checkout Integration (`POST /v1/payment/session`, `GET /v1/payment/session/:session_id`)**:
-  - `POST /v1/payment/session`: If `final_amount > 0`: Creates Stripe Checkout Session with `discounts: [{ coupon: stripe_coupon_id }]`, appending `session_id={CHECKOUT_SESSION_ID}` to `success_url`, returning `{ "checkout_url": "...", "session_id": "..." }`.
+  - `POST /v1/payment/session`: If `final_amount > 0`: Creates Stripe Checkout Session with `discounts: [{ coupon: provider_coupon_id }]`, appending `session_id={CHECKOUT_SESSION_ID}` to `success_url`, returning `{ "checkout_url": "...", "session_id": "..." }`.
   - If `final_amount == 0`: Bypasses Stripe, records `Payment::Purchase` (with `unit_amount: product.unit_amount, amount_received: 0`), creates `Payment::UserCoupon`, and grants access via `AccessService.grant(...)`.
   - `GET /v1/payment/session/:session_id`: Immediate client fulfillment upon reaching the success return URL. Inspects session status and immediately provisions subscription/purchase records and entitlement grants (`AccessService.grant(...)`) without waiting for background webhook delivery.
 - **Referral Coupons**:
@@ -582,6 +582,49 @@ _Version resolution_: Core maps `app_version` to a matching `Client::Version` re
   - Soft delete (`discard`) moves coupons to the recycle bin while preserving Stripe sync IDs for potential restoration.
   - Hard delete (`destroy`) permanently purges the coupon and its dependent redemption records from the database and Stripe.
   - Discarded coupons remain inspectable via `/v1/admin/payment/coupons/:id` and `/v1/admin/payment/coupons/:id/redemptions`.
+
+### 8. Universal Payment & Omnichannel In-App Purchase Protocol
+
+- **Unified Omnichannel Catalog Product Tier Model**:
+  - `Payment::Product` represents a single catalog entitlement tier (e.g. "Pro Monthly", $9/mo) and holds multi-store identifiers simultaneously:
+    - `stripe_product_id` & `stripe_price_id`: Web and card payment identifiers.
+    - `google_play_product_id`: Google Play Console product/SKU identifier.
+    - `app_store_product_id`: Apple App Store / StoreKit product/SKU identifier.
+    - `supported_providers`: Array of active platforms for this tier (`["stripe", "google_play", "app_store"]`).
+  - Single Entitlement Linkage: `Access` connects `user_id` to `product_id` (the single tier UUID). A subscription purchased on Web, iOS, or Android unlocks the exact same entitlement tier across all platforms.
+  - **Bi-Directional Omnichannel Catalog Sync**:
+    - **Stripe $\rightarrow$ RexOne**: Setting `google_play_product_id` and `app_store_product_id` in Stripe Product metadata automatically populates the RexOne database via webhooks (`product.created`, `product.updated`, `price.created`).
+    - **RexOne $\rightarrow$ Stripe**: Creating or updating products in RexOne Admin transmits `google_play_product_id` and `app_store_product_id` directly to Stripe's product metadata via API.
+- **Universal Transaction & Provider Tracking**:
+  - `Payment::Purchase`, `Payment::Subscription`, `Payment::WebhookEvent`, and `Payment::Coupon` record the specific origin provider (`provider: "stripe" | "google_play" | "app_store"`) with universal transaction keys (`provider_payment_id`, `provider_subscription_id`, `provider_event_id`, `provider_coupon_id`).
+  - Swappable provider adapters exist in `app/services/payment/providers/` (`Payment::Providers::Stripe`, `Payment::Providers::GooglePlay`, `Payment::Providers::AppStore`).
+  - Unified In-App Purchase orchestrator: `Payment::IapService` (`app/services/payment/iap_service.rb`).
+- **Free Products (`unit_amount: 0`)**:
+  - Free products operate natively without requiring external store identifiers, though optional Stripe free tiers are supported.
+  - Immediate access is granted via `AccessService.grant(...)` on `POST /v1/payment/session` returning `{ "free_access_granted": true, "access_id": "..." }`.
+- **In-App Purchase Verification (`POST /v1/payment/verify`)**:
+  - Mobile initiates native purchase via StoreKit (iOS) or Google Play Billing (Android).
+  - Mobile posts store proof to `POST /v1/payment/verify`:
+    ```json
+    {
+      "provider": "google_play", // or "app_store"
+      "product_id": "UUID",
+      "transaction_id": "STORE_TX_ID",
+      "purchase_token": "TOKEN",      // Google Play
+      "package_name": "BUNDLE_ID",    // Google Play
+      "receipt_data": "BASE64_JWS",   // Apple App Store
+      "coupon_code": "SUMMER50"       // Optional server-side promo coupon
+    }
+    ```
+  - **With or Without Coupon**:
+    - **Without Coupon (`coupon_code: nil`)**: Directly verifies token/receipt with the app store, creates `Payment::Purchase` or `Payment::Subscription`, and provisions entitlements via `AccessService.grant(...)`. Zero coupon redemptions recorded.
+    - **With Coupon**: Validates coupon upfront against product restrictions, expiration, and user limits. Following successful store verification, applies coupon via `CouponService.apply_to_checkout!` under pessimistic lock (`user.lock!`), creating `Payment::UserCoupon`, incrementing usage, and returning coupon metadata in the response.
+    - **100% Free Coupon**: Bypasses native app store sheets entirely and provisions access instantly.
+  - Core broadcasts real-time WebSocket events (`payment_success` / `subscription_created`) across connected Web and Mobile clients.
+- **Silent Mobile Integration & Dual Checkout Toggle**:
+  - Mobile features `PaymentConfig.enableInAppPurchases = false` by default, ensuring developers without app store merchant setups can run the app without errors or native store channel initialization.
+  - When `enableInAppPurchases = false`, mobile exclusively displays Stripe web checkout on all platforms.
+  - When `enableInAppPurchases = true`, mobile dynamically resolves native store SKUs (`googlePlayProductId` on Android, `appStoreProductId` on iOS), displaying native store checkout alongside optional card checkout when `supportsStripe` is true.
 
 ---
 

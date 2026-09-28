@@ -1,0 +1,80 @@
+# frozen_string_literal: true
+
+# app/services/payment/providers/base.rb
+module Payment
+  module Providers
+    class Base
+      def create_customer(user_id: nil, user: nil)
+        raise NotImplementedError, "#{self.class} must implement #create_customer"
+      end
+
+      def create_checkout_session(user_id:, product_id:, success_url: nil, cancel_url: nil, coupon: nil)
+        raise NotImplementedError, "#{self.class} must implement #create_checkout_session"
+      end
+
+      def get_session(session_id)
+        raise NotImplementedError, "#{self.class} must implement #get_session"
+      end
+
+      def cancel_subscription(subscription_id)
+        raise NotImplementedError, "#{self.class} must implement #cancel_subscription"
+      end
+
+      def resume_subscription(subscription_id)
+        raise NotImplementedError, "#{self.class} must implement #resume_subscription"
+      end
+
+      def create_product(attributes)
+        raise NotImplementedError, "#{self.class} must implement #create_product"
+      end
+
+      def update_product(product_id, attributes)
+        raise NotImplementedError, "#{self.class} must implement #update_product"
+      end
+
+      def discard_product(product_id)
+        raise NotImplementedError, "#{self.class} must implement #discard_product"
+      end
+
+      def undiscard_product(product_id)
+        raise NotImplementedError, "#{self.class} must implement #undiscard_product"
+      end
+
+      def create_coupon(coupon)
+        raise NotImplementedError, "#{self.class} must implement #create_coupon"
+      end
+
+      def update_coupon(coupon)
+        raise NotImplementedError, "#{self.class} must implement #update_coupon"
+      end
+
+      def discard_coupon(coupon)
+        raise NotImplementedError, "#{self.class} must implement #discard_coupon"
+      end
+
+      def undiscard_coupon(coupon)
+        raise NotImplementedError, "#{self.class} must implement #undiscard_coupon"
+      end
+
+      def destroy_coupon(coupon)
+        raise NotImplementedError, "#{self.class} must implement #destroy_coupon"
+      end
+
+      def verify_purchase(user:, product:, receipt_data:, transaction_id: nil, purchase_token: nil, package_name: nil, raw_payload: {})
+        raise NotImplementedError, "#{self.class} must implement #verify_purchase"
+      end
+
+      def supported_webhook_event?(event_type)
+        raise NotImplementedError, "#{self.class} must implement #supported_webhook_event?"
+      end
+
+      def verify_webhook(payload, signature)
+        raise NotImplementedError, "#{self.class} must implement #verify_webhook"
+      end
+
+      def process_webhook(event)
+        raise NotImplementedError, "#{self.class} must implement #process_webhook"
+      end
+    end
+  end
+end

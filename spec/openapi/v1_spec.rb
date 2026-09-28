@@ -25,6 +25,7 @@ RSpec.describe "OpenAPI V1 document" do
     expect(document[:paths]).to include(
       "/signup",
       "/v1/payment/session",
+      "/v1/payment/verify",
       "/v1/payment/coupons/validate",
       "/v1/admin/payment/coupons",
       "/v1/admin/payment/user_coupons",

@@ -28,7 +28,8 @@ class Payment::WebhookEventDashboard < Administrate::BaseDashboard
     processing_started_at: Field::DateTime,
     received_at: Field::DateTime,
     status: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
-    stripe_event_id: Field::String,
+    provider: Field::String,
+    provider_event_id: Field::String,
     undiscarded_at: Field::DateTime,
     undiscarded_by_id: Field::String,
     undiscarder: Field::BelongsTo,
@@ -68,7 +69,8 @@ class Payment::WebhookEventDashboard < Administrate::BaseDashboard
     processing_started_at
     received_at
     status
-    stripe_event_id
+    provider
+    provider_event_id
     undiscarded_at
     undiscarded_by_id
     undiscarder
@@ -96,7 +98,8 @@ class Payment::WebhookEventDashboard < Administrate::BaseDashboard
     processing_started_at
     received_at
     status
-    stripe_event_id
+    provider
+    provider_event_id
     undiscarded_at
     undiscarded_by_id
     undiscarder

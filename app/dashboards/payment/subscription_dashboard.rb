@@ -29,10 +29,11 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     interval_count: Field::Number,
     started_at: Field::DateTime,
     status: Field::Select.with_options(searchable: false, collection: ->(field) { field.resource.class.send(field.attribute.to_s.pluralize).keys }),
-    stripe_customer_id: Field::String,
-    stripe_price_id: Field::String,
-    stripe_subscription_item_id: Field::String,
-    stripe_subscription_id: Field::String,
+    provider: Field::String,
+    provider_subscription_id: Field::String,
+    provider_subscription_item_id: Field::String,
+    provider_price_id: Field::String,
+    provider_customer_id: Field::String,
     unit_amount: Field::Number,
     undiscarded_at: Field::DateTime,
     undiscarded_by_id: Field::String,
@@ -84,10 +85,11 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     product
     started_at
     status
-    stripe_customer_id
-    stripe_price_id
-    stripe_subscription_item_id
-    stripe_subscription_id
+    provider
+    provider_subscription_id
+    provider_subscription_item_id
+    provider_price_id
+    provider_customer_id
     undiscarded_at
     undiscarded_by_id
     undiscarder
@@ -123,10 +125,11 @@ class Payment::SubscriptionDashboard < Administrate::BaseDashboard
     product
     started_at
     status
-    stripe_customer_id
-    stripe_price_id
-    stripe_subscription_item_id
-    stripe_subscription_id
+    provider
+    provider_subscription_id
+    provider_subscription_item_id
+    provider_price_id
+    provider_customer_id
     undiscarded_at
     undiscarded_by_id
     undiscarder

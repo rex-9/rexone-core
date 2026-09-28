@@ -7,15 +7,44 @@ FactoryBot.define do
     currency { "usd" }
     interval { "month" }
     active { true }
+
+    trait :free do
+      unit_amount { 0 }
+      interval { nil }
+      stripe_product_id { nil }
+      stripe_price_id { nil }
+      google_play_product_id { nil }
+      app_store_product_id { nil }
+    end
+
+    trait :google_play do
+      stripe_product_id { nil }
+      stripe_price_id { nil }
+      sequence(:google_play_product_id) { |n| "com.rexone.play_#{n}" }
+    end
+
+    trait :app_store do
+      stripe_product_id { nil }
+      stripe_price_id { nil }
+      sequence(:app_store_product_id) { |n| "com.rexone.store_#{n}" }
+    end
+
+    trait :omnichannel do
+      sequence(:stripe_product_id) { |n| "prod_#{n}" }
+      sequence(:stripe_price_id) { |n| "price_#{n}" }
+      sequence(:google_play_product_id) { |n| "com.rexone.play_#{n}" }
+      sequence(:app_store_product_id) { |n| "com.rexone.store_#{n}" }
+    end
   end
 
   factory :payment_subscription, class: "Payment::Subscription" do
     user
     association :product, factory: :payment_product
-    sequence(:stripe_subscription_id) { |n| "sub_#{n}" }
-    sequence(:stripe_subscription_item_id) { |n| "si_#{n}" }
-    sequence(:stripe_price_id) { |n| "price_subscription_#{n}" }
-    stripe_customer_id { "cus_test" }
+    provider { PaymentConstants::Provider::STRIPE }
+    sequence(:provider_subscription_id) { |n| "sub_#{n}" }
+    sequence(:provider_subscription_item_id) { |n| "si_#{n}" }
+    sequence(:provider_price_id) { |n| "price_subscription_#{n}" }
+    provider_customer_id { "cus_test" }
     status { "active" }
     currency { "usd" }
     unit_amount { 1_000 }
@@ -30,7 +59,8 @@ FactoryBot.define do
   factory :payment_purchase, class: "Payment::Purchase" do
     user
     association :product, factory: :payment_product
-    sequence(:stripe_payment_intent_id) { |n| "pi_#{n}" }
+    provider { PaymentConstants::Provider::STRIPE }
+    sequence(:provider_payment_id) { |n| "pi_#{n}" }
     status { "succeeded" }
     unit_amount { 1_000 }
     currency { "usd" }
@@ -45,14 +75,17 @@ FactoryBot.define do
   end
 
   factory :payment_webhook_event, class: "Payment::WebhookEvent" do
-    sequence(:stripe_event_id) { |n| "evt_#{n}" }
+    provider { PaymentConstants::Provider::STRIPE }
+    sequence(:provider_event_id) { |n| "evt_#{n}" }
     event_type { "checkout.session.completed" }
     status { "pending" }
-    payload { { "id" => stripe_event_id, "type" => event_type, "data" => { "object" => {} } } }
+    payload { { "id" => provider_event_id, "type" => event_type, "data" => { "object" => {} } } }
     received_at { Time.current }
   end
 
   factory :payment_coupon, class: "Payment::Coupon" do
+    provider { PaymentConstants::Provider::STRIPE }
+    sequence(:provider_coupon_id) { |n| "COUPON#{n}" }
     sequence(:title) { |n| "Coupon #{n}" }
     sequence(:code) { |n| "COUPON#{n}" }
     coupon_type { :percentage }

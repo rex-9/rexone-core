@@ -1,10 +1,10 @@
 require "rails_helper"
 
 RSpec.describe Payment::Purchase, type: :model do
-  it "validates its Stripe identifier and amount" do
+  it "validates its provider identifier and amount" do
     expect(build(:payment_purchase)).to be_valid
-    expect(build(:payment_purchase, stripe_payment_intent_id: nil)).not_to be_valid
-    expect(build(:payment_purchase, unit_amount: 0)).not_to be_valid
+    expect(build(:payment_purchase, provider_payment_id: nil)).not_to be_valid
+    expect(build(:payment_purchase, unit_amount: -1)).not_to be_valid
   end
 
   it "exposes success, pending, and failure states" do

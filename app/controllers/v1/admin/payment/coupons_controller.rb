@@ -49,7 +49,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     attributes[:updated_by_id] = current_user.id
     resolve_target_user_ids!(attributes)
 
-    result = PaymentService::Client.create_coupon(attributes)
+    result = Payment::Providers::Client.create_coupon(attributes)
     return render_service_error(MessageService::Payment::COUPON_CREATE_FAILED, result[:error]) if result[:error]
 
     coupon = result[:data]
@@ -116,7 +116,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     attributes[:updated_by_id] = current_user.id
     resolve_target_user_ids!(attributes)
 
-    result = PaymentService::Client.update_coupon(@coupon.id, attributes)
+    result = Payment::Providers::Client.update_coupon(@coupon.id, attributes)
     return render_service_error(MessageService::Payment::COUPON_UPDATE_FAILED, result[:error]) if result[:error]
 
     coupon = result[:data]
@@ -131,7 +131,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
 
   # DELETE /v1/admin/payment/coupons/:id
   def discard
-    result = PaymentService::Client.discard_coupon(@coupon.id)
+    result = Payment::Providers::Client.discard_coupon(@coupon.id)
     return render_service_error(MessageService::Payment::COUPON_DISCARD_FAILED, result[:error]) if result[:error]
 
     coupon = result[:data]
@@ -144,7 +144,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
 
   # PUT /v1/admin/payment/coupons/:id/undiscard
   def undiscard
-    result = PaymentService::Client.undiscard_coupon(@coupon.id)
+    result = Payment::Providers::Client.undiscard_coupon(@coupon.id)
     return render_service_error(MessageService::Payment::COUPON_RESTORE_FAILED, result[:error]) if result[:error]
 
     coupon = result[:data]
@@ -173,7 +173,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
 
   # DELETE /v1/admin/payment/coupons/:id
   def destroy
-    result = PaymentService::Client.destroy_coupon(@coupon.id)
+    result = Payment::Providers::Client.destroy_coupon(@coupon.id)
     return render_service_error(MessageService::Payment::COUPON_DESTROY_FAILED, result[:error]) if result[:error]
 
     render_json_response(
@@ -189,7 +189,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     scope = ::Payment::Coupon.with_discarded.discarded
     count = scope.count
     scope.find_each do |coupon|
-      PaymentService::Client.destroy_coupon(coupon.id)
+      Payment::Providers::Client.destroy_coupon(coupon.id)
     end
 
     render_json_response(
@@ -214,7 +214,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     scope = ::Payment::Coupon.kept.where(id: ids)
     count = 0
     scope.find_each do |coupon|
-      res = PaymentService::Client.discard_coupon(coupon.id)
+      res = Payment::Providers::Client.discard_coupon(coupon.id)
       count += 1 unless res[:error]
     end
 
@@ -240,7 +240,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     scope = ::Payment::Coupon.with_discarded.discarded.where(id: ids)
     count = 0
     scope.find_each do |coupon|
-      res = PaymentService::Client.undiscard_coupon(coupon.id)
+      res = Payment::Providers::Client.undiscard_coupon(coupon.id)
       count += 1 unless res[:error]
     end
 
@@ -266,7 +266,7 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
     scope = ::Payment::Coupon.with_discarded.where(id: ids)
     count = 0
     scope.find_each do |coupon|
-      res = PaymentService::Client.destroy_coupon(coupon.id)
+      res = Payment::Providers::Client.destroy_coupon(coupon.id)
       count += 1 unless res[:error]
     end
 

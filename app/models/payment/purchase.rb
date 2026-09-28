@@ -30,8 +30,9 @@ class Payment::Purchase < ApplicationRecord
   }
 
   # ===== VALIDATIONS =====
-  validates :stripe_payment_intent_id, presence: true, uniqueness: true
-  validates :unit_amount, numericality: { greater_than: 0 }
+  validates :provider, presence: true, inclusion: { in: PaymentConstants::Provider::ALL }
+  validates :provider_payment_id, presence: true, uniqueness: true
+  validates :unit_amount, numericality: { greater_than_or_equal_to: 0 }
 
   # ===== SCOPES =====
   scope :successful, -> { where(status: PaymentConstants::PurchaseStatus::SUCCEEDED) }
@@ -39,6 +40,7 @@ class Payment::Purchase < ApplicationRecord
   scope :failed, -> { where(status: [ PaymentConstants::PurchaseStatus::CANCELED ]) }
   scope :recent, -> { order(created_at: :desc).limit(10) }
   scope :by_user, ->(user_id) { where(user_id: user_id) }
+  scope :for_provider, ->(provider_name) { where(provider: provider_name) }
 
   # ===== INSTANCE METHODS =====
   def succeeded?
@@ -59,6 +61,22 @@ class Payment::Purchase < ApplicationRecord
 
   def requires_action?
     status == "requires_action"
+  end
+
+  def stripe?
+    provider == PaymentConstants::Provider::STRIPE
+  end
+
+  def google_play?
+    provider == PaymentConstants::Provider::GOOGLE_PLAY
+  end
+
+  def app_store?
+    provider == PaymentConstants::Provider::APP_STORE
+  end
+
+  def in_app?
+    google_play? || app_store?
   end
 
   # Update status from Stripe Payment Intent

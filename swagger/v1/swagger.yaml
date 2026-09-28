@@ -492,6 +492,14 @@ components:
                 - year
                 -
               description: Use null for one-time products.
+            google_play_product_id:
+              type: string
+              nullable: true
+              example: monthly_tier1
+            app_store_product_id:
+              type: string
+              nullable: true
+              example: monthly_tier1
             active:
               type: boolean
               default: true
@@ -1331,6 +1339,46 @@ components:
       required:
         - code
         - product_id
+    payment_verify_request:
+      type: object
+      properties:
+        product_id:
+          type: string
+          format: uuid
+          description: Target product UUID.
+        provider:
+          type: string
+          enum:
+            - google_play
+            - app_store
+          description: In-app purchase provider.
+        transaction_id:
+          type: string
+          nullable: true
+          description: Transaction ID (required for App Store).
+        purchase_token:
+          type: string
+          nullable: true
+          description: Purchase token (required for Google Play).
+        receipt_data:
+          type: string
+          nullable: true
+          description: Receipt payload or signed data.
+        package_name:
+          type: string
+          nullable: true
+          description: App package identifier.
+        coupon_code:
+          type: string
+          nullable: true
+          description: Optional coupon or promo code applied.
+        metadata:
+          type: object
+          nullable: true
+          description: Optional raw metadata or client payload.
+      required:
+        - product_id
+        - provider
     ai_chat_request:
       type: object
       properties:
@@ -2047,6 +2095,59 @@ components:
         - status
         - data
         - meta
+    payment_verify_data:
+      type: object
+      properties:
+        verified:
+          type: boolean
+          example: true
+        product_id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum:
+            - google_play
+            - app_store
+        purchase_id:
+          type: string
+          format: uuid
+          nullable: true
+        subscription_id:
+          type: string
+          format: uuid
+          nullable: true
+        access_id:
+          type: string
+          format: uuid
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        coupon_code:
+          type: string
+          nullable: true
+        discount_amount:
+          type: integer
+          nullable: true
+        final_amount:
+          type: integer
+          nullable: true
+      required:
+        - verified
+        - product_id
+        - provider
+    payment_verify_response:
+      type: object
+      properties:
+        status:
+          "$ref": "#/components/schemas/response_status"
+        data:
+          "$ref": "#/components/schemas/payment_verify_data"
+      required:
+        - status
+        - data
     response:
       type: object
       properties:
@@ -2330,8 +2431,22 @@ components:
           type: boolean
         stripe_product_id:
           type: string
+          nullable: true
         stripe_price_id:
           type: string
+          nullable: true
+        google_play_product_id:
+          type: string
+          nullable: true
+        app_store_product_id:
+          type: string
+          nullable: true
+        in_app:
+          type: boolean
+        supported_providers:
+          type: array
+          items:
+            type: string
         thumbnail_url:
           type: string
           format: uri
@@ -2369,15 +2484,19 @@ components:
         product_id:
           type: string
           format: uuid
-        stripe_subscription_id:
+        provider:
           type: string
-        stripe_customer_id:
+        provider_subscription_id:
+          type: string
+        provider_customer_id:
           type: string
           nullable: true
-        stripe_subscription_item_id:
+        provider_subscription_item_id:
           type: string
-        stripe_price_id:
+          nullable: true
+        provider_price_id:
           type: string
+          nullable: true
         status:
           type: string
           enum:
@@ -2496,9 +2615,8 @@ components:
         - id
         - user_id
         - product_id
-        - stripe_subscription_id
-        - stripe_subscription_item_id
-        - stripe_price_id
+        - provider
+        - provider_subscription_id
         - status
         - currency
         - unit_amount
@@ -2532,12 +2650,14 @@ components:
           type: string
           format: uuid
           nullable: true
-        stripe_payment_intent_id:
+        provider:
           type: string
-        stripe_charge_id:
+        provider_payment_id:
+          type: string
+        provider_charge_id:
           type: string
           nullable: true
-        stripe_customer_id:
+        provider_customer_id:
           type: string
           nullable: true
         status:
@@ -2624,7 +2744,8 @@ components:
       required:
         - id
         - user_id
-        - stripe_payment_intent_id
+        - provider
+        - provider_payment_id
         - status
         - unit_amount
         - currency
@@ -10335,6 +10456,66 @@ paths:
                 "$ref": "#/components/schemas/error_response"
       security:
         - bearerAuth: []
+  "/v1/payment/verify":
+    post:
+      tags:
+        - Payments
+      summary: Verify in-app purchase and grant product access
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payment_verify_response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "422":
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/payment_verify_request"
   "/v1/payment/coupons/validate":
     post:
       tags:

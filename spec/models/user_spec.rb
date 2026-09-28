@@ -187,7 +187,7 @@ RSpec.describe User, type: :model do
     it "cleans up referred coupon on Stripe when user is destroyed" do
       user = create(:user)
       coupon = user.referred_coupons.first
-      coupon.update_column(:stripe_coupon_id, "STRIPE_REF_123")
+      coupon.update_column(:provider_coupon_id, "STRIPE_REF_123")
       allow(Stripe::Coupon).to receive(:delete)
 
       user.destroy!

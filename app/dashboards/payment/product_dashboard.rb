@@ -26,8 +26,10 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
     discarder: Field::BelongsTo,
     name: Field::String,
     unit_amount: Field::Number,
-    stripe_price_id: Field::String,
     stripe_product_id: Field::String,
+    stripe_price_id: Field::String,
+    google_play_product_id: Field::String,
+    app_store_product_id: Field::String,
     subscriptions: Field::HasMany,
     purchases: Field::HasMany,
     undiscarded_at: Field::DateTime,
@@ -68,8 +70,10 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
     discarder
     name
     unit_amount
-    stripe_price_id
     stripe_product_id
+    stripe_price_id
+    google_play_product_id
+    app_store_product_id
     subscriptions
     purchases
     undiscarded_at
@@ -97,8 +101,10 @@ class Payment::ProductDashboard < Administrate::BaseDashboard
     discarder
     name
     unit_amount
-    stripe_price_id
     stripe_product_id
+    stripe_price_id
+    google_play_product_id
+    app_store_product_id
     subscriptions
     purchases
     undiscarded_at

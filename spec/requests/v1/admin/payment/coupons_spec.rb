@@ -37,7 +37,7 @@ RSpec.describe "Admin payment coupons", type: :request do
 
   describe "POST /v1/admin/payment/coupons" do
     it "creates a new coupon" do
-      allow(PaymentService::Client).to receive(:create_coupon) do |attrs|
+      allow(Payment::Providers::Client).to receive(:create_coupon) do |attrs|
         coupon = Payment::Coupon.create!(attrs)
         { data: coupon }
       end
@@ -62,7 +62,7 @@ RSpec.describe "Admin payment coupons", type: :request do
     it "resolves target_user_emails to target_user_ids" do
       target_user = create(:user, email: "vip_customer@example.com")
 
-      allow(PaymentService::Client).to receive(:create_coupon) do |attrs|
+      allow(Payment::Providers::Client).to receive(:create_coupon) do |attrs|
         coupon = Payment::Coupon.create!(attrs)
         { data: coupon }
       end
@@ -139,7 +139,7 @@ RSpec.describe "Admin payment coupons", type: :request do
     it "updates a coupon" do
       coupon = create(:payment_coupon, title: "Old Title")
 
-      allow(PaymentService::Client).to receive(:update_coupon) do |id, attrs|
+      allow(Payment::Providers::Client).to receive(:update_coupon) do |id, attrs|
         c = Payment::Coupon.find(id)
         c.update!(attrs)
         { data: c }
@@ -156,7 +156,7 @@ RSpec.describe "Admin payment coupons", type: :request do
     it "rejects activating a coupon with failed sync status" do
       coupon = create(:payment_coupon, active: false, metadata: { "status" => "failed", "sync_error" => "Stripe reject" })
 
-      allow(PaymentService::Client).to receive(:update_coupon).and_call_original
+      allow(Payment::Providers::Client).to receive(:update_coupon).and_call_original
 
       put "/v1/admin/payment/coupons/#{coupon.id}",
           params: { coupon: { active: true } },
@@ -171,7 +171,7 @@ RSpec.describe "Admin payment coupons", type: :request do
     it "discards a coupon" do
       coupon = create(:payment_coupon)
 
-      allow(PaymentService::Client).to receive(:discard_coupon) do |id|
+      allow(Payment::Providers::Client).to receive(:discard_coupon) do |id|
         c = Payment::Coupon.find(id)
         c.discard
         { data: c }
