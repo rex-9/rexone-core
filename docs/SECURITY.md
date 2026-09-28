@@ -108,6 +108,8 @@ Every developer working on RexOne installs the local pre-commit guardrail:
    - Google API Keys (`AIzaSy[0-9A-Za-z_-]{33}`)
 3. **Locale & MessageService Integrity**:
    - Validates that all translation keys have 1-to-1 parity between English and Burmese before allowing commits.
+4. **Ruby Code Style & RuboCop Compliance**:
+   - Runs RuboCop linter checks inside the API container to guarantee zero style offenses or syntax errors are committed.
 
 ---
 

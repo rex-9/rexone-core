@@ -142,7 +142,7 @@ Rails.application.configure do
   # Enable DNS rebinding protection and other `Host` header attacks.
   allowed_hosts = [
     "rex9.me",          # Allow requests from rex9.me showcase demo
-    /.+\.rex9\.me/,     # Allow requests from subdomains like `api.rexone.rex9.me`
+    /.+\.rex9\.me/      # Allow requests from subdomains like `api.rexone.rex9.me`
   ]
 
   # Allow localhost in production only if explicitly opted in

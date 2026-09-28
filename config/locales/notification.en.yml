@@ -37,7 +37,7 @@ en:
       body: "Hi %{name}, we noticed a new sign-in to your account."
     iam_updated:
       title: "Your access has changed"
-      body: "Your roles and permissions were updated. Open this notification to apply your latest access."
+      body: "Your roles and permissions have been updated. Please sign in again."
     notifications_fetched: "Notifications fetched successfully."
     unread_count_fetched: "Unread notification count fetched."
     marked_as_read: "Notification marked as read."

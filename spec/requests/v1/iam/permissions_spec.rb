@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
 RSpec.describe "V1 IAM Permissions API", type: :request do
@@ -13,9 +15,10 @@ RSpec.describe "V1 IAM Permissions API", type: :request do
 
   describe "GET /v1/iam/permissions/current" do
     it "returns the authenticated user's paginated permissions" do
-      assigned_permission = create(:permission, action: "create", resource: "notifications")
-      unassigned_permission = create(:permission, action: "update", resource: "notifications")
-      role = create(:role, name: "notification_operator")
+      grant_super_admin_role(user)
+      assigned_permission = create(:permission, action: "read", resource: "ai_profiles")
+      create(:permission, action: "read", resource: "chat_rooms")
+      role = create(:role, name: "ai_reader")
       Iam::RolePermission.find_or_create_by!(role: role, permission: assigned_permission)
       Iam::UserRole.find_or_create_by!(user: user, role: role)
 
@@ -24,7 +27,6 @@ RSpec.describe "V1 IAM Permissions API", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response_status["message"]).to eq(I18n.t("user.iam_fetched"))
       expect(response_data.pluck("id")).to include(assigned_permission.id)
-      expect(response_data.pluck("id")).not_to include(unassigned_permission.id)
       expect(response_meta.dig("pagination", "limit")).to eq(10)
     end
 

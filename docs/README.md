@@ -41,6 +41,7 @@ All development tasks are automated via deterministic shell scripts located in `
 | `./scripts/generate_secrets.sh` | Generates high-entropy cryptographically secure production secret keys | None |
 | `./scripts/check_secrets.sh` | Pre-commit secret scanner blocking live API keys and untracked `.env` files | `--install`, `--all` |
 | `./scripts/install_pre_commit.sh`| Installs the master git pre-commit hook into your local `.git/hooks/` | None |
+| `./scripts/lint.sh` | Runs RuboCop inside the API container with auto-correction support | `[-a]`, `[-A]`, `[path...]` |
 
 ---
 

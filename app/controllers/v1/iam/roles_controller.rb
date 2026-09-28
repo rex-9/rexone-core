@@ -1,7 +1,10 @@
-# app/controllers/v1/iam/roles_controller.rb:
+# frozen_string_literal: true
+
+# app/controllers/v1/iam/roles_controller.rb
 class V1::Iam::RolesController < V1::ApplicationController
   before_action :super_admin_required!
-  # GET /iam/roles/current
+
+  # GET /v1/iam/roles/current
   def read_current_roles
     roles = current_user.roles.includes(:permissions).order(:name)
     pagy, records = pagy(:offset, roles, limit: index_params[:limit])

@@ -29,10 +29,10 @@ RSpec.describe Ai::Providers::DeepSeek do
 
   it "returns a localized provider error for HTTP and network failures" do
     allow(http).to receive(:request).and_return(instance_double(Net::HTTPResponse, code: "500", body: "bad gateway"))
-    expect(provider.chat(messages: [] )[:error]).to be_present
+    expect(provider.chat(messages: [])[:error]).to be_present
 
     allow(http).to receive(:request).and_raise(Timeout::Error)
-    expect(provider.chat(messages: [] )[:error]).to be_present
+    expect(provider.chat(messages: [])[:error]).to be_present
   end
 
   it "yields valid streaming deltas and skips malformed or done chunks" do

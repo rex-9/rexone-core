@@ -28,7 +28,7 @@ RSpec.describe ApplicationSerializer do
 
   describe ".collection" do
     it "serializes a collection of records" do
-      result = dummy_serializer.collection([item1, item2])
+      result = dummy_serializer.collection([ item1, item2 ])
       expect(result.size).to eq(2)
       expect(result.first[:id]).to eq("1")
       expect(result.last[:id]).to eq("2")
@@ -55,7 +55,7 @@ RSpec.describe ApplicationSerializer do
 
   describe ".collection_attributes" do
     it "extracts array of attribute hashes" do
-      result = dummy_serializer.collection_attributes([item1, item2])
+      result = dummy_serializer.collection_attributes([ item1, item2 ])
       expect(result).to eq([
         { id: "1", name: "Alpha", role: "admin" },
         { id: "2", name: "Beta", role: "member" }
@@ -82,7 +82,7 @@ RSpec.describe ApplicationSerializer do
     end
 
     it "serializes collection with standardized pagination metadata" do
-      result = dummy_serializer.collection_pagy([item1, item2], pagy)
+      result = dummy_serializer.collection_pagy([ item1, item2 ], pagy)
 
       expect(result[:data]).to be_an(Array)
       expect(result[:data].size).to eq(2)

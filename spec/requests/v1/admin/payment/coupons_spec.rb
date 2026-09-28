@@ -224,7 +224,7 @@ RSpec.describe "Admin payment coupons", type: :request do
 
       expect(response).to have_http_status(:ok)
       ids = response_data.map { |r| r.dig("attributes", "id") }
-      expect(ids).to eq([redemption_a.id, redemption_z.id])
+      expect(ids).to eq([ redemption_a.id, redemption_z.id ])
     end
 
     it "requires read permission on payment_coupons" do
@@ -298,7 +298,7 @@ RSpec.describe "Admin payment coupons", type: :request do
       coupon2 = create(:payment_coupon)
 
       post "/v1/admin/payment/coupons/discard_batch",
-           params: { ids: [coupon1.id, coupon2.id] },
+           params: { ids: [ coupon1.id, coupon2.id ] },
            headers: headers
 
       expect(response).to have_http_status(:ok)
@@ -324,7 +324,7 @@ RSpec.describe "Admin payment coupons", type: :request do
       coupon2.discard!
 
       post "/v1/admin/payment/coupons/undiscard_batch",
-           params: { ids: [coupon1.id, coupon2.id] },
+           params: { ids: [ coupon1.id, coupon2.id ] },
            headers: headers
 
       expect(response).to have_http_status(:ok)
@@ -342,7 +342,7 @@ RSpec.describe "Admin payment coupons", type: :request do
       coupon2.discard!
 
       post "/v1/admin/payment/coupons/destroy_batch",
-           params: { ids: [coupon1.id, coupon2.id] },
+           params: { ids: [ coupon1.id, coupon2.id ] },
            headers: headers
 
       expect(response).to have_http_status(:ok)

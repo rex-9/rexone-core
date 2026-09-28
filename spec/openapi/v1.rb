@@ -473,6 +473,10 @@ module Openapi
         required: [ :role_id ],
         role_id: UUID.merge(description: "Role UUID to assign to the path user.")
       ),
+      role_user_request: object(
+        required: [ :user_id ],
+        user_id: UUID.merge(description: "User UUID to assign to the path role.")
+      ),
       client_log_context: {
         type: :object,
         description: "Free-form, JSON-safe diagnostic context supplied by the client. Do not include secrets or tokens.",
@@ -1653,25 +1657,45 @@ module Openapi
       }
       paths["/v1/iam/permissions/current"] = {
         get: operation(tags: "IAM Permissions", summary: "List current user's permissions",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+                       parameters: [
+                         query_parameter(:page, type: :integer, minimum: 1, description: "Page number"),
+                         query_parameter(:limit, type: :integer, minimum: 1, description: "Page size")
+                       ], errors: [ 401, 403 ])
       }
       paths["/v1/iam/roles/current"] = {
         get: operation(tags: "IAM Roles", summary: "List current user's roles",
-                       parameters: [ query_parameter(:limit, type: :integer, minimum: 1) ], errors: [ 401, 403 ])
+                       parameters: [
+                         query_parameter(:page, type: :integer, minimum: 1, description: "Page number"),
+                         query_parameter(:limit, type: :integer, minimum: 1, description: "Page size")
+                       ], errors: [ 401, 403 ])
       }
 
-      paths["/v1/iam/users/{user_id}/roles"] = {
-        get: operation(tags: "IAM User Roles", summary: "List a user's roles",
+      paths["/v1/admin/iam/users/{user_id}/roles"] = {
+        get: operation(tags: "Admin / IAM User Roles", summary: "List a user's roles",
                        parameters: [ path_parameter(:user_id) ], errors: [ 401, 403, 404 ]),
         post: operation(
-          tags: "IAM User Roles", summary: "Assign a role to a user",
+          tags: "Admin / IAM User Roles", summary: "Assign a role to a user",
           parameters: [ path_parameter(:user_id) ],
           body: ref(:user_role_request), errors: [ 401, 403, 404, 422 ]
         )
       }
-      paths["/v1/iam/users/{user_id}/roles/{role_id}"] = {
-        delete: operation(tags: "IAM User Roles", summary: "Remove a role from a user",
+      paths["/v1/admin/iam/users/{user_id}/roles/{role_id}"] = {
+        delete: operation(tags: "Admin / IAM User Roles", summary: "Remove a role from a user",
                           parameters: [ path_parameter(:user_id), path_parameter(:role_id, "Role ID") ],
+                          errors: [ 401, 403, 404, 422 ])
+      }
+      paths["/v1/admin/iam/roles/{role_id}/users"] = {
+        get: operation(tags: "Admin / IAM User Roles", summary: "List users assigned to a role",
+                       parameters: [ path_parameter(:role_id, "Role ID") ], errors: [ 401, 403, 404 ]),
+        post: operation(
+          tags: "Admin / IAM User Roles", summary: "Assign a user to a role",
+          parameters: [ path_parameter(:role_id, "Role ID") ],
+          body: ref(:role_user_request), errors: [ 401, 403, 404, 422 ]
+        )
+      }
+      paths["/v1/admin/iam/roles/{role_id}/users/{user_id}"] = {
+        delete: operation(tags: "Admin / IAM User Roles", summary: "Remove a user from a role",
+                          parameters: [ path_parameter(:role_id, "Role ID"), path_parameter(:user_id) ],
                           errors: [ 401, 403, 404, 422 ])
       }
 
@@ -1999,7 +2023,7 @@ module Openapi
       ]
       paths["/v1/admin/payment/user_coupons"] = {
         get: operation(tags: "Admin / User Coupons", summary: "List and filter coupon redemptions for admins",
-                       parameters: user_coupon_filters, errors: [ 401, 403 ]),
+                       parameters: user_coupon_filters, errors: [ 401, 403 ])
       }
       paths["/v1/admin/payment/user_coupons/{id}"] = {
         get: operation(tags: "Admin / User Coupons", summary: "Get user coupon redemption details",

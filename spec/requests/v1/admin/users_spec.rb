@@ -36,8 +36,8 @@ RSpec.describe "V1 Admin Users API", type: :request do
         name_match.id,
         email_match.id
       )
-    end 
-     
+    end
+
     it "allows standard admins with user read permission" do
       standard_admin = create(:user)
       admin_token = jwt_for(standard_admin)

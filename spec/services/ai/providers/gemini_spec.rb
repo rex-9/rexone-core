@@ -28,9 +28,9 @@ RSpec.describe Ai::Providers::Gemini do
 
   it "returns localized provider error on failure" do
     allow(http).to receive(:request).and_return(instance_double(Net::HTTPResponse, code: "500", body: "error"))
-    expect(provider.chat(messages: [] )[:error]).to be_present
+    expect(provider.chat(messages: [])[:error]).to be_present
 
     allow(http).to receive(:request).and_raise(Timeout::Error)
-    expect(provider.chat(messages: [] )[:error]).to be_present
+    expect(provider.chat(messages: [])[:error]).to be_present
   end
 end

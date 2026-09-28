@@ -239,4 +239,3 @@ RSpec.describe "OpenAPI V1 document" do
     end
   end
 end
-

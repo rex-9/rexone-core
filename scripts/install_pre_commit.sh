@@ -42,14 +42,20 @@ echo -e "${CYAN}🛡️  Running RexOne Pre-Commit Quality & Security Gates...${
 
 # 1. Check for uncommitted secrets and .env files
 if [ -f "./scripts/check_secrets.sh" ]; then
-  echo -e "   → [1/2] Scanning for secrets and uncommitted .env files..."
+  echo -e "   → [1/3] Scanning for secrets and uncommitted .env files..."
   ./scripts/check_secrets.sh
 fi
 
 # 2. Check locale parity & message service integrity
 if [ -f "./scripts/check_locales.sh" ]; then
-  echo -e "   → [2/2] Checking locale parity & translation constants..."
+  echo -e "   → [2/3] Checking locale parity & translation constants..."
   ./scripts/check_locales.sh
+fi
+
+# 3. Check Ruby code style & RuboCop compliance
+if [ -f "./scripts/lint.sh" ]; then
+  echo -e "   → [3/3] Checking Ruby code style & RuboCop compliance..."
+  ./scripts/lint.sh
 fi
 
 echo -e "${GREEN}✅ All pre-commit checks passed cleanly! Proceeding with commit.${NC}"
@@ -64,4 +70,5 @@ echo -e "     ${PRE_COMMIT_HOOK}"
 echo -e "${GREEN}  Checks configured:${NC}"
 echo -e "     1. Secret Scanner (blocks real .env files and live API keys)"
 echo -e "     2. Locale & MessageService Integrity Checker"
+echo -e "     3. RuboCop Style & Linter Compliance"
 echo -e "${GREEN}======================================================================${NC}"

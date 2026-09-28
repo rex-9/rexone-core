@@ -81,6 +81,10 @@ module NotificationConstants
     WELCOME               = "welcome".freeze
     SIGN_IN_ALERT         = "sign_in_alert".freeze
     IAM_UPDATED           = "iam_updated".freeze
+    ACCESS_UPDATED        = "access_updated".freeze
+    ACCESS_REVOKED        = "access_revoked".freeze
+    SESSION_EXPIRED       = "session_expired".freeze
+    SESSION_INVALIDATED   = "session_invalidated".freeze
     NOTIFICATION          = "notification".freeze
   end
 
@@ -93,9 +97,9 @@ module NotificationConstants
         category: Category::SYSTEM,
         link: Link::HOME,
         admin: true,
-        in_app_title: "Welcome aboard! 🎉",
+        in_app_title: "Welcome aboard!",
         in_app_body: "Hey {{user_name}}, thanks for joining RexOne! We're excited to have you.",
-        push_title: "Welcome aboard! 🎉",
+        push_title: "Welcome aboard!",
         push_body: "Hey {{user_name}}, thanks for joining RexOne!",
         email_subject: "Welcome to RexOne!",
         email_body: "Welcome to RexOne, {{user_name}}!",

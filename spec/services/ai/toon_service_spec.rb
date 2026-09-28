@@ -23,9 +23,9 @@ RSpec.describe Ai::ToonService do
 
     it "encodes inline primitive arrays" do
       expect(described_class.encode([])).to eq("[0]:")
-      expect(described_class.encode([1, 2, 3])).to eq("[3]: 1,2,3")
-      expect(described_class.encode(["admin", "user", "guest"])).to eq("[3]: admin,user,guest")
-      expect(described_class.encode(["tag,1", "tag:2"])).to eq('[2]: "tag,1","tag:2"')
+      expect(described_class.encode([ 1, 2, 3 ])).to eq("[3]: 1,2,3")
+      expect(described_class.encode([ "admin", "user", "guest" ])).to eq("[3]: admin,user,guest")
+      expect(described_class.encode([ "tag,1", "tag:2" ])).to eq('[2]: "tag,1","tag:2"')
     end
 
     it "encodes uniform arrays into tabular form" do
@@ -150,8 +150,8 @@ RSpec.describe Ai::ToonService do
     end
 
     it "decodes inline primitive arrays" do
-      expect(described_class.decode("[3]: 1,2,3")).to eq([1, 2, 3])
-      expect(described_class.decode('tags[2]: "tag,1",normal')).to eq({ "tags" => ["tag,1", "normal"] })
+      expect(described_class.decode("[3]: 1,2,3")).to eq([ 1, 2, 3 ])
+      expect(described_class.decode('tags[2]: "tag,1",normal')).to eq({ "tags" => [ "tag,1", "normal" ] })
       expect(described_class.decode("[0]:")).to eq([])
     end
 

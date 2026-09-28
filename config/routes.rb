@@ -177,6 +177,11 @@ Rails.application.routes.draw do
             post :discard
             post :undiscard
           end
+          resources :users, only: %i[index create destroy], param: :user_id, controller: "user_roles"
+        end
+
+        resources :users, only: [] do
+          resources :roles, only: %i[index create destroy], param: :role_id, controller: "user_roles"
         end
       end
 
@@ -290,9 +295,8 @@ Rails.application.routes.draw do
     # ===== FEEDBACK =====
     resources :feedbacks, only: %i[create index show]
 
-    # ===== IAM =====
+    # ===== IAM (Current User) =====
     namespace :iam do
-      # API-only: no new/edit
       resources :permissions, only: [] do
         collection do
           get :read_current_permissions, path: "current"
@@ -303,13 +307,6 @@ Rails.application.routes.draw do
         collection do
           get :read_current_roles, path: "current"
         end
-      end
-
-      resources :users, only: [] do
-        resources :roles,
-          only: %i[index create destroy],
-          param: :role_id,
-          controller: "user_roles"
       end
     end
 

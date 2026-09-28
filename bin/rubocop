@@ -1,8 +1,28 @@
-#!/usr/bin/env ruby
-require "rubygems"
-require "bundler/setup"
+#!/usr/bin/env bash
 
-# Explicit RuboCop config increases performance slightly while avoiding config confusion.
-ARGV.unshift("--config", File.expand_path("../.rubocop.yml", __dir__))
+# Resolve project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-load Gem.bin_path("rubocop", "rubocop")
+# If running inside Docker container already
+if [ -f "/.dockerenv" ] || [ "${DOCKER_CONTAINER:-false}" = "true" ]; then
+  exec bundle exec rubocop "$@"
+fi
+
+# Running on host machine: translate host paths to container path (/rails)
+COMPOSE_FILE="$PROJECT_ROOT/docker-compose.dev.yaml"
+SERVICE="api"
+CONTAINER_ROOT="/rails"
+
+ARGS=()
+for arg in "$@"; do
+  arg="${arg/$PROJECT_ROOT/$CONTAINER_ROOT}"
+  ARGS+=("$arg")
+done
+
+# Forward to running api container, or fallback to run --rm
+if docker compose -f "$COMPOSE_FILE" ps --status running -q "$SERVICE" >/dev/null 2>&1; then
+  exec docker compose -f "$COMPOSE_FILE" exec -T "$SERVICE" bundle exec rubocop "${ARGS[@]}"
+else
+  exec docker compose -f "$COMPOSE_FILE" run --rm -T -e RAILS_ENV=test "$SERVICE" bundle exec rubocop "${ARGS[@]}"
+fi

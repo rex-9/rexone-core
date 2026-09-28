@@ -188,12 +188,12 @@ Permissions follow a clean, four-level administrative model:
    - Grants access only to specific `/v1/admin/*` resources matching the role's assigned permissions.
    - Non-admin permissions (e.g. from the base `user` role) can never access `/v1/admin/*` endpoints.
 4. **Single-Request IAM Introspection**: `GET /v1/users/current/iam` returns complete role/permission sets (`is_admin`, `is_super_admin`, `roles`, `admin_roles`, `permissions`, `admin_permissions`) so clients evaluate UI permissions immediately without secondary calls.
-5. **Unified Product Entitlements Flow (`UserSerializer.accesses`)**: Just like IAM permissions, active product accesses (`id`, `product_id`, `product_code`, `product_name`, `granted_at`, `expires_at`, `remaining_days`, `active`) are serialized directly into `UserSerializer.accesses` upon authentication (`/signin`, `/signup`, `/confirmation`) and session introspection (`GET /v1/users/me`). Frontends (Web & Mobile) persist this payload locally on boot, evaluate entitlements in-memory with real-time expiration awareness (`useAccess` in Web, `AuthController.hasAccess` in Mobile), and seamlessly refresh via WebSockets (`payment_success`, `subscription_created`, `access_granted`).
+5. **Unified Product Entitlements Flow (`UserSerializer.accesses`)**: Just like IAM permissions, active product accesses (`id`, `product_id`, `product_code`, `product_name`, `granted_at`, `expires_at`, `remaining_days`, `active`) are serialized directly into `UserSerializer.accesses` upon authentication (`/signin`, `/signup`, `/confirmation`) and session introspection (`GET /v1/users/me`). Frontends (Web & Mobile) persist this payload locally on boot, evaluate entitlements in-memory with real-time expiration awareness (`useAccess` in Web, `AuthController.hasAccess` in Mobile), and seamlessly refresh via WebSockets (`payment_success`, `subscription_created`).
 
 ### 🛠️ Core Client-Admin API Endpoints
 
 - **User Management**: `GET/POST /v1/admin/users`, `PATCH /v1/admin/users/:id`, `DELETE /v1/admin/users/:id` (CRUD, soft-delete discard/undiscard, role assignment, confirmation status auditing).
-- **IAM Management**: `GET/PATCH/DELETE /v1/admin/iam/roles`, `GET/POST/PATCH/DELETE /v1/admin/iam/permissions`.
+- **IAM Management**: `GET/PATCH/DELETE /v1/admin/iam/roles`, `GET/POST/PATCH/DELETE /v1/admin/iam/permissions`, bidirectional user role assignments via `GET/POST /v1/admin/iam/users/:user_id/roles`, `DELETE /v1/admin/iam/users/:user_id/roles/:role_id`, and `GET/POST /v1/admin/iam/roles/:role_id/users`, `DELETE /v1/admin/iam/roles/:role_id/users/:user_id`.
 - **Chat Endpoints**: User API: `GET/POST /v1/chat/rooms`, `GET/PUT/DELETE /v1/chat/rooms/:id`, `GET/POST /v1/chat/messages`, `DELETE /v1/chat/messages/destroy_all`. Admin moderation: `GET/PATCH/DELETE /v1/admin/chat/rooms` and `GET/PATCH/DELETE /v1/admin/chat/messages`.
 - **AI Control Plane & Universal TOON Pipeline**: `GET/PATCH /v1/admin/ai/profiles` (prompt templates, models, token limits, multi-attribute sorting and filters), `GET /v1/admin/ai/runs` (execution telemetry, latency, token consumption). RexOne enforces a universal **Zero-JSON LLM Pipeline**: Large Language Models never receive or output raw JSON. All inbound JSON (in user messages, assistant history, system prompts, or template values) is automatically converted to compact Token-Oriented Object Notation (TOON via `Ai::ToonService`), compressing context by 30–60% over JSON. Models are instructed to output structured data strictly in TOON format (` ```toon `). On receiving completions, the server transparently converts TOON structures back into standard, formatted JSON before database persistence and client WebSocket broadcasting, maintaining 100% standard JSON compatibility across web, mobile, and REST clients without requiring frontend TOON parsers.
 - **Standardized Permissions Protocol**: Strictly 4 canonical CRUD actions (`read`, `create`, `update`, `delete`). Soft deletes map to `:delete`, restores map to `:delete`. Resources are explicitly prefixed (e.g. `ai_profiles`, `chat_rooms`, `payment_products`).
@@ -248,7 +248,7 @@ Permissions follow a clean, four-level administrative model:
 
 - **Design System Tokens**: `AppColors`, `AppTypography`, `AppSpacing`, `AppStyles`, `AppIcons`, `AppMedia`, `AppTheme` (Material 3 Light/Dark).
 - **Theme Extensions**: Reactive styling via `context.colors.*` and `context.typo.*`.
-- **UI Components**: `AppAccessGate`, `AppButton`, `AppInputField`, `AppPasswordField`, `AppLoading` (dual-mode: modal blocking overlay & non-blocking top linear progress), `AppPagyListView` (infinite scroll lazy loading with automatic next-page trigger, pull-to-refresh, empty/error fallbacks), `AppSearchBar` (debounced search with clear trigger, filter badge, and quick filter chips), `AppSnackbar`, `AppDialog` (with `AppDialog.confirm()` for destructive flows), `AppPage`, `AppListTile`, `AppToggle`, `AppNetworkBanner` ("Offline mode" banner).
+- **UI Components**: `AppAccessGate`, `AppButton`, `AppDropdown` (universal select dropdown with custom options, prefix icons, and small/medium/large sizes matching Web's `Dropdown`), `AppInputField`, `AppPasswordField`, `AppLoading` (dual-mode: modal blocking overlay & non-blocking top linear progress), `AppPagyListView` (infinite scroll lazy loading with automatic next-page trigger, pull-to-refresh, empty/error fallbacks), `AppSearchBar` (debounced search with clear trigger, filter badge, and integrated `AppDropdown` filter selection), `AppSnackbar`, `AppDialog` (with `AppDialog.confirm()` for destructive flows), `AppPage`, `AppListTile`, `AppToggle`, `AppNetworkBanner` ("Offline mode" banner).
 
 ### 🧩 Domain Capabilities
 
@@ -373,7 +373,7 @@ Permissions follow a clean, four-level administrative model:
 - **Mobile Pagy Controller & Infinite Scroll Architecture**:
   - `PagyControllerMixin<T>`: Standardized reactive controller mixin managing `items`, `pagination` (`PaginationMeta`), `isLoading`, `isLoadingMore`, `isRefreshing`, `errorMessage`, `searchQuery`, `activeFilters`, and automatic debounced search. Implements automatic state transitions for `refreshList()`, `loadMore()`, `setFilter()`, and `onSearchChanged()`.
   - `AppPagyListView<T>`: Reusable infinite scroll list view that monitors scroll offsets (`scrollThreshold: 200px`), displays a non-intrusive bottom loading spinner when fetching subsequent pages, binds to pull-to-refresh (`RefreshIndicator`), and cleanly displays customized initial loading, empty, and retry error states.
-  - `AppSearchBar`: Universal search input with built-in keystroke debouncing, active search in-flight indicator, clear button, filter modal trigger badge, and horizontal quick-filter chip row.
+  - `AppSearchBar`: Universal search input with built-in keystroke debouncing, active search in-flight indicator, clear button, filter modal trigger badge, and integrated `AppDropdown` filter selection.
   - **Unified Centralized Loading Paradigm (`AppLoading`)**: Eliminates redundant, scattered local spinners in favor of unified global loading matching Web's `LoadingContext`:
     1. **Modal Blocking Overlay** (`AppLoading.showOverlay([message])` / `AppLoading.hideOverlay()`): Used for high-stakes asynchronous mutations (checkout, authentication, cancellations) with backdrop blur and spinner.
     2. **Non-Blocking Inline Progress** (`AppLoading.showInline()` / `AppLoading.hideInline()`): Renders a sleek top linear progress indicator mounted under `SafeArea` for seamless background or list updates without freezing UI interaction.
@@ -403,18 +403,26 @@ Permissions follow a clean, four-level administrative model:
 
 Broadcasts async processing events, payment confirmations, and in-app inbox items:
 
-| Event Type                                      | Payload Attributes                                                                               | Description                                        |
-| :---------------------------------------------- | :----------------------------------------------------------------------------------------------- | :------------------------------------------------- |
-| `ai_response_ready`                             | `room_id`, `message_id`                                                                          | AI message generation finished.                    |
-| `ai_response_failed`                            | `room_id`, `error`                                                                               | AI generation failed.                              |
-| `tts_ready`                                     | `message_id`, `asset_id`                                                                         | TTS audio synthesis completed.                     |
-| `tts_failed`                                    | `message_id`, `error`                                                                            | TTS audio synthesis failed.                        |
-| `asset_updated`                                 | `id`, `status`, `size_bytes`, `compressed_size_bytes`, `compression_ratio`, `compression_passes` | Real-time compression status updates.              |
-| `asset_thumbnail_generated`                     | `asset_id`, `thumbnail`                                                                          | Video thumbnail generated in background.           |
-| `payment_success`                               | `product_name`, `amount`                                                                         | Successful Stripe payment confirmation.            |
-| `subscription_created` / `canceled` / `resumed` | `product_name`, `active_until`                                                                   | Subscription status transitions.                   |
-| `in_app_notification`                           | `id`, `title`, `message`, `link`, `read_at`, `created_at`, `metadata`                            | New persistent notification received.              |
-| `welcome`                                       | `{}`                                                                                             | Emitted upon successful Action Cable subscription. |
+| Event Type                  | Payload Attributes                                                                               | Description                                                                  |
+| :-------------------------- | :----------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| `ai_response_ready`         | `room_id`, `message_id`                                                                          | AI message generation finished.                                              |
+| `ai_response_failed`        | `room_id`, `error`                                                                               | AI generation failed.                                                        |
+| `tts_ready`                 | `message_id`, `asset_id`                                                                         | TTS audio synthesis completed.                                               |
+| `tts_failed`                | `message_id`, `error`                                                                            | TTS audio synthesis failed.                                                  |
+| `asset_updated`             | `id`, `status`, `size_bytes`, `compressed_size_bytes`, `compression_ratio`, `compression_passes` | Real-time compression status updates.                                        |
+| `asset_thumbnail_generated` | `asset_id`, `thumbnail`                                                                          | Video thumbnail generated in background.                                     |
+| `payment_success`           | `product_name`, `amount`                                                                         | Successful payment confirmation.                                             |
+| `payment_failed`            | `product_name`, `amount`                                                                         | Failed payment alert.                                                        |
+| `subscription_created`      | `product_name`, `active_until`                                                                   | Subscription activated.                                                      |
+| `subscription_canceled`     | `product_name`, `active_until`                                                                   | Subscription canceled.                                                       |
+| `subscription_resumed`      | `product_name`, `active_until`                                                                   | Subscription resumed.                                                        |
+| `in_app_notification`       | `id`, `title`, `message`, `link`, `read_at`, `created_at`, `metadata`                            | New persistent notification received.                                        |
+| `iam_updated`               | `roles`                                                                                          | Roles/permissions updated; JWT invalidated, client signs out.                |
+| `access_updated`            | `product_id`                                                                                     | Manual admin entitlement grant/extension; JWT invalidated, client signs out. |
+| `access_revoked`            | `product_id`                                                                                     | Manual admin entitlement revocation; JWT invalidated, client signs out.      |
+| `session_expired`           | `{}`                                                                                             | Server session expired; client signs out.                                    |
+| `session_invalidated`       | `{}`                                                                                             | Server session invalidated; client signs out.                                |
+| `welcome`                   | `{}`                                                                                             | Emitted upon successful Action Cable subscription.                           |
 
 _Navigation targets_: `link` represents the destination. Common internal destinations: `/home`, `/profile`, `/payment`, `/ai`. External URLs (`https://`) open in a new tab on Web and request user confirmation before opening the system browser on Mobile.
 
@@ -610,10 +618,10 @@ _Version resolution_: Core maps `app_version` to a matching `Client::Version` re
       "provider": "google_play", // or "app_store"
       "product_id": "UUID",
       "transaction_id": "STORE_TX_ID",
-      "purchase_token": "TOKEN",      // Google Play
-      "package_name": "BUNDLE_ID",    // Google Play
-      "receipt_data": "BASE64_JWS",   // Apple App Store
-      "coupon_code": "SUMMER50"       // Optional server-side promo coupon
+      "purchase_token": "TOKEN", // Google Play
+      "package_name": "BUNDLE_ID", // Google Play
+      "receipt_data": "BASE64_JWS", // Apple App Store
+      "coupon_code": "SUMMER50" // Optional server-side promo coupon
     }
     ```
   - **With or Without Coupon**:

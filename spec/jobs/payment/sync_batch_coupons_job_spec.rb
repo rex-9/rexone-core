@@ -17,7 +17,7 @@ RSpec.describe Payment::SyncBatchCouponsJob, type: :job do
         coupon2.code
       end
 
-      described_class.perform_now([coupon1.id, coupon2.id])
+      described_class.perform_now([ coupon1.id, coupon2.id ])
 
       coupon1.reload
       coupon2.reload
@@ -41,7 +41,7 @@ RSpec.describe Payment::SyncBatchCouponsJob, type: :job do
         success_coupon.code
       end
 
-      described_class.perform_now([failed_coupon.id, success_coupon.id])
+      described_class.perform_now([ failed_coupon.id, success_coupon.id ])
 
       failed_coupon.reload
       success_coupon.reload
@@ -61,7 +61,7 @@ RSpec.describe Payment::SyncBatchCouponsJob, type: :job do
 
       expect(CouponService).not_to receive(:ensure_stripe_coupon)
 
-      described_class.perform_now([synced_coupon.id, failed_coupon.id])
+      described_class.perform_now([ synced_coupon.id, failed_coupon.id ])
     end
 
     it "retries on Stripe rate limit or connection errors" do
@@ -70,13 +70,13 @@ RSpec.describe Payment::SyncBatchCouponsJob, type: :job do
       allow(CouponService).to receive(:ensure_stripe_coupon).with(coupon, raise_on_error: true).and_raise(Stripe::RateLimitError.new("Rate limit exceeded"))
 
       expect_any_instance_of(described_class).to receive(:retry_job)
-      described_class.perform_now([coupon.id])
+      described_class.perform_now([ coupon.id ])
     end
 
     it "marks coupon as failed when retries are exhausted" do
       coupon = create(:payment_coupon, active: false, provider_coupon_id: nil, metadata: { "status" => "processing" })
 
-      job = described_class.new([coupon.id])
+      job = described_class.new([ coupon.id ])
       error = Stripe::RateLimitError.new("Rate limit exceeded")
       job.handle_retry_exhaustion(error)
 

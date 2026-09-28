@@ -173,6 +173,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
   def notify_assigned_users(role)
     role.users.find_each do |user|
+      user.update_column(:jti, SecureRandom.uuid) unless user.id == current_user&.id
       NotificationService::Center.iam_updated(user)
     end
   end

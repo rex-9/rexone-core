@@ -67,6 +67,15 @@ class V1::Admin::AccessesController < V1::ApplicationController
       )
     end
 
+    eligible_users.each do |user|
+      user.update_column(:jti, SecureRandom.uuid)
+      SocketService::Client.broadcast(
+        user_id: user.id,
+        message: access_message(MessageService::Access::GRANTED),
+        data: { type: NotificationConstants::NotificationType::ACCESS_UPDATED, product_id: product.id }
+      )
+    end
+
     data = AccessSerializer.collection(accesses)
 
     render_json_response(
@@ -106,6 +115,13 @@ class V1::Admin::AccessesController < V1::ApplicationController
       days: days,
       expires_at: expires_at
     )
+    @access.user&.update_column(:jti, SecureRandom.uuid)
+
+    SocketService::Client.broadcast(
+      user_id: @access.user_id,
+      message: access_message(MessageService::Access::EXTENDED),
+      data: { type: NotificationConstants::NotificationType::ACCESS_UPDATED, product_id: @access.product_id }
+    )
 
     render_json_response(
       status_code: 200,
@@ -117,6 +133,13 @@ class V1::Admin::AccessesController < V1::ApplicationController
   # DELETE /v1/admin/accesses/:id
   def destroy
     @access.revoke!
+    @access.user&.update_column(:jti, SecureRandom.uuid)
+
+    SocketService::Client.broadcast(
+      user_id: @access.user_id,
+      message: access_message(MessageService::Access::REVOKED),
+      data: { type: NotificationConstants::NotificationType::ACCESS_REVOKED, product_id: @access.product_id }
+    )
 
     render_json_response(
       status_code: 200,

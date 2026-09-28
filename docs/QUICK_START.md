@@ -34,7 +34,7 @@ cp .env.example .env
 ```
 
 ### 🛡️ Pre-Commit Safety Guardrail
-**Running `./scripts/install_pre_commit.sh` is mandatory before making any commits.** It installs local Git hooks that automatically prevent committing unignored `.env` files, high-entropy cloud keys (Stripe, AWS, OpenAI, Google), and unlocalized strings. See [Security Architecture](SECURITY.md) for full details.
+**Running `./scripts/install_pre_commit.sh` is mandatory before making any commits.** It installs local Git hooks that automatically prevent committing unignored `.env` files, high-entropy cloud keys (Stripe, AWS, OpenAI, Google), unlocalized strings, and RuboCop lint violations. See [Security Architecture](SECURITY.md) for full details.
 
 ## Configure Core
 
@@ -191,6 +191,9 @@ This verifies authentication, IAM, API transport, PostgreSQL, Garage, Solid Queu
 
 # Regenerate OpenAPI
 ./scripts/rswag.sh
+
+# Run RuboCop linter (with optional auto-correct)
+./scripts/lint.sh [-a|-A]
 
 # Watch specs
 ./scripts/test_watch.sh

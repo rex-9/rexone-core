@@ -24,6 +24,7 @@ run_native_ci() {
 
   if [[ "$MODE" == "all" ]]; then
     bin/rails zeitwerk:check
+    bundle exec rubocop
   fi
 
   bundle exec rake rswag:specs:swaggerize
@@ -63,7 +64,7 @@ fi
 if [[ "$MODE" == "contracts" ]]; then
   TEST_COMMAND="bin/rails db:test:prepare && bundle exec rake rswag:specs:swaggerize && bundle exec rspec spec/openapi spec/channels spec/services/socket_service"
 else
-  TEST_COMMAND="bin/rails db:test:prepare && bin/rails zeitwerk:check && bundle exec rake rswag:specs:swaggerize && bundle exec rspec --tag ~type:system --tag ~e2e"
+  TEST_COMMAND="bin/rails db:test:prepare && bin/rails zeitwerk:check && bundle exec rubocop && bundle exec rake rswag:specs:swaggerize && bundle exec rspec --tag ~type:system --tag ~e2e"
 fi
 
 docker compose -f "$COMPOSE_FILE" run --rm -T \
