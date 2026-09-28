@@ -51,6 +51,13 @@ class Auth::PasswordsController < Devise::PasswordsController
     user = User.reset_password_by_token(reset_password_params)
     if user.errors.empty?
       PasswordService.new(user.id).record_reset_success
+      user.update_column(:jti, SecureRandom.uuid)
+      AuthConstants::Session.clear_all(user.id)
+      SocketService::Client.broadcast(
+        user_id: user.id,
+        message: auth_message(MessageService::Auth::ACTIVE_SESSION_NOT_FOUND),
+        data: { type: NotificationConstants::NotificationType::SESSION_INVALIDATED }
+      )
 
       render_json_response(
         status_code: 200,

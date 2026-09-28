@@ -62,13 +62,22 @@ RSpec.describe "Password recovery", type: :request do
     let(:user) { create(:user) }
     let(:raw_token) { user.send_reset_password_instructions }
 
-    it "changes the password with a valid token" do
+    it "changes the password with a valid token, rotating JTI and invalidating active sessions" do
+      old_jti = user.jti
+      allow(SocketService::Client).to receive(:broadcast)
+
       put "/password/reset", params: {
         user: { reset_password_token: raw_token, password: "newpassword", password_confirmation: "newpassword" }
       }
 
       expect(response).to have_http_status(:ok)
       expect(user.reload.valid_password?("newpassword")).to be(true)
+      expect(user.reload.jti).not_to eq(old_jti)
+      expect(SocketService::Client).to have_received(:broadcast).with(
+        user_id: user.id,
+        message: anything,
+        data: { type: NotificationConstants::NotificationType::SESSION_INVALIDATED }
+      )
     end
 
     it "rejects an invalid token, short password, and mismatched confirmation" do

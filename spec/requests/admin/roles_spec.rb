@@ -65,6 +65,25 @@ RSpec.describe "Admin IAM roles", type: :request do
     expect(NotificationService::Center).to have_received(:iam_updated).once
   end
 
+  it "notifies assigned users when a role is discarded, undiscarded, or destroyed" do
+    role = create(:role, name: "support_agent")
+    assigned_user = create(:user)
+    create(:user_role, user: assigned_user, role: role)
+    allow(NotificationService::Center).to receive(:iam_updated)
+
+    post "/v1/admin/iam/roles/#{role.id}/discard", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(NotificationService::Center).to have_received(:iam_updated).with(assigned_user).once
+
+    post "/v1/admin/iam/roles/#{role.id}/undiscard", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(NotificationService::Center).to have_received(:iam_updated).with(assigned_user).twice
+
+    delete "/v1/admin/iam/roles/#{role.id}", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(NotificationService::Center).to have_received(:iam_updated).with(assigned_user).exactly(3).times
+  end
+
   it "does not notify assigned users when role permissions are unchanged" do
     permission = create(:permission, action: "read", resource: IamConstants::Resource::PAYMENT_PRODUCTS)
     role = create(:role, name: "product_admin")

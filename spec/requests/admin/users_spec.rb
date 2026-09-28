@@ -47,8 +47,11 @@ RSpec.describe "Admin users", type: :request do
     expect(avatar_asset.reload.assetable).to eq(user)
   end
 
-  it "discards and restores a user with localized messages" do
+  it "discards and restores a user with localized messages, rotating JTI and invalidating sessions" do
     grant_admin_user_permission(:delete)
+    old_jti = user.jti
+    allow(CacheService).to receive(:delete)
+    allow(SocketService::Client).to receive(:broadcast)
 
     post "/v1/admin/users/#{user.id}/discard", headers: headers.merge("X-Locale" => "my")
 
@@ -57,6 +60,13 @@ RSpec.describe "Admin users", type: :request do
     expect(response_data["id"]).to eq(user.id)
     expect(response_data.dig("attributes", "discarded_at")).to be_present
     expect(User.with_discarded.find(user.id)).to be_discarded
+    expect(user.reload.jti).not_to eq(old_jti)
+    expect(CacheService).to have_received(:delete).with(AuthConstants::Session.key(user.id, AuthConstants::Platform::WEB))
+    expect(SocketService::Client).to have_received(:broadcast).with(
+      user_id: user.id,
+      message: anything,
+      data: { type: NotificationConstants::NotificationType::SESSION_INVALIDATED }
+    )
 
     post "/v1/admin/users/#{user.id}/undiscard", headers: headers
 

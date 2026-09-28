@@ -23,6 +23,7 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
   # POST /v1/admin/iam/permissions/:id/discard
   def discard
     @permission.discard!
+    notify_assigned_users(@permission)
 
     render_json_response(
       status_code: 200,
@@ -33,6 +34,7 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
   # POST /v1/admin/iam/permissions/:id/undiscard
   def undiscard
     @permission.undiscard!
+    notify_assigned_users(@permission)
 
     render_json_response(
       status_code: 200,
@@ -76,6 +78,8 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
     set_permission_name(@permission)
 
     if @permission.save
+      notify_assigned_users(@permission)
+
       render_json_response(
         status_code: 200,
         message: iam_message(MessageService::Iam::PERMISSION_UPDATED),
@@ -98,6 +102,8 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
       return
     end
 
+    affected_users = users_for_permission(@permission)
+
     unless @permission.destroy
       render_json_response(
         status_code: 422,
@@ -106,6 +112,8 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
       )
       return
     end
+
+    notify_users(affected_users)
 
     render_json_response(
       status_code: 200,
@@ -139,5 +147,23 @@ class V1::Admin::Iam::PermissionsController < V1::ApplicationController
 
   def iam_message(key, **options)
     MessageService::Iam.t(key, **options)
+  end
+
+  def users_for_permission(permission)
+    User.joins(user_roles: { role: :role_permissions })
+        .where(iam_role_permissions: { permission_id: permission.id })
+        .distinct
+        .to_a
+  end
+
+  def notify_assigned_users(permission)
+    notify_users(users_for_permission(permission))
+  end
+
+  def notify_users(users)
+    users.each do |user|
+      user.update_column(:jti, SecureRandom.uuid) unless user.id == current_user&.id
+      NotificationService::Center.iam_updated(user)
+    end
   end
 end

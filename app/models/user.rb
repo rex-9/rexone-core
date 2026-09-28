@@ -62,11 +62,20 @@ class User < ApplicationRecord
     if confirmation_code == code &&
       confirmation_sent_at.present? &&
       confirmation_sent_at > AppConfig::CONFIRM_CODE_WITHIN.ago
+      self.confirmation_code = nil
       confirm
     else
       errors.add(:confirmation_code, :invalid_or_expired)
       false
     end
+  end
+
+  def active_for_authentication?
+    super && !discarded?
+  end
+
+  def inactive_message # used for spec
+    discarded? ? :inactive : super
   end
 
   def get_avatar_url

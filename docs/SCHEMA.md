@@ -153,6 +153,7 @@ erDiagram
 
 - `UserSerializer` embeds the current IAM snapshot under `iam`: admin flags plus all/admin/non-admin role and permission collections. The current-user API therefore has no separate IAM aggregate endpoint.
 - Super-admin accounts cannot be discarded.
+- Discarded user accounts are rejected from authentication (`active_for_authentication?` returns `false` with `:inactive` message), their `jti` is rotated, and active platform sessions are evicted from Redis upon discard.
 
 ---
 

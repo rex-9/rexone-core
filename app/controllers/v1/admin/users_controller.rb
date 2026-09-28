@@ -94,6 +94,13 @@ class V1::Admin::UsersController < V1::ApplicationController
     return if protected_lifecycle_user?
 
     @user.discard!
+    @user.update_column(:jti, SecureRandom.uuid)
+    AuthConstants::Session.clear_all(@user.id)
+    SocketService::Client.broadcast(
+      user_id: @user.id,
+      message: auth_message(MessageService::Auth::ACTIVE_SESSION_NOT_FOUND),
+      data: { type: NotificationConstants::NotificationType::SESSION_INVALIDATED }
+    )
 
     render_json_response(
       status_code: 200,

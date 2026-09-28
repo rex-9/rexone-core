@@ -26,6 +26,20 @@ module AuthConstants
     ALL     = [ WEB, ANDROID, IOS ].freeze
   end
 
+  module Session
+    PREFIX = "active_session:user".freeze
+
+    def self.key(user_id, platform)
+      "#{PREFIX}:#{user_id}:#{platform}"
+    end
+
+    def self.clear_all(user_id)
+      Platform::ALL.each do |platform|
+        CacheService.delete(key(user_id, platform))
+      end
+    end
+  end
+
   module Provider
     EMAIL  = "email".freeze
     GOOGLE = "google".freeze

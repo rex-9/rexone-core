@@ -53,31 +53,28 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
 
   # PATCH/PUT /v1/admin/iam/roles/:id
   def update
-    if @role.update(role_params.except(:permission_ids))
-      permissions_changed = begin
-        permission_ids_param_provided? && assign_permissions(@role)
-      rescue ActiveRecord::RecordNotDestroyed => error
-        render_json_response(
-          status_code: 422,
-          message: iam_message(MessageService::Iam::ROLE_UPDATE_FAILED),
-          error: error.record.errors.full_messages.to_sentence
-        )
-        return
-      end
-      notify_assigned_users(@role) if permissions_changed
-
-      render_json_response(
-        status_code: 200,
-        message: iam_message(MessageService::Iam::ROLE_UPDATED),
-        data: ::Iam::RoleSerializer.record(@role)
-      )
-    else
-      render_json_response(
+    unless @role.update(role_params.except(:permission_ids))
+      return render_json_response(
         status_code: 422,
         message: iam_message(MessageService::Iam::ROLE_UPDATE_FAILED),
         error: @role.errors.full_messages.to_sentence
       )
     end
+
+    permissions_changed = permission_ids_param_provided? && assign_permissions(@role)
+    notify_assigned_users(@role) if permissions_changed || @role.saved_change_to_name?
+
+    render_json_response(
+      status_code: 200,
+      message: iam_message(MessageService::Iam::ROLE_UPDATED),
+      data: ::Iam::RoleSerializer.record(@role)
+    )
+  rescue ActiveRecord::RecordNotDestroyed => error
+    render_json_response(
+      status_code: 422,
+      message: iam_message(MessageService::Iam::ROLE_UPDATE_FAILED),
+      error: error.record.errors.full_messages.to_sentence
+    )
   end
 
   # POST /v1/admin/iam/roles/:id/discard
@@ -92,6 +89,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
     end
 
     @role.discard!
+    notify_assigned_users(@role)
 
     render_json_response(
       status_code: 200,
@@ -102,6 +100,7 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
   # POST /v1/admin/iam/roles/:id/undiscard
   def undiscard
     @role.undiscard!
+    notify_assigned_users(@role)
 
     render_json_response(
       status_code: 200,
@@ -121,7 +120,9 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
       return
     end
 
+    affected_users = @role.users.to_a
     @role.destroy
+    notify_users(affected_users)
 
     render_json_response(
       status_code: 200,
@@ -172,7 +173,11 @@ class V1::Admin::Iam::RolesController < V1::ApplicationController
   end
 
   def notify_assigned_users(role)
-    role.users.find_each do |user|
+    notify_users(role.users)
+  end
+
+  def notify_users(users)
+    users.each do |user|
       user.update_column(:jti, SecureRandom.uuid) unless user.id == current_user&.id
       NotificationService::Center.iam_updated(user)
     end

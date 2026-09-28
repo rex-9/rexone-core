@@ -59,6 +59,34 @@ RSpec.describe "Admin IAM permissions", type: :request do
     expect(response_status["message"]).to eq(I18n.t("iam.permissions.deleted", locale: :my))
   end
 
+  it "notifies users assigned to roles containing the permission on update, discard, undiscard, and destroy" do
+    permission = create(:permission, action: "read", resource: "notifications")
+    role = create(:role, name: "notification_manager")
+    create(:role_permission, role: role, permission: permission)
+    assigned_user = create(:user)
+    create(:user_role, user: assigned_user, role: role)
+    allow(NotificationService::Center).to receive(:iam_updated)
+
+    patch "/v1/admin/iam/permissions/#{permission.id}",
+          params: { action: "delete", resource: "notifications" },
+          headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(NotificationService::Center).to have_received(:iam_updated).with(assigned_user).once
+
+    post "/v1/admin/iam/permissions/#{permission.id}/discard", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(NotificationService::Center).to have_received(:iam_updated).with(assigned_user).twice
+
+    post "/v1/admin/iam/permissions/#{permission.id}/undiscard", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(NotificationService::Center).to have_received(:iam_updated).with(assigned_user).exactly(3).times
+
+    post "/v1/admin/iam/permissions/#{permission.id}/discard", headers: headers
+    delete "/v1/admin/iam/permissions/#{permission.id}", headers: headers
+    expect(response).to have_http_status(:ok)
+    expect(NotificationService::Center).to have_received(:iam_updated).with(assigned_user).exactly(5).times
+  end
+
   it "rejects permanent deletion until a permission is discarded" do
     permission = create(:permission, action: "read", resource: "notifications")
 

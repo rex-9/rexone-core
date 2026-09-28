@@ -68,6 +68,28 @@ RSpec.describe User, type: :model do
       user.update_columns(confirmation_sent_at: AppConfig::CONFIRM_CODE_WITHIN.ago - 1.second)
       expect(user.confirm_code("123456")).to be(false)
     end
+
+    it "clears the confirmation code upon successful confirmation" do
+      user = create(:user, :unconfirmed)
+      user.update_columns(confirmation_code: "654321", confirmation_sent_at: 1.minute.ago)
+
+      expect(user.confirm_code("654321")).to be(true)
+      expect(user.reload.confirmation_code).to be_nil
+    end
+  end
+
+  describe "authentication status for discarded users" do
+    it "is active for authentication when kept, but inactive when discarded" do
+      user = create(:user)
+      expect(user.active_for_authentication?).to be(true)
+
+      user.discard!
+      expect(user.active_for_authentication?).to be(false)
+      expect(user.inactive_message).to eq(:inactive)
+
+      user.undiscard!
+      expect(user.active_for_authentication?).to be(true)
+    end
   end
 
   describe "role assignment" do
