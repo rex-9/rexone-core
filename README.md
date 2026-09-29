@@ -14,13 +14,15 @@ Built under an immutable creed: **Start from One. Not from Zero. Clear in though
 [![Rails](https://img.shields.io/badge/Rails-8.1-CC0000?logo=rubyonrails&logoColor=white)](https://rubyonrails.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![GSoC 2027](https://img.shields.io/badge/GSoC-2027_Ready-FF5722?logo=google&logoColor=white)](docs/GSOC_IDEAS.md)
+[![Discussions](https://img.shields.io/badge/Discussions-Join_Community-0052CC?logo=github&logoColor=white)](https://github.com/rex-9/rexone-core/discussions)
 [![Sponsor rex-9](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/rex-9)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-rexone.rex9.me-FF2238?logo=firefox&logoColor=white)](https://rexone.rex9.me)
 [![CI](https://github.com/rex-9/rexone-core/actions/workflows/test.yml/badge.svg)](https://github.com/rex-9/rexone-core/actions/workflows/test.yml)
 
 **API-first · Modular · Observable · Queue-aware · Built to grow**
 
-[Live Demo ↗](https://rexone.rex9.me) · [Quick Start](docs/QUICK_START.md) · [Explore the foundation](#feature-map) · [Foundation Guide](docs/FOUNDATION.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Visual Walkthrough](./docs/VISUAL_WALKTHROUGH.md) · [Who it is for](#who-rexone-is-for) · [Development Law](LAW.md) · [Agent Governance](AGENTS.md) · [Production Deployment](docs/DEPLOYMENT.md)
+[Live Demo ↗](https://rexone.rex9.me) · [Quick Start](docs/QUICK_START.md) · [Discussions ↗](https://github.com/rex-9/rexone-core/discussions) · [Contributing](CONTRIBUTING.md) · [GSoC Roadmap](docs/GSOC_IDEAS.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Development Law](LAW.md) · [Agent Governance](AGENTS.md) · [Production Deployment](docs/DEPLOYMENT.md)
 
 </div>
 
@@ -35,6 +37,10 @@ Built under an immutable creed: **Start from One. Not from Zero. Clear in though
 | **🏛️ System Architecture**            | High-level system topology, domain services, Solid Queue, and provider boundaries: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                                    |
 | **🗄️ Database Schema & Models**        | Complete database schema, tables, UUID indexes, and model associations: **[docs/SCHEMA.md](docs/SCHEMA.md)**                                                             |
 | **🗺️ Visual Walkthrough**             | Screenshot-driven, feature-by-feature tour of RexOne across all surfaces and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**                      |
+| **🤝 Contributing & Governance**       | Contributor workflow, Code of Conduct, and BDFL/RFC governance: **[CONTRIBUTING.md](CONTRIBUTING.md)** · **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** · **[GOVERNANCE.md](GOVERNANCE.md)** |
+| **🛡️ Coordinated Disclosure**         | Coordinated Vulnerability Disclosure & security response SLA: **[SECURITY.md](SECURITY.md)**                                                                             |
+| **🤖 Anti-Vibe AI Policy**            | Machine-enforced coding standards for AI assistants & contributors: **[docs/AI_CONTRIBUTION_POLICY.md](docs/AI_CONTRIBUTION_POLICY.md)**                                 |
+| **🎓 GSoC & Open Source Grants**       | Project ideas catalog, mentor criteria, and milestone roadmap: **[docs/GSOC_IDEAS.md](docs/GSOC_IDEAS.md)**                                                              |
 | **💳 Universal Payments & IAP**        | Unified Stripe, Google Play, Apple App Store, coupons, and entitlement state machines: **[docs/PAYMENT.md](docs/PAYMENT.md)**                                           |
 | **🚀 Production Deployment**          | Contabo VPS + Coolify deployment, zero-downtime rolling updates, and reverse proxy: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**                                         |
 | **🧹 Telemetry & VPS Maintenance**     | Automated log rotation, Solid Queue/Cache pruning, and VPS cleanup: **[docs/MAINTENANCE.md](docs/MAINTENANCE.md)**                                                      |

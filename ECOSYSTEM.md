@@ -34,6 +34,9 @@ Building any modern commercial digital product across Backend, Web, and Native M
 | Resource                     | Scope & Canonical Specification                                                                                                                           |
 | :--------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 📜 **Constitutional Law**    | Strict engineering constraints and architectural rules: **[LAW.md](LAW.md)** _(Zero exceptions)_                                                          |
+| 🤝 **Governance & RFCs**     | Community guidelines, Code of Conduct, and BDFL/RFC governance: **[GOVERNANCE.md](GOVERNANCE.md)** & **[CONTRIBUTING.md](CONTRIBUTING.md)**               |
+| 🤖 **Anti-Vibe AI Policy**   | Machine-enforced coding standards for AI assistants & contributors: **[AI Contribution Policy](docs/AI_CONTRIBUTION_POLICY.md)**                           |
+| 🎓 **GSoC & Grants Roadmap** | Google Summer of Code project ideas catalog & institutional grant roadmap: **[GSoC Ideas Catalog](docs/GSOC_IDEAS.md)**                                   |
 | 📖 **API Docs & Swagger**    | Complete OpenAPI v1 schema and interactive Swagger UI at `/api-docs`: **[swagger.yaml](swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`)            |
 | 🌐 **Live Web Demo**         | Production web application preview: **[rexone.rex9.me](https://rexone.rex9.me)** (API: `api.rexone.rex9.me`)                                              |
 | 🗺️ **Visual Walkthrough**    | Screenshot tour across Core, Web, Mobile, and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**                                       |
