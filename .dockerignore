@@ -40,3 +40,20 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Ignore tests, specs, and coverage
+/spec
+/test
+/coverage
+
+# Ignore documentation and markdown files (prevents layer cache busts on doc edits)
+/docs
+/*.md
+
+# Ignore OS and editor metadata
+.DS_Store
+/.vscode
+/.idea
+/.gemini
+/.cursor
+/scratch

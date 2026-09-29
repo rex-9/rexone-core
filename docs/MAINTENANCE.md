@@ -79,19 +79,48 @@ The AI Control Plane records every LLM prompt, completion, token breakdown, and 
 
 ---
 
-## 5. Host VPS Maintenance (`scripts/vps_cleanup.sh`)
+## 5. Host VPS Maintenance (`scripts/vps_cleanup.sh`) & Long-Term Disk Protection
 
-For Contabo / Coolify Linux VPS hosts:
+To ensure the VPS operates continuously from day zero to infinity without running out of disk space, implement both host daemon limits and automated pruning:
+
+### 5.1 Host-Level `/etc/docker/daemon.json` Safeguards (Recommended)
+Configure the Docker daemon on your VPS host to enforce global log rotation and BuildKit automatic garbage collection across all containers:
+
+```json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "builder": {
+    "gc": {
+      "enabled": true,
+      "defaultKeepStorage": "20GB"
+    }
+  }
+}
+```
+*Reload Docker daemon after editing:* `sudo systemctl restart docker`.
+
+### 5.2 Coolify Native Docker Cleanup
+In the Coolify dashboard under **Server** → **Docker Cleanup**:
+- Enable **Docker Cleanup** (runs daily or weekly).
+- Ensure image pruning and builder cache pruning are enabled.
+
+### 5.3 Scheduled VPS Cleanup Script (`scripts/vps_cleanup.sh`)
+Add the maintenance script to the host `crontab` as a recurring safety net:
 
 ```bash
 # Recommended Host Cron (runs every Sunday at 03:00 UTC):
-0 3 * * 0 /path/to/rexone-core/scripts/vps_cleanup.sh >> /var/log/rexone_vps_cleanup.log 2>&1
+0 3 * * 0 /path/to/rexone-core/scripts/vps_cleanup.sh -y >> /var/log/rexone_vps_cleanup.log 2>&1
 ```
 
-* Prunes exited/dead containers (`docker container prune -f`).
-* Prunes unused deployment images older than 7 days (`IMAGE_RETENTION_HOURS=168`).
-* Prunes builder cache older than 7 days (`BUILD_CACHE_RETENTION_HOURS=168`).
-* **Absolute Safety**: Never touches database or Garage storage volumes (`rexone-postgres-data`, `rexone-garage-data`).
+* **Exited Containers**: Pruned via `docker container prune -f`.
+* **Deployment Images**: Pruned if unused for > 7 days (`docker image prune -a --filter "until=168h" -f`).
+* **BuildKit Build Cache**: Pruned with `-a` flag (`docker builder prune -a --filter "until=168h" -f`) to ensure non-dangling intermediate build layers are purged.
+* **Volume Safety**: Persistent database and Garage S3 volumes (`rexone-postgres-data`, `rexone-garage-data`) are NEVER pruned.
+* **PostgreSQL Maintenance**: Active tables in Solid Queue and Solid Cache are cleaned on schedule in `recurring.yml`. PostgreSQL internal autovacuum automatically reclaims space from deleted rows.
 
 ---
 

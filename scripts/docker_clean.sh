@@ -80,17 +80,51 @@ fi
 
 # 2. General cleanup prompt
 if [ "$FORCE" = false ]; then
+  ALL_STOPPED=$(docker ps -a --filter "status=exited" --filter "status=dead" --format "  - {{.Names}} (Status: {{.Status}})" || true)
+  RUNNING_NOW=$(docker ps --format "  + {{.Names}} (Status: {{.Status}})" || true)
+  DANGLING_COUNT=$(docker images -f "dangling=true" -q | wc -l | tr -d ' ' || echo "0")
+
   echo ""
-  echo " This will prune stopped containers, unused networks, and dangling images/build cache."
-  if [ "$PRUNE_VOLUMES" = true ]; then
-    echo " 🚨 WARNING: '--volumes' flag is ENABLED. Unused volumes WILL BE REMOVED."
+  echo "📋 PRE-CLEANUP MANIFEST: Specifically what will be cleaned vs protected"
+  echo "──────────────────────────────────────────────────────────────────"
+  echo "🗑️  RESOURCES THAT WILL BE CLEANED AND REMOVED AFTER CONFIRMING YES:"
+  echo ""
+  echo " 1. Stopped / Exited Containers (WILL BE DELETED):"
+  if [ -n "$ALL_STOPPED" ]; then
+    echo "$ALL_STOPPED"
   else
-    echo " 🔒 Volumes are SAFE and will NOT be touched."
+    echo "    (None - no stopped containers found)"
   fi
-  read -r -p " Proceed with cleanup? [y/N]: " CONFIRM
+  echo ""
+  echo " 2. Unused Docker Networks (WILL BE PRUNED):"
+  echo "    - All networks not actively attached to a running container"
+  echo ""
+  echo " 3. Dangling Docker Images (WILL BE PRUNED):"
+  echo "    - ${DANGLING_COUNT} untagged/dangling intermediate image layers"
+  echo ""
+  echo " 4. Docker BuildKit Build Cache (WILL BE PURGED):"
+  echo "    - All BuildKit build cache across previous container builds"
+  echo ""
+  if [ "$PRUNE_VOLUMES" = true ]; then
+    echo " 🚨 WARNING: '--volumes' flag is ENABLED. All unattached volumes WILL BE REMOVED."
+  else
+    echo " 🔒 Volumes are SAFE and will NOT be touched (database & S3 preserved)."
+  fi
+  echo "──────────────────────────────────────────────────────────────────"
+  echo "🔒 RESOURCES THAT WILL STAY SAFE & 100% UNTOUCHED:"
+  echo ""
+  echo " 🛡️  Active Running Containers (WILL NOT BE KILLED OR STOPPED):"
+  if [ -n "$RUNNING_NOW" ]; then
+    echo "$RUNNING_NOW"
+  else
+    echo "    (No containers currently running)"
+  fi
+  echo "──────────────────────────────────────────────────────────────────"
+  echo ""
+  read -r -p " Proceed with Docker cleanup and removal of the items listed above? [y/N]: " CONFIRM
   case "$CONFIRM" in
     [yY][eE][sS]|[yY])
-      echo " Proceeding with Docker cleanup..."
+      echo " Confirmation received. Proceeding with Docker cleanup..."
       ;;
     *)
       echo " Aborted by user. No resources were pruned."

@@ -5,8 +5,8 @@ if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*/libjemalloc.so.2 ]; then
   export LD_PRELOAD="$(echo /usr/lib/*/libjemalloc.so.2)"
 fi
 
-# Prepare the database only when starting the Rails API server.
-if [ "$1" = "./bin/rails" ] && [ "$2" = "server" ]; then
+# Prepare the database only when starting the Rails API server and not explicitly skipped.
+if [ -z "${SKIP_DB_PREPARE+x}" ] && [ "$1" = "./bin/rails" ] && [ "$2" = "server" ]; then
   echo "Preparing database..."
   bundle exec rake db:prepare
 fi

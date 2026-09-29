@@ -42,6 +42,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 25s
+    stop_grace_period: 30s
     logging: *default-logging
     networks:
       - rexone-network

@@ -164,6 +164,47 @@ docker network create prod-rexone-net || true
 docker network create uat-rexone-net || true
 ```
 
+### 3.4 Configure Docker Daemon for "Zero to Infinity" Disk Protection (One-Time Setup)
+
+To guarantee your VPS never runs out of disk space regardless of how many builds or deployments occur over years of operation, configure the Docker daemon to enforce automatic BuildKit cache garbage collection and universal container log rotation.
+
+Edit `/etc/docker/daemon.json` on the VPS host (create it if it does not exist):
+
+```bash
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "builder": {
+    "gc": {
+      "enabled": true,
+      "defaultKeepStorage": "20GB"
+    }
+  }
+}
+EOF
+```
+
+* **`defaultKeepStorage: "20GB"`**: Instructs Docker BuildKit to automatically garbage-collect build cache when it exceeds 20GB.
+* **`max-size: 10m` & `max-file: 3`**: Strictly caps every container's log file on the VPS to 30MB maximum (10MB $\times$ 3 files).
+
+Restart Docker to apply the daemon settings:
+```bash
+sudo systemctl restart docker
+```
+
+### 3.5 Coolify Dashboard Server Cleanup Settings
+
+In the Coolify UI dashboard:
+1. Navigate to **Server** (top navigation) → select your server → **Docker Cleanup**.
+2. **Enable Docker Cleanup**: Toggle **ON** (runs on schedule).
+3. Ensure **Clean Images** and **Clean Builder Cache** checkboxes are enabled.
+4. Set execution frequency to **Daily** or **Weekly**.
+
 ---
 
 ## 4. Step-by-Step Deployment Instructions
@@ -269,6 +310,9 @@ _(This automatically assigns the cluster layout, creates bucket `rexone`, and co
    - Dev: `https://dev.api.rexone.me`
    - Demo: `https://api.rexone.rex9.me`
    - Traefik maps port `3000` with automatic Let's Encrypt SSL.
+   - **Healthcheck Path:** Set to `/up` (interval: 10s, timeout: 5s, retries: 5). Rails 8 automatically excludes `/up` from host authorization and SSL redirect.
+   - **Pre-deployment Migration (Optional):** If using Coolify's pre-deployment command, set `bundle exec rake db:migrate` and pass `SKIP_DB_PREPARE=true` to runtime containers to avoid redundant migrations on horizontal replicas.
+   - **Database Connection Flexibility:** Both `RAILS_DATABASE_URL` and standard Coolify `DATABASE_URL` are recognized automatically.
 
 ---
 
@@ -296,6 +340,29 @@ _(This automatically assigns the cluster layout, creates bucket `rexone`, and co
 
 ---
 
+### Step 5: Setup Automated Host Maintenance Cron ("Zero to Infinity" Safety Net)
+
+To ensure that the VPS disk remains healthy indefinitely without manual developer intervention, configure the automated maintenance cron on the host VPS:
+
+1. Open root crontab on the VPS host:
+   ```bash
+   sudo crontab -e
+   ```
+2. Add the scheduled weekly maintenance job (runs every Sunday at 03:00 UTC):
+   ```bash
+   0 3 * * 0 /path/to/rexone-core/scripts/vps_cleanup.sh -y >> /var/log/rexone_vps_cleanup.log 2>&1
+   ```
+   *(Replace `/path/to/rexone-core` with the absolute path to your cloned repository on the host, e.g. `/data/coolify/applications/.../rexone-core`)*
+
+3. **What this automated job cleans every week:**
+   - 🧹 **Dead/Exited Containers**: Pruned via `docker container prune -f`.
+   - 🧹 **Deployment Images**: Old images older than 7 days (`168h`) are pruned via `docker image prune -a --filter "until=168h" -f`.
+   - 🧹 **Docker BuildKit Cache**: Tagged and intermediate build layers older than 7 days (`168h`) are pruned via `docker builder prune -a --filter "until=168h" -f`.
+   - 🔒 **Absolute Volume Safety**: Database and Garage S3 volumes (`rexone-postgres-data`, `rexone-garage-data`) are NEVER pruned.
+   - 📦 **PostgreSQL Auto-Vacuum**: High-churn Solid Queue and Solid Cache tables are automatically vacuumed and compacted by PostgreSQL autovacuum.
+
+---
+
 ## 5. Deployment Verification Checklist
 
 After deploying all services, verify each component:
@@ -310,3 +377,48 @@ After deploying all services, verify each component:
 - [ ] **Solid Queue Background Jobs:** `docker logs prod-rexone-waka` shows active Solid Queue polling without errors.
 - [ ] **Web SPA Routing:** Visiting deep links (e.g. `https://rexone.me/profile`, `https://rexone.me/ai`) returns HTTP 200 and loads React correctly (not Nginx 404).
 - [ ] **Automated Maintenance & Retention:** Docker log rotation is active (`DOCKER_LOG_MAX_SIZE=10m`, `DOCKER_LOG_MAX_FILE=3`), and recurring cleanup tasks are operational. See **[MAINTENANCE.md](MAINTENANCE.md)**.
+
+---
+
+## 6. Ongoing Operations & Maintenance Playbook ("Zero to Infinity")
+
+### 6.1 Zero-Downtime Rolling Redeployments in Coolify
+When pushing new code updates to your Git repository:
+1. Coolify pulls the latest commit, builds the new Docker image using BuildKit, and boots the new container.
+2. The new container runs its native healthcheck (`curl -f http://127.0.0.1:3000/up` with `start_period: 25s`, `interval: 10s`).
+3. **Traefik Traffic Switching**: Only after the new container is marked **healthy** does Traefik switch inbound traffic to it.
+4. **Graceful Draining**: The old container receives `SIGTERM` and has `stop_grace_period: 30s` to finish processing any active in-flight requests and database transactions before terminating.
+
+### 6.2 Database Migrations During Updates
+- **Single Replica (Default)**: `docker-entrypoint` automatically executes `rake db:prepare` during startup.
+- **Horizontal Scaling / Pre-Deploy Command**: If running multiple API replicas, specify the Pre-deployment command in Coolify:
+  ```bash
+  bundle exec rake db:migrate
+  ```
+  And set `SKIP_DB_PREPARE=true` on runtime containers to prevent concurrent migration attempts.
+
+### 6.3 Host Disk & Resource Inspection (Cheat Sheet)
+Run these commands on the VPS host to audit system health:
+
+```bash
+# 1. Check VPS filesystem storage
+df -h /
+
+# 2. Check Docker disk utilization (Images, Containers, Volumes, Build Cache)
+docker system df
+
+# 3. Check container log file sizes on the host
+docker ps -q | xargs docker inspect --format='{{.Name}}: {{.LogPath}}' | xargs -n2 sh -c 'ls -lh "$2" 2>/dev/null' _
+
+# 4. Manually trigger instant VPS cleanup (bypasses cron)
+sudo /path/to/rexone-core/scripts/vps_cleanup.sh
+
+# 5. Check Rails Pulse / Solid Queue status inside API container
+docker exec -it prod-rexone-api bundle exec rails runner "puts SolidQueue::Job.count"
+```
+
+### 6.4 Rollback Procedure
+If an issue occurs after deploying a new release:
+1. In the Coolify Dashboard for `rexone-core` or `rexone-web`, navigate to **Deployments**.
+2. Select the previous stable deployment and click **Redeploy**.
+3. If database restoration is required, navigate to the PostgreSQL resource → **Backups** tab → select the desired daily snapshot → click **Restore**.

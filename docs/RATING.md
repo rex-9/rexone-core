@@ -47,8 +47,8 @@
     - **39 Background Job Specs**: Async queues, notification workers, speech processing, and retry policies.
     - **7 Real-time Channel Specs**: Bi-directional WebSocket subscriptions, connection lifecycles, and event streaming.
 - **Client Presentation Layer Verification**:
-  - `rexone-web`: **218 / 218** Vitest unit & integration tests passing + clean Vite production build.
-  - `rexone_mobile`: **97 / 97** Flutter unit & widget tests passing.
+  - `rexone-web`: **371 / 371** Vitest unit & integration tests passing + clean Vite production build.
+  - `rexone_mobile`: **322 / 322** Flutter unit & widget tests passing.
 - **Systematic Casing Engine & Rebranding**: Codified multi-platform naming conventions (`kebab-case` Docker/S3, `snake_case` Postgres, `lowercase` Flutter, `Title Case` UI) documented in [`NAMING_CONVENTIONS.md`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/docs/NAMING_CONVENTIONS.md).
 
 ---

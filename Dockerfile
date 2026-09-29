@@ -89,4 +89,8 @@ ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
 
+# Healthcheck for Coolify / Docker orchestrators
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
+  CMD curl -f http://127.0.0.1:3000/up || exit 1
+
 CMD ["./bin/rails", "server", "-b", "0.0.0.0"]

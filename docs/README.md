@@ -9,18 +9,22 @@ This directory serves as the technical documentation manual for **RexOne Core** 
 | Guide | Description | Canonical Path |
 | :--- | :--- | :--- |
 | **🚀 Ecosystem Quick Start** | Local containerized setup, database seeding, and startup debugging | **[`docs/QUICK_START.md`](QUICK_START.md)** |
+| **🏛️ System Architecture** | High-level system topology, domain services, queues, and provider boundaries | **[`docs/ARCHITECTURE.md`](ARCHITECTURE.md)** |
 | **🏛️ Foundation Architecture** | Deep dive into IAM, Devise JWT, Soft Deletion, and JSON:API conventions | **[`docs/FOUNDATION.md`](FOUNDATION.md)** |
 | **🗺️ Visual Walkthrough** | Screenshot-driven, feature-by-feature tour across all operations | **[`docs/VISUAL_WALKTHROUGH.md`](VISUAL_WALKTHROUGH.md)** |
 | **🗄️ Database Schema & Models** | Complete database schema, tables, UUID indexes, and model associations | **[`docs/SCHEMA.md`](SCHEMA.md)** |
 | **📦 Object Storage (Garage S3)** | Self-hosted S3-compatible Garage storage setup, buckets, and Cyberduck profile | **[`docs/GARAGE.md`](GARAGE.md)** |
 | **🎬 Media Processing & Streaming** | Progressive video/audio playback, FFmpeg background compression, and SRT subtitles | **[`docs/MEDIA_PLAYBACK.md`](MEDIA_PLAYBACK.md)** |
 | **🤖 AI Assistant & Speech Manual** | Queued chat, Telegram-style chunking, DeepSeek/Gemini, and TTS/STT pipelines | **[`docs/AI_MANUAL.md`](AI_MANUAL.md)** |
+| **💳 Universal Payments & IAP** | Unified Stripe, Google Play, Apple App Store, coupons, and entitlements | **[`docs/PAYMENT.md`](PAYMENT.md)** |
 | **📊 Analytics & Telemetry** | Glass-box observability, Rails Pulse APM, RED error tracking, and client logs | **[`docs/ANALYTICS.md`](ANALYTICS.md)** |
 | **⚡ Async Operations & Queues** | Solid Queue fiber + thread concurrency topology, recurring jobs, and priority pooling | **[`docs/ASYNC_OPERATIONS.md`](ASYNC_OPERATIONS.md)** |
 | **🛡️ Security & Boot Guard** | Zero-trust CORS, startup secret validation, pre-commit scanners, and hygiene | **[`docs/SECURITY.md`](SECURITY.md)** |
 | **🛑 DDoS & Rate Limiting** | Edge defense, Rack::Attack rate-limiting ladders, and abuse protection | **[`docs/DDOS.md`](DDOS.md)** |
 | **🚀 Production Deployment** | Multi-stage Docker, Coolify VPS maintenance, log rotation, and SSL reverse proxy | **[`docs/DEPLOYMENT.md`](DEPLOYMENT.md)** |
+| **🧹 Telemetry & Retention Maintenance** | Automated log rotation, Solid Queue/Cache pruning, and VPS cleanup | **[`docs/MAINTENANCE.md`](MAINTENANCE.md)** |
 | **🏷️ Naming Conventions** | Canonical identifiers (`storage_key`), parameter rules, and casing conventions | **[`docs/NAMING_CONVENTIONS.md`](NAMING_CONVENTIONS.md)** |
+| **🏆 Architectural Evaluation** | Objective engineering assessment, test suites, and quality rating | **[`docs/RATING.md`](RATING.md)** |
 
 ---
 
