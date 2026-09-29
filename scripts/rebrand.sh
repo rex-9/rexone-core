@@ -24,48 +24,67 @@ fi
 
 echo "📖 Reading brand configuration from: $(basename "$CONFIG_FILE")..."
 
-# Helper to read JSON values via ruby, node, or python3
+# Helper to read JSON values via node, python3, or ruby
 read_json() {
-  ruby -rjson -e "c = JSON.parse(File.read('$CONFIG_FILE')); val = $1; puts val unless val.nil?" 2>/dev/null || \
-  node -e "const c = require('$CONFIG_FILE'); const val = $1; if (val !== undefined) console.log(val);" 2>/dev/null || \
-  python3 -c "import json; c = json.load(open('$CONFIG_FILE')); val = $1; print(val if val is not None else '')" 2>/dev/null || true
+  local key_path="$1"
+  node -e "
+    const fs = require('fs');
+    try {
+      const c = JSON.parse(fs.readFileSync('$CONFIG_FILE', 'utf8'));
+      const parts = '$key_path'.split('.');
+      let val = c;
+      for (const p of parts) {
+        val = (val && typeof val === 'object') ? val[p] : undefined;
+      }
+      if (val !== undefined && val !== null) console.log(val);
+    } catch (_) {}
+  " 2>/dev/null || \
+  python3 -c "
+    import json
+    try:
+      c = json.load(open('$CONFIG_FILE'))
+      parts = '$key_path'.split('.')
+      val = c
+      for p in parts:
+        val = val[p] if isinstance(val, dict) else None
+      if val is not None: print(val)
+    except Exception: pass
+  " 2>/dev/null || true
 }
 
-BRAND_NAME=$(read_json "c.dig('brand', 'name')")
-BRAND_SLUG_RAW=$(read_json "c.dig('brand', 'slug')")
-BRAND_SHORT_NAME=$(read_json "c.dig('brand', 'shortName') || c.dig('brand', 'name')")
-BRAND_DESC=$(read_json "c.dig('brand', 'description')")
-BRAND_LOGO=$(read_json "c.dig('brand', 'logoPath')")
-BRAND_DOMAIN=$(read_json "c.dig('brand', 'domain')")
+BRAND_NAME=$(read_json "brand.name")
+BRAND_SLUG_RAW=$(read_json "brand.slug")
+BRAND_SHORT_NAME=$(read_json "brand.shortName")
+[ -z "$BRAND_SHORT_NAME" ] && BRAND_SHORT_NAME="$BRAND_NAME"
+BRAND_DESC=$(read_json "brand.description")
+BRAND_LOGO=$(read_json "brand.logoPath")
+BRAND_DOMAIN=$(read_json "brand.domain")
+
+MOBILE_APP_NAME=$(read_json "mobile.appName")
+[ -z "$MOBILE_APP_NAME" ] && MOBILE_APP_NAME="$BRAND_NAME"
+MOBILE_PACKAGE=$(read_json "mobile.packageName")
+
+WEB_APP_NAME=$(read_json "web.appName")
+[ -z "$WEB_APP_NAME" ] && WEB_APP_NAME="$BRAND_NAME"
+WEB_TITLE=$(read_json "web.title")
+[ -z "$WEB_TITLE" ] && WEB_TITLE="$BRAND_NAME"
+
+CORE_APP_NAME=$(read_json "core.appName")
+[ -z "$CORE_APP_NAME" ] && CORE_APP_NAME="$BRAND_NAME"
 
 SLUG_SOURCE="${BRAND_SLUG_RAW:-$BRAND_NAME}"
 
 # Derive standardized naming forms per docs/NAMING_CONVENTIONS.md
-BRAND_SLUG_KEBAB=$(ruby -e "puts '$SLUG_SOURCE'.downcase.gsub(/[^a-z0-9]+/, '-').gsub(/^-|-$/, '')" 2>/dev/null || \
-  node -e "console.log('$SLUG_SOURCE'.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))" 2>/dev/null || \
-  echo "$SLUG_SOURCE" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alnum:]' '-' | sed 's/^-//;s/-$//')
-
-BRAND_SLUG_SNAKE=$(ruby -e "puts '$SLUG_SOURCE'.downcase.gsub(/[^a-z0-9]+/, '_').gsub(/^_|_$/, '')" 2>/dev/null || \
-  node -e "console.log('$SLUG_SOURCE'.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''))" 2>/dev/null || \
-  echo "$SLUG_SOURCE" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alnum:]' '_' | sed 's/^_//;s/_$//')
-
-BRAND_SLUG_FLAT=$(ruby -e "puts '$SLUG_SOURCE'.downcase.gsub(/[^a-z0-9]/, '')" 2>/dev/null || \
-  node -e "console.log('$SLUG_SOURCE'.toLowerCase().replace(/[^a-z0-9]/g, ''))" 2>/dev/null || \
-  echo "$SLUG_SOURCE" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]')
-
-BRAND_PASCAL=$(ruby -e "puts '$SLUG_SOURCE'.split(/[^a-zA-Z0-9]+/).map(&:capitalize).join" 2>/dev/null || echo "$BRAND_NAME")
+BRAND_SLUG_KEBAB=$(node -e "console.log('$SLUG_SOURCE'.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))" 2>/dev/null || echo "$SLUG_SOURCE" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alnum:]' '-' | sed 's/^-//;s/-$//')
+BRAND_SLUG_SNAKE=$(node -e "console.log('$SLUG_SOURCE'.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''))" 2>/dev/null || echo "$SLUG_SOURCE" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alnum:]' '_' | sed 's/^_//;s/_$//')
+BRAND_SLUG_FLAT=$(node -e "console.log('$SLUG_SOURCE'.toLowerCase().replace(/[^a-z0-9]/g, ''))" 2>/dev/null || echo "$SLUG_SOURCE" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]')
 
 if [ -z "$BRAND_DOMAIN" ]; then
   BRAND_DOMAIN="${BRAND_SLUG_FLAT}.com"
 fi
-
-MOBILE_APP_NAME=$(read_json "c.dig('mobile', 'appName') || \"${BRAND_NAME} Mobile\"")
-MOBILE_PACKAGE=$(read_json "c.dig('mobile', 'packageName') || \"com.rex9.${BRAND_SLUG_FLAT}\"")
-
-WEB_APP_NAME=$(read_json "c.dig('web', 'appName') || \"${BRAND_NAME} Web\"")
-WEB_TITLE=$(read_json "c.dig('web', 'title') || \"${BRAND_NAME} — Product Foundation\"")
-
-CORE_APP_NAME=$(read_json "c.dig('core', 'appName') || \"${BRAND_NAME} Core\"")
+if [ -z "$MOBILE_PACKAGE" ]; then
+  MOBILE_PACKAGE="com.rex9.${BRAND_SLUG_FLAT}"
+fi
 
 RESOLVED_LOGO_PATH=""
 if [ -n "$BRAND_LOGO" ]; then
@@ -108,8 +127,8 @@ update_env_var() {
   local val="$3"
 
   if [ -f "$target_file" ]; then
-    if grep -q "^#* *${key}=" "$target_file"; then
-      sedi -E "s|^#* *${key}=.*|${key}=${val}|g" "$target_file"
+    if grep -q "^${key}=" "$target_file"; then
+      sedi -E "s|^${key}=.*|${key}=${val}|g" "$target_file"
     fi
   fi
 }
@@ -119,25 +138,30 @@ update_env_var() {
 # ------------------------------------------------------------
 echo "⚙️  Rebranding Core Backend & Infrastructure..."
 
-# Update Core .env and .env.example files
-for env_file in "$CORE_DIR"/.env*; do
-  if [ -f "$env_file" ]; then
-    update_env_var "$env_file" "APP_NAME" "\"$CORE_APP_NAME\""
-    update_env_var "$env_file" "PRODUCT_DOMAIN" "$BRAND_DOMAIN"
-    update_env_var "$env_file" "RAILS_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-api"
-    update_env_var "$env_file" "WAKA_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-waka"
-    update_env_var "$env_file" "DB_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-db"
-    update_env_var "$env_file" "MEDIA_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-media"
-    update_env_var "$env_file" "GARAGE_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-garage"
-    update_env_var "$env_file" "PG_DATABASE" "${BRAND_SLUG_SNAKE}_core"
-    update_env_var "$env_file" "S3_BUCKET" "${BRAND_SLUG_KEBAB}"
-    update_env_var "$env_file" "S3_ADMIN_TOKEN" "${BRAND_SLUG_SNAKE}_garage_admin_token_secret_key_12345"
-    update_env_var "$env_file" "RAILS_JWT_SECRET_KEY" "${BRAND_SLUG_SNAKE}"
-    update_env_var "$env_file" "FROM_EMAIL" "support@${BRAND_DOMAIN}"
-    update_env_var "$env_file" "SMTP_DOMAIN" "${BRAND_DOMAIN}"
-    echo "  ✅ Core: Updated env variables in $(basename "$env_file")"
+# Update Core .env.example file (Law U16 & Secret Isolation: never touch local gitignored .env files)
+if [ -f "$CORE_DIR/.env.example" ]; then
+  env_from_email="support@${BRAND_DOMAIN}"
+  env_smtp_domain="${BRAND_DOMAIN}"
+  if [ "$BRAND_NAME" = "RexOne" ]; then
+    env_from_email="support@rexone.me"
+    env_smtp_domain="rexone.me"
   fi
-done
+  update_env_var "$CORE_DIR/.env.example" "PG_DATABASE" "${BRAND_SLUG_SNAKE}_core"
+  update_env_var "$CORE_DIR/.env.example" "S3_BUCKET" "${BRAND_SLUG_KEBAB}"
+  update_env_var "$CORE_DIR/.env.example" "FROM_EMAIL" "${env_from_email}"
+  update_env_var "$CORE_DIR/.env.example" "SMTP_DOMAIN" "${env_smtp_domain}"
+  update_env_var "$CORE_DIR/.env.example" "RAILS_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-api"
+  update_env_var "$CORE_DIR/.env.example" "WAKA_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-waka"
+  update_env_var "$CORE_DIR/.env.example" "DB_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-db"
+  update_env_var "$CORE_DIR/.env.example" "MEDIA_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-media"
+  update_env_var "$CORE_DIR/.env.example" "GARAGE_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-garage"
+  # Commented example lines in .env.example
+  sedi -E "s|^# PRODUCT_DOMAIN=.*|# PRODUCT_DOMAIN=${env_smtp_domain}|g" "$CORE_DIR/.env.example"
+  sedi -E "s|^# CORS_ORIGINS=.*|# CORS_ORIGINS=https://${env_smtp_domain},https://uat.${env_smtp_domain}|g" "$CORE_DIR/.env.example"
+  sedi -E "s|^# GOOGLE_PLAY_PACKAGE_NAME=.*|# GOOGLE_PLAY_PACKAGE_NAME=${MOBILE_PACKAGE}|g" "$CORE_DIR/.env.example"
+  sedi -E "s|^# APPLE_APP_STORE_BUNDLE_ID=.*|# APPLE_APP_STORE_BUNDLE_ID=${MOBILE_PACKAGE}|g" "$CORE_DIR/.env.example"
+  echo "  ✅ Core: Updated .env.example"
+fi
 
 # Update Core docker-compose.yaml (Production / Coolify)
 if [ -f "$CORE_DIR/docker-compose.yaml" ]; then
@@ -158,7 +182,138 @@ fi
 # Update Core docker-compose.dev.yaml (Development)
 if [ -f "$CORE_DIR/docker-compose.dev.yaml" ]; then
   sedi -E "s|container_name: \\\$\{GARAGE_CONTAINER_NAME:-[^}]*\}|container_name: \${GARAGE_CONTAINER_NAME:-dev-${BRAND_SLUG_KEBAB}-core-garage}|g" "$CORE_DIR/docker-compose.dev.yaml"
+  sedi -E "s|container_name: \\\$\{DB_CONTAINER_NAME:-[^}]*\}|container_name: \${DB_CONTAINER_NAME:-dev-${BRAND_SLUG_KEBAB}-core-db}|g" "$CORE_DIR/docker-compose.dev.yaml"
+  sedi -E "s|container_name: \\\$\{RAILS_CONTAINER_NAME:-[^}]*\}|container_name: \${RAILS_CONTAINER_NAME:-dev-${BRAND_SLUG_KEBAB}-core-api}|g" "$CORE_DIR/docker-compose.dev.yaml"
+  sedi -E "s|container_name: \\\$\{WAKA_CONTAINER_NAME:-[^}]*\}|container_name: \${WAKA_CONTAINER_NAME:-dev-${BRAND_SLUG_KEBAB}-core-waka}|g" "$CORE_DIR/docker-compose.dev.yaml"
+  sedi -E "s|container_name: \\\$\{MEDIA_CONTAINER_NAME:-[^}]*\}|container_name: \${MEDIA_CONTAINER_NAME:-dev-${BRAND_SLUG_KEBAB}-core-media}|g" "$CORE_DIR/docker-compose.dev.yaml"
   echo "  ✅ Core: Synchronized docker-compose.dev.yaml"
+fi
+
+# Update Core maintenance scripts with new container/DB fallbacks
+if [ -f "$CORE_DIR/scripts/backup_db.sh" ]; then
+  sedi -E "s/dev-[a-z0-9_-]*-core-db/dev-${BRAND_SLUG_KEBAB}-core-db/g" "$CORE_DIR/scripts/backup_db.sh"
+  sedi -E "s/[a-z0-9_]*_core_production/${BRAND_SLUG_SNAKE}_core_production/g" "$CORE_DIR/scripts/backup_db.sh"
+  sedi -E "s/[a-z0-9_]*_core_development/${BRAND_SLUG_SNAKE}_core_development/g" "$CORE_DIR/scripts/backup_db.sh"
+  echo "  ✅ Core: Synchronized scripts/backup_db.sh"
+fi
+if [ -f "$CORE_DIR/scripts/backup_garage.sh" ]; then
+  sedi -E "s/dev-[a-z0-9_-]*-core-garage/dev-${BRAND_SLUG_KEBAB}-core-garage/g" "$CORE_DIR/scripts/backup_garage.sh"
+  echo "  ✅ Core: Synchronized scripts/backup_garage.sh"
+fi
+if [ -f "$CORE_DIR/scripts/dev_garage.sh" ]; then
+  sedi -E "s/dev-[a-z0-9_-]*-core-garage/dev-${BRAND_SLUG_KEBAB}-core-garage/g" "$CORE_DIR/scripts/dev_garage.sh"
+  sedi -E "s/KEY_NAME=\"[^\"]*\"/KEY_NAME=\"${BRAND_SLUG_KEBAB}-key\"/g" "$CORE_DIR/scripts/dev_garage.sh"
+  sedi -E "s/BUCKET_NAME=\"\\\$\{S3_BUCKET:-[^}]*\}\"/BUCKET_NAME=\"\${S3_BUCKET:-${BRAND_SLUG_KEBAB}}\"/g" "$CORE_DIR/scripts/dev_garage.sh"
+  echo "  ✅ Core: Synchronized scripts/dev_garage.sh"
+fi
+if [ -f "$CORE_DIR/scripts/prod_garage_init.sh" ]; then
+  sedi -E "s/GARAGE_KEY_NAME:-[a-z0-9_-]*-key/GARAGE_KEY_NAME:-${BRAND_SLUG_KEBAB}-key/g" "$CORE_DIR/scripts/prod_garage_init.sh"
+  echo "  ✅ Core: Synchronized scripts/prod_garage_init.sh"
+fi
+
+# Update Core application config fallbacks
+if [ -f "$CORE_DIR/config/app_config.rb" ]; then
+  smtp_domain="${BRAND_DOMAIN}"
+  from_email="support@${BRAND_DOMAIN}"
+  if [ "$BRAND_NAME" = "RexOne" ]; then
+    smtp_domain="rexone.me"
+    from_email="support@rexone.me"
+  fi
+  sedi -E "s/env_or\.call\(\"RAILS_JWT_SECRET_KEY\", \"[^\"]*\"\)/env_or.call(\"RAILS_JWT_SECRET_KEY\", \"${BRAND_SLUG_SNAKE}\")/g" "$CORE_DIR/config/app_config.rb"
+  sedi -E "s/env_or\.call\(\"SMTP_DOMAIN\", \"[^\"]*\"\)/env_or.call(\"SMTP_DOMAIN\", \"${smtp_domain}\")/g" "$CORE_DIR/config/app_config.rb"
+  sedi -E "s/env_or\.call\(\"FROM_EMAIL\", \"[^\"]*\"\)/env_or.call(\"FROM_EMAIL\", \"${from_email}\")/g" "$CORE_DIR/config/app_config.rb"
+  sedi -E "s/env_or\.call\(\"S3_BUCKET\", \"[^\"]*\"\)/env_or.call(\"S3_BUCKET\", \"${BRAND_SLUG_KEBAB}\")/g" "$CORE_DIR/config/app_config.rb"
+  sedi -E "s/\"[a-z0-9_-]+:\/\/\"\)/\"${BRAND_SLUG_KEBAB}:\/\/\")/g" "$CORE_DIR/config/app_config.rb"
+  echo "  ✅ Core: Synchronized config/app_config.rb fallbacks"
+fi
+
+# Update Core database configuration templates
+for db_file in "$CORE_DIR/config/database.yml" "$CORE_DIR/config/database.example.yml"; do
+  if [ -f "$db_file" ]; then
+    sedi -E "s/[a-z0-9_]+_core_development/${BRAND_SLUG_SNAKE}_core_development/g" "$db_file"
+    sedi -E "s/[a-z0-9_]+_core_test/${BRAND_SLUG_SNAKE}_core_test/g" "$db_file"
+    sedi -E "s/[a-z0-9_]+_core_production/${BRAND_SLUG_SNAKE}_core_production/g" "$db_file"
+    sedi -E "s/username: [a-z0-9_]+_core/username: ${BRAND_SLUG_SNAKE}_core/g" "$db_file"
+    echo "  ✅ Core: Synchronized $(basename "$db_file")"
+  fi
+done
+
+# Update Core garage.toml tokens
+if [ -f "$CORE_DIR/config/garage.toml" ]; then
+  sedi -E "s/admin_token = \"[^\"]*\"/admin_token = \"${BRAND_SLUG_SNAKE}_garage_admin_token_secret_key_12345\"/g" "$CORE_DIR/config/garage.toml"
+  sedi -E "s/metrics_token = \"[^\"]*\"/metrics_token = \"${BRAND_SLUG_SNAKE}_garage_metrics_token_secret_key_12345\"/g" "$CORE_DIR/config/garage.toml"
+  echo "  ✅ Core: Synchronized config/garage.toml"
+fi
+
+# Update Core security boot guard
+if [ -f "$CORE_DIR/config/initializers/security_boot_guard.rb" ]; then
+  sedi -E "s/\"[a-z0-9_]+_garage_admin_token_secret_key_12345\"/\"${BRAND_SLUG_SNAKE}_garage_admin_token_secret_key_12345\"/g" "$CORE_DIR/config/initializers/security_boot_guard.rb"
+  echo "  ✅ Core: Synchronized config/initializers/security_boot_guard.rb"
+fi
+
+# Update Core Devise mailer sender
+if [ -f "$CORE_DIR/config/initializers/devise.rb" ]; then
+  mailer_sender="support@${BRAND_DOMAIN}"
+  if [ "$BRAND_NAME" = "RexOne" ]; then
+    mailer_sender="rex@rexone.me"
+  fi
+  sedi -E "s/config\.mailer_sender = \"[^\"]*\"/config.mailer_sender = \"${mailer_sender}\"/g" "$CORE_DIR/config/initializers/devise.rb"
+  echo "  ✅ Core: Synchronized config/initializers/devise.rb"
+fi
+
+# Update Core speech user agent & session system
+if [ -f "$CORE_DIR/app/constants/speech_constants.rb" ]; then
+  sedi -E "s/AZURE_USER_AGENT = \"[^\"]*\"/AZURE_USER_AGENT = \"${BRAND_SLUG_KEBAB}-core\"/g" "$CORE_DIR/app/constants/speech_constants.rb"
+  echo "  ✅ Core: Synchronized speech_constants.rb"
+fi
+if [ -f "$CORE_DIR/app/services/speech_service/session.rb" ]; then
+  sedi -E "s/name: \"[a-z0-9_-]+-core\"/name: \"${BRAND_SLUG_KEBAB}-core\"/g" "$CORE_DIR/app/services/speech_service/session.rb"
+  echo "  ✅ Core: Synchronized speech_service/session.rb"
+fi
+
+# Update Core notification defaults and locales
+if [ -f "$CORE_DIR/app/constants/notification_constants.rb" ]; then
+  sedi -E "s/Welcome to [A-Za-z0-9_-]+/Welcome to ${BRAND_NAME}/g" "$CORE_DIR/app/constants/notification_constants.rb"
+  sedi -E "s/joining [A-Za-z0-9_-]+!/joining ${BRAND_NAME}!/g" "$CORE_DIR/app/constants/notification_constants.rb"
+  echo "  ✅ Core: Synchronized notification_constants.rb"
+fi
+if [ -f "$CORE_DIR/config/locales/notification.en.yml" ]; then
+  sedi -E "s/[a-zA-Z0-9_-]+ will be temporarily unavailable/${BRAND_NAME} will be temporarily unavailable/g" "$CORE_DIR/config/locales/notification.en.yml"
+  sedi -E "s/A new [a-zA-Z0-9_-]+ feature/A new ${BRAND_NAME} feature/g" "$CORE_DIR/config/locales/notification.en.yml"
+  echo "  ✅ Core: Synchronized notification.en.yml"
+fi
+if [ -f "$CORE_DIR/config/locales/notification.my.yml" ]; then
+  sedi -E "s/စနစ် ပြင်ဆင်နေစဉ် [^\" ]+ ကို/စနစ် ပြင်ဆင်နေစဉ် ${BRAND_NAME} ကို/g" "$CORE_DIR/config/locales/notification.my.yml"
+  sedi -E "s/\"[^\" ]+ လုပ်ဆောင်ချက်အသစ်/\"${BRAND_NAME} လုပ်ဆောင်ချက်အသစ်/g" "$CORE_DIR/config/locales/notification.my.yml"
+  echo "  ✅ Core: Synchronized notification.my.yml"
+fi
+
+# Update Core email template renderer
+if [ -f "$CORE_DIR/app/services/email_service/template_renderer.rb" ]; then
+  sedi -E "s/registered user of [^.]+\./registered user of ${BRAND_NAME}./g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/Confirm your [a-zA-Z0-9_-]+ email/Confirm your ${BRAND_NAME} email/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/Reset your [a-zA-Z0-9_-]+ passcode/Reset your ${BRAND_NAME} passcode/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/Welcome to [a-zA-Z0-9_-]+/Welcome to ${BRAND_NAME}/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/joining [a-zA-Z0-9_-]+(\.|\!)/joining ${BRAND_NAME}\1/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/Open [a-zA-Z0-9_-]+/Open ${BRAND_NAME}/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  copyright_name="${BRAND_NAME}"
+  if [ "$BRAND_NAME" = "RexOne" ]; then
+    copyright_name="RexOne Ecosystem"
+  fi
+  sedi -E "s/(&copy;|\\&copy;)[^<]+/\\&copy; 2026 ${copyright_name}. All rights reserved./g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  echo "  ✅ Core: Synchronized template_renderer.rb"
+fi
+
+# Update Core Swagger title
+if [ -f "$CORE_DIR/spec/swagger_helper.rb" ]; then
+  sedi -E "s/title: '[^']* Core API'/title: '${BRAND_NAME} Core API'/g" "$CORE_DIR/spec/swagger_helper.rb"
+  echo "  ✅ Core: Synchronized spec/swagger_helper.rb"
+fi
+
+# Update Core admin stylesheet comment
+if [ -f "$CORE_DIR/app/assets/stylesheets/admin.css" ]; then
+  sedi -E "s/[a-zA-Z0-9_-]+ Design Tokens/${BRAND_NAME} Design Tokens/g" "$CORE_DIR/app/assets/stylesheets/admin.css"
+  echo "  ✅ Core: Synchronized admin.css"
 fi
 
 # ------------------------------------------------------------
@@ -170,33 +325,50 @@ if [ -d "$WEB_DIR" ]; then
 
   # Update index.html (Title, Metadata, Canonical, OpenGraph, Twitter, Schema.org)
   if [ -f "$WEB_DIR/index.html" ]; then
-    sedi -E "s|<title>.*</title>|<title>$WEB_TITLE</title>|g" "$WEB_DIR/index.html"
-    sedi -E "s|<meta name=\"title\" content=\"[^\"]*\"|<meta name=\"title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|<link rel=\"canonical\" href=\"[^\"]*\"|<link rel=\"canonical\" href=\"https://${BRAND_DOMAIN}/\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|<meta property=\"og:site_name\" content=\"[^\"]*\"|<meta property=\"og:site_name\" content=\"${BRAND_NAME} Ecosystem\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|<meta property=\"og:title\" content=\"[^\"]*\"|<meta property=\"og:title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|<meta property=\"og:url\" content=\"[^\"]*\"|<meta property=\"og:url\" content=\"https://${BRAND_DOMAIN}/\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|<meta name=\"twitter:title\" content=\"[^\"]*\"|<meta name=\"twitter:title\" content=\"$WEB_TITLE\"|g" "$WEB_DIR/index.html"
-    sedi -E "s|<meta name=\"twitter:url\" content=\"[^\"]*\"|<meta name=\"twitter:url\" content=\"https://${BRAND_DOMAIN}/\"|g" "$WEB_DIR/index.html"
-    if [ -n "$BRAND_DESC" ]; then
-      sedi -E "s|<meta name=\"description\" content=\"[^\"]*\"|<meta name=\"description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
-      sedi -E "s|<meta property=\"og:description\" content=\"[^\"]*\"|<meta property=\"og:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
-      sedi -E "s|<meta name=\"twitter:description\" content=\"[^\"]*\"|<meta name=\"twitter:description\" content=\"$BRAND_DESC\"|g" "$WEB_DIR/index.html"
+    if [ "$BRAND_NAME" = "RexOne" ]; then
+      node -e "
+        const fs = require('fs');
+        const f = '$WEB_DIR/index.html';
+        let c = fs.readFileSync(f, 'utf8');
+        c = c.replace(/<title>[^<]*<\/title>/, '<title>RexOne | Discipline-Driven Development (DDD) | Start from One. Not from Zero. | By Htet Naing (Rex9)<\/title>');
+        c = c.replace(/<meta name=\"title\" content=\"[^\"]*\" \/>/, '<meta name=\"title\" content=\"RexOne | Discipline-Driven Development (DDD) | Start from One. Not from Zero. | By Htet Naing (Rex9)\" \/>');
+        c = c.replace(/<meta name=\"description\" content=\"[^\"]*\" \/>/, '<meta name=\"description\" content=\"Start from One. Not from Zero. RexOne is the home of Discipline-Driven Development (DDD)—the codified product engineering foundation and architectural constitution for humans and AI coding agents across Rails 8 API, React 19 Web, and Flutter Mobile. Created by Htet Naing (Rex9).\" \/>');
+        c = c.replace(/<link rel=\"canonical\" href=\"[^\"]*\" \/>/, '<link rel=\"canonical\" href=\"https://rexone.rex9.me\/\" \/>');
+        c = c.replace(/<meta property=\"og:site_name\" content=\"[^\"]*\" \/>/, '<meta property=\"og:site_name\" content=\"RexOne Sovereign Ecosystem\" \/>');
+        c = c.replace(/<meta property=\"og:title\" content=\"[^\"]*\" \/>/, '<meta property=\"og:title\" content=\"RexOne | Discipline-Driven Development (DDD) | By Htet Naing (Rex9)\" \/>');
+        c = c.replace(/<meta property=\"og:description\" content=\"[^\"]*\" \/>/, '<meta property=\"og:description\" content=\"Start from One. Not from Zero. RexOne pioneers Discipline-Driven Development (DDD)—the battle-tested product foundation and architectural constitution for humans and AI agents. Created by Htet Naing (Rex9).\" \/>');
+        c = c.replace(/<meta property=\"og:url\" content=\"[^\"]*\" \/>/, '<meta property=\"og:url\" content=\"https://rexone.rex9.me\/\" \/>');
+        c = c.replace(/<meta name=\"twitter:title\" content=\"[^\"]*\" \/>/, '<meta name=\"twitter:title\" content=\"RexOne | Discipline-Driven Development (DDD) | By Htet Naing (Rex9)\" \/>');
+        c = c.replace(/<meta name=\"twitter:description\" content=\"[^\"]*\" \/>/, '<meta name=\"twitter:description\" content=\"Start from One. Not from Zero. RexOne pioneers Discipline-Driven Development (DDD)—the battle-tested product foundation and architectural constitution for humans and AI agents. Created by Htet Naing (Rex9).\" \/>');
+        c = c.replace(/<meta name=\"twitter:url\" content=\"[^\"]*\" \/>/, '<meta name=\"twitter:url\" content=\"https://rexone.rex9.me\/\" \/>');
+        c = c.replace(/(\"@type\":\s*\"SoftwareApplication\",\s*\"name\":\s*\")[^\"]*(\")/, '\$1RexOne\$2');
+        c = c.replace(/(\"slogan\":\s*\"[^\"]*\",\s*\"description\":\s*\"[^\"]*\",\s*\"url\":\s*\")[^\"]*(\")/, '\$1https://rexone.rex9.me\$2');
+        fs.writeFileSync(f, c);
+      " 2>/dev/null || true
+    else
+      node -e "
+        const fs = require('fs');
+        const [title, domain, brand, desc] = process.argv.slice(1);
+        const f = '$WEB_DIR/index.html';
+        let c = fs.readFileSync(f, 'utf8');
+        c = c.replace(/<title>[^<]*<\/title>/, () => '<title>' + title + '</title>');
+        c = c.replace(/<meta name=\"title\" content=\"[^\"]*\" \/>/, () => '<meta name=\"title\" content=\"' + title + '\" />');
+        c = c.replace(/<link rel=\"canonical\" href=\"[^\"]*\" \/>/, () => '<link rel=\"canonical\" href=\"https://' + domain + '/\" />');
+        c = c.replace(/<meta property=\"og:site_name\" content=\"[^\"]*\" \/>/, () => '<meta property=\"og:site_name\" content=\"' + brand + '\" />');
+        c = c.replace(/<meta property=\"og:title\" content=\"[^\"]*\" \/>/, () => '<meta property=\"og:title\" content=\"' + title + '\" />');
+        c = c.replace(/<meta property=\"og:url\" content=\"[^\"]*\" \/>/, () => '<meta property=\"og:url\" content=\"https://' + domain + '/\" />');
+        c = c.replace(/<meta name=\"twitter:title\" content=\"[^\"]*\" \/>/, () => '<meta name=\"twitter:title\" content=\"' + title + '\" />');
+        c = c.replace(/<meta name=\"twitter:url\" content=\"[^\"]*\" \/>/, () => '<meta name=\"twitter:url\" content=\"https://' + domain + '/\" />');
+        if (desc) {
+          c = c.replace(/<meta name=\"description\" content=\"[^\"]*\" \/>/, () => '<meta name=\"description\" content=\"' + desc + '\" />');
+          c = c.replace(/<meta property=\"og:description\" content=\"[^\"]*\" \/>/, () => '<meta property=\"og:description\" content=\"' + desc + '\" />');
+          c = c.replace(/<meta name=\"twitter:description\" content=\"[^\"]*\" \/>/, () => '<meta name=\"twitter:description\" content=\"' + desc + '\" />');
+        }
+        c = c.replace(/(\"@type\":\s*\"SoftwareApplication\",\s*\"name\":\s*\")[^\"]*(\")/, (_, p1, p2) => p1 + brand + p2);
+        c = c.replace(/(\"slogan\":\s*\"[^\"]*\",\s*\"description\":\s*\"[^\"]*\",\s*\"url\":\s*\")[^\"]*(\")/, (_, p1, p2) => p1 + 'https://' + domain + p2);
+        fs.writeFileSync(f, c);
+      " "$WEB_TITLE" "$BRAND_DOMAIN" "$BRAND_NAME" "$BRAND_DESC"
     fi
-
-    # Update Schema.org SoftwareApplication name and canonical url while strictly preserving author, isBasedOn and creditText lineage (Law U16)
-    ruby -e "
-      content = File.read('$WEB_DIR/index.html')
-      content.sub!(/(\"@type\":\s*\"SoftwareApplication\",\s*\"name\":\s*\")[^\"]*(\")/, \"\\\1$BRAND_NAME\\\2\")
-      content.sub!(/(\"slogan\":\s*\"[^\"]*\",\s*\"description\":\s*\"[^\"]*\",\s*\"url\":\s*\")[^\"]*(\")/, \"\\\1https://${BRAND_DOMAIN}\\\2\")
-      File.write('$WEB_DIR/index.html', content)
-    " 2>/dev/null || node -e "
-      const fs = require('fs');
-      let content = fs.readFileSync('$WEB_DIR/index.html', 'utf8');
-      content = content.replace(/(\"@type\":\s*\"SoftwareApplication\",\s*\"name\":\s*\")[^\"]*(\")/, '\$1$BRAND_NAME\$2');
-      content = content.replace(/(\"slogan\":\s*\"[^\"]*\",\s*\"description\":\s*\"[^\"]*\",\s*\"url\":\s*\")[^\"]*(\")/, '\$1https://${BRAND_DOMAIN}\$2');
-      fs.writeFileSync('$WEB_DIR/index.html', content);
-    " 2>/dev/null || true
     echo "  ✅ Web: Updated index.html (Metadata, OpenGraph, Canonical & Schema.org preserving lineage)"
   fi
 
@@ -213,33 +385,29 @@ if [ -d "$WEB_DIR" ]; then
 
   # Update llms.txt and llms-full.txt preserving RexOne Foundation Lineage & Moral Attribution Code (Law U16)
   if [ -f "$WEB_DIR/public/llms.txt" ]; then
-    ruby -e "
-      content = File.read('$WEB_DIR/public/llms.txt')
-      content.sub!(/\A#\s+[^\n]+/, '# $BRAND_NAME (Powered by RexOne): Sovereign Tri-Platform Application Foundation')
-      content.sub!(/>\s*\*\*Official Website:\*\*\s*[^\n]*/, '> **Official Website:** https://${BRAND_DOMAIN}')
-      File.write('$WEB_DIR/public/llms.txt', content)
-    " 2>/dev/null || node -e "
+    node -e "
       const fs = require('fs');
-      let content = fs.readFileSync('$WEB_DIR/public/llms.txt', 'utf8');
-      content = content.replace(/^#\s+[^\n]+/m, '# $BRAND_NAME (Powered by RexOne): Sovereign Tri-Platform Application Foundation');
-      content = content.replace(/>\s*\*\*Official Website:\*\*\s*[^\n]*/, '> **Official Website:** https://${BRAND_DOMAIN}');
-      fs.writeFileSync('$WEB_DIR/public/llms.txt', content);
+      try {
+        let content = fs.readFileSync('$WEB_DIR/public/llms.txt', 'utf8');
+        const title = ('$BRAND_NAME' === 'RexOne') ? '# RexOne: The Sovereign Tri-Platform Application Foundation & Full-Stack Masterclass' : '# $BRAND_NAME (Powered by RexOne): Sovereign Tri-Platform Application Foundation';
+        content = content.replace(/^#\s+[^\n]+/m, title);
+        content = content.replace(/>\s*\*\*Official Website:\*\*\s*[^\n]*/, '> **Official Website:** https://${BRAND_DOMAIN}  ');
+        fs.writeFileSync('$WEB_DIR/public/llms.txt', content);
+      } catch (_) {}
     " 2>/dev/null || true
     echo "  ✅ Web: Updated public/llms.txt (Preserving RexOne Foundation Lineage & Moral Attribution Directive)"
   fi
 
   if [ -f "$WEB_DIR/public/llms-full.txt" ]; then
-    ruby -e "
-      content = File.read('$WEB_DIR/public/llms-full.txt')
-      content.sub!(/\A#\s+[^\n]+/, '# $BRAND_NAME (Powered by RexOne): Full Architectural Specification')
-      content.sub!(/>\s*\*\*Official Hub:\*\*\s*[^\n]*/, '> **Official Hub:** https://${BRAND_DOMAIN}')
-      File.write('$WEB_DIR/public/llms-full.txt', content)
-    " 2>/dev/null || node -e "
+    node -e "
       const fs = require('fs');
-      let content = fs.readFileSync('$WEB_DIR/public/llms-full.txt', 'utf8');
-      content = content.replace(/^#\s+[^\n]+/m, '# $BRAND_NAME (Powered by RexOne): Full Architectural Specification');
-      content = content.replace(/>\s*\*\*Official Hub:\*\*\s*[^\n]*/, '> **Official Hub:** https://${BRAND_DOMAIN}');
-      fs.writeFileSync('$WEB_DIR/public/llms-full.txt', content);
+      try {
+        let content = fs.readFileSync('$WEB_DIR/public/llms-full.txt', 'utf8');
+        const title = ('$BRAND_NAME' === 'RexOne') ? '# RexOne: Full Architectural Specification & Developer Reference' : '# $BRAND_NAME (Powered by RexOne): Full Architectural Specification';
+        content = content.replace(/^#\s+[^\n]+/m, title);
+        content = content.replace(/>\s*\*\*Official Hub:\*\*\s*[^\n]*/, '> **Official Hub:** https://${BRAND_DOMAIN}  ');
+        fs.writeFileSync('$WEB_DIR/public/llms-full.txt', content);
+      } catch (_) {}
     " 2>/dev/null || true
     echo "  ✅ Web: Updated public/llms-full.txt (Preserving RexOne Foundation Lineage & Moral Attribution Directive)"
   fi
@@ -250,35 +418,96 @@ if [ -d "$WEB_DIR" ]; then
     echo "  ✅ Web: Updated package.json (\"name\": \"$BRAND_SLUG_KEBAB-web\")"
   fi
 
+  # Update AppConfig.tsx default APP_NAME fallback
+  if [ -f "$WEB_DIR/src/AppConfig.tsx" ]; then
+    app_name_fallback="$BRAND_NAME"
+    if [ "$BRAND_NAME" = "RexOne" ]; then
+      app_name_fallback="rexone.me"
+    fi
+    sedi -E "s/APP_NAME = import\.meta\.env\.VITE_REACT_APP_NAME \|\| \"[^\"]*\"/APP_NAME = import.meta.env.VITE_REACT_APP_NAME || \"$app_name_fallback\"/g" "$WEB_DIR/src/AppConfig.tsx"
+    echo "  ✅ Web: Updated AppConfig.tsx default APP_NAME to \"$app_name_fallback\""
+  fi
+
+
   # Update queryClient cache key
   if [ -f "$WEB_DIR/src/services/queryClient.ts" ]; then
-    sedi -E "s/\"[a-z0-9_-]+_react_query_cache\"/\"${BRAND_SLUG_SNAKE}_react_query_cache\"/g" "$WEB_DIR/src/services/queryClient.ts"
+    sedi -E "s/\"[a-z0-9_-]*_react_query_cache\"/\"${BRAND_SLUG_SNAKE}_react_query_cache\"/g" "$WEB_DIR/src/services/queryClient.ts"
     echo "  ✅ Web: Updated React Query cache key to \"${BRAND_SLUG_SNAKE}_react_query_cache\""
   fi
 
-  # Update locales/en.json if brand name mentioned
+  # Update locales/en.json and my.json
   if [ -f "$WEB_DIR/src/locales/en.json" ]; then
-    sedi -E "s/\"title\": \"Welcome to [^\"]*\"/\"title\": \"Welcome to $BRAND_NAME\"/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/\"Welcome to [^\"]*\"/\"Welcome to $BRAND_NAME\"/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/to help improve [a-zA-Z0-9_-]+\./to help improve ${BRAND_NAME}./g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/e\.g\. Open [a-zA-Z0-9_-]+/e.g. Open ${BRAND_NAME}/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/Defaults to 'Open [a-zA-Z0-9_-]+'/Defaults to 'Open ${BRAND_NAME}'/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/Tap to open in [a-zA-Z0-9_-]+/Tap to open in ${BRAND_NAME}/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/[a-zA-Z0-9_-]+ Ecosystem •/${BRAND_NAME} Ecosystem •/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/joining [a-zA-Z0-9_-]+!/joining ${BRAND_NAME}!/g" "$WEB_DIR/src/locales/en.json"
     echo "  ✅ Web: Updated brand references in src/locales/en.json"
   fi
+  if [ -f "$WEB_DIR/src/locales/my.json" ]; then
+    sedi -E "s/\"[^\" ]+ ပိုမိုကောင်းမွန်စေရန်/\"${BRAND_NAME} ပိုမိုကောင်းမွန်စေရန်/g" "$WEB_DIR/src/locales/my.json"
+    sedi -E "s/\"[^\" ]+ မှ ကြိုဆိုပါသည်\"/\"${BRAND_NAME} မှ ကြိုဆိုပါသည်\"/g" "$WEB_DIR/src/locales/my.json"
+    sedi -E "s/Open [^၊]+၊/Open ${BRAND_NAME}၊/g" "$WEB_DIR/src/locales/my.json"
+    sedi -E "s/'Open [^']+' ဖြစ်မည်/'Open ${BRAND_NAME}' ဖြစ်မည်/g" "$WEB_DIR/src/locales/my.json"
+    sedi -E "s/\"[^\" ]+ တွင် ဖွင့်ကြည့်ရန်/\"${BRAND_NAME} တွင် ဖွင့်ကြည့်ရန်/g" "$WEB_DIR/src/locales/my.json"
+    sedi -E "s/\"[^\" ]+ ဂေဟစနစ် •/\"${BRAND_NAME} ဂေဟစနစ် •/g" "$WEB_DIR/src/locales/my.json"
+    echo "  ✅ Web: Updated brand references in src/locales/my.json"
+  fi
 
-  # Update Web .env files and .env.example
-  for env_file in "$WEB_DIR"/.env*; do
-    if [ -f "$env_file" ]; then
-      update_env_var "$env_file" "VITE_APP_NAME" "\"$WEB_APP_NAME\""
-      update_env_var "$env_file" "VITE_REACT_APP_NAME" "$BRAND_NAME"
-      echo "  ✅ Web: Updated $(basename "$env_file")"
+  # Update Web .env.example (Law U16 & Secret Isolation)
+  if [ -f "$WEB_DIR/.env.example" ]; then
+    web_env_name="$BRAND_NAME"
+    web_domain="${BRAND_DOMAIN}"
+    if [ "$BRAND_NAME" = "RexOne" ]; then
+      web_env_name="rexone.me"
+      web_domain="rexone.me"
     fi
-  done
+    update_env_var "$WEB_DIR/.env.example" "VITE_REACT_APP_NAME" "$web_env_name"
+    node -e "
+      const fs = require('fs');
+      const f = '$WEB_DIR/.env.example';
+      let c = fs.readFileSync(f, 'utf8');
+      c = c.replace(/# Production Tier \(e\.g\. [^)]*\):\n#\s+VITE_REACT_APP_CLIENT_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_WS_BASE_URL=[^\n]*/,
+        '# Production Tier (e.g. $BRAND_NAME):\n#   VITE_REACT_APP_CLIENT_BASE_URL=https://$web_domain\n#   VITE_REACT_APP_SERVER_BASE_URL=https://api.$web_domain\n#   VITE_REACT_APP_SERVER_WS_BASE_URL=wss://api.$web_domain');
+      c = c.replace(/# UAT Tier:\n#\s+VITE_REACT_APP_CLIENT_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_WS_BASE_URL=[^\n]*/,
+        '# UAT Tier:\n#   VITE_REACT_APP_CLIENT_BASE_URL=https://uat.$web_domain\n#   VITE_REACT_APP_SERVER_BASE_URL=https://uat.api.$web_domain\n#   VITE_REACT_APP_SERVER_WS_BASE_URL=wss://uat.api.$web_domain');
+      c = c.replace(/# Dev Tier:\n#\s+VITE_REACT_APP_CLIENT_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_WS_BASE_URL=[^\n]*/,
+        '# Dev Tier:\n#   VITE_REACT_APP_CLIENT_BASE_URL=https://dev.$web_domain\n#   VITE_REACT_APP_SERVER_BASE_URL=https://dev.api.$web_domain\n#   VITE_REACT_APP_SERVER_WS_BASE_URL=wss://dev.api.$web_domain');
+      fs.writeFileSync(f, c);
+    " 2>/dev/null || true
+    echo "  ✅ Web: Updated .env.example"
+  fi
+
+  # Update Web uat.sh and prod.sh scripts default URLs
+  web_script_domain="${BRAND_DOMAIN}"
+  if [ "$BRAND_NAME" = "RexOne" ]; then
+    web_script_domain="rexone.me"
+  fi
+  if [ -f "$WEB_DIR/scripts/uat.sh" ]; then
+    sedi -E "s|https://uat\.api\.[a-zA-Z0-9_.-]+|https://uat.api.${web_script_domain}|g" "$WEB_DIR/scripts/uat.sh"
+    sedi -E "s|wss://uat\.api\.[a-zA-Z0-9_.-]+|wss://uat.api.${web_script_domain}|g" "$WEB_DIR/scripts/uat.sh"
+    echo "  ✅ Web: Updated scripts/uat.sh target URLs"
+  fi
+  if [ -f "$WEB_DIR/scripts/prod.sh" ]; then
+    sedi -E "s|https://api\.[a-zA-Z0-9_.-]+|https://api.${web_script_domain}|g" "$WEB_DIR/scripts/prod.sh"
+    sedi -E "s|wss://api\.[a-zA-Z0-9_.-]+|wss://api.${web_script_domain}|g" "$WEB_DIR/scripts/prod.sh"
+    echo "  ✅ Web: Updated scripts/prod.sh target URLs"
+  fi
 
   # Update Web docker-compose.yaml
   if [ -f "$WEB_DIR/docker-compose.yaml" ]; then
+    compose_domain="${BRAND_DOMAIN}"
+    if [ "$BRAND_NAME" = "RexOne" ]; then
+      compose_domain="rexone.me"
+    fi
     sedi -E "s|container_name: \\\$\{WEB_CONTAINER_NAME:-[^}]*\}|container_name: \${WEB_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-web}|g" "$WEB_DIR/docker-compose.yaml"
     sedi -E "s|name: \\\$\{DOCKER_NETWORK:-[^}]*\}|name: \${DOCKER_NETWORK:-prod-${BRAND_SLUG_KEBAB}-net}|g" "$WEB_DIR/docker-compose.yaml"
-    sedi -E "s|VITE_REACT_APP_NAME: \\\$\{VITE_REACT_APP_NAME:-[^}]*\}|VITE_REACT_APP_NAME: \${VITE_REACT_APP_NAME:-${BRAND_DOMAIN}}|g" "$WEB_DIR/docker-compose.yaml"
-    sedi -E "s|VITE_REACT_APP_SERVER_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_BASE_URL: \${VITE_REACT_APP_SERVER_BASE_URL:-https://api.${BRAND_DOMAIN}}|g" "$WEB_DIR/docker-compose.yaml"
-    sedi -E "s|VITE_REACT_APP_CLIENT_BASE_URL: \\\$\{VITE_REACT_APP_CLIENT_BASE_URL:-[^}]*\}|VITE_REACT_APP_CLIENT_BASE_URL: \${VITE_REACT_APP_CLIENT_BASE_URL:-https://${BRAND_DOMAIN}}|g" "$WEB_DIR/docker-compose.yaml"
-    sedi -E "s|VITE_REACT_APP_SERVER_WS_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_WS_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_WS_BASE_URL: \${VITE_REACT_APP_SERVER_WS_BASE_URL:-wss://api.${BRAND_DOMAIN}}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_NAME: \\\$\{VITE_REACT_APP_NAME:-[^}]*\}|VITE_REACT_APP_NAME: \${VITE_REACT_APP_NAME:-${compose_domain}}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_SERVER_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_BASE_URL: \${VITE_REACT_APP_SERVER_BASE_URL:-https://api.${compose_domain}}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_CLIENT_BASE_URL: \\\$\{VITE_REACT_APP_CLIENT_BASE_URL:-[^}]*\}|VITE_REACT_APP_CLIENT_BASE_URL: \${VITE_REACT_APP_CLIENT_BASE_URL:-https://${compose_domain}}|g" "$WEB_DIR/docker-compose.yaml"
+    sedi -E "s|VITE_REACT_APP_SERVER_WS_BASE_URL: \\\$\{VITE_REACT_APP_SERVER_WS_BASE_URL:-[^}]*\}|VITE_REACT_APP_SERVER_WS_BASE_URL: \${VITE_REACT_APP_SERVER_WS_BASE_URL:-wss://api.${compose_domain}}|g" "$WEB_DIR/docker-compose.yaml"
     echo "  ✅ Web: Synchronized docker-compose.yaml with prod-${BRAND_SLUG_KEBAB}-web"
   fi
 
@@ -288,13 +517,59 @@ if [ -d "$WEB_DIR" ]; then
     echo "  ✅ Web: Synchronized docker-compose.dev.yaml (dev-${BRAND_SLUG_KEBAB}-web)"
   fi
 
+  # Update assets/index.ts logo titles and banner
+  if [ -f "$WEB_DIR/src/assets/index.ts" ]; then
+    banner_alt="${BRAND_NAME} Banner"
+    if [ "$BRAND_NAME" = "RexOne" ]; then
+      banner_alt="Banner image"
+    fi
+    sedi -E "s/banner: \{ src: banner, alt: \"[^\"]*\", title: \"[^\"]*\" \}/banner: { src: banner, alt: \"${banner_alt}\", title: \"${BRAND_NAME} Banner\" }/g" "$WEB_DIR/src/assets/index.ts"
+    sedi -E "s/logo: \{ src: ([^,]+), alt: \"[^\"]*\", title: \"[^\"]*\" \}/logo: { src: \1, alt: \"${BRAND_NAME} Logo\", title: \"${BRAND_NAME}\" }/g" "$WEB_DIR/src/assets/index.ts"
+    sedi -E "s/rexoneLogo: \{ src: ([^,]+), alt: \"[^\"]*\", title: \"[^\"]*\" \}/rexoneLogo: { src: \1, alt: \"${BRAND_NAME} Logo\", title: \"${BRAND_NAME}\" }/g" "$WEB_DIR/src/assets/index.ts"
+    echo "  ✅ Web: Synchronized assets/index.ts logo titles"
+  fi
+
+
+  # Update AdminNotificationPreview.tsx preview email and brand
+  if [ -f "$WEB_DIR/src/modules/admin/notification/components/AdminNotificationPreview.tsx" ]; then
+    admin_brand="$BRAND_NAME"
+    admin_email="support@${BRAND_DOMAIN}"
+    sedi -E "s|support@[a-zA-Z0-9_.-]+|${admin_email}|g" "$WEB_DIR/src/modules/admin/notification/components/AdminNotificationPreview.tsx"
+    sedi -E "s|Welcome to [^!]+!|Welcome to ${admin_brand}!|g" "$WEB_DIR/src/modules/admin/notification/components/AdminNotificationPreview.tsx"
+    sedi -E "s|joining [^!]+!|joining ${admin_brand}!|g" "$WEB_DIR/src/modules/admin/notification/components/AdminNotificationPreview.tsx"
+    echo "  ✅ Web: Updated AdminNotificationPreview.tsx brand references"
+  fi
+
+  # Update Web notificationRoute helper default origin
+  if [ -f "$WEB_DIR/src/modules/notification/helpers/notificationRoute.helper.ts" ]; then
+    notif_origin="https://notification.${BRAND_DOMAIN}"
+    if [ "$BRAND_NAME" = "RexOne" ]; then
+      notif_origin="https://notification.rexone.local"
+    fi
+    sedi -E "s|https://notification\.[a-zA-Z0-9_.-]+|${notif_origin}|g" "$WEB_DIR/src/modules/notification/helpers/notificationRoute.helper.ts"
+    echo "  ✅ Web: Synchronized notificationRoute.helper.ts"
+  fi
+
+  # Update Web speech controller and api service comments
+  if [ -f "$WEB_DIR/src/services/api.service.ts" ]; then
+    sedi -E "s|// [a-zA-Z0-9_-]+ Core locale|// ${BRAND_NAME} Core locale|g" "$WEB_DIR/src/services/api.service.ts"
+  fi
+  if [ -f "$WEB_DIR/src/modules/speech/speech.controller.ts" ]; then
+    sedi -E "s|using [a-zA-Z0-9_-]+ Core STT|using ${BRAND_NAME} Core STT|g" "$WEB_DIR/src/modules/speech/speech.controller.ts"
+  fi
+
   # Copy logo if provided
   if [ -n "$RESOLVED_LOGO_PATH" ]; then
     mkdir -p "$WEB_DIR/public/brand"
     cp "$RESOLVED_LOGO_PATH" "$WEB_DIR/public/brand/logo.png"
-    cp "$RESOLVED_LOGO_PATH" "$WEB_DIR/public/favicon.png"
-    echo "  ✅ Web: Updated public/brand/logo.png and favicon from $(basename "$RESOLVED_LOGO_PATH")"
+    if [ "$BRAND_NAME" != "RexOne" ]; then
+      cp "$RESOLVED_LOGO_PATH" "$WEB_DIR/public/favicon.png"
+    elif [ -f "$WEB_DIR/public/favicon-512x512.png" ]; then
+      cp "$WEB_DIR/public/favicon-512x512.png" "$WEB_DIR/public/favicon.png"
+    fi
+    echo "  ✅ Web: Updated public/brand/logo.png from $(basename "$RESOLVED_LOGO_PATH")"
   fi
+  echo "  ℹ️  Web Note: Landing module (src/modules/landing) is intentionally untouched (to be replaced per product)."
 else
   echo "ℹ️  Web repository not found at $WEB_DIR (skipping)"
 fi
@@ -307,7 +582,7 @@ if [ -d "$MOBILE_DIR" ]; then
   echo "📱 Rebranding Mobile Client ($MOBILE_DIR)..."
 
   if [ -f "$MOBILE_DIR/scripts/rebrand.sh" ]; then
-    bash "$MOBILE_DIR/scripts/rebrand.sh" "$MOBILE_APP_NAME" "$MOBILE_PACKAGE" "$RESOLVED_LOGO_PATH" "$BRAND_NAME"
+    bash "$MOBILE_DIR/scripts/rebrand.sh" "$MOBILE_APP_NAME" "$MOBILE_PACKAGE" "$RESOLVED_LOGO_PATH" "$BRAND_NAME" "$BRAND_DOMAIN"
   fi
 else
   echo "ℹ️  Mobile repository not found at $MOBILE_DIR (skipping)"
@@ -317,5 +592,17 @@ echo "============================================================"
 echo "🎉 REBRANDING COMPLETED SUCCESSFULLY FOR: $BRAND_NAME"
 echo "   Docker Kebab Slug:    $BRAND_SLUG_KEBAB"
 echo "   Database Snake Slug:  $BRAND_SLUG_SNAKE"
+echo "   Stack Identifiers:    -core, -web, _mobile strictly preserved"
 echo "   Foundation: Built on top of the RexOne Ecosystem (rex-9)"
+echo "------------------------------------------------------------"
+echo "📌 CRITICAL DEVELOPER ACTIONS REQUIRED (SECURITY & SECRETS):"
+echo "   1. Environment Files: Live local .env files (.env, .env.dev, etc.)"
+echo "      are gitignored and NEVER touched by automation for security."
+echo "      Update them manually using synchronized .env.example templates."
+echo "   2. Firebase / Google Services: Live credentials (google-services.json"
+echo "      and GoogleService-Info.plist) are gitignored and platform-generated."
+echo "      Download fresh configuration files from Firebase Console for"
+echo "      '$MOBILE_PACKAGE' and place them in android/app/ and ios/Runner/."
+echo "   3. Landing Module: Web landing (src/modules/landing) is left intact as"
+echo "      it will be completely replaced by whatever product is built on top."
 echo "============================================================"
