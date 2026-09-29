@@ -1,0 +1,53 @@
+name: "🎓 GSoC Project Proposal / Discussion"
+description: "Submit or discuss a Google Summer of Code (GSoC) candidate project proposal."
+title: "[GSOC]: "
+labels: ["gsoc", "community"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Welcome to RexOne GSoC! Before submitting, please review our [GSoC Project Ideas Catalog](docs/GSOC_IDEAS.md), [Contributing Guidelines](CONTRIBUTING.md), and [AI Contribution Policy](docs/AI_CONTRIBUTION_POLICY.md).
+  - type: dropdown
+    id: idea_reference
+    attributes:
+      label: "Project Idea Reference"
+      options:
+        - "Project 1: Adaptive HLS/CMAF Media Pipeline & Transcoding Daemon (350h)"
+        - "Project 2: Cross-Platform Offline Sync & Vector-Clock Conflict Resolution (350h)"
+        - "Project 3: Automated LAW.md AST Compliance Linter (175h)"
+        - "Project 4: OpenSSF SLSA Level 3 Provenance & Supply-Chain Hardening (175h)"
+        - "Project 5: Cross-Platform Distributed Tracing & OpenTelemetry Correlation (175h)"
+        - "Project 6: Interactive Developer CLI & Product Scaffolding Wizard (90h)"
+        - "Custom Project Proposal"
+    validations:
+      required: true
+  - type: input
+    id: candidate_name
+    attributes:
+      label: "Candidate Name & Contact Info"
+      placeholder: "Full Name, GitHub username, Timezone"
+    validations:
+      required: true
+  - type: textarea
+    id: proposal_summary
+    attributes:
+      label: "Proposal Summary & Architecture Plan"
+      description: "Explain your proposed technical approach, architectural breakdown, and milestones."
+    validations:
+      required: true
+  - type: textarea
+    id: qualifications_experience
+    attributes:
+      label: "Relevant Experience & Prior PRs"
+      description: "List relevant experience, open-source contributions, or RexOne PRs you have submitted."
+    validations:
+      required: true
+  - type: checkboxes
+    id: candidate_commitments
+    attributes:
+      label: "Candidate Commitments"
+      options:
+        - label: "I have read and agree to follow the RexOne Code of Conduct and AI Contribution Policy."
+          required: true
+        - label: "I commit to dedicating the required weekly hours for the duration of the program."
+          required: true

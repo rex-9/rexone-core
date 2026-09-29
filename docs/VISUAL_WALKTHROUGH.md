@@ -1211,7 +1211,7 @@ The UI architecture is strictly decoupled from business contracts:
    ./scripts/rebrand.sh brand.config.json
    ```
 
-   This script reads the master `brand.config.json` (app name, organization, domain, database names, bundle identifiers, email sender identity, repository URLs) and safely synchronizes the brand identity across `rexone-core`, `rexone-web`, and `rexone-mobile` simultaneously.
+   This script reads the master `brand.config.json` (app name, organization, domain, database names, bundle identifiers, email sender identity, repository URLs) and safely synchronizes the brand identity across `rexone-core`, `rexone-web`, and `rexone-mobile` simultaneously. (Note: Landing modules and foundation SEO/GEO discovery assets are intentionally excluded from automation to preserve RexOne's foundation identity and leave product-specific SEO in the hands of the developer).
 
 2. **Web Design System (`rexone-web/src/design`)**:
    All UI elements, widgets, dialogs, typography, and theme tokens live under `src/design/`:

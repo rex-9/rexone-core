@@ -1,0 +1,49 @@
+name: "💡 Feature or Architectural Proposal"
+description: "Propose a new capability, enhancement, or architectural refinement."
+title: "[FEATURE]: "
+labels: ["enhancement", "proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for proposing an enhancement to RexOne! Please make sure your proposal adheres to **Discipline-Driven Development (DDD)** and the constitutional laws defined in [`LAW.md`](../../LAW.md).
+  - type: dropdown
+    id: targeted_platform
+    attributes:
+      label: "Targeted Platform"
+      options:
+        - "Cross-Platform (Core + Web + Mobile)"
+        - "Core API (rexone-core)"
+        - "Web Client (rexone-web)"
+        - "Mobile App (rexone_mobile)"
+        - "Developer Tooling & CLI"
+    validations:
+      required: true
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: "Problem Statement"
+      description: "What pain point, limitation, or opportunity does this feature address?"
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: "Proposed Solution & Design"
+      description: "Describe how this should work and how it preserves architectural boundaries (e.g. provider isolation, clean contracts)."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives_considered
+    attributes:
+      label: "Alternatives Considered"
+      description: "What other approaches or third-party libraries did you consider, and why did you choose this design?"
+  - type: checkboxes
+    id: constitutional_alignment
+    attributes:
+      label: "Constitutional Alignment"
+      options:
+        - label: "I have reviewed `LAW.md` and confirmed this proposal does not violate constitutional boundaries or introduce loose code."
+          required: true
+        - label: "I am willing to submit a pull request implementing this feature if approved."
+          required: false

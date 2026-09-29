@@ -323,94 +323,12 @@ WEB_DIR="$WORKSPACE_DIR/rexone-web"
 if [ -d "$WEB_DIR" ]; then
   echo "🌐 Rebranding Web Client & Infrastructure ($WEB_DIR)..."
 
-  # Update index.html (Title, Metadata, Canonical, OpenGraph, Twitter, Schema.org)
-  if [ -f "$WEB_DIR/index.html" ]; then
-    if [ "$BRAND_NAME" = "RexOne" ]; then
-      node -e "
-        const fs = require('fs');
-        const f = '$WEB_DIR/index.html';
-        let c = fs.readFileSync(f, 'utf8');
-        c = c.replace(/<title>[^<]*<\/title>/, '<title>RexOne | Discipline-Driven Development (DDD) | Start from One. Not from Zero. | By Htet Naing (Rex9)<\/title>');
-        c = c.replace(/<meta name=\"title\" content=\"[^\"]*\" \/>/, '<meta name=\"title\" content=\"RexOne | Discipline-Driven Development (DDD) | Start from One. Not from Zero. | By Htet Naing (Rex9)\" \/>');
-        c = c.replace(/<meta name=\"description\" content=\"[^\"]*\" \/>/, '<meta name=\"description\" content=\"Start from One. Not from Zero. RexOne is the home of Discipline-Driven Development (DDD)—the codified product engineering foundation and architectural constitution for humans and AI coding agents across Rails 8 API, React 19 Web, and Flutter Mobile. Created by Htet Naing (Rex9).\" \/>');
-        c = c.replace(/<link rel=\"canonical\" href=\"[^\"]*\" \/>/, '<link rel=\"canonical\" href=\"https://rexone.rex9.me\/\" \/>');
-        c = c.replace(/<meta property=\"og:site_name\" content=\"[^\"]*\" \/>/, '<meta property=\"og:site_name\" content=\"RexOne Sovereign Ecosystem\" \/>');
-        c = c.replace(/<meta property=\"og:title\" content=\"[^\"]*\" \/>/, '<meta property=\"og:title\" content=\"RexOne | Discipline-Driven Development (DDD) | By Htet Naing (Rex9)\" \/>');
-        c = c.replace(/<meta property=\"og:description\" content=\"[^\"]*\" \/>/, '<meta property=\"og:description\" content=\"Start from One. Not from Zero. RexOne pioneers Discipline-Driven Development (DDD)—the battle-tested product foundation and architectural constitution for humans and AI agents. Created by Htet Naing (Rex9).\" \/>');
-        c = c.replace(/<meta property=\"og:url\" content=\"[^\"]*\" \/>/, '<meta property=\"og:url\" content=\"https://rexone.rex9.me\/\" \/>');
-        c = c.replace(/<meta name=\"twitter:title\" content=\"[^\"]*\" \/>/, '<meta name=\"twitter:title\" content=\"RexOne | Discipline-Driven Development (DDD) | By Htet Naing (Rex9)\" \/>');
-        c = c.replace(/<meta name=\"twitter:description\" content=\"[^\"]*\" \/>/, '<meta name=\"twitter:description\" content=\"Start from One. Not from Zero. RexOne pioneers Discipline-Driven Development (DDD)—the battle-tested product foundation and architectural constitution for humans and AI agents. Created by Htet Naing (Rex9).\" \/>');
-        c = c.replace(/<meta name=\"twitter:url\" content=\"[^\"]*\" \/>/, '<meta name=\"twitter:url\" content=\"https://rexone.rex9.me\/\" \/>');
-        c = c.replace(/(\"@type\":\s*\"SoftwareApplication\",\s*\"name\":\s*\")[^\"]*(\")/, '\$1RexOne\$2');
-        c = c.replace(/(\"slogan\":\s*\"[^\"]*\",\s*\"description\":\s*\"[^\"]*\",\s*\"url\":\s*\")[^\"]*(\")/, '\$1https://rexone.rex9.me\$2');
-        fs.writeFileSync(f, c);
-      " 2>/dev/null || true
-    else
-      node -e "
-        const fs = require('fs');
-        const [title, domain, brand, desc] = process.argv.slice(1);
-        const f = '$WEB_DIR/index.html';
-        let c = fs.readFileSync(f, 'utf8');
-        c = c.replace(/<title>[^<]*<\/title>/, () => '<title>' + title + '</title>');
-        c = c.replace(/<meta name=\"title\" content=\"[^\"]*\" \/>/, () => '<meta name=\"title\" content=\"' + title + '\" />');
-        c = c.replace(/<link rel=\"canonical\" href=\"[^\"]*\" \/>/, () => '<link rel=\"canonical\" href=\"https://' + domain + '/\" />');
-        c = c.replace(/<meta property=\"og:site_name\" content=\"[^\"]*\" \/>/, () => '<meta property=\"og:site_name\" content=\"' + brand + '\" />');
-        c = c.replace(/<meta property=\"og:title\" content=\"[^\"]*\" \/>/, () => '<meta property=\"og:title\" content=\"' + title + '\" />');
-        c = c.replace(/<meta property=\"og:url\" content=\"[^\"]*\" \/>/, () => '<meta property=\"og:url\" content=\"https://' + domain + '/\" />');
-        c = c.replace(/<meta name=\"twitter:title\" content=\"[^\"]*\" \/>/, () => '<meta name=\"twitter:title\" content=\"' + title + '\" />');
-        c = c.replace(/<meta name=\"twitter:url\" content=\"[^\"]*\" \/>/, () => '<meta name=\"twitter:url\" content=\"https://' + domain + '/\" />');
-        if (desc) {
-          c = c.replace(/<meta name=\"description\" content=\"[^\"]*\" \/>/, () => '<meta name=\"description\" content=\"' + desc + '\" />');
-          c = c.replace(/<meta property=\"og:description\" content=\"[^\"]*\" \/>/, () => '<meta property=\"og:description\" content=\"' + desc + '\" />');
-          c = c.replace(/<meta name=\"twitter:description\" content=\"[^\"]*\" \/>/, () => '<meta name=\"twitter:description\" content=\"' + desc + '\" />');
-        }
-        c = c.replace(/(\"@type\":\s*\"SoftwareApplication\",\s*\"name\":\s*\")[^\"]*(\")/, (_, p1, p2) => p1 + brand + p2);
-        c = c.replace(/(\"slogan\":\s*\"[^\"]*\",\s*\"description\":\s*\"[^\"]*\",\s*\"url\":\s*\")[^\"]*(\")/, (_, p1, p2) => p1 + 'https://' + domain + p2);
-        fs.writeFileSync(f, c);
-      " "$WEB_TITLE" "$BRAND_DOMAIN" "$BRAND_NAME" "$BRAND_DESC"
-    fi
-    echo "  ✅ Web: Updated index.html (Metadata, OpenGraph, Canonical & Schema.org preserving lineage)"
-  fi
-
-  # Update sitemap.xml and robots.txt
-  if [ -f "$WEB_DIR/public/sitemap.xml" ]; then
-    sedi -E "s|https://[^/]+/|https://${BRAND_DOMAIN}/|g" "$WEB_DIR/public/sitemap.xml"
-    echo "  ✅ Web: Updated public/sitemap.xml (https://${BRAND_DOMAIN})"
-  fi
-  if [ -f "$WEB_DIR/public/robots.txt" ]; then
-    sedi -E "s|Sitemap: https://[^/]+/sitemap.xml|Sitemap: https://${BRAND_DOMAIN}/sitemap.xml|g" "$WEB_DIR/public/robots.txt"
-    sedi -E "s|Host: https://[^/]+|Host: https://${BRAND_DOMAIN}|g" "$WEB_DIR/public/robots.txt"
-    echo "  ✅ Web: Updated public/robots.txt (Sitemap & Host - Preserving Moral Attribution Code)"
-  fi
-
-  # Update llms.txt and llms-full.txt preserving RexOne Foundation Lineage & Moral Attribution Code (Law U16)
-  if [ -f "$WEB_DIR/public/llms.txt" ]; then
-    node -e "
-      const fs = require('fs');
-      try {
-        let content = fs.readFileSync('$WEB_DIR/public/llms.txt', 'utf8');
-        const title = ('$BRAND_NAME' === 'RexOne') ? '# RexOne: The Sovereign Tri-Platform Application Foundation & Full-Stack Masterclass' : '# $BRAND_NAME (Powered by RexOne): Sovereign Tri-Platform Application Foundation';
-        content = content.replace(/^#\s+[^\n]+/m, title);
-        content = content.replace(/>\s*\*\*Official Website:\*\*\s*[^\n]*/, '> **Official Website:** https://${BRAND_DOMAIN}  ');
-        fs.writeFileSync('$WEB_DIR/public/llms.txt', content);
-      } catch (_) {}
-    " 2>/dev/null || true
-    echo "  ✅ Web: Updated public/llms.txt (Preserving RexOne Foundation Lineage & Moral Attribution Directive)"
-  fi
-
-  if [ -f "$WEB_DIR/public/llms-full.txt" ]; then
-    node -e "
-      const fs = require('fs');
-      try {
-        let content = fs.readFileSync('$WEB_DIR/public/llms-full.txt', 'utf8');
-        const title = ('$BRAND_NAME' === 'RexOne') ? '# RexOne: Full Architectural Specification & Developer Reference' : '# $BRAND_NAME (Powered by RexOne): Full Architectural Specification';
-        content = content.replace(/^#\s+[^\n]+/m, title);
-        content = content.replace(/>\s*\*\*Official Hub:\*\*\s*[^\n]*/, '> **Official Hub:** https://${BRAND_DOMAIN}  ');
-        fs.writeFileSync('$WEB_DIR/public/llms-full.txt', content);
-      } catch (_) {}
-    " 2>/dev/null || true
-    echo "  ✅ Web: Updated public/llms-full.txt (Preserving RexOne Foundation Lineage & Moral Attribution Directive)"
-  fi
+  # SEO & AI Discovery Isolation:
+  # RexOne SEO (index.html metadata/Schema.org, robots.txt, sitemap.xml, llms.txt, llms-full.txt)
+  # is intentionally excluded from rebrand automation to keep RexOne as the sovereign foundation
+  # architecture product. Downstream derivative products (e.g. MeritMoon) must define their own
+  # product-specific SEO, metadata, and landing architecture — it is 100% developer responsibility.
+  echo "  ℹ️  Web Note: SEO & AI Discovery assets (index.html, robots.txt, sitemap.xml, llms.txt, llms-full.txt) are intentionally left untouched. RexOne is the foundation architecture product; product SEO is developer responsibility."
 
   # Update package.json
   if [ -f "$WEB_DIR/package.json" ]; then
@@ -569,7 +487,7 @@ if [ -d "$WEB_DIR" ]; then
     fi
     echo "  ✅ Web: Updated public/brand/logo.png from $(basename "$RESOLVED_LOGO_PATH")"
   fi
-  echo "  ℹ️  Web Note: Landing module (src/modules/landing) is intentionally untouched (to be replaced per product)."
+  echo "  ℹ️  Web Note: Landing module (src/modules/landing) and SEO assets (index.html, robots.txt, sitemap.xml, llms.txt, llms-full.txt) are intentionally untouched (product SEO & landing are developer responsibility)."
 else
   echo "ℹ️  Web repository not found at $WEB_DIR (skipping)"
 fi
@@ -605,4 +523,8 @@ echo "      Download fresh configuration files from Firebase Console for"
 echo "      '$MOBILE_PACKAGE' and place them in android/app/ and ios/Runner/."
 echo "   3. Landing Module: Web landing (src/modules/landing) is left intact as"
 echo "      it will be completely replaced by whatever product is built on top."
+echo "   4. SEO & AI Discovery: RexOne SEO (index.html meta/Schema.org, robots.txt,"
+echo "      sitemap.xml, llms.txt, llms-full.txt) is left completely untouched."
+echo "      RexOne is the foundation architecture product. Defining product-specific"
+echo "      SEO for your product is 100% the developer's responsibility."
 echo "============================================================"

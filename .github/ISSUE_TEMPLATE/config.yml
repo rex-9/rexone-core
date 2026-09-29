@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "💬 Community Discussions & Architectural RFCs"
+    url: "https://github.com/rex-9/rexone-core/discussions"
+    about: "Ask questions, share ideas, or propose architectural RFCs."
+  - name: "🔒 Security Vulnerability Reporting"
+    url: "https://github.com/rex-9/rexone-core/security/advisories/new"
+    about: "Privately disclose a security vulnerability (see SECURITY.md)."
+  - name: "📖 RexOne Master Documentation"
+    url: "https://rexone.rex9.me"
+    about: "Explore official documentation, guides, and architectural diagrams."

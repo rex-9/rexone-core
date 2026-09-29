@@ -429,6 +429,9 @@ APP_NAME="My New App Name"
 DEFAULT_MAIL_SENDER="no-reply@mynewapp.com"
 ```
 
+> [!NOTE]
+> The rebranding script intentionally leaves the **landing module** (`src/modules/landing`) and **SEO / AI discovery assets** (`index.html` metadata/Schema.org, `robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt`) completely untouched. RexOne SEO belongs to the foundation architecture; product-specific landing and SEO design are 100% the developer's responsibility.
+
 ---
 
 ## 🏛️ Ecosystem Lineage & Attribution
