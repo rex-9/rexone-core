@@ -59,6 +59,9 @@ BRAND_SHORT_NAME=$(read_json "brand.shortName")
 BRAND_DESC=$(read_json "brand.description")
 BRAND_LOGO=$(read_json "brand.logoPath")
 BRAND_DOMAIN=$(read_json "brand.domain")
+BRAND_SUPPORT_EMAIL=$(read_json "brand.supportEmail")
+[ -z "$BRAND_SUPPORT_EMAIL" ] && BRAND_SUPPORT_EMAIL=$(read_json "brand.support_email")
+[ -z "$BRAND_SUPPORT_EMAIL" ] && BRAND_SUPPORT_EMAIL=$(read_json "core.mailerSender")
 
 MOBILE_APP_NAME=$(read_json "mobile.appName")
 [ -z "$MOBILE_APP_NAME" ] && MOBILE_APP_NAME="$BRAND_NAME"
@@ -86,6 +89,13 @@ if [ -z "$MOBILE_PACKAGE" ]; then
   MOBILE_PACKAGE="com.rex9.${BRAND_SLUG_FLAT}"
 fi
 
+RESOLVED_FROM_EMAIL="${BRAND_SUPPORT_EMAIL:-support@${BRAND_DOMAIN}}"
+RESOLVED_SMTP_DOMAIN="${BRAND_DOMAIN}"
+if [ "$BRAND_NAME" = "RexOne" ]; then
+  RESOLVED_FROM_EMAIL="support@rexone.com"
+  RESOLVED_SMTP_DOMAIN="rexone.com"
+fi
+
 RESOLVED_LOGO_PATH=""
 if [ -n "$BRAND_LOGO" ]; then
   if [ -f "$CORE_DIR/$BRAND_LOGO" ]; then
@@ -98,6 +108,7 @@ fi
 echo "🎯 Target Brand Configuration:"
 echo "   - Title / Display Name:  $BRAND_NAME"
 echo "   - Canonical Domain:      $BRAND_DOMAIN"
+echo "   - Support Email:         $RESOLVED_FROM_EMAIL"
 echo "   - Kebab Slug (Docker):   $BRAND_SLUG_KEBAB"
 echo "   - Snake Slug (Database): $BRAND_SLUG_SNAKE"
 echo "   - Flat Slug (Package):   $BRAND_SLUG_FLAT"
@@ -140,24 +151,18 @@ echo "⚙️  Rebranding Core Backend & Infrastructure..."
 
 # Update Core .env.example file (Law U16 & Secret Isolation: never touch local gitignored .env files)
 if [ -f "$CORE_DIR/.env.example" ]; then
-  env_from_email="support@${BRAND_DOMAIN}"
-  env_smtp_domain="${BRAND_DOMAIN}"
-  if [ "$BRAND_NAME" = "RexOne" ]; then
-    env_from_email="support@rexone.me"
-    env_smtp_domain="rexone.me"
-  fi
   update_env_var "$CORE_DIR/.env.example" "PG_DATABASE" "${BRAND_SLUG_SNAKE}_core"
   update_env_var "$CORE_DIR/.env.example" "S3_BUCKET" "${BRAND_SLUG_KEBAB}"
-  update_env_var "$CORE_DIR/.env.example" "FROM_EMAIL" "${env_from_email}"
-  update_env_var "$CORE_DIR/.env.example" "SMTP_DOMAIN" "${env_smtp_domain}"
+  update_env_var "$CORE_DIR/.env.example" "FROM_EMAIL" "${RESOLVED_FROM_EMAIL}"
+  update_env_var "$CORE_DIR/.env.example" "SMTP_DOMAIN" "${RESOLVED_SMTP_DOMAIN}"
   update_env_var "$CORE_DIR/.env.example" "RAILS_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-api"
   update_env_var "$CORE_DIR/.env.example" "WAKA_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-waka"
   update_env_var "$CORE_DIR/.env.example" "DB_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-db"
   update_env_var "$CORE_DIR/.env.example" "MEDIA_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-media"
   update_env_var "$CORE_DIR/.env.example" "GARAGE_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-garage"
   # Commented example lines in .env.example
-  sedi -E "s|^# PRODUCT_DOMAIN=.*|# PRODUCT_DOMAIN=${env_smtp_domain}|g" "$CORE_DIR/.env.example"
-  sedi -E "s|^# CORS_ORIGINS=.*|# CORS_ORIGINS=https://${env_smtp_domain},https://uat.${env_smtp_domain}|g" "$CORE_DIR/.env.example"
+  sedi -E "s|^# PRODUCT_DOMAIN=.*|# PRODUCT_DOMAIN=${RESOLVED_SMTP_DOMAIN}|g" "$CORE_DIR/.env.example"
+  sedi -E "s|^# CORS_ORIGINS=.*|# CORS_ORIGINS=https://${RESOLVED_SMTP_DOMAIN},https://uat.${RESOLVED_SMTP_DOMAIN}|g" "$CORE_DIR/.env.example"
   sedi -E "s|^# GOOGLE_PLAY_PACKAGE_NAME=.*|# GOOGLE_PLAY_PACKAGE_NAME=${MOBILE_PACKAGE}|g" "$CORE_DIR/.env.example"
   sedi -E "s|^# APPLE_APP_STORE_BUNDLE_ID=.*|# APPLE_APP_STORE_BUNDLE_ID=${MOBILE_PACKAGE}|g" "$CORE_DIR/.env.example"
   echo "  ✅ Core: Updated .env.example"
@@ -191,17 +196,17 @@ fi
 
 # Update Core maintenance scripts with new container/DB fallbacks
 if [ -f "$CORE_DIR/scripts/backup_db.sh" ]; then
-  sedi -E "s/dev-[a-z0-9_-]*-core-db/dev-${BRAND_SLUG_KEBAB}-core-db/g" "$CORE_DIR/scripts/backup_db.sh"
-  sedi -E "s/[a-z0-9_]*_core_production/${BRAND_SLUG_SNAKE}_core_production/g" "$CORE_DIR/scripts/backup_db.sh"
-  sedi -E "s/[a-z0-9_]*_core_development/${BRAND_SLUG_SNAKE}_core_development/g" "$CORE_DIR/scripts/backup_db.sh"
+  sedi -E "s/dev-[a-z0-9_-]+-core-db/dev-${BRAND_SLUG_KEBAB}-core-db/g" "$CORE_DIR/scripts/backup_db.sh"
+  sedi -E "s/[a-z0-9_-]+_core_production/${BRAND_SLUG_SNAKE}_core_production/g" "$CORE_DIR/scripts/backup_db.sh"
+  sedi -E "s/[a-z0-9_-]+_core_development/${BRAND_SLUG_SNAKE}_core_development/g" "$CORE_DIR/scripts/backup_db.sh"
   echo "  ✅ Core: Synchronized scripts/backup_db.sh"
 fi
 if [ -f "$CORE_DIR/scripts/backup_garage.sh" ]; then
-  sedi -E "s/dev-[a-z0-9_-]*-core-garage/dev-${BRAND_SLUG_KEBAB}-core-garage/g" "$CORE_DIR/scripts/backup_garage.sh"
+  sedi -E "s/dev-[a-z0-9_-]+-core-garage/dev-${BRAND_SLUG_KEBAB}-core-garage/g" "$CORE_DIR/scripts/backup_garage.sh"
   echo "  ✅ Core: Synchronized scripts/backup_garage.sh"
 fi
 if [ -f "$CORE_DIR/scripts/dev_garage.sh" ]; then
-  sedi -E "s/dev-[a-z0-9_-]*-core-garage/dev-${BRAND_SLUG_KEBAB}-core-garage/g" "$CORE_DIR/scripts/dev_garage.sh"
+  sedi -E "s/dev-[a-z0-9_-]+-core-garage/dev-${BRAND_SLUG_KEBAB}-core-garage/g" "$CORE_DIR/scripts/dev_garage.sh"
   sedi -E "s/KEY_NAME=\"[^\"]*\"/KEY_NAME=\"${BRAND_SLUG_KEBAB}-key\"/g" "$CORE_DIR/scripts/dev_garage.sh"
   sedi -E "s/BUCKET_NAME=\"\\\$\{S3_BUCKET:-[^}]*\}\"/BUCKET_NAME=\"\${S3_BUCKET:-${BRAND_SLUG_KEBAB}}\"/g" "$CORE_DIR/scripts/dev_garage.sh"
   echo "  ✅ Core: Synchronized scripts/dev_garage.sh"
@@ -213,15 +218,9 @@ fi
 
 # Update Core application config fallbacks
 if [ -f "$CORE_DIR/config/app_config.rb" ]; then
-  smtp_domain="${BRAND_DOMAIN}"
-  from_email="support@${BRAND_DOMAIN}"
-  if [ "$BRAND_NAME" = "RexOne" ]; then
-    smtp_domain="rexone.me"
-    from_email="support@rexone.me"
-  fi
   sedi -E "s/env_or\.call\(\"RAILS_JWT_SECRET_KEY\", \"[^\"]*\"\)/env_or.call(\"RAILS_JWT_SECRET_KEY\", \"${BRAND_SLUG_SNAKE}\")/g" "$CORE_DIR/config/app_config.rb"
-  sedi -E "s/env_or\.call\(\"SMTP_DOMAIN\", \"[^\"]*\"\)/env_or.call(\"SMTP_DOMAIN\", \"${smtp_domain}\")/g" "$CORE_DIR/config/app_config.rb"
-  sedi -E "s/env_or\.call\(\"FROM_EMAIL\", \"[^\"]*\"\)/env_or.call(\"FROM_EMAIL\", \"${from_email}\")/g" "$CORE_DIR/config/app_config.rb"
+  sedi -E "s/env_or\.call\(\"SMTP_DOMAIN\", \"[^\"]*\"\)/env_or.call(\"SMTP_DOMAIN\", \"${RESOLVED_SMTP_DOMAIN}\")/g" "$CORE_DIR/config/app_config.rb"
+  sedi -E "s/env_or\.call\(\"FROM_EMAIL\", \"[^\"]*\"\)/env_or.call(\"FROM_EMAIL\", \"${RESOLVED_FROM_EMAIL}\")/g" "$CORE_DIR/config/app_config.rb"
   sedi -E "s/env_or\.call\(\"S3_BUCKET\", \"[^\"]*\"\)/env_or.call(\"S3_BUCKET\", \"${BRAND_SLUG_KEBAB}\")/g" "$CORE_DIR/config/app_config.rb"
   sedi -E "s/\"[a-z0-9_-]+:\/\/\"\)/\"${BRAND_SLUG_KEBAB}:\/\/\")/g" "$CORE_DIR/config/app_config.rb"
   echo "  ✅ Core: Synchronized config/app_config.rb fallbacks"
@@ -253,12 +252,8 @@ fi
 
 # Update Core Devise mailer sender
 if [ -f "$CORE_DIR/config/initializers/devise.rb" ]; then
-  mailer_sender="support@${BRAND_DOMAIN}"
-  if [ "$BRAND_NAME" = "RexOne" ]; then
-    mailer_sender="rex@rexone.me"
-  fi
-  sedi -E "s/config\.mailer_sender = \"[^\"]*\"/config.mailer_sender = \"${mailer_sender}\"/g" "$CORE_DIR/config/initializers/devise.rb"
-  echo "  ✅ Core: Synchronized config/initializers/devise.rb"
+  sedi -E "s/config\.mailer_sender = .*/config.mailer_sender = AppConfig::FROM_EMAIL/g" "$CORE_DIR/config/initializers/devise.rb"
+  echo "  ✅ Core: Synchronized config/initializers/devise.rb (AppConfig::FROM_EMAIL)"
 fi
 
 # Update Core speech user agent & session system
@@ -273,29 +268,29 @@ fi
 
 # Update Core notification defaults and locales
 if [ -f "$CORE_DIR/app/constants/notification_constants.rb" ]; then
-  sedi -E "s/Welcome to [A-Za-z0-9_-]+/Welcome to ${BRAND_NAME}/g" "$CORE_DIR/app/constants/notification_constants.rb"
-  sedi -E "s/joining [A-Za-z0-9_-]+!/joining ${BRAND_NAME}!/g" "$CORE_DIR/app/constants/notification_constants.rb"
+  sedi -E "s/Welcome to [^\"',!]+/Welcome to ${BRAND_NAME}/g" "$CORE_DIR/app/constants/notification_constants.rb"
+  sedi -E "s/joining [^\"'!]+!/joining ${BRAND_NAME}!/g" "$CORE_DIR/app/constants/notification_constants.rb"
   echo "  ✅ Core: Synchronized notification_constants.rb"
 fi
 if [ -f "$CORE_DIR/config/locales/notification.en.yml" ]; then
-  sedi -E "s/[a-zA-Z0-9_-]+ will be temporarily unavailable/${BRAND_NAME} will be temporarily unavailable/g" "$CORE_DIR/config/locales/notification.en.yml"
-  sedi -E "s/A new [a-zA-Z0-9_-]+ feature/A new ${BRAND_NAME} feature/g" "$CORE_DIR/config/locales/notification.en.yml"
+  sedi -E "s/[^\"']+ will be temporarily unavailable/${BRAND_NAME} will be temporarily unavailable/g" "$CORE_DIR/config/locales/notification.en.yml"
+  sedi -E "s/A new [^\"']+ feature/A new ${BRAND_NAME} feature/g" "$CORE_DIR/config/locales/notification.en.yml"
   echo "  ✅ Core: Synchronized notification.en.yml"
 fi
 if [ -f "$CORE_DIR/config/locales/notification.my.yml" ]; then
-  sedi -E "s/စနစ် ပြင်ဆင်နေစဉ် [^\" ]+ ကို/စနစ် ပြင်ဆင်နေစဉ် ${BRAND_NAME} ကို/g" "$CORE_DIR/config/locales/notification.my.yml"
-  sedi -E "s/\"[^\" ]+ လုပ်ဆောင်ချက်အသစ်/\"${BRAND_NAME} လုပ်ဆောင်ချက်အသစ်/g" "$CORE_DIR/config/locales/notification.my.yml"
+  sedi -E "s/စနစ် ပြင်ဆင်နေစဉ် [^\"]+ ကို/စနစ် ပြင်ဆင်နေစဉ် ${BRAND_NAME} ကို/g" "$CORE_DIR/config/locales/notification.my.yml"
+  sedi -E "s/\"[^\"]+ လုပ်ဆောင်ချက်အသစ်/\"${BRAND_NAME} လုပ်ဆောင်ချက်အသစ်/g" "$CORE_DIR/config/locales/notification.my.yml"
   echo "  ✅ Core: Synchronized notification.my.yml"
 fi
 
 # Update Core email template renderer
 if [ -f "$CORE_DIR/app/services/email_service/template_renderer.rb" ]; then
   sedi -E "s/registered user of [^.]+\./registered user of ${BRAND_NAME}./g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
-  sedi -E "s/Confirm your [a-zA-Z0-9_-]+ email/Confirm your ${BRAND_NAME} email/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
-  sedi -E "s/Reset your [a-zA-Z0-9_-]+ passcode/Reset your ${BRAND_NAME} passcode/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
-  sedi -E "s/Welcome to [a-zA-Z0-9_-]+/Welcome to ${BRAND_NAME}/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
-  sedi -E "s/joining [a-zA-Z0-9_-]+(\.|\!)/joining ${BRAND_NAME}\1/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
-  sedi -E "s/Open [a-zA-Z0-9_-]+/Open ${BRAND_NAME}/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/Confirm your [^\"']+ email/Confirm your ${BRAND_NAME} email/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/Reset your [^\"']+ passcode/Reset your ${BRAND_NAME} passcode/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/Welcome to [^\"'!]+/Welcome to ${BRAND_NAME}/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/joining [^\"'!\.]+(\.|\!)/joining ${BRAND_NAME}\1/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
+  sedi -E "s/Open [^\"'\/\\<]+(\"|;|\$)/Open ${BRAND_NAME}\1/g" "$CORE_DIR/app/services/email_service/template_renderer.rb"
   copyright_name="${BRAND_NAME}"
   if [ "$BRAND_NAME" = "RexOne" ]; then
     copyright_name="RexOne Ecosystem"
@@ -340,9 +335,10 @@ if [ -d "$WEB_DIR" ]; then
   if [ -f "$WEB_DIR/src/AppConfig.tsx" ]; then
     app_name_fallback="$BRAND_NAME"
     if [ "$BRAND_NAME" = "RexOne" ]; then
-      app_name_fallback="rexone.me"
+      app_name_fallback="rexone.com"
     fi
     sedi -E "s/APP_NAME = import\.meta\.env\.VITE_REACT_APP_NAME \|\| \"[^\"]*\"/APP_NAME = import.meta.env.VITE_REACT_APP_NAME || \"$app_name_fallback\"/g" "$WEB_DIR/src/AppConfig.tsx"
+    sedi -E "s/FROM_EMAIL = import\.meta\.env\.VITE_REACT_APP_FROM_EMAIL \|\| \"[^\"]*\"/FROM_EMAIL = import.meta.env.VITE_REACT_APP_FROM_EMAIL || \"${RESOLVED_FROM_EMAIL}\"/g" "$WEB_DIR/src/AppConfig.tsx"
     echo "  ✅ Web: Updated AppConfig.tsx default APP_NAME to \"$app_name_fallback\""
   fi
 
@@ -356,33 +352,34 @@ if [ -d "$WEB_DIR" ]; then
   # Update locales/en.json and my.json
   if [ -f "$WEB_DIR/src/locales/en.json" ]; then
     sedi -E "s/\"Welcome to [^\"]*\"/\"Welcome to $BRAND_NAME\"/g" "$WEB_DIR/src/locales/en.json"
-    sedi -E "s/to help improve [a-zA-Z0-9_-]+\./to help improve ${BRAND_NAME}./g" "$WEB_DIR/src/locales/en.json"
-    sedi -E "s/e\.g\. Open [a-zA-Z0-9_-]+/e.g. Open ${BRAND_NAME}/g" "$WEB_DIR/src/locales/en.json"
-    sedi -E "s/Defaults to 'Open [a-zA-Z0-9_-]+'/Defaults to 'Open ${BRAND_NAME}'/g" "$WEB_DIR/src/locales/en.json"
-    sedi -E "s/Tap to open in [a-zA-Z0-9_-]+/Tap to open in ${BRAND_NAME}/g" "$WEB_DIR/src/locales/en.json"
-    sedi -E "s/[a-zA-Z0-9_-]+ Ecosystem •/${BRAND_NAME} Ecosystem •/g" "$WEB_DIR/src/locales/en.json"
-    sedi -E "s/joining [a-zA-Z0-9_-]+!/joining ${BRAND_NAME}!/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/to help improve [^.]+\./to help improve ${BRAND_NAME}./g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/e\.g\. Open [^,]+,/e.g. Open ${BRAND_NAME},/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/Defaults to 'Open [^']+'/Defaults to 'Open ${BRAND_NAME}'/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/Tap to open in [^\"]+\"/Tap to open in ${BRAND_NAME}\"/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/[^\"•]+ Ecosystem •/${BRAND_NAME} Ecosystem •/g" "$WEB_DIR/src/locales/en.json"
+    sedi -E "s/joining [^!]+!/joining ${BRAND_NAME}!/g" "$WEB_DIR/src/locales/en.json"
     echo "  ✅ Web: Updated brand references in src/locales/en.json"
   fi
   if [ -f "$WEB_DIR/src/locales/my.json" ]; then
-    sedi -E "s/\"[^\" ]+ ပိုမိုကောင်းမွန်စေရန်/\"${BRAND_NAME} ပိုမိုကောင်းမွန်စေရန်/g" "$WEB_DIR/src/locales/my.json"
-    sedi -E "s/\"[^\" ]+ မှ ကြိုဆိုပါသည်\"/\"${BRAND_NAME} မှ ကြိုဆိုပါသည်\"/g" "$WEB_DIR/src/locales/my.json"
+    sedi -E "s/\"[^\"]+ ပိုမိုကောင်းမွန်စေရန်/\"${BRAND_NAME} ပိုမိုကောင်းမွန်စေရန်/g" "$WEB_DIR/src/locales/my.json"
+    sedi -E "s/\"[^\"]+ မှ ကြိုဆိုပါသည်\"/\"${BRAND_NAME} မှ ကြိုဆိုပါသည်\"/g" "$WEB_DIR/src/locales/my.json"
     sedi -E "s/Open [^၊]+၊/Open ${BRAND_NAME}၊/g" "$WEB_DIR/src/locales/my.json"
     sedi -E "s/'Open [^']+' ဖြစ်မည်/'Open ${BRAND_NAME}' ဖြစ်မည်/g" "$WEB_DIR/src/locales/my.json"
-    sedi -E "s/\"[^\" ]+ တွင် ဖွင့်ကြည့်ရန်/\"${BRAND_NAME} တွင် ဖွင့်ကြည့်ရန်/g" "$WEB_DIR/src/locales/my.json"
-    sedi -E "s/\"[^\" ]+ ဂေဟစနစ် •/\"${BRAND_NAME} ဂေဟစနစ် •/g" "$WEB_DIR/src/locales/my.json"
+    sedi -E "s/\"[^\"]+ တွင် ဖွင့်ကြည့်ရန်/\"${BRAND_NAME} တွင် ဖွင့်ကြည့်ရန်/g" "$WEB_DIR/src/locales/my.json"
+    sedi -E "s/\"[^\"]+ ဂေဟစနစ် •/\"${BRAND_NAME} ဂေဟစနစ် •/g" "$WEB_DIR/src/locales/my.json"
     echo "  ✅ Web: Updated brand references in src/locales/my.json"
   fi
 
   # Update Web .env.example (Law U16 & Secret Isolation)
   if [ -f "$WEB_DIR/.env.example" ]; then
     web_env_name="$BRAND_NAME"
-    web_domain="${BRAND_DOMAIN}"
+    web_domain="${RESOLVED_SMTP_DOMAIN}"
     if [ "$BRAND_NAME" = "RexOne" ]; then
-      web_env_name="rexone.me"
-      web_domain="rexone.me"
+      web_env_name="rexone.com"
+      web_domain="rexone.com"
     fi
     update_env_var "$WEB_DIR/.env.example" "VITE_REACT_APP_NAME" "$web_env_name"
+    update_env_var "$WEB_DIR/.env.example" "VITE_REACT_APP_FROM_EMAIL" "${RESOLVED_FROM_EMAIL}"
     node -e "
       const fs = require('fs');
       const f = '$WEB_DIR/.env.example';
@@ -401,7 +398,7 @@ if [ -d "$WEB_DIR" ]; then
   # Update Web uat.sh and prod.sh scripts default URLs
   web_script_domain="${BRAND_DOMAIN}"
   if [ "$BRAND_NAME" = "RexOne" ]; then
-    web_script_domain="rexone.me"
+    web_script_domain="rexone.com"
   fi
   if [ -f "$WEB_DIR/scripts/uat.sh" ]; then
     sedi -E "s|https://uat\.api\.[a-zA-Z0-9_.-]+|https://uat.api.${web_script_domain}|g" "$WEB_DIR/scripts/uat.sh"
@@ -418,7 +415,7 @@ if [ -d "$WEB_DIR" ]; then
   if [ -f "$WEB_DIR/docker-compose.yaml" ]; then
     compose_domain="${BRAND_DOMAIN}"
     if [ "$BRAND_NAME" = "RexOne" ]; then
-      compose_domain="rexone.me"
+      compose_domain="rexone.com"
     fi
     sedi -E "s|container_name: \\\$\{WEB_CONTAINER_NAME:-[^}]*\}|container_name: \${WEB_CONTAINER_NAME:-prod-${BRAND_SLUG_KEBAB}-web}|g" "$WEB_DIR/docker-compose.yaml"
     sedi -E "s|name: \\\$\{DOCKER_NETWORK:-[^}]*\}|name: \${DOCKER_NETWORK:-prod-${BRAND_SLUG_KEBAB}-net}|g" "$WEB_DIR/docker-compose.yaml"
@@ -448,15 +445,6 @@ if [ -d "$WEB_DIR" ]; then
   fi
 
 
-  # Update AdminNotificationPreview.tsx preview email and brand
-  if [ -f "$WEB_DIR/src/modules/admin/notification/components/AdminNotificationPreview.tsx" ]; then
-    admin_brand="$BRAND_NAME"
-    admin_email="support@${BRAND_DOMAIN}"
-    sedi -E "s|support@[a-zA-Z0-9_.-]+|${admin_email}|g" "$WEB_DIR/src/modules/admin/notification/components/AdminNotificationPreview.tsx"
-    sedi -E "s|Welcome to [^!]+!|Welcome to ${admin_brand}!|g" "$WEB_DIR/src/modules/admin/notification/components/AdminNotificationPreview.tsx"
-    sedi -E "s|joining [^!]+!|joining ${admin_brand}!|g" "$WEB_DIR/src/modules/admin/notification/components/AdminNotificationPreview.tsx"
-    echo "  ✅ Web: Updated AdminNotificationPreview.tsx brand references"
-  fi
 
   # Update Web notificationRoute helper default origin
   if [ -f "$WEB_DIR/src/modules/notification/helpers/notificationRoute.helper.ts" ]; then
@@ -500,7 +488,7 @@ if [ -d "$MOBILE_DIR" ]; then
   echo "📱 Rebranding Mobile Client ($MOBILE_DIR)..."
 
   if [ -f "$MOBILE_DIR/scripts/rebrand.sh" ]; then
-    bash "$MOBILE_DIR/scripts/rebrand.sh" "$MOBILE_APP_NAME" "$MOBILE_PACKAGE" "$RESOLVED_LOGO_PATH" "$BRAND_NAME" "$BRAND_DOMAIN"
+    bash "$MOBILE_DIR/scripts/rebrand.sh" "$MOBILE_APP_NAME" "$MOBILE_PACKAGE" "$RESOLVED_LOGO_PATH" "$BRAND_NAME" "$BRAND_DOMAIN" "$RESOLVED_FROM_EMAIL"
   fi
 else
   echo "ℹ️  Mobile repository not found at $MOBILE_DIR (skipping)"
@@ -527,4 +515,9 @@ echo "   4. SEO & AI Discovery: RexOne SEO (index.html meta/Schema.org, robots.t
 echo "      sitemap.xml, llms.txt, llms-full.txt) is left completely untouched."
 echo "      RexOne is the foundation architecture product. Defining product-specific"
 echo "      SEO for your product is 100% the developer's responsibility."
+echo "   5. Documentation & Policies: All documentation files (README.md,"
+echo "      ECOSYSTEM.md, CODE_OF_CONDUCT.md, COMMUNITY_STANDARDS.md, docs/*)"
+echo "      are intentionally left untouched. New products require their own"
+echo "      documentation; documenting derivative products is 100% developer"
+echo "      responsibility."
 echo "============================================================"

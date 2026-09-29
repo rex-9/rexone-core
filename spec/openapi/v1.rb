@@ -1467,6 +1467,12 @@ module Openapi
             body: ref(:current_user_update_request),
             errors: [ 401, 422 ],
             success_schema: ref(:current_user_response)
+          ),
+          delete: operation(
+            tags: "Users",
+            summary: "Delete (soft-delete / discard) the current user account and invalidate active sessions",
+            errors: [ 401, 422 ],
+            success_schema: ref(:current_user_response)
           )
         }
       }

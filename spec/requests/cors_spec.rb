@@ -36,36 +36,36 @@ RSpec.describe "CORS Policy", type: :request do
       expect(response.headers["Access-Control-Allow-Origin"]).to eq("http://www.rexone.rex9.me")
     end
 
-    it "allows product tier with http, https, and www when PRODUCT_DOMAIN is configured (e.g. rexone.me: prod, uat, dev, www)" do
+    it "allows product tier with http, https, and www when PRODUCT_DOMAIN is configured (e.g. rexone.com: prod, uat, dev, www)" do
       allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("PRODUCT_DOMAIN").and_return("rexone.me")
+      allow(ENV).to receive(:[]).with("PRODUCT_DOMAIN").and_return("rexone.com")
 
-      check_cors("https://rexone.me")
-      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://rexone.me")
+      check_cors("https://rexone.com")
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://rexone.com")
 
-      check_cors("http://rexone.me")
-      expect(response.headers["Access-Control-Allow-Origin"]).to eq("http://rexone.me")
+      check_cors("http://rexone.com")
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("http://rexone.com")
 
-      check_cors("https://www.rexone.me")
-      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://www.rexone.me")
+      check_cors("https://www.rexone.com")
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://www.rexone.com")
 
-      check_cors("https://uat.rexone.me")
-      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://uat.rexone.me")
+      check_cors("https://uat.rexone.com")
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://uat.rexone.com")
 
-      check_cors("http://uat.rexone.me")
-      expect(response.headers["Access-Control-Allow-Origin"]).to eq("http://uat.rexone.me")
+      check_cors("http://uat.rexone.com")
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("http://uat.rexone.com")
 
-      check_cors("https://www.uat.rexone.me")
-      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://www.uat.rexone.me")
+      check_cors("https://www.uat.rexone.com")
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://www.uat.rexone.com")
 
-      check_cors("https://dev.rexone.me")
-      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://dev.rexone.me")
+      check_cors("https://dev.rexone.com")
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://dev.rexone.com")
 
-      check_cors("http://dev.rexone.me")
-      expect(response.headers["Access-Control-Allow-Origin"]).to eq("http://dev.rexone.me")
+      check_cors("http://dev.rexone.com")
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("http://dev.rexone.com")
 
-      check_cors("https://www.dev.rexone.me")
-      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://www.dev.rexone.me")
+      check_cors("https://www.dev.rexone.com")
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://www.dev.rexone.com")
     end
 
     it "dynamically allows custom PRODUCT_DOMAIN with any TLD (e.g. .com, .io, .ai)" do

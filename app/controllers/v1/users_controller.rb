@@ -38,6 +38,39 @@ class V1::UsersController < V1::ApplicationController
     end
   end
 
+  # DELETE /users/current
+  def discard_current_user
+    if current_user.super_admin?
+      return render_json_response(
+        status_code: 422,
+        message: user_message(MessageService::User::SUPER_ADMIN_CANNOT_DELETE)
+      )
+    end
+
+    user = current_user
+    if user.discard
+      user.update_column(:jti, SecureRandom.uuid)
+      AuthConstants::Session.clear_all(user.id)
+      SocketService::Client.broadcast(
+        user_id: user.id,
+        message: user_message(MessageService::User::ACCOUNT_DELETED),
+        data: { type: NotificationConstants::NotificationType::SESSION_INVALIDATED }
+      )
+
+      render_json_response(
+        status_code: 200,
+        message: user_message(MessageService::User::ACCOUNT_DELETED),
+        data: UserSerializer.record(user)
+      )
+    else
+      render_json_response(
+        status_code: 422,
+        message: user_message(MessageService::User::ACCOUNT_DELETE_FAILED),
+        error: user.errors.full_messages.to_sentence
+      )
+    end
+  end
+
   private
 
   def current_user_params

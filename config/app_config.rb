@@ -28,10 +28,10 @@ module AppConfig
   EMAIL_PROVIDER = env_or.call("EMAIL_PROVIDER", "brevo")
   SMTP_ADDRESS = env_or.call("SMTP_ADDRESS", "smtp.gmail.com")
   SMTP_PORT = env_or.call("SMTP_PORT", "587").to_i
-  SMTP_DOMAIN = env_or.call("SMTP_DOMAIN", "rexone.me")
+  SMTP_DOMAIN = env_or.call("SMTP_DOMAIN", "rexone.com")
   SMTP_USERNAME = env_or.call("SMTP_USERNAME", "")
   SMTP_PASSWORD = env_or.call("SMTP_PASSWORD", "")
-  FROM_EMAIL = env_or.call("FROM_EMAIL", "support@rexone.me")
+  FROM_EMAIL = env_or.call("FROM_EMAIL", "support@rexone.com")
   BREVO_API_KEY = env_or.call("BREVO_API_KEY", "")
   BREVO_BASE_URL = env_or.call("BREVO_BASE_URL", "https://api.brevo.com/v3")
 

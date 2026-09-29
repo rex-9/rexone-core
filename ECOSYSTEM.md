@@ -177,6 +177,14 @@ Solid Queue operates under a hybrid concurrency architecture configured in `conf
 - **Passcode Authentication**: 6-digit numeric passcodes verified via Devise with escalating cooldown protection.
 - **Google OAuth**: Links Google accounts directly, handles registration challenge flows, and sets up authentication without loose intermediate states.
 
+### 🗑️ User Account Deletion (`DELETE /v1/users/current`)
+
+- **User-Facing Terminology**: Surfaces as **"Delete Account"** in user interfaces for absolute clarity.
+- **Email Reservation**: The email address remains reserved and cannot be reused to register a new account.
+- **Confirmation Prompt**: Frontends MUST display a confirmation dialog warning users that the account will be deleted, that the email address cannot be reused for future registration, and directing users to contact support (`support@rexone.com`) if needed.
+- **Comprehensive Session Revocation**: Deletion rotates `user.jti = SecureRandom.uuid`, clears active sessions (`AuthConstants::Session.clear_all`), and broadcasts `NotificationConstants::Type::SESSION_INVALIDATED` over Action Cable, immediately terminating active sessions across Web and Mobile.
+- **Super-Admin Protection**: Super administrators (`super_admin`) are strictly forbidden from self-deletion (returns `422 Unprocessable Content`).
+
 ### 🔐 RBAC Model & Administrative Hierarchy
 
 Permissions follow a clean, four-level administrative model:

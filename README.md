@@ -243,7 +243,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 | Foundation     | What is ready                                                                                                                                                        | Details                                                                               |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions                                                                                               | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
+| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions, self-account deletion                                        | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
 | Authorization  | Roles, permissions, user-role and role-permission assignments                                                                                                        | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
 | Commerce       | Universal multi-provider billing (Stripe, Google Play, Apple App Store, Free tiers), one-time purchases, subscriptions, coupons & referrals, access entitlements         | [Universal Payments](docs/PAYMENT.md) · [Entitlements](docs/FOUNDATION.md#payments-and-entitlements) |
 | Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                                                                      | [Background processing](#background-processing)                                       |
@@ -427,6 +427,7 @@ RexOne Core serves as the master rebranding engine for the entire ecosystem:
 # 2. Local environment variables in .env:
 APP_NAME="My New App Name"
 DEFAULT_MAIL_SENDER="no-reply@mynewapp.com"
+FROM_EMAIL="support@mynewapp.com"
 ```
 
 > [!NOTE]

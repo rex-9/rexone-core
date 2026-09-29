@@ -7,9 +7,9 @@
     "description": "Unified Cross-Platform Product Foundation",
     "company": "Rex9",
     "author": "Rex (Htet Naing)",
-    "supportEmail": "rex9.tech@gmail.com",
     "website": "https://rex9.me",
-    "domain": "rexone.rex9.me",
+    "domain": "rexone.com",
+    "supportEmail": "support@rexone.com",
     "logoPath": "brand/logo.png"
   },
   "mobile": {
@@ -24,6 +24,6 @@
   },
   "core": {
     "appName": "RexOne Core",
-    "mailerSender": "no-reply@rexone.com"
+    "mailerSender": "support@rexone.com"
   }
 }

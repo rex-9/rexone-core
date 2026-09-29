@@ -7,7 +7,7 @@
     "description": "Unified Streamlining Platform",
     "company": "Rex9",
     "author": "Rex (Htet Naing)",
-    "supportEmail": "rex9.tech@gmail.com",
+    "supportEmail": "support@pulseflow.com",
     "website": "https://rex9.me",
     "logoPath": "brand/logo.png"
   },
@@ -23,6 +23,6 @@
   },
   "core": {
     "appName": "Pulse Flow Core",
-    "mailerSender": "no-reply@pulseflow.me"
+    "mailerSender": "support@pulseflow.com"
   }
 }

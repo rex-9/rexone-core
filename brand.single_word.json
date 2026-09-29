@@ -7,7 +7,7 @@
     "description": "Intelligent Cloud Platform",
     "company": "Rex9",
     "author": "Rex (Htet Naing)",
-    "supportEmail": "rex9.tech@gmail.com",
+    "supportEmail": "support@nova.com",
     "website": "https://rex9.me",
     "logoPath": "brand/logo.png"
   },
@@ -23,6 +23,6 @@
   },
   "core": {
     "appName": "Nova Core",
-    "mailerSender": "no-reply@nova.me"
+    "mailerSender": "support@nova.com"
   }
 }

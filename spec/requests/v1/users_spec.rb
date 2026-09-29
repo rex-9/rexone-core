@@ -104,4 +104,45 @@ RSpec.describe "V1 Users API", type: :request do
       expect(response_data.dig("attributes", "name")).to eq("Nope")
     end
   end
+
+  describe "DELETE /v1/users/current" do
+    it "soft-deletes (discards) the current user and clears active sessions" do
+      expect(SocketService::Client).to receive(:broadcast).with(
+        hash_including(
+          user_id: user.id,
+          data: { type: NotificationConstants::NotificationType::SESSION_INVALIDATED }
+        )
+      )
+
+      original_jti = user.jti
+
+      delete "/v1/users/current", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response_status["message"]).to eq(I18n.t("user.account_deleted"))
+      expect(user.reload.discarded?).to be(true)
+      expect(user.jti).not_to eq(original_jti)
+      expect(user.active_for_authentication?).to be(false)
+    end
+
+    it "blocks super admin accounts from self-deletion" do
+      super_admin_role = create(:role, name: IamConstants::Role::SUPER_ADMIN)
+      user.roles << super_admin_role
+
+      delete "/v1/users/current", headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response_status["message"]).to eq(I18n.t("user.super_admin_cannot_delete"))
+      expect(user.reload.discarded?).to be(false)
+    end
+
+    it "does not require an IAM permission to discard the current user's own document" do
+      user.user_roles.destroy_all
+
+      delete "/v1/users/current", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(user.reload.discarded?).to be(true)
+    end
+  end
 end

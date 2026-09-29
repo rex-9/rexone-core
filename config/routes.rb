@@ -127,8 +127,11 @@ Rails.application.routes.draw do
     end
 
     # ===== USERS =====
-    get "users/current", to: "users#read_current_user"
-    put "users/current", to: "users#update_current_user"
+    scope :users, controller: :users do
+      get :current, action: :read_current_user
+      put :current, action: :update_current_user
+      delete :current, action: :discard_current_user
+    end
 
     # ===== ADMIN API =====
     # React Admin Dashboard.

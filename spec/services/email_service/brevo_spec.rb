@@ -4,7 +4,7 @@ RSpec.describe EmailService::Brevo do
   before do
     stub_const("AppConfig::BREVO_API_KEY", "brevo-key")
     stub_const("AppConfig::BREVO_BASE_URL", "https://api.brevo.com/v3")
-    stub_const("AppConfig::FROM_EMAIL", "support@rexone.me")
+    stub_const("AppConfig::FROM_EMAIL", "support@rexone.com")
   end
 
   subject(:provider) { described_class.new }
@@ -15,7 +15,7 @@ RSpec.describe EmailService::Brevo do
     expect(RestClient).to receive(:post).with(
       "https://api.brevo.com/v3/smtp/email",
       {
-        sender: { email: "support@rexone.me" },
+        sender: { email: "support@rexone.com" },
         to: [ { email: "user@example.com" } ],
         subject: "Welcome",
         htmlContent: "<p>Hello</p>"
@@ -36,7 +36,7 @@ RSpec.describe EmailService::Brevo do
     expect(RestClient).to receive(:post).with(
       "https://api.brevo.com/v3/smtp/email",
       {
-        sender: { email: "support@rexone.me" },
+        sender: { email: "support@rexone.com" },
         to: [ { email: "user@example.com" } ],
         templateId: 42,
         params: { code: "123456" }

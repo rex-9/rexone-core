@@ -6,6 +6,9 @@ en:
     iam_fetched: "User IAM fetched"
     current_updated: "Profile updated successfully."
     current_update_failed: "Failed to update profile."
+    account_deleted: "Your account has been deleted successfully."
+    account_delete_failed: "Failed to delete account."
+    super_admin_cannot_delete: "Super admin accounts cannot be deleted."
   activerecord:
     attributes:
       user:

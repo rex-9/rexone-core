@@ -137,6 +137,7 @@ RSpec.describe "OpenAPI V1 document" do
       [ "/confirmation/confirm_code", :post ] => :auth_session_response,
       [ "/v1/users/current", :get ] => :current_user_response,
       [ "/v1/users/current", :put ] => :current_user_response,
+      [ "/v1/users/current", :delete ] => :current_user_response,
       [ "/v1/assets/upload", :post ] => :asset_upload_response,
       [ "/v1/admin/assets/upload", :post ] => :asset_upload_response,
       [ "/v1/admin/assets/{id}/compress", :post ] => :asset_operation_response,

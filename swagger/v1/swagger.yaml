@@ -4592,6 +4592,55 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/current_user_update_request"
+    delete:
+      tags:
+        - Users
+      summary:
+        Delete (soft-delete / discard) the current user account and invalidate
+        active sessions
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/current_user_response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "422":
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
   "/v1/admin/users":
     get:
       tags:

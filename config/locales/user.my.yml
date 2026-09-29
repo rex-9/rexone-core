@@ -6,6 +6,9 @@ my:
     iam_fetched: "အသုံးပြုသူ IAM အချက်အလက်ကို ရယူပြီးပါပြီ"
     current_updated: "ပရိုဖိုင်ကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။"
     current_update_failed: "ပရိုဖိုင်ကို ပြင်ဆင်ရန် မအောင်မြင်ပါ။"
+    account_deleted: "သင့်အကောင့်ကို အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။"
+    account_delete_failed: "အကောင့်ဖျက်ရန် မအောင်မြင်ပါ။"
+    super_admin_cannot_delete: "စူပါအက်ဒမင် အကောင့်များကို ဖျက်၍မရပါ။"
   activerecord:
     attributes:
       user:
