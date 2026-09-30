@@ -12,7 +12,7 @@ A centralized registry of public software indexes, curated lists, and developer 
 | **Awesome-Selfhosted** | `Software Development - Low Code`                                   | ⏳ In Review  | [awesome-selfhosted-data #3145](https://github.com/awesome-selfhosted/awesome-selfhosted-data/issues/3145) |
 | **Awesome-Flutter**    | `Open Source Apps` / `Top`                                          | ⏳ PR Open    | [awesome-flutter PR #1078](https://github.com/Solido/awesome-flutter/pull/1078)                            |
 | **Awesome-React**      | `React Real Apps`                                                   |  ⏳ PR Open  | [awesome-react PR #1859](https://github.com/enaqx/awesome-react/pull/1859)                                 |
-| **Awesome-Rails**              | `Open Source Rails Apps`                                            |  ⏳ PR Open  | [awesome-rails PR #158](https://github.com/gramantin/awesome-rails/pull/158)                               |
+| **Awesome-Rails**              | `Open Source Rails Apps`                                            |   ✅ Merged   | [awesome-rails PR #158](https://github.com/gramantin/awesome-rails/pull/158)                               |
 | **Awesome-SaaS-Boilerplates**  | `Ruby on Rails` & `Open Source`                                     |  ⏳ PR Open  | [xcomptek/awesome-saas-boilerplates PR #236](https://github.com/xcomptek/awesome-saas-boilerplates/pull/236) |
 
 ---
