@@ -781,6 +781,28 @@ RSpec.describe Payment::Providers::Stripe do
           )
         )
       end
+
+      it "converts ISO 8601 expires_at string to Unix timestamp for redeem_by" do
+        stripe_coupon = instance_double("Stripe::Coupon", id: "EXPIRE20")
+        allow(Stripe::Coupon).to receive(:create).and_return(stripe_coupon)
+
+        target_time = 7.days.from_now.change(usec: 0)
+
+        result = service.create_coupon(
+          code: "EXPIRE20",
+          title: "Expiring 20% Off",
+          coupon_type: :percentage,
+          amount: 20,
+          expires_at: target_time.iso8601
+        )
+
+        expect(result[:data]).to be_a(Payment::Coupon)
+        expect(Stripe::Coupon).to have_received(:create).with(
+          hash_including(
+            redeem_by: target_time.to_i
+          )
+        )
+      end
     end
 
     describe "#update_coupon" do

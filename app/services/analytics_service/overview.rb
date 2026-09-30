@@ -86,11 +86,7 @@ module AnalyticsService
     end
 
     def parse_utc(value, fallback:)
-      return fallback if value.blank?
-
-      Time.zone.parse(value.to_s)&.utc || fallback
-    rescue
-      fallback
+      TimeService.parse_utc(value, fallback: fallback)
     end
 
     ACTIVE_SUB_STATUSES = [

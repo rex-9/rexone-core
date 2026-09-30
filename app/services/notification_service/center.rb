@@ -260,7 +260,7 @@ module NotificationService
         template = template_for(NotificationConstants::NotificationType::SUBSCRIPTION_CANCELED)
         context = {
           product_name: product.name,
-          active_until: active_until ? Time.zone.at(active_until).strftime("%B %d, %Y") : nil
+          active_until: active_until ? TimeService.parse_utc(active_until)&.strftime("%B %d, %Y") : nil
         }
 
         title = template ? template.render_text(template.in_app_title, user: user, context: context) : payment_message(MessageService::Payment::SUBSCRIPTION_CANCELED_TITLE)
@@ -281,7 +281,7 @@ module NotificationService
           data: {
             type: NotificationConstants::NotificationType::SUBSCRIPTION_CANCELED,
             product_name: product.name,
-            active_until: active_until ? Time.zone.at(active_until).iso8601 : nil
+            active_until: active_until ? TimeService.iso8601(active_until) : nil
           },
           send_socket: true,
           send_push: true,
@@ -292,7 +292,7 @@ module NotificationService
             user_name: user.name || user.username,
             product_name: product.name,
             canceled_on: subscription.canceled_at ? format_date(subscription.canceled_at) : payment_message(MessageService::Payment::TODAY),
-            valid_until: active_until ? Time.zone.at(active_until).strftime("%B %d, %Y") : payment_message(MessageService::Payment::END_OF_PERIOD)
+            valid_until: active_until ? TimeService.parse_utc(active_until)&.strftime("%B %d, %Y") : payment_message(MessageService::Payment::END_OF_PERIOD)
           },
           **kwargs
         )
@@ -534,7 +534,7 @@ module NotificationService
         payment_message(
           key,
           product_name: product.name,
-          active_until: active_until ? (active_until.is_a?(Numeric) ? Time.zone.at(active_until).strftime("%B %d, %Y") : active_until.strftime("%B %d, %Y")) : nil
+          active_until: active_until ? TimeService.parse_utc(active_until)&.strftime("%B %d, %Y") : nil
         )
       end
 

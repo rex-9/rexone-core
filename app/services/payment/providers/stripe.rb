@@ -287,7 +287,11 @@ module Payment
           end
 
           stripe_params[:max_redemptions] = attributes[:max_usage].to_i if attributes[:max_usage].to_i.positive?
-          stripe_params[:redeem_by] = attributes[:expires_at].to_i if attributes[:expires_at].present?
+          if attributes[:expires_at].present?
+            epoch = TimeService.to_epoch(attributes[:expires_at])
+            stripe_params[:redeem_by] = epoch if epoch
+            attributes = attributes.merge(expires_at: TimeService.parse_utc(attributes[:expires_at]))
+          end
           if attributes[:metadata].present? && attributes[:metadata].is_a?(Hash)
             stripe_params[:metadata] = attributes[:metadata].stringify_keys.transform_values(&:to_s)
           end
@@ -564,9 +568,7 @@ module Payment
       end
 
       def stripe_time(timestamp)
-        return nil if timestamp.blank?
-
-        Time.at(timestamp).utc
+        TimeService.parse_utc(timestamp)
       end
 
       def stripe_object_id(value)
