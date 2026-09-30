@@ -46,6 +46,12 @@ if [ -z "$(docker compose -f "$COMPOSE_FILE" ps --status running -q "$SERVICE")"
   docker compose -f "$COMPOSE_FILE" up -d "$SERVICE" || exit $?
 fi
 
+DOCKER_EXEC_FLAGS=""
+if [ ! -t 0 ] || [ "${CI:-false}" = "true" ]; then
+  DOCKER_EXEC_FLAGS="-T"
+fi
+
 printf '%s\n' "Running RuboCop in the API container..."
-docker compose -f "$COMPOSE_FILE" exec "$SERVICE" \
+# shellcheck disable=SC2086
+docker compose -f "$COMPOSE_FILE" exec $DOCKER_EXEC_FLAGS "$SERVICE" \
   bundle exec rubocop "$@"

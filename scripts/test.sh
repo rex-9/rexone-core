@@ -50,6 +50,12 @@ if [ "$#" -eq 0 ]; then
   set -- spec
 fi
 
+DOCKER_EXEC_FLAGS=""
+if [ ! -t 0 ] || [ "${CI:-false}" = "true" ]; then
+  DOCKER_EXEC_FLAGS="-T"
+fi
+
 printf '%s\n' "Running specs in the API container (RAILS_ENV=test)..."
-docker compose -f "$COMPOSE_FILE" exec -e RAILS_ENV=test "$SERVICE" \
+# shellcheck disable=SC2086
+docker compose -f "$COMPOSE_FILE" exec $DOCKER_EXEC_FLAGS -e RAILS_ENV=test "$SERVICE" \
   bundle exec rspec "$@"
