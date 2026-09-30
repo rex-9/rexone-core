@@ -134,6 +134,10 @@ class Payment::Coupon < ApplicationRecord
       end
     end
 
+    if referrer_id.present? && user.id == referrer_id
+      return { valid: false, error: MessageService::Payment::COUPON_INVALID }
+    end
+
     discount_data = calculate_discount(product)
     {
       valid: true,

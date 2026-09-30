@@ -287,7 +287,7 @@ module Payment
           end
 
           stripe_params[:max_redemptions] = attributes[:max_usage].to_i if attributes[:max_usage].to_i.positive?
-          stripe_params[:redeem_by] = attributes[:expires_at].to_i if attributes[:expires_at].present?
+          stripe_params[:redeem_by] = Time.zone.parse(attributes[:expires_at].to_s).to_i if attributes[:expires_at].present?
           if attributes[:metadata].present? && attributes[:metadata].is_a?(Hash)
             stripe_params[:metadata] = attributes[:metadata].stringify_keys.transform_values(&:to_s)
           end
