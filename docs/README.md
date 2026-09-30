@@ -4,7 +4,7 @@ This directory serves as the technical documentation manual for **RexOne Core** 
 
 ---
 
-## 📚 Documentation Indexx
+## 📚 Documentation Index
 
 | Guide                                    | Description                                                                           | Canonical Path                                            |
 | :--------------------------------------- | :------------------------------------------------------------------------------------ | :-------------------------------------------------------- |
