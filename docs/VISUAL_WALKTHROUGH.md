@@ -932,7 +932,7 @@ This gives the backend one place to inspect failures originating outside Rails i
 
 The Operations Center is where RexOne visibly demonstrates that “observable” is an architectural property, not a marketing word.
 
-Accessible on `http://localhost:3000` via Super Admin credentials (`username: superadmin`, `passcode: 111111`), Core mounts multiple protected operational surfaces:
+Accessible on `http://localhost:3000` via authorized administrative credentials, Core mounts multiple protected operational surfaces:
 
 | Path           | Surface                     | Purpose                                         |
 | -------------- | --------------------------- | ----------------------------------------------- |
@@ -941,9 +941,9 @@ Accessible on `http://localhost:3000` via Super Admin credentials (`username: su
 | `/admin/red`   | Rails Error Dashboard (RED) | Backend exception investigation and diagnostics |
 | `/admin/queue` | Solid Web UI — Queue        | Solid Queue inspection/control                  |
 | `/admin/cache` | Solid Web UI — Cache        | Solid Cache inspection                          |
-| `/admin/cable` | Solid Web UI — Cable        | Solid Cable activity                            |
-| `/api-docs`    | Rswag / Swagger UI          | Interactive OpenAPI documentation               |
-| `/up`          | Rails health endpoint       | Application health check                        |
+| `/admin/cable`    | Solid Web UI — Cable        | Solid Cable activity                            |
+| `/admin/api-docs` | Rswag / Swagger UI          | Interactive OpenAPI documentation               |
+| `/up`             | Rails health endpoint       | Application health check                        |
 
 ## 13.1 Administrate — server back office
 
@@ -1014,7 +1014,7 @@ The cable dashboard exposes message/channel activity, volume, and retention beha
   <img src="./images/walkthrough/operations/o07-swagger.png" alt="O07 — Swagger/OpenAPI API docs" width="100%">
 </p>
 
-`/api-docs` makes the HTTP contract inspectable and testable instead of requiring developers to reverse-engineer routes from client code.
+`/admin/api-docs` makes the HTTP contract inspectable and testable instead of requiring developers to reverse-engineer routes from client code.
 
 **Open-source credit:** [rswag/rswag](https://github.com/rswag/rswag)
 

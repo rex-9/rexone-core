@@ -51,7 +51,7 @@ All development tasks are automated via deterministic shell scripts located in `
 
 ## 🌐 API Route Directory
 
-For interactive OpenAPI/Swagger exploration, visit `/api-docs` when the API is running. The authoritative route families defined in [`config/routes.rb`](../config/routes.rb) include:
+For interactive OpenAPI/Swagger exploration, visit `/admin/api-docs` when the API is running. The authoritative route families defined in [`config/routes.rb`](../config/routes.rb) include:
 
 - **Authentication (`/signup`, `/signin`, `/confirmation/*`, `/password/*`)**: Stateless Devise JWT, OTP email verification, atomic JTI revocation lists, and Google OAuth challenge exchanges.
 - **IAM & Users (`/v1/users/*`, `/v1/iam/*`)**: Hierarchical role assignments, resource permission grids, user profile updates, and active session management.

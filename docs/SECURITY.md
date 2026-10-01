@@ -82,6 +82,7 @@ All public identity endpoints are protected by hardware-level IP throttles:
 | **`/confirmation/send_code`** | `POST` | **10 requests / 5 mins** | **Transactional Email Bombing**: Prevents draining email quotas (Brevo/SES). |
 | **`/password/forgot`** | `POST` | **10 requests / 5 mins** | **Reset Flooding & Harassment**: Prevents repeated reset email delivery. |
 | **General Auth** | `*` | **60 req / 1 min** | **Baseline DoS Shielding**: Absorbs general authentication traffic spikes. |
+| **`/admin*`** | `*` | **60 req / 1 min** | **Administrative Surface Shielding**: Restricts automated scanners and unauthorized probes. |
 
 When throttled, the API returns HTTP 429 (`Too Many Requests`) with a standardized JSON envelope and `Retry-After` header.
 

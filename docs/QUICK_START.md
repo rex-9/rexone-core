@@ -119,7 +119,7 @@ The seed task creates default roles, permissions, assignments, and development a
 Open:
 
 - Health check: [http://localhost:3000/up](http://localhost:3000/up)
-- OpenAPI UI: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+- OpenAPI UI: [http://localhost:3000/admin/api-docs](http://localhost:3000/admin/api-docs)
 - Super-admin record dashboard: [http://localhost:3000/admin](http://localhost:3000/admin)
 
 A successful `/up` response confirms the API process is reachable. It does not by itself verify every optional provider.
@@ -161,7 +161,7 @@ After Core and Web are connected, a useful first evaluation is:
 3. Confirm navigation reflects the account's IAM permissions.
 4. Upload a supported asset.
 5. Observe its queued/processing state and real-time completion notification while `media` is running.
-6. Inspect the API contract at `/api-docs` and the resulting record in the permitted administration interface.
+6. Inspect the API contract at `/admin/api-docs` and the resulting record in the permitted administration interface.
 
 This verifies authentication, IAM, API transport, PostgreSQL, Garage, Solid Queue, Action Cable, and the Web operation lifecycle in one connected workflow.
 

@@ -220,14 +220,7 @@ RailsPulse.configure do |config|
 
   # Example 4: Basic HTTP authentication
   config.authentication_method = proc {
-    authenticate_or_request_with_http_basic("Admin Area") do |username, password|
-      user = User.find_by(username: username)
-      # Check if user exists, password is valid, and user is admin
-      user&.valid_password?(password) && user.admin?
-    end
-    # authenticate_or_request_with_http_basic do |username, password|
-    #   username == ENV['RAILS_PULSE_USERNAME'] && password == ENV['RAILS_PULSE_PASSWORD']
-    # end
+    AdminAuthService.http_basic_authenticate(self)
   }
 
   # Example 5: Custom authorization check

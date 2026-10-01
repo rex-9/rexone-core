@@ -97,7 +97,7 @@ Speech capabilities include:
 - Pagy offset pagination for every collection endpoint.
 - Versioned client routes under `/v1` and a separate `/v1/admin` namespace.
 - Request-scoped Rails I18n messages organized by domain.
-- Rswag-generated OpenAPI documentation at `/api-docs`.
+- Rswag-generated OpenAPI documentation at `/admin/api-docs`.
 - UTC-only persistence and transport; clients own local-time presentation.
 
 See [SCHEMA.md](SCHEMA.md) for application records and [LAW.md](../LAW.md) for the binding architectural rules.

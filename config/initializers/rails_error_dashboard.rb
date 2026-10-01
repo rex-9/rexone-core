@@ -6,21 +6,11 @@ RailsErrorDashboard.configure do |config|
   # ============================================================================
 
   config.authenticate_with = -> {
-    authenticate_or_request_with_http_basic("Admin Area") do |username, password|
-      user = User.find_by(username: username)
-
-      next false unless user&.valid_password?(password)
-      next false unless user.admin?
-
-      true
-    end
+    AdminAuthService.http_basic_authenticate(self)
   }
 
-  # Dashboard authentication credentials
-  # ⚠️ CHANGE THESE BEFORE PRODUCTION! ⚠️
-  # Authentication is ALWAYS enforced in ALL environments (production, development, test)
-  # config.dashboard_username = ENV.fetch("ERROR_DASHBOARD_USER", "gandalf")
-  # config.dashboard_password = ENV.fetch("ERROR_DASHBOARD_PASSWORD", "youshallnotpass")
+  # Authentication is centralized through AdminAuthService
+  # (enforcing attempt cooldowns, IP failure lockouts, and Rack::Attack throttling)
 
   # === Custom Authentication (optional) ===
   # Use your app's existing auth instead of HTTP Basic Auth.

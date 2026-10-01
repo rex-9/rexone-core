@@ -13,20 +13,7 @@ module Admin
     private
 
     def authenticate_admin
-      authenticate_or_request_with_http_basic("Admin Area") do |username, password|
-        user = User.find_by(username: username)
-
-        next false unless user&.valid_password?(password)
-        next false unless user.admin?
-
-        @current_user = user
-        Current.auditor = user
-      end
-
-      # http_basic_authenticate_or_request_with(
-      #   name: AppConfig::RAILS_ADMIN_USERNAME,
-      #   password: AppConfig::RAILS_ADMIN_PASSWORD
-      # )
+      AdminAuthService.http_basic_authenticate(self)
     end
 
     # Override this value to specify the number of elements to display at a time

@@ -57,6 +57,12 @@ class Rack::Attack
     )
   end
 
+  # Baseline protection for operational admin dashboards and OpenAPI documentation.
+  # Restricts automated scanners and passcode generators to 60 requests/min per IP.
+  throttle("admin/req/ip", limit: 60, period: 1.minute) do |req|
+    req.ip if req.path.start_with?("/admin")
+  end
+
   # ── Responses ─────────────────────────────────────────────────────────────
 
   self.throttled_responder = lambda do |req|

@@ -33,7 +33,7 @@ Built under an immutable creed: **Start from One. Not from Zero. Clear in though
 | Resource                              | Purpose & Canonical Specification                                                                                                                                       |
 | :------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **🏛️ Unified Ecosystem**              | Complete cross-platform architecture, feature parity matrix, and communication protocols across Core, Web, and Mobile: **[ECOSYSTEM.md](ECOSYSTEM.md)**                 |
-| **📖 Interactive API Docs & Swagger** | Full OpenAPI 3.0 specification & interactive Swagger UI explorer at `/api-docs`: **[swagger.yaml](swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`)               |
+| **📖 Interactive API Docs & Swagger** | Full OpenAPI 3.0 specification & interactive Swagger UI explorer at `/admin/api-docs`: **[swagger.yaml](swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`)               |
 | **🏛️ System Architecture**            | High-level system topology, domain services, Solid Queue, and provider boundaries: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                                    |
 | **🗄️ Database Schema & Models**        | Complete database schema, tables, UUID indexes, and model associations: **[docs/SCHEMA.md](docs/SCHEMA.md)**                                                             |
 | **🗺️ Visual Walkthrough**             | Screenshot-driven, feature-by-feature tour of RexOne across all surfaces and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**                      |
@@ -434,14 +434,14 @@ cd ../rexone-web && ./scripts/dev.sh
 
 ## 🎛️ Operations & Glass-Box Observability
 
-Built-in operational consoles are mounted directly into the engine, secured by administrative RBAC:
+Built-in operational consoles are mounted directly into the engine, secured by administrative authorization and centralized through `AdminAuthService` (with automated attempt cooldowns, IP failure lockouts, and `Rack::Attack` rate limiting):
 
 - **Resource Administration**: `/admin` (Administrate engine for core models, users, and credentials)
 - **AI Profiles & Diagnostics**: `/admin/ai/profiles` (prompt models) & `/admin/ai/runs` (telemetry audit)
 - **Application Performance Monitoring (APM)**: `/admin/pulse` (request, SQL query, and job latency metrics)
 - **Error Tracking**: `/admin/red` (Rails Error Dashboard with stack traces and request parameters)
 - **Queue & Real-Time Inspection**: `/admin/queue` (Solid Queue), `/admin/cache`, and `/admin/cable`
-- **Interactive API Documentation**: `/api-docs` (Swagger / OpenAPI 3.0 specification)
+- **Interactive API Documentation**: `/admin/api-docs` (Swagger / OpenAPI 3.0 specification, HTTP Basic Auth protected)
 - **System Health**: `/up` (automated zero-downtime container health probes)
 
 Client runtime errors are accepted at `POST /v1/client/logs` and correlated with backend traces.
@@ -455,7 +455,7 @@ To maintain high architectural discipline without cluttering the primary showcas
 | Resource                               | Scope & Canonical Specification                                                                                                                           |
 | :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **📖 Master Documentation Hub**        | Comprehensive engineering reference and scripts catalog: **[`docs/README.md`](docs/README.md)**                                                           |
-| **📑 OpenAPI & Swagger Documentation** | Interactive Swagger UI at `/api-docs` and live API schema: **[`swagger/v1/swagger.yaml`](swagger/v1/swagger.yaml)** (Rake: `rake rswag:specs:swaggerize`) |
+| **📑 OpenAPI & Swagger Documentation** | Interactive Swagger UI at `/admin/api-docs` and live API schema: **[`swagger/v1/swagger.yaml`](swagger/v1/swagger.yaml)** (Rake: `rake rswag:specs:swaggerize`) |
 | **🚀 Ecosystem Quick Start**           | Local Docker setup, database seeding, and startup debugging: **[`docs/QUICK_START.md`](docs/QUICK_START.md)**                                             |
 | **🏛️ Foundation Architecture**         | Deep dive into IAM, Devise JWT, Soft Deletion, and JSON:API: **[`docs/FOUNDATION.md`](docs/FOUNDATION.md)**                                               |
 | **🗄️ Database Schema & Models**        | Complete database schema, tables, UUID indexes, and associations: **[`docs/SCHEMA.md`](docs/SCHEMA.md)**                                                  |

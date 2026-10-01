@@ -14,9 +14,14 @@ Rails.application.routes.draw do
   get "up", to: "rails/health#show", as: :rails_health_check
   # get "up" => "rails/health#show", as: :rails_health_check
 
-  # ===== API DOCS - RSWAG =====
-  mount Rswag::Ui::Engine => "/api-docs"
-  mount Rswag::Api::Engine => "/api-docs"
+  # ===== API DOCS - RSWAG (Admin HTTP Basic Auth Protected) =====
+  mount Rack::Auth::Basic.new(Rswag::Ui::Engine, "Admin Area") { |u, p|
+    AdminAuthService.authenticate(username: u, password: p).present?
+  } => "/admin/api-docs"
+
+  mount Rack::Auth::Basic.new(Rswag::Api::Engine, "Admin Area") { |u, p|
+    AdminAuthService.authenticate(username: u, password: p).present?
+  } => "/admin/api-docs"
 
   # ===== RAILS PULSE PERFORMANCE =====
   mount RailsPulse::Engine => "/admin/pulse"
