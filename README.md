@@ -246,26 +246,97 @@ No prophecy. No magic. No shortcuts disguised as momentum.
 
 Just deliberate engineering, tested boundaries, and a foundation built to remain standing.
 
-## Feature map
+## 🌟 RexOne Feature Showcase
 
-| Foundation     | What is ready                                                                                                                                                        | Details                                                                               |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Identity       | Devise, JWT, confirmation, recovery, Google sign-in, platform sessions, self-account deletion                                        | [Authentication & security](docs/FOUNDATION.md#authentication-and-security)           |
-| Authorization  | Roles, permissions, user-role and role-permission assignments                                                                                                        | [IAM & access control](docs/FOUNDATION.md#iam-and-access-control)                     |
-| Commerce       | Universal multi-provider billing (Stripe, Google Play, Apple App Store, Free tiers), one-time purchases, subscriptions, coupons & referrals, access entitlements         | [Universal Payments](docs/PAYMENT.md) · [Entitlements](docs/FOUNDATION.md#payments-and-entitlements) |
-| Async work     | Solid Queue, dedicated queues, retries, concurrency controls, recurring cleanup                                                                                      | [Background processing](#background-processing)                                       |
-| Notifications  | Socket, push, and email coordination through Action Cable, OneSignal, and Brevo (Master Shell & client URL normalization)                                            | [Notifications & real time](docs/FOUNDATION.md#notifications-and-real-time-delivery)  |
-| Media          | Provider-neutral storage (Garage S3), silent background optimization (FFmpeg + libvips), SVG conversion, posters, SRT subtitle tracks, and progressive playback      | [Media playback](docs/MEDIA_PLAYBACK.md)                                              |
-| Speech         | Synchronous and async TTS, batch STT, and live audio WebSocket streaming through Azure/Nova                                                                          | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| AI             | Durable queued chat, Telegram-style multi-message chunking, persisted history, completion alerts, and language tools                                                 | [AI & speech](docs/FOUNDATION.md#ai-and-speech)                                       |
-| Localization   | Request-scoped English and Myanmar responses with modular domain translations                                                                                        | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Data lifecycle | PostgreSQL, global soft deletion, actor-aware auditing, JSON:API serialization                                                                                       | [Data & API design](docs/FOUNDATION.md#data-and-api-design)                           |
-| Operations     | Performance, errors, client logs, queues, cache, cable, health checks                                                                                                | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
-| Administration | Administrate for Server plus Client Admin API for users (with quick confirmation), IAM, products (with access inspection), chat, assets, notifications, app versions | [Observability & administration](docs/FOUNDATION.md#observability-and-administration) |
-| Security       | Boot Guard, Zero-Trust CORS, Rate Limiting (Rack::Attack), Pre-Commit Secret Scanner                                                                                 | [Security Architecture](docs/SECURITY.md)                                             |
-| Governance     | Constitutional Law (LAW.md: pure deterministic contracts, zero legacy shims) & Agent Operations (AGENTS.md)                                                          | [LAW.md](LAW.md) · [AGENTS.md](AGENTS.md)                                             |
-| Delivery       | Docker images, 5-container topology (API/waka/media/db/garage), graceful shutdown                                                                                    | [Deployment](#deployment)                                                             |
-| Quality        | RSpec, factories, security scanning, dependency auditing, linting                                                                                                    | [Quality toolchain](docs/FOUNDATION.md#quality-toolchain)                             |
+### ⚡ At a Glance: The 8 Sovereign Pillars (Quick Scan)
+
+| Sovereign Pillar | Flagship Capabilities | Differentiator vs Traditional Stacks |
+| :--- | :--- | :--- |
+| 🔐 **Identity & Security** | Devise + JWT, 6-digit passcode auth, Google SSO, single-session lock, self-account deletion | Complete zero-trust lifecycle; zero vendor lock-in to Auth0 or Clerk ($$$). |
+| 🛡️ **IAM & Access Control** | Granular RBAC, 96+ system permissions across 23 resources, declarative `user.can?`, frontend `<AccessGate>` | Eliminates clumsy hardcoded roles; scales seamlessly from simple app to enterprise IAM. |
+| 💳 **Universal Commerce** | Stripe checkout & billing, Google Play / Apple IAP contracts, discount coupons, referral ledger, durable access entitlements | Multi-provider architecture; entitlement engine divorces billing vendor from access rights. |
+| ⚡ **Hybrid Queues (Solid Queue)** | Rails 8 Fiber isolation (50 I/O workers) + isolated OS threads for media & cron, zero Redis dependency | Blazing fast concurrency on PostgreSQL; zero extra server RAM or external Redis costs. |
+| 📦 **S3 Storage & Media Engine** | Self-hosted Garage S3, async libvips image optimization, FFmpeg video transcoding, SRT subtitles, signed URLs | 100% sovereign object storage with zero egress fees; dedicated media container prevents CPU lockup. |
+| 🤖 **Queued AI & Speech** | DeepSeek V3/V4 + Gemini 2.5 Flash, universal TOON serialization, Telegram chunking, live 16kHz STT & binary TTS | Saves 30–60% tokens (no raw JSON); background queued inference survives client disconnects. |
+| 📱 **Native Tri-Platform Synchrony** | Rails 8.1 API + React 19 SPA + Flutter 3 native app, shared OpenAPI v1 specs, Drift SQLite offline storage | Exact contract parity across Web and Mobile; true 60fps native Flutter with offline-first sync. |
+| 📊 **Glass-Box Observability** | Rails Pulse metrics, Rails Error Dashboard (RED), client log ingestion, dual admin portals (internal + API) | Zero external SaaS monitoring fees (Datadog/Sentry); complete operational visibility out of the box. |
+
+---
+
+### 🏛️ Complete Master Feature Matrix (All Features of RexOne)
+
+| Category & Domain | Feature & Capability | Core (Rails) | Web (React) | Mobile (Flutter) | Architectural Reference |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **🔐 Identity & Auth** | Email & 6-Digit Passcode Verification | ✅ | ✅ | ✅ | [Authentication & Security](docs/FOUNDATION.md#authentication-and-security) |
+| | Google SSO & Challenge Flow | ✅ | ✅ | ✅ | [Authentication & Security](docs/FOUNDATION.md#authentication-and-security) |
+| | JWT JTI Revocation & Token Rotation | ✅ | ✅ | ✅ | [Authentication & Security](docs/FOUNDATION.md#authentication-and-security) |
+| | Active Single-Platform Session Enforcement | ✅ | ✅ | ✅ | [Authentication & Security](docs/FOUNDATION.md#authentication-and-security) |
+| | Brute-Force Password Retry Cooldown | ✅ | ✅ | ✅ | [Authentication & Security](docs/FOUNDATION.md#authentication-and-security) |
+| | 6-Digit Password Reset Lifecycle | ✅ | ✅ | ✅ | [Authentication & Security](docs/FOUNDATION.md#authentication-and-security) |
+| | Self-Service Account & Data Deletion (GDPR/Apple) | ✅ | ✅ | ✅ | [Authentication & Security](docs/FOUNDATION.md#authentication-and-security) |
+| **🛡️ Access Control & IAM** | Hierarchical Roles & 96+ System Permissions | ✅ | ✅ | ✅ | [IAM & Access Control](docs/FOUNDATION.md#iam-and-access-control) |
+| | 23 Canonical Domain Resources | ✅ | ✅ | ✅ | [IAM & Access Control](docs/FOUNDATION.md#iam-and-access-control) |
+| | Declarative `user.can?(action, resource)` Engine | ✅ | ✅ | ✅ | [IAM & Access Control](docs/FOUNDATION.md#iam-and-access-control) |
+| | UI Access Gates (`<AccessGate>` / `AppAccessGate`) | N/A | ✅ | ✅ | [IAM & Access Control](docs/FOUNDATION.md#iam-and-access-control) |
+| | Client Admin IAM Manager (Roles & Permission Toggles) | ✅ | ✅ | N/A | [IAM & Access Control](docs/FOUNDATION.md#iam-and-access-control) |
+| **💳 Commerce & Billing** | Stripe Checkout Session Creation & Handoff | ✅ | ✅ (Redirect) | ✅ (WebView) | [Universal Payments](docs/PAYMENT.md) |
+| | Recurring Subscriptions (Tiers, Resumption, Cancellation) | ✅ | ✅ | ✅ | [Universal Payments](docs/PAYMENT.md) |
+| | One-Time Purchases & Lifetime Products | ✅ | ✅ | ✅ | [Universal Payments](docs/PAYMENT.md) |
+| | Multi-Provider In-App Purchases (Google Play & Apple App Store) | ✅ | N/A | ✅ | [Universal Payments](docs/PAYMENT.md) |
+| | Percentage & Fixed Discount Coupons | ✅ | ✅ | ✅ | [Universal Payments](docs/PAYMENT.md) |
+| | Automated User Referral Coupon Generation | ✅ | ✅ | ✅ | [Universal Payments](docs/PAYMENT.md) |
+| | Durable Entitlement Ledger (`Access` Model) | ✅ | ✅ | ✅ | [Payments & Entitlements](docs/FOUNDATION.md#payments-and-entitlements) |
+| | Idempotent Webhook Processing & Ledger Reconcile | ✅ | N/A | N/A | [Universal Payments](docs/PAYMENT.md) |
+| **⚡ Background Processing** | Solid Queue Hybrid Concurrency (Fibers + Threads) | ✅ | N/A | N/A | [Background Processing](#background-processing) |
+| | Fiber Worker Isolation (50 Concurrent I/O Tasks) | ✅ | N/A | N/A | [Background Processing](#background-processing) |
+| | Dedicated Quarantined `media` Worker (libvips/FFmpeg) | ✅ | N/A | N/A | [Background Processing](#background-processing) |
+| | Workload Elasticity & Auto-Failover Queues | ✅ | N/A | N/A | [Background Processing](#background-processing) |
+| | Transactional Recurring Cron (`config/recurring.yml`) | ✅ | N/A | N/A | [Background Processing](#background-processing) |
+| | Zero Redis Dependency (Pure PostgreSQL Concurrency) | ✅ | N/A | N/A | [Background Processing](#background-processing) |
+| **📦 Object Storage & Media** | Self-Hosted Garage S3 (Port 3100 API / 3101 Admin) | ✅ | N/A | N/A | [Media Playback](docs/MEDIA_PLAYBACK.md) |
+| | Cloudinary & Local Filesystem Fallback Adapters | ✅ | N/A | N/A | [Media Playback](docs/MEDIA_PLAYBACK.md) |
+| | Universal S3 Key Addressing (`user/{id}/...`, `admin/...`) | ✅ | ✅ | ✅ | [Media Playback](docs/MEDIA_PLAYBACK.md) |
+| | Async Image Optimization & WebP Conversion (libvips) | ✅ | N/A | N/A | [Media Playback](docs/MEDIA_PLAYBACK.md) |
+| | Video Transcoding & CRF Tuning (FFmpeg) | ✅ | N/A | N/A | [Media Playback](docs/MEDIA_PLAYBACK.md) |
+| | Synchronized SRT Subtitle & Lyric Extraction | ✅ | N/A | ✅ | [Media Playback](docs/MEDIA_PLAYBACK.md) |
+| | Short-Lived Signed Playback URLs (`/playback`) | ✅ | ✅ | ✅ | [Media Playback](docs/MEDIA_PLAYBACK.md) |
+| | Offline AES-GCM Encrypted Media Downloads (Drift SQLite) | N/A | N/A | ✅ | [Ecosystem Matrix](ECOSYSTEM.md#3-rexone_mobile-the-flutter-mobile-client) |
+| **🤖 AI & Speech Workflows** | Multi-Provider LLM Engine (DeepSeek V3/V4 & Gemini 2.5) | ✅ | ✅ | ✅ | [AI Manual](docs/AI_MANUAL.md) |
+| | Universal TOON Serialization (30–60% Token Savings) | ✅ | ✅ | ✅ | [AI Manual](docs/AI_MANUAL.md) |
+| | Durable Background Queued Inference | ✅ | ✅ | ✅ | [AI Manual](docs/AI_MANUAL.md) |
+| | Telegram-Style Message Chunking (2,000-char limits) | ✅ | ✅ | ✅ | [AI Manual](docs/AI_MANUAL.md) |
+| | Real-Time WebSocket Completion Broadcasts | ✅ | ✅ | ✅ | [AI Manual](docs/AI_MANUAL.md) |
+| | Persistent AI Run Telemetry (`Ai::Run` Tokens & Latency) | ✅ | ✅ | N/A | [AI Manual](docs/AI_MANUAL.md) |
+| | Server-Owned AI Persona Profiles (`Ai::Profile`) | ✅ | ✅ | N/A | [AI Manual](docs/AI_MANUAL.md) |
+| | Binary MP3 Text-to-Speech (Azure Speech / Nova) | ✅ | ✅ | ✅ | [AI & Speech](docs/FOUNDATION.md#ai-and-speech) |
+| | Batch Audio Speech-to-Text Transcription | ✅ | ✅ | ✅ | [AI & Speech](docs/FOUNDATION.md#ai-and-speech) |
+| | Live 16kHz Bidirectional STT Audio Streaming | ✅ | ✅ | ✅ | [AI & Speech](docs/FOUNDATION.md#ai-and-speech) |
+| **🔔 Notifications & Real Time** | Tri-Channel Delivery (In-App, Push, Email) | ✅ | ✅ | ✅ | [Notifications & Real Time](docs/FOUNDATION.md#notifications-and-real-time-delivery) |
+| | Mobile Push Notifications via OneSignal | ✅ | N/A | ✅ | [Notifications & Real Time](docs/FOUNDATION.md#notifications-and-real-time-delivery) |
+| | Responsive Transactional Email via Brevo / SMTP | ✅ | N/A | N/A | [Notifications & Real Time](docs/FOUNDATION.md#notifications-and-real-time-delivery) |
+| | Persistent In-App Notification Inbox & Pagy Pagination | ✅ | ✅ | ✅ | [Notifications & Real Time](docs/FOUNDATION.md#notifications-and-real-time-delivery) |
+| | Real-Time Action Cable WebSocket Alerts | ✅ | ✅ | ✅ | [Notifications & Real Time](docs/FOUNDATION.md#notifications-and-real-time-delivery) |
+| | Scheduled Notification Retention Cleanup | ✅ | N/A | N/A | [Notifications & Real Time](docs/FOUNDATION.md#notifications-and-real-time-delivery) |
+| **📱 Client Experience & UI** | 100% Design System Parity (Light / Dark Theming) | N/A | ✅ | ✅ | [Visual Walkthrough](docs/VISUAL_WALKTHROUGH.md) |
+| | Multi-Language Localization (`en`, `es`, `my`) | ✅ | ✅ | ✅ | [Data & API Design](docs/FOUNDATION.md#data-and-api-design) |
+| | Dynamic `X-Locale` / `Accept-Language` Synchronization | ✅ | ✅ | ✅ | [Data & API Design](docs/FOUNDATION.md#data-and-api-design) |
+| | Client Error Telemetry Logging (`/v1/client/logs`) | ✅ | ✅ | ✅ | [Observability](docs/FOUNDATION.md#observability-and-administration) |
+| | User Feedback Engine (1–10 Rating & Auto-Triage) | ✅ | ✅ | ✅ | [Observability](docs/FOUNDATION.md#observability-and-administration) |
+| | In-App Semantic Version Upgrader & Splash Check | ✅ | ✅ | ✅ | [Ecosystem](ECOSYSTEM.md) |
+| | Generative Engine Optimization (GEO & `/llms.txt`) | N/A | ✅ | N/A | [AI Discovery Guide](../rexone-web/docs/SEO_GEO.md) |
+| **📊 Ops, Observability & Admin** | Rails Pulse Live Performance & Query Metrics | ✅ | N/A | N/A | [Observability](docs/FOUNDATION.md#observability-and-administration) |
+| | Rails Error Dashboard (RED) In-App Exception Tracking | ✅ | N/A | N/A | [Observability](docs/FOUNDATION.md#observability-and-administration) |
+| | Administrate Server-Rendered Portal (`/admin`) | ✅ | N/A | N/A | [Observability](docs/FOUNDATION.md#observability-and-administration) |
+| | Client Admin Management Portal | ✅ | ✅ | N/A | [Observability](docs/FOUNDATION.md#observability-and-administration) |
+| | Docker 5-Container Topology with `/up` Healthchecks | ✅ | N/A | N/A | [Deployment](docs/DEPLOYMENT.md) |
+| | Automated Log Rotation & VPS Cleanup Scripts | ✅ | N/A | N/A | [Maintenance](docs/MAINTENANCE.md) |
+| **🛡️ Quality, Security & Law** | Strict Constitutional Law (`LAW.md` Zero-Shim Discipline) | ✅ | ✅ | ✅ | [Constitutional Law](LAW.md) |
+| | Operational AI Governance (`AGENTS.md`) | ✅ | ✅ | ✅ | [Agent Governance](AGENTS.md) |
+| | 1,690+ Automated Tests (RSpec + Vitest + Flutter) | ✅ | ✅ | ✅ | [Quality Toolchain](docs/FOUNDATION.md#quality-toolchain) |
+| | Security Boot Guard & Zero-Trust CORS | ✅ | N/A | N/A | [Security Architecture](docs/SECURITY.md) |
+| | Pre-Commit Secret Scanning & Key Entropy Checks | ✅ | ✅ | ✅ | [Security Architecture](docs/SECURITY.md) |
+| | Strict UTC Transport & Client Local Formatting (Law U10) | ✅ | ✅ | ✅ | [Constitutional Law](LAW.md) |
+
 
 ## Architecture
 
