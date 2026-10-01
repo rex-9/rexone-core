@@ -36,9 +36,7 @@ Rails.application.configure do
   # config.action_cable.mount_path = nil
   # config.action_cable.url = "wss://example.com/cable"
   # Action Cable allowed origins in production (Secure: NO localhost in production by default)
-  cable_origins = [
-    %r{\Ahttps?://([a-zA-Z0-9-]+\.)*rex9\.me(:\d+)?\z}
-  ]
+  cable_origins = []
 
   if AppConfig::PRODUCT_DOMAIN.present?
     p_domain = AppConfig::PRODUCT_DOMAIN
@@ -140,15 +138,7 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
-  allowed_hosts = [
-    "rex9.me",          # Allow requests from rex9.me showcase demo
-    /.+\.rex9\.me/      # Allow requests from subdomains like `api.rexone.rex9.me`
-  ]
-
-  # Allow localhost in production only if explicitly opted in
-  if AppConfig::CORS_ALLOW_LOCALHOST
-    allowed_hosts << /localhost(:\d+)?/
-  end
+  allowed_hosts = []
 
   if AppConfig::PRODUCT_DOMAIN.present?
     p_domain = AppConfig::PRODUCT_DOMAIN
@@ -164,7 +154,37 @@ Rails.application.configure do
     end
   end
 
-  config.hosts = allowed_hosts
+  if AppConfig::CLIENT_BASE_URL.present?
+    begin
+      client_host = URI.parse(AppConfig::CLIENT_BASE_URL).host
+      allowed_hosts << client_host if client_host.present?
+    rescue URI::InvalidURIError
+    end
+  end
+
+  if AppConfig::RAILS_SERVER_HOST.present? && AppConfig::RAILS_SERVER_HOST != "localhost"
+    allowed_hosts << AppConfig::RAILS_SERVER_HOST
+  end
+
+  AppConfig::CORS_ORIGINS.each do |origin|
+    begin
+      origin_host = URI.parse(origin).host
+      allowed_hosts << origin_host if origin_host.present?
+    rescue URI::InvalidURIError
+    end
+  end
+
+  # Allow localhost in production only if explicitly opted in
+  if AppConfig::CORS_ALLOW_LOCALHOST
+    allowed_hosts << /localhost(:\d+)?/
+    allowed_hosts << /127\.0\.0\.1(:\d+)?/
+  end
+
+  if allowed_hosts.any?
+    config.hosts = allowed_hosts.uniq
+  else
+    config.hosts.clear
+  end
 
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }

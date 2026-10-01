@@ -23,7 +23,7 @@ module RexOneCore
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
 
-    config.time_zone = "UTC"  # Set a consistent timezone
+    config.time_zone = AppConfig::SERVER_TIMEZONE
     config.active_record.default_timezone = :utc
 
     # Media variants are handled by the custom Garage/Vips pipeline.

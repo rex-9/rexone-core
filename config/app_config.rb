@@ -42,6 +42,7 @@ module AppConfig
   SERVER_BASE_URL             = env_or.call("RAILS_SERVER_BASE_URL", "http://localhost:3000")
   CLIENT_BASE_URL             = env_or.call("RAILS_CLIENT_BASE_URL", "http://localhost:4000")
   PRODUCT_DOMAIN              = env_or.call("PRODUCT_DOMAIN", nil)
+  SERVER_TIMEZONE             = env_or.call("RAILS_TIMEZONE", "UTC").freeze
   CORS_ORIGINS                = env_or.call("CORS_ORIGINS", "").split(",").map(&:strip).reject(&:empty?).freeze
   CORS_ALLOW_LOCALHOST        = env_or.call("CORS_ALLOW_LOCALHOST") == "true"
   CI                          = !env_or.call("CI").nil?

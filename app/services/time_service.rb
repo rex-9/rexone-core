@@ -4,8 +4,10 @@
 # Universal UTC timestamp, epoch, and date serialization service.
 # Enforces Constitutional Law U10 (Strict UTC Transport) & Law U14 (Clean Parameter Contracts).
 class TimeService
+  TIMEZONE = AppConfig::SERVER_TIMEZONE
+
   class << self
-    # Current time in UTC (ActiveSupport::TimeWithZone)
+    # Current time in configured server timezone (ActiveSupport::TimeWithZone)
     def current
       Time.current
     end
@@ -36,24 +38,24 @@ class TimeService
     end
 
     # Parses any valid time representation (ISO 8601 string, numeric epoch, Date/Time)
-    # into a UTC ActiveSupport::TimeWithZone instance.
+    # into an ActiveSupport::TimeWithZone instance in configured server timezone.
     # Returns fallback if input is blank or invalid.
     def parse_utc(value, fallback: nil)
       return fallback if value.blank?
 
       time = case value
       when Numeric
-        Time.at(value).in_time_zone("UTC")
+        Time.at(value).in_time_zone(TIMEZONE)
       when Time, DateTime, ActiveSupport::TimeWithZone
-        value.in_time_zone("UTC")
+        value.in_time_zone(TIMEZONE)
       when Date
-        value.in_time_zone("UTC")
+        value.in_time_zone(TIMEZONE)
       when String
         clean_value = value.strip
         if clean_value.match?(/\A-?\d+\z/)
-          Time.at(clean_value.to_i).in_time_zone("UTC")
+          Time.at(clean_value.to_i).in_time_zone(TIMEZONE)
         else
-          Time.zone.parse(clean_value)&.in_time_zone("UTC")
+          Time.zone.parse(clean_value)&.in_time_zone(TIMEZONE)
         end
       else
         nil

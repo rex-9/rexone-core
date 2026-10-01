@@ -43,17 +43,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       ]
     end
 
-    # 2. Live Demo Tier (Rex9 showcase deployment)
-    # Explicit strings for http, https, www + wildcard for all demo subdomains
-    origins_list += [
-      "https://rexone.rex9.me", "http://rexone.rex9.me",
-      "https://www.rexone.rex9.me", "http://www.rexone.rex9.me",
-      "https://rex9.me", "http://rex9.me",
-      "https://www.rex9.me", "http://www.rexone.rex9.me",
-      %r{\Ahttps?://([a-zA-Z0-9-]+\.)*rex9\.me\z}
-    ]
-
-    # 3. Explicit Client Base URL (auto-adds http://, https://, and www. forms)
+    # 2. Explicit Client Base URL (auto-adds http://, https://, and www. forms)
     if AppConfig::CLIENT_BASE_URL.present?
       client_url = AppConfig::CLIENT_BASE_URL
       origins_list << client_url
@@ -69,12 +59,12 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       end
     end
 
-    # 4. Comma-separated custom CORS origins
+    # 3. Comma-separated custom CORS origins
     if AppConfig::CORS_ORIGINS.any?
       origins_list.concat(AppConfig::CORS_ORIGINS)
     end
 
-    # 5. Runtime dynamic resolver for live ENV changes (PRODUCT_DOMAIN and CORS_ORIGINS)
+    # 4. Runtime dynamic resolver for live ENV changes (PRODUCT_DOMAIN and CORS_ORIGINS)
     origins_list << lambda { |source, _env|
       if AppConfig::PRODUCT_DOMAIN.present?
         return true if source =~ %r{\Ahttps?://([a-zA-Z0-9-]+\.)*#{Regexp.escape(AppConfig::PRODUCT_DOMAIN)}\z}
