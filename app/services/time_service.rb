@@ -43,7 +43,7 @@ class TimeService
 
       time = case value
       when Numeric
-        Time.zone.at(value)
+        Time.at(value).in_time_zone("UTC")
       when Time, DateTime, ActiveSupport::TimeWithZone
         value.in_time_zone("UTC")
       when Date
@@ -51,9 +51,9 @@ class TimeService
       when String
         clean_value = value.strip
         if clean_value.match?(/\A-?\d+\z/)
-          Time.zone.at(clean_value.to_i)
+          Time.at(clean_value.to_i).in_time_zone("UTC")
         else
-          Time.zone.parse(clean_value)
+          Time.zone.parse(clean_value)&.in_time_zone("UTC")
         end
       else
         nil

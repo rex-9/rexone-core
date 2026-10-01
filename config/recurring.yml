@@ -49,7 +49,7 @@ production:
   # General system data reconciliation - Weekly safety net (configurable)
   data_sync:
     class: DataSyncJob
-    schedule: <%= ENV.fetch("DATA_SYNC_SCHEDULE", "at 3:00am every Sunday") %>
+    schedule: <%= AppConfig::DATA_SYNC_SCHEDULE %>
 
   # Purge read and discarded notifications - Daily at 2:30am
   notification_cleanup:
@@ -103,7 +103,7 @@ development:
   # General system data reconciliation - Weekly safety net (configurable)
   data_sync:
     class: DataSyncJob
-    schedule: <%= ENV.fetch("DATA_SYNC_SCHEDULE", "at 3:00am every Sunday") %>
+    schedule: <%= AppConfig::DATA_SYNC_SCHEDULE %>
 
   notification_cleanup:
     class: Notification::CleanupJob

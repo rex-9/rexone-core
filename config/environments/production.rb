@@ -40,17 +40,17 @@ Rails.application.configure do
     %r{\Ahttps?://([a-zA-Z0-9-]+\.)*rex9\.me(:\d+)?\z}
   ]
 
-  if ENV["PRODUCT_DOMAIN"].present?
-    p_domain = ENV["PRODUCT_DOMAIN"].strip
+  if AppConfig::PRODUCT_DOMAIN.present?
+    p_domain = AppConfig::PRODUCT_DOMAIN
     cable_origins << %r{\Ahttps?://([a-zA-Z0-9-]+\.)*#{Regexp.escape(p_domain)}(:\d+)?\z}
   end
 
-  cable_origins << ENV["RAILS_CLIENT_BASE_URL"].strip if ENV["RAILS_CLIENT_BASE_URL"].present?
-  if ENV["CORS_ORIGINS"].present?
-    cable_origins.concat(ENV["CORS_ORIGINS"].split(",").map(&:strip).reject(&:empty?))
+  cable_origins << AppConfig::CLIENT_BASE_URL if AppConfig::CLIENT_BASE_URL.present?
+  if AppConfig::CORS_ORIGINS.any?
+    cable_origins.concat(AppConfig::CORS_ORIGINS)
   end
 
-  if ENV["CORS_ALLOW_LOCALHOST"] == "true"
+  if AppConfig::CORS_ALLOW_LOCALHOST
     cable_origins << %r{\Ahttp://localhost(:\d+)?\z}
     cable_origins << %r{\Ahttp://127\.0\.0\.1(:\d+)?\z}
   end
@@ -146,19 +146,19 @@ Rails.application.configure do
   ]
 
   # Allow localhost in production only if explicitly opted in
-  if ENV["CORS_ALLOW_LOCALHOST"] == "true"
+  if AppConfig::CORS_ALLOW_LOCALHOST
     allowed_hosts << /localhost(:\d+)?/
   end
 
-  if ENV["PRODUCT_DOMAIN"].present?
-    p_domain = ENV["PRODUCT_DOMAIN"].strip
+  if AppConfig::PRODUCT_DOMAIN.present?
+    p_domain = AppConfig::PRODUCT_DOMAIN
     allowed_hosts << p_domain
     allowed_hosts << /.+\.#{Regexp.escape(p_domain)}/
   end
 
-  if ENV["RAILS_SERVER_BASE_URL"].present?
+  if AppConfig::SERVER_BASE_URL.present?
     begin
-      server_host = URI.parse(ENV["RAILS_SERVER_BASE_URL"]).host
+      server_host = URI.parse(AppConfig::SERVER_BASE_URL).host
       allowed_hosts << server_host if server_host.present?
     rescue URI::InvalidURIError
     end

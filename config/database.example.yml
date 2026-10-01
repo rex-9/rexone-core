@@ -21,12 +21,12 @@ default: &default
 
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#configuring-a-database
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  pool: <%= AppConfig::DB_POOL %>
 
-  # Database connection is provided through RAILS_DATABASE_URL.
+  # Database connection is provided through RAILS_DATABASE_URL or DATABASE_URL.
   # Example:
   # postgresql://username:password@localhost/rexone_core_development
-  url: <%= ENV["RAILS_DATABASE_URL"] %>
+  url: <%= AppConfig::DATABASE_URL %>
 
 # ============================================================
 # DEVELOPMENT
@@ -128,7 +128,5 @@ production:
     # RAILS_DATABASE_URL=postgresql://psql:password@db:5432/rexone_core_production
 
     # Solid Queue runs in the same application environment.
-    # Increase the database pool to accommodate both Rails threads
-    # and Solid Queue workers.
-    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 }.to_i +
-      ENV.fetch("SOLID_QUEUE_WORKERS", 5).to_i * 10 %>
+    # Database pool is configured via AppConfig::DB_POOL (defaulting to RAILS_MAX_THREADS).
+    pool: <%= AppConfig::DB_POOL %>

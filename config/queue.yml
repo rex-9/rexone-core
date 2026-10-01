@@ -20,12 +20,12 @@ development:
     # High-concurrency non-blocking Fiber reactor for I/O-bound workloads
     # Dynamically scales across queues: payments -> ai -> notifications -> default
     - queues: [payments, notifications, ai, default]
-      fibers: <%= ENV.fetch("SOLID_QUEUE_FIBERS", 50).to_i %>
-      polling_interval: <%= ENV.fetch("SOLID_QUEUE_POLLING_INTERVAL", 0.1).to_f %>
+      fibers: <%= AppConfig::SOLID_QUEUE_FIBERS %>
+      polling_interval: <%= AppConfig::SOLID_QUEUE_POLLING_INTERVAL %>
 
     # Isolated OS Thread worker for recurring scheduler & maintenance jobs
     - queues: [solid_queue_recurring, default]
-      threads: <%= ENV.fetch("SOLID_QUEUE_MAINTENANCE_THREADS", 2).to_i %>
+      threads: <%= AppConfig::SOLID_QUEUE_MAINTENANCE_THREADS %>
       polling_interval: 1
 
 test:
@@ -41,10 +41,10 @@ production:
     # High-concurrency non-blocking Fiber reactor for I/O-bound workloads
     # Dynamically scales across queues: payments -> ai -> notifications -> default
     - queues: [payments, notifications, ai, default]
-      fibers: <%= ENV.fetch("SOLID_QUEUE_FIBERS", 50).to_i %>
-      polling_interval: <%= ENV.fetch("SOLID_QUEUE_POLLING_INTERVAL", 0.1).to_f %>
+      fibers: <%= AppConfig::SOLID_QUEUE_FIBERS %>
+      polling_interval: <%= AppConfig::SOLID_QUEUE_POLLING_INTERVAL %>
 
     # Isolated OS Thread worker for recurring scheduler & maintenance jobs
     - queues: [solid_queue_recurring, default]
-      threads: <%= ENV.fetch("SOLID_QUEUE_MAINTENANCE_THREADS", 2).to_i %>
+      threads: <%= AppConfig::SOLID_QUEUE_MAINTENANCE_THREADS %>
       polling_interval: 1

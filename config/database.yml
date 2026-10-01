@@ -17,8 +17,8 @@ default: &default
   encoding: unicode
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
-  pool: <%= ENV.fetch("DB_POOL", ENV.fetch("RAILS_MAX_THREADS", 7)).to_i %>
-  url: <%= ENV["RAILS_DATABASE_URL"] || ENV["DATABASE_URL"] %>
+  pool: <%= AppConfig::DB_POOL %>
+  url: <%= AppConfig::DATABASE_URL %>
   # timeout: 5000
 
 development:
@@ -59,9 +59,7 @@ development:
 test:
   primary:
     <<: *default
-    # RAILS_DATABASE_URL is normally set to the development database in Docker.
-    # Give tests an isolated URL so the inherited default cannot override this name.
-    url: <%= ENV["RAILS_TEST_DATABASE_URL"] || ENV["RAILS_DATABASE_URL"]&.sub(%r{/[^/]+\z}, "/rexone_core_test") %>
+    url: <%= AppConfig::TEST_DATABASE_URL %>
     database: rexone_core_test
 
 # As with config/credentials.yml, you never want to store sensitive information,
