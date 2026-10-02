@@ -17,12 +17,13 @@ Built under an immutable creed: **Start from One. Not from Zero. Clear in though
 [![GSoC 2027](https://img.shields.io/badge/GSoC-2027_Ready-FF5722?logo=google&logoColor=white)](docs/GSOC_IDEAS.md)
 [![Discussions](https://img.shields.io/badge/Discussions-Join_Community-0052CC?logo=github&logoColor=white)](https://github.com/rex-9/rexone-core/discussions)
 [![Sponsor rex-9](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/rex-9)
+[![Product Hunt](https://img.shields.io/badge/Product_Hunt-Live-DA552F?logo=producthunt&logoColor=white)](https://www.producthunt.com/products/rexone)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-rexone.rex9.me-FF2238?logo=firefox&logoColor=white)](https://rexone.rex9.me)
 [![CI](https://github.com/rex-9/rexone-core/actions/workflows/test.yml/badge.svg)](https://github.com/rex-9/rexone-core/actions/workflows/test.yml)
 
 **API-first · Modular · Observable · Queue-aware · Built to grow**
 
-[Live Demo ↗](https://rexone.rex9.me) · [Quick Start](docs/QUICK_START.md) · [Discussions ↗](https://github.com/rex-9/rexone-core/discussions) · [Contributing](CONTRIBUTING.md) · [GSoC Roadmap](docs/GSOC_IDEAS.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Development Law](LAW.md) · [Agent Governance](AGENTS.md) · [Production Deployment](docs/DEPLOYMENT.md)
+[Live Demo ↗](https://rexone.rex9.me) · [Product Hunt ↗](https://www.producthunt.com/products/rexone) · [Quick Start](docs/QUICK_START.md) · [Discussions ↗](https://github.com/rex-9/rexone-core/discussions) · [Contributing](CONTRIBUTING.md) · [GSoC Roadmap](docs/GSOC_IDEAS.md) · [Ecosystem Architecture](ECOSYSTEM.md) · [Development Law](LAW.md) · [Agent Governance](AGENTS.md) · [Production Deployment](docs/DEPLOYMENT.md)
 
 </div>
 

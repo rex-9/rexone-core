@@ -20,7 +20,7 @@ A centralized registry of public software indexes, curated lists, and developer 
 
 | Channel                 | Format                                     | Target Audience                             | Reference                                                                                              |
 | :---------------------- | :----------------------------------------- | :------------------------------------------ | :----------------------------------------------------------------------------------------------------- |
-| **Product Hunt**        | Official Product Launch                    | Global indie hackers, makers & founders     | [RexOne on Product Hunt (Post)](https://www.producthunt.com/posts/rexone) · [Hub](https://www.producthunt.com/products/rexone-ecosystem) |
+| **Product Hunt**        | Official Product Launch                    | Global indie hackers, makers & founders     | [RexOne on Product Hunt (Post)](https://www.producthunt.com/posts/rexone) · [Hub](https://www.producthunt.com/products/rexone) |
 | **Hacker News**         | `Show HN` Submission                       | Systems engineers & open-source purists     | [Show HN: RexOne #49896596](https://news.ycombinator.com/item?id=49896596) (user: `Rex9`)             |
 | **Reddit r/selfhosted** | Self-Hosted Architecture Discussion        | Homelab, VPS & sovereign software community | `reddit.com/r/selfhosted`                                             |
 | **Reddit r/ruby**       | Rails 8 & Solid Queue Showcase             | Ruby & Rails developers                     | `reddit.com/r/ruby`                                                   |
