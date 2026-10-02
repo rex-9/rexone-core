@@ -6,14 +6,13 @@ A centralized registry of public software indexes, curated lists, and developer 
 
 ### 📂 Software Comparison & Discovery Directories
 
-| Platform               | Category / Classification                                           |    Status     | Listing Link / Reference                                                                                   |
-| :--------------------- | :------------------------------------------------------------------ | :-----------: | :--------------------------------------------------------------------------------------------------------- |
-| **AlternativeTo**      | Open-source alternative to Supabase, Firebase, Appwrite, PocketBase |    ✅ Live    | [AlternativeTo Profile](https://alternativeto.net/software/rexone/)                                        |
-| **Awesome-Selfhosted** | `Software Development - Low Code`                                   | ⏳ In Review  | [awesome-selfhosted-data #3145](https://github.com/awesome-selfhosted/awesome-selfhosted-data/issues/3145) |
-| **Awesome-Flutter**    | `Open Source Apps` / `Top`                                          | ⏳ PR Open    | [awesome-flutter PR #1078](https://github.com/Solido/awesome-flutter/pull/1078)                            |
-| **Awesome-React**      | `React Real Apps`                                                   |  ⏳ PR Open  | [awesome-react PR #1859](https://github.com/enaqx/awesome-react/pull/1859)                                 |
-| **Awesome-Rails**              | `Open Source Rails Apps`                                            |   ✅ Merged   | [awesome-rails PR #158](https://github.com/gramantin/awesome-rails/pull/158)                               |
-| **Awesome-SaaS-Boilerplates**  | `Ruby on Rails` & `Open Source`                                     |  ⏳ PR Open  | [xcomptek/awesome-saas-boilerplates PR #236](https://github.com/xcomptek/awesome-saas-boilerplates/pull/236) |
+| Platform                      | Category / Classification                                           |    Status    | Listing Link / Reference                                                                                       |
+| :---------------------------- | :------------------------------------------------------------------ | :----------: | :------------------------------------------------------------------------------------------------------------- |
+| **AlternativeTo**             | Open-source alternative to Supabase, Firebase, Appwrite, PocketBase |   ✅ Live    | [AlternativeTo Profile](https://alternativeto.net/software/rexone/)                                            |
+| **Awesome-Selfhosted**        | `Software Development - Low Code`                                   | ⏳ In Review | [awesome-selfhosted-data #3145](https://github.com/awesome-selfhosted/awesome-selfhosted-data/issues/3145)     |
+| **Awesome-Flutter**           | `Open Source Apps` / `Top`                                          |  ⏳ PR Open  | [awesome-flutter PR #1078](https://github.com/Solido/awesome-flutter/pull/1078)                                |
+| **Awesome-Rails**             | `Open Source Rails Apps`                                            |  ✅ Merged   | [awesome-rails PR #158](https://github.com/gramantin/awesome-rails/pull/158)                                   |
+| **Awesome-SaaS-Boilerplates** | `Ruby on Rails` & `Open Source`                                     |  ⏳ PR Open  | [xcomptek/awesome-saas-boilerplates PR #236](https://github.com/xcomptek/awesome-saas-boilerplates/pull/236)   |
 
 ---
 
@@ -21,7 +20,7 @@ A centralized registry of public software indexes, curated lists, and developer 
 
 | Channel                 | Format                                     | Target Audience                             | Reference                                                                                              |
 | :---------------------- | :----------------------------------------- | :------------------------------------------ | :----------------------------------------------------------------------------------------------------- |
-| **Product Hunt**        | Official Product Launch                    | Global indie hackers, makers & founders     | [RexOne on Product Hunt](https://www.producthunt.com/products/rexone)                                 |
+| **Product Hunt**        | Official Product Launch                    | Global indie hackers, makers & founders     | [RexOne on Product Hunt (Post)](https://www.producthunt.com/posts/rexone) · [Hub](https://www.producthunt.com/products/rexone-ecosystem) |
 | **Hacker News**         | `Show HN` Submission                       | Systems engineers & open-source purists     | [Show HN: RexOne #49896596](https://news.ycombinator.com/item?id=49896596) (user: `Rex9`)             |
 | **Reddit r/selfhosted** | Self-Hosted Architecture Discussion        | Homelab, VPS & sovereign software community | `reddit.com/r/selfhosted`                                             |
 | **Reddit r/ruby**       | Rails 8 & Solid Queue Showcase             | Ruby & Rails developers                     | `reddit.com/r/ruby`                                                   |
