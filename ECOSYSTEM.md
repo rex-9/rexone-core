@@ -25,7 +25,7 @@ Building any modern commercial digital product across Backend, Web, and Native M
 - **Months 7–9**: Building CRUD admin portals, S3 signed upload pipelines, WebSockets, and resolving 50+ JSON contract drifts between Web and Flutter.
 - **The Result**: $150,000–$300,000 burned before writing a single line of proprietary business logic.
 
-**RexOne is Architectural Time Travel.** By delivering a synchronized, battle-hardened foundation across Rails 8, React 19, and Flutter 3 backed by 1,690+ automated tests, RexOne deletes 9 months of generic plumbing from your roadmap. You launch your unique product in **1 to 3 weeks**.
+**RexOne is Architectural Time Travel.** By delivering a synchronized, battle-hardened foundation across Rails 8, React 19, and Flutter 3 backed by 1,785+ automated tests (1,071 RSpec + 372 Vitest + 342 Flutter), RexOne deletes 9 months of generic plumbing from your roadmap. You launch your unique product in **1 to 3 weeks**.
 
 > _The author (Rex) could have closed-sourced this enterprise foundation or charged $800+ behind a commercial paywall. Instead, out of pure loving-kindness (mettā) for builders, indie hackers, and learners worldwide, RexOne is 100% free and open-source under Apache 2.0. If RexOne saves you months of work, please kindly return the loving-kindness: [Sponsor the Author on GitHub](https://github.com/sponsors/rex-9) and star the repositories. Thank u so much for your kindness._
 
@@ -645,6 +645,39 @@ _Version resolution_: Core maps `app_version` to a matching `Client::Version` re
   - Mobile features `PaymentConfig.enableInAppPurchases = false` by default, ensuring developers without app store merchant setups can run the app without errors or native store channel initialization.
   - When `enableInAppPurchases = false`, mobile exclusively displays Stripe web checkout on all platforms.
   - When `enableInAppPurchases = true`, mobile dynamically resolves native store SKUs (`googlePlayProductId` on Android, `appStoreProductId` on iOS), displaying native store checkout alongside optional card checkout when `supportsStripe` is true.
+
+### 9. Return-After-Auth Protocol & Universal Deep Linking (`rexone://`)
+
+A unified, tamper-proof protocol across Web and Mobile that preserves user navigation intent when unauthenticated visitors attempt to access protected resources, coupled with native universal deep link dispatch:
+
+- **Cross-Platform Storage Standard**:
+  - Universal storage key: `continueUrl` (`StorageKeys.CONTINUE_URL` on Web, `StorageKeys.continueUrl` on Mobile).
+- **Strict Zero URL Query Parameter Law**:
+  - `continueUrl` is **NEVER** exposed in URL query parameters (`?continueUrl=...`, `?returnTo=...`).
+  - Stored strictly in local client storage (`localStorage` via `AtomService` on Web, `GetStorage` via `StorageService` on Mobile) to eliminate URL tampering, open-redirect vulnerabilities, credential phishing vectors, and broken UX caused by users accidentally deleting or modifying query parameters.
+- **Capture on Protected Access**:
+  - **Web (`ProtectedRoute.tsx`)**: When an unauthenticated visitor accesses an auth-required route (e.g., `/ai`), the router captures `location.pathname + location.search`, persists it via `AtomService.setContinueUrl(targetUrl)`, and opens the onboarding auth dialog (`AppRoutes.buildDialogUrl(DialogAuthSteps.INITIAL)`).
+  - **Mobile (`GuardRoutes.redirect` / `AppRoutes.handleDeepLink`)**: When an unauthenticated visitor hits an auth-required route (`AppRoutes.ai`, `AppRoutes.settings`, deep link), the router executes `storage.setContinueRoute(target)` and redirects to `AppRoutes.auth`.
+- **Open-Redirect & Circular Loop Protection (`getSafeContinueUrl`)**:
+  - Must begin with a single `/` and must not begin with `//` (protocol-relative external redirect attack prevention).
+  - Explicitly rejects circular auth routes (`/signin`, `/signup`, `/confirm-email`, `/forgot-password`, `/reset-password`, `/signout`) using centralized `AppRoutes` constants with zero hardcoded string literals.
+  - Returns `null` if the stored route violates validation rules.
+- **Consumption on Authentication (`navigateContinueURL`)**:
+  - Upon completing authentication (password login, Google SSO, signup verification OTP, or email confirmation token link), client consumes and immediately purges the stored continue route (`consumeContinueUrl` on Web, `consumeContinueRoute` on Mobile).
+  - **Web (`navigateContinueURL(navigate)`)**: If a valid continue route was stored and passes `getSafeContinueUrl(target)`, navigates with history replacement (`navigate(target, { replace: true })`), falling back cleanly to `AppRoutes.client.protected.HOME`.
+  - **Mobile (`AppRoutes.navigateContinueURL([storageService])`)**: Because unauthenticated mobile users are gated behind `/auth` without access to in-app links, `continueRoute` triggers when unauthenticated users open external deep links (`rexone://...`) or push notification links. To prevent users from being trapped on the destination without a way to return to `Home`, mobile mounts `AppRoutes.home` as the navigation stack base (`Get.offAllNamed(AppRoutes.home)` followed by `Get.toNamed(continueRoute)`), persists `_storage.saveRouteStack([AppRoutes.home, continueRoute])`, enabling standard back-button and swipe-back navigation directly to `Home`. If no continue route is present, falls back cleanly to `AppRoutes.toHome()`.
+- **Universal Deep Linking Specification (`rexone://`)**:
+  - **Custom Scheme Authority**: Canonical URI scheme is strictly `rexone://` (e.g. `rexone://ai`, `rexone://payment`, `rexone://profile`, `rexone://settings`, `rexone://notifications`). Legacy or compound schemes like `rexonemobile://` are rejected.
+  - **Native Platform Registrations**:
+    - **iOS (`ios/Runner/Info.plist`)**: Registered under `CFBundleURLTypes` -> `CFBundleURLSchemes` with `<string>rexone</string>`.
+    - **Android (`android/app/src/main/AndroidManifest.xml`)**: Configured with `<intent-filter>` for `android.intent.action.VIEW` with `android:scheme="rexone"`.
+  - **Flutter Routing Gateway (`DeepLinkService` & `AppRoutes.handleDeepLink`)**:
+    - Native stream and initial cold-start links are listened to via `app_links` in `DeepLinkService`.
+    - `AppRoutes.handleDeepLink` parses URIs via `AppRoutes.resolveNotificationRoute`:
+      - If user is unauthenticated: stores route as `continueRoute` and prompts/redirects to `/auth`. Once authenticated, `navigateContinueURL` restores the requested screen atop `Home`.
+      - If user is already authenticated: guarantees `Home` is the base of the backstack (`Get.offAllNamed(home)` then `Get.toNamed(target)`) so native back navigation always leads back to `Home`.
+- **Session Purge on Sign Out**:
+  - Explicit sign-out (`signOut`) and auth dialog dismissal (`handleClose`) automatically clear `continueUrl` from local storage to prevent stale redirects.
 
 ---
 

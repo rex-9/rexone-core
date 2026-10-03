@@ -9,7 +9,7 @@ class Notification < ApplicationRecord
 
   # ===== VALIDATIONS =====
   validates :event, presence: true,
-                    uniqueness: { conditions: -> { kept } },
+                    uniqueness: true,
                     format: { with: NotificationConstants::Event::FORMAT }
   validates :name, presence: true
   validates :category, presence: true, inclusion: { in: NotificationConstants::Category::ALL }

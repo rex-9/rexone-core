@@ -8,15 +8,19 @@ class AccessService
         expires_at ||
         (product.recurring? ? product.interval_in_duration.from_now : nil)
 
-      # create_or_find_by! uses the unique database index to safely handle
-      # two workers attempting to create the same access simultaneously.
-      access = Access.create_or_find_by!(
-        user_id: user_id,
-        product_id: product_id
-      ) do |record|
-        record.status = AccessConstants::AccessStatus::ACTIVE
-        record.granted_at = Time.current
-        record.expires_at = resolved_expires_at
+      access = Access.find_by(user_id: user_id, product_id: product_id)
+      unless access
+        begin
+          access = Access.create!(
+            user_id: user_id,
+            product_id: product_id,
+            status: AccessConstants::AccessStatus::ACTIVE,
+            granted_at: Time.current,
+            expires_at: resolved_expires_at
+          )
+        rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+          access = Access.find_by!(user_id: user_id, product_id: product_id)
+        end
       end
 
       access.with_lock do

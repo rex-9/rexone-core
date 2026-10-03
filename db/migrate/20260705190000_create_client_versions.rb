@@ -23,18 +23,10 @@ class CreateClientVersions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :client_versions, :number, unique: true, where: "discarded_at IS NULL",
-              name: "index_client_versions_on_number_kept"
-    add_index :client_versions, :ios_build_number, unique: true,
-              where: "discarded_at IS NULL AND ios_build_number IS NOT NULL",
-              name: "index_client_versions_on_ios_build_number_kept"
-    add_index :client_versions, :android_build_number, unique: true,
-              where: "discarded_at IS NULL AND android_build_number IS NOT NULL",
-              name: "index_client_versions_on_android_build_number_kept"
+    add_index :client_versions, :number, unique: true
+    add_index :client_versions, :ios_build_number, unique: true
+    add_index :client_versions, :android_build_number, unique: true
     add_index :client_versions, :status
-    add_index :client_versions, :status, unique: true,
-              where: "status = 'published' AND discarded_at IS NULL",
-              name: "index_client_versions_on_one_published_kept"
     add_index :client_versions, :released_at
     add_index :client_versions, :discarded_at
   end

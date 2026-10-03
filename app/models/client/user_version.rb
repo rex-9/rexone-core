@@ -12,7 +12,7 @@ class Client::UserVersion < ApplicationRecord
 
   validates :platform, presence: true, inclusion: { in: AuthConstants::Platform::ALL }
   validates :number, presence: true, format: { with: VersionConstants::Number::FORMAT }
-  validates :user_id, uniqueness: { scope: :platform, conditions: -> { kept } }
+  validates :user_id, uniqueness: { scope: :platform }
   validates :build_number, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :last_seen_at, presence: true
 end

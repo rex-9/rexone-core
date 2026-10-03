@@ -31,7 +31,7 @@ class CreateUserNotifications < ActiveRecord::Migration[8.1]
 
     add_index :user_notifications, [ :user_id, :created_at ]
     add_index :user_notifications, [ :user_id, :read_at ]
-    add_index :user_notifications, [ :user_id, :operation_id ], unique: true, where: "operation_id IS NOT NULL"
+    add_index :user_notifications, [ :user_id, :operation_id ]
     add_index :user_notifications, :discarded_at
     add_index :user_notifications, :clients, using: :gin
   end

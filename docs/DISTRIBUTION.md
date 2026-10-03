@@ -32,6 +32,6 @@ A centralized registry of public software indexes, curated lists, and developer 
 
 ### 🏛️ Maintainer Guidelines for Submitting Additions
 
-1. **Neutral Descriptive Tone**: When submitting to public registries, avoid hype adjectives; emphasize verifiable architectural metrics (Rails 8, React 19, Flutter 3, 1,690+ tests, Apache 2.0).
+1. **Neutral Descriptive Tone**: When submitting to public registries, avoid hype adjectives; emphasize verifiable architectural metrics (Rails 8, React 19, Flutter 3, 1,785+ tests, Apache 2.0).
 2. **Alphabetical Adherence**: Ensure all Awesome list submissions strictly follow alphabetical placement rules.
 3. **Strict License Consistency**: Maintain Apache 2.0 attribution across all directory metadata.

@@ -20,8 +20,7 @@ class CreateClientUserVersions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :client_user_versions, [ :user_id, :platform ], unique: true, where: "discarded_at IS NULL",
-              name: "index_client_user_versions_on_user_id_and_platform_kept"
+    add_index :client_user_versions, [ :user_id, :platform ], unique: true
     add_index :client_user_versions, :number
     add_index :client_user_versions, :last_seen_at
     add_index :client_user_versions, :discarded_at

@@ -41,7 +41,16 @@ end
      - `discarded_by_id`
      - `undiscarded_by_id`
    - Timestamps: `undiscarded_at` (in addition to `discarded_at`).
-4. **Scope of this Document**:
+4. **Agile Standard Migrations & Model Validations Doctrine (LAW C6)**:
+   - **Clean Standard Migrations**: Migrations strictly define column types, nullability, foreign keys, and clean query and unique indexes.
+   - **Single-Field & Composite Join Unique Indexes Permitted & Standard**:
+     - Single-field natural unique keys (`ai_profiles.key`, `coupons.code`, `payment_products.code`, `assets.url`, `iam_roles.name`, `iam_permissions.name`, `client_versions.number`, `client_versions.ios_build_number`, `client_versions.android_build_number`) enforce physical table-wide uniqueness at the database level.
+     - Composite join/association unique keys (`iam_role_permissions [role_id, permission_id]`, `iam_user_roles [user_id, role_id]`, `iam_permissions [resource, action]`, `client_user_versions [user_id, platform]`) are standard and prevent duplicate join relations in the database.
+     - Complex domain entitlements (`accesses [user_id, product_id]`, `user_notifications [user_id, operation_id]`) utilize clean standard query indexes with lifecycle uniqueness managed in Rails models.
+   - **Zero Raw SQL Partial Indexes**: Raw SQL `WHERE` clauses (e.g. `where: "discarded_at IS NULL"`) in migrations are prohibited.
+   - **Zero Sequence/Reordering Collisions**: Multi-column sequence unique indexes on ordering/positional columns are banned to prevent drag-and-drop / re-indexing deadlocks.
+   - **Model-Led Business Validation Authority**: Model validations enforce uniqueness across all records (including discarded/recycled records). This ensures administrators are immediately alerted if an entity already exists in the Recycle Bin ("has already been taken"), prompting them to restore it (`undiscard`) or permanently purge it from the bin (`destroy`) before creating a duplicate.
+5. **Scope of this Document**:
    - Covers only **Application Records** representing business entities.
    - **Explicitly Excluded**: Background engine & telemetry tables (Solid Queue, Solid Cable, Solid Cache, Rails Pulse, and Rails Error Dashboard). See [Excluded Infrastructure Tables](#excluded-infrastructure-tables).
 
@@ -179,7 +188,7 @@ erDiagram
 
 **Indexes**:
 
-- `index_iam_roles_on_name` (UNIQUE: `name`)
+- `index_iam_roles_on_name` (`name`, unique)
 - `index_iam_roles_on_discarded_at` (`discarded_at`)
 - Auditing indexes on `created_by_id`, `updated_by_id`, `discarded_by_id`, `undiscarded_by_id`.
 
@@ -207,8 +216,8 @@ erDiagram
 
 **Indexes**:
 
-- `index_iam_permissions_on_name` (UNIQUE: `name`)
-- `index_iam_permissions_on_resource_and_action` (UNIQUE: `resource`, `action`)
+- `index_iam_permissions_on_name` (`name`, unique)
+- `index_iam_permissions_on_resource_and_action` (`resource`, `action`, unique)
 - Auditing indexes on `created_by_id`, `updated_by_id`, `discarded_by_id`, `undiscarded_by_id`, `discarded_at`.
 
 **Mutation invariants**:
@@ -239,7 +248,7 @@ erDiagram
 
 **Indexes & Foreign Keys**:
 
-- `index_iam_user_roles_on_user_id_and_role_id` (UNIQUE: `user_id`, `role_id`)
+- `index_iam_user_roles_on_user_id_and_role_id` (`user_id`, `role_id`, unique)
 - `index_iam_user_roles_on_role_id` (`role_id`)
 - `index_iam_user_roles_on_user_id` (`user_id`)
 - FKs to `users(id)` and `iam_roles(id)`.
@@ -266,7 +275,7 @@ erDiagram
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                 |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder               |
-| `undiscarded_by_id` | `uuid`     |    ✔     | `NULL`              | Auditing: Restorer                |
+| `undiscarded_by_id` | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                |
 | `discarded_at`      | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp             |
 | `undiscarded_at`    | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp |
 | `created_at`        | `datetime` |    ❌    | —                   | Timestamp                         |
@@ -274,7 +283,7 @@ erDiagram
 
 **Indexes & Foreign Keys**:
 
-- `index_iam_role_permissions_on_role_id_and_permission_id` (UNIQUE: `role_id`, `permission_id`)
+- `index_iam_role_permissions_on_role_id_and_permission_id` (`role_id`, `permission_id`, unique)
 - `index_iam_role_permissions_on_role_id` (`role_id`)
 - `index_iam_role_permissions_on_permission_id` (`permission_id`)
 - FKs to `iam_roles(id)` and `iam_permissions(id)`.
@@ -313,11 +322,11 @@ erDiagram
 
 **Indexes**:
 
-- `index_payment_products_on_code` (UNIQUE: `code`)
-- `index_payment_products_on_stripe_product_id` (UNIQUE: `stripe_product_id`)
-- `index_payment_products_on_stripe_price_id` (UNIQUE: `stripe_price_id`)
-- `index_payment_products_on_google_play_product_id` (UNIQUE: `google_play_product_id`)
-- `index_payment_products_on_app_store_product_id` (UNIQUE: `app_store_product_id`)
+- `index_payment_products_on_code` (`code`, unique)
+- `index_payment_products_on_stripe_product_id` (`stripe_product_id`, unique)
+- `index_payment_products_on_stripe_price_id` (`stripe_price_id`, unique)
+- `index_payment_products_on_google_play_product_id` (`google_play_product_id`, unique)
+- `index_payment_products_on_app_store_product_id` (`app_store_product_id`, unique)
 - `index_payment_products_on_discarded_at` (`discarded_at`)
 
 ---
@@ -506,7 +515,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 **Indexes & Foreign Keys**:
 
-- `index_coupons_on_code` (UNIQUE: `code`)
+- `index_coupons_on_code` (`code`, unique)
 - `index_coupons_on_provider_coupon_id` (`provider_coupon_id`)
 - `index_coupons_on_provider` (`provider`)
 - `index_coupons_on_referrer_id` (`referrer_id`)
@@ -606,7 +615,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 **Indexes & Foreign Keys**:
 
-- `index_accesses_on_user_id_and_product_id` (UNIQUE: `user_id`, `product_id`)
+- `index_accesses_on_user_id_and_product_id` (`user_id`, `product_id`)
 - `index_accesses_on_user_id_and_status` (`user_id`, `status`)
 - `index_accesses_on_user_id` (`user_id`)
 - `index_accesses_on_product_id` (`product_id`)
@@ -805,7 +814,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 **Indexes**:
 
-- `index_assets_on_url` (UNIQUE: `url`)
+- `index_assets_on_url` (`url`, unique)
 - `index_assets_on_assetable_type_and_assetable_id` (`assetable_type`, `assetable_id`)
 - `index_assets_on_parent_asset_id` (`parent_asset_id`)
 - `index_assets_on_name` (`name`)
@@ -1007,6 +1016,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 - `index_user_notifications_on_user_id_and_created_at` (`user_id`, `created_at`)
 - `index_user_notifications_on_user_id_and_read_at` (`user_id`, `read_at`)
+- `index_user_notifications_on_user_id_and_operation_id` (`user_id`, `operation_id`) — idempotency scoped uniqueness via model validation (`validates :operation_id, uniqueness: { scope: :user_id }, allow_nil: true`)
 - `index_user_notifications_on_discarded_at` (`discarded_at`)
 - FK to `users(id)` on delete cascade.
 - FK to `notifications(id)` on delete nullify.
@@ -1044,11 +1054,10 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 **Indexes & Foreign Keys**:
 
-- `index_client_versions_on_number_kept` (unique `number` where `discarded_at IS NULL`)
-- `index_client_versions_on_ios_build_number_kept` (unique `ios_build_number` where kept and not null)
-- `index_client_versions_on_android_build_number_kept` (unique `android_build_number` where kept and not null)
-- `index_client_versions_on_status` (`status`)
-- `index_client_versions_on_one_published_kept` (unique `status` where `status = 'published'` and `discarded_at IS NULL`)
+- `index_client_versions_on_number` (`number`, unique)
+- `index_client_versions_on_ios_build_number` (`ios_build_number`, unique)
+- `index_client_versions_on_android_build_number` (`android_build_number`, unique)
+- `index_client_versions_on_status` (`status`) — single published version enforced via `yank_other_published_versions` model callback
 - `index_client_versions_on_released_at` (`released_at`)
 - `index_client_versions_on_discarded_at` (`discarded_at`)
 - FKs: audit columns → `users(id)`.
@@ -1080,7 +1089,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 **Indexes & Foreign Keys**:
 
-- `index_client_user_versions_on_user_id_and_platform_kept` (unique `[user_id, platform]` where `discarded_at IS NULL`)
+- `index_client_user_versions_on_user_id_and_platform` (`user_id`, `platform`, unique)
 - `index_client_user_versions_on_number` (`number`)
 - `index_client_user_versions_on_last_seen_at` (`last_seen_at`)
 - `index_client_user_versions_on_discarded_at` (`discarded_at`)

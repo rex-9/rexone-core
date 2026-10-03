@@ -39,7 +39,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.index ["status"], name: "index_accesses_on_status"
     t.index ["undiscarded_by_id"], name: "index_accesses_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_accesses_on_updated_by_id"
-    t.index ["user_id", "product_id"], name: "index_accesses_on_user_id_and_product_id", unique: true
+    t.index ["user_id", "product_id"], name: "index_accesses_on_user_id_and_product_id"
     t.index ["user_id", "status"], name: "index_accesses_on_user_id_and_status"
     t.index ["user_id"], name: "index_accesses_on_user_id"
   end
@@ -256,7 +256,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.index ["number"], name: "index_client_user_versions_on_number"
     t.index ["undiscarded_by_id"], name: "index_client_user_versions_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_client_user_versions_on_updated_by_id"
-    t.index ["user_id", "platform"], name: "index_client_user_versions_on_user_id_and_platform_kept", unique: true, where: "(discarded_at IS NULL)"
+    t.index ["user_id", "platform"], name: "index_client_user_versions_on_user_id_and_platform", unique: true
     t.index ["user_id"], name: "index_client_user_versions_on_user_id"
     t.index ["version_id"], name: "index_client_user_versions_on_version_id"
   end
@@ -279,14 +279,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.datetime "undiscarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["android_build_number"], name: "index_client_versions_on_android_build_number_kept", unique: true, where: "((discarded_at IS NULL) AND (android_build_number IS NOT NULL))"
+    t.index ["android_build_number"], name: "index_client_versions_on_android_build_number", unique: true
     t.index ["created_by_id"], name: "index_client_versions_on_created_by_id"
     t.index ["discarded_at"], name: "index_client_versions_on_discarded_at"
     t.index ["discarded_by_id"], name: "index_client_versions_on_discarded_by_id"
-    t.index ["ios_build_number"], name: "index_client_versions_on_ios_build_number_kept", unique: true, where: "((discarded_at IS NULL) AND (ios_build_number IS NOT NULL))"
-    t.index ["number"], name: "index_client_versions_on_number_kept", unique: true, where: "(discarded_at IS NULL)"
+    t.index ["ios_build_number"], name: "index_client_versions_on_ios_build_number", unique: true
+    t.index ["number"], name: "index_client_versions_on_number", unique: true
     t.index ["released_at"], name: "index_client_versions_on_released_at"
-    t.index ["status"], name: "index_client_versions_on_one_published_kept", unique: true, where: "(((status)::text = 'published'::text) AND (discarded_at IS NULL))"
     t.index ["status"], name: "index_client_versions_on_status"
     t.index ["undiscarded_by_id"], name: "index_client_versions_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_client_versions_on_updated_by_id"
@@ -1250,7 +1249,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.index ["undiscarded_by_id"], name: "index_user_notifications_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_user_notifications_on_updated_by_id"
     t.index ["user_id", "created_at"], name: "index_user_notifications_on_user_id_and_created_at"
-    t.index ["user_id", "operation_id"], name: "index_user_notifications_on_user_id_and_operation_id", unique: true, where: "(operation_id IS NOT NULL)"
+    t.index ["user_id", "operation_id"], name: "index_user_notifications_on_user_id_and_operation_id"
     t.index ["user_id", "read_at"], name: "index_user_notifications_on_user_id_and_read_at"
     t.index ["user_id"], name: "index_user_notifications_on_user_id"
   end

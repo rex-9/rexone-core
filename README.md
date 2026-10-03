@@ -141,7 +141,7 @@ Here is the unvarnished, brutal truth of what actually happens over the subseque
 │                                                                                        │
 │  Week 2:  Wire your business logic to existing, fully-tested controllers.              │
 │                                                                                        │
-│  Week 3:  Run 1,690+ passing automated tests. Deploy staging. Ship to production.      │
+│  Week 3:  Run 1,785+ passing automated tests. Deploy staging. Ship to production.      │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 Result: 8 to 11 months of soul-crushing plumbing deleted. You launch in weeks.
 ```
@@ -324,6 +324,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | | Client Error Telemetry Logging (`/v1/client/logs`) | ✅ | ✅ | ✅ | [Observability](docs/FOUNDATION.md#observability-and-administration) |
 | | User Feedback Engine (1–10 Rating & Auto-Triage) | ✅ | ✅ | ✅ | [Observability](docs/FOUNDATION.md#observability-and-administration) |
 | | In-App Semantic Version Upgrader & Splash Check | ✅ | ✅ | ✅ | [Ecosystem](ECOSYSTEM.md) |
+| | Universal Deep Linking (`rexone://`) & Continue URLs | N/A | ✅ | ✅ | [Ecosystem](ECOSYSTEM.md#9-return-after-auth-protocol--universal-deep-linking-rexone) |
 | | Generative Engine Optimization (GEO & `/llms.txt`) | N/A | ✅ | N/A | [AI Discovery Guide](../rexone-web/docs/SEO_GEO.md) |
 | **📊 Ops, Observability & Admin** | Rails Pulse Live Performance & Query Metrics | ✅ | N/A | N/A | [Observability](docs/FOUNDATION.md#observability-and-administration) |
 | | Rails Error Dashboard (RED) In-App Exception Tracking | ✅ | N/A | N/A | [Observability](docs/FOUNDATION.md#observability-and-administration) |
@@ -333,7 +334,7 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 | | Automated Log Rotation & VPS Cleanup Scripts | ✅ | N/A | N/A | [Maintenance](docs/MAINTENANCE.md) |
 | **🛡️ Quality, Security & Law** | Strict Constitutional Law (`LAW.md` Zero-Shim Discipline) | ✅ | ✅ | ✅ | [Constitutional Law](LAW.md) |
 | | Operational AI Governance (`AGENTS.md`) | ✅ | ✅ | ✅ | [Agent Governance](AGENTS.md) |
-| | 1,690+ Automated Tests (RSpec + Vitest + Flutter) | ✅ | ✅ | ✅ | [Quality Toolchain](docs/FOUNDATION.md#quality-toolchain) |
+| | 1,785+ Automated Tests (RSpec + Vitest + Flutter) | ✅ | ✅ | ✅ | [Quality Toolchain](docs/FOUNDATION.md#quality-toolchain) |
 | | Security Boot Guard & Zero-Trust CORS | ✅ | N/A | N/A | [Security Architecture](docs/SECURITY.md) |
 | | Pre-Commit Secret Scanning & Key Entropy Checks | ✅ | ✅ | ✅ | [Security Architecture](docs/SECURITY.md) |
 | | Strict UTC Transport & Client Local Formatting (Law U10) | ✅ | ✅ | ✅ | [Constitutional Law](LAW.md) |

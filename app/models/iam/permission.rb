@@ -22,7 +22,8 @@ module Iam
 
     # ===== VALIDATIONS =====
     validates :name, presence: true, uniqueness: true
-    validates :action, presence: true, inclusion: { in: ACTIONS }
+    validates :action, presence: true, inclusion: { in: ACTIONS },
+                       uniqueness: { scope: :resource }
     validates :resource, presence: true, inclusion: { in: RESOURCES }
 
     # ===== SCOPES =====

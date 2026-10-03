@@ -13,6 +13,7 @@ class Access < ApplicationRecord
 
   # ===== VALIDATIONS =====
   validates :granted_at, presence: true
+  validates :product_id, uniqueness: { scope: :user_id }
 
   # ===== SCOPES =====
   scope :active, -> { where(status: "active") }

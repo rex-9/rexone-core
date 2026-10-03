@@ -278,6 +278,15 @@ Service Layer (app/services/)
 - **Soft Deletion & Undiscard**: All method names, controller actions, routes, and services MUST strictly use `undiscard` (e.g. `put :undiscard`, `def undiscard`).
 - **HTTP Methods**: `PATCH` is forbidden. Record updates use `PUT`. State transitions and lifecycle actions use `PUT` or `POST`.
 - **Audit Trails & Timestamps**: Models with audit requirements include `Audited` concern (`created_by_id`, `updated_by_id`, `discarded_by_id`). All tables include `created_at` and `updated_at`.
+- **Agile Standard Migrations Law**:
+  - Migrations MUST strictly define column types, nullability, foreign keys, and standard query and unique indexes.
+  - **Standard Unique Indexes**: Single-field natural unique keys and composite join table keys may declare `unique: true` across the physical table. Detailed table specifications belong in `docs/SCHEMA.md`.
+  - **Zero Raw SQL Partial Indexes**: Raw SQL `WHERE` partial indexes (e.g. `where: "discarded_at IS NULL"` or `where: "status = 0"`) in migrations are strictly prohibited.
+  - **Zero Rigid Sequence Unique Constraints**: Multi-column sequence unique indexes on ordering/positional columns (e.g. `night_id + sit`, `parent_id + position`) are strictly forbidden in migrations to prevent drag-and-drop / reordering collision deadlocks.
+  - **Zero Dynamic Scoped State DB Constraints**: Compound business state uniqueness (e.g. only 1 active path per user) belongs strictly in `ApplicationRecord` model validations, not database constraints.
+- **Model-Led Business Validation Authority**:
+  - All application business rules, sequence validations, and single-active-entity invariants (e.g. `validate :single_active_path, if: :active?`) MUST be declared and enforced within Rails `ApplicationRecord` models.
+  - **Recycle Bin Duplicate Awareness**: Model validations enforce uniqueness across all records (including discarded/recycled records) by default. This intentionally alerts administrators if an entity already exists in the Recycle Bin ("has already been taken"), prompting them to restore it (`undiscard`) or permanently purge it from the bin (`destroy`) before creating a duplicate.
 
 ### C7. Background Jobs (Solid Queue) & Dedicated Queues
 

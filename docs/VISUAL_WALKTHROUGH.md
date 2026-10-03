@@ -51,7 +51,7 @@ Teams routinely burn $150,000–$300,000 in runway reinventing password resets, 
 
 ### The RexOne Difference: Day-One Sovereign Reality
 RexOne delivers this entire tri-platform foundation on **Day One**:
-- **1,690+ Automated Tests** (1,020 RSpec + 371 Vitest + 304 Flutter) guaranteeing unbreakable architectural integrity.
+- **1,785+ Automated Tests** (1,071 RSpec + 372 Vitest + 342 Flutter) guaranteeing unbreakable architectural integrity.
 - **Strict Constitutional Law (`LAW.md`)** enforcing pure parameter contracts, plain English, and zero dead code.
 - **Sovereign & Self-Hostable**: PostgreSQL 18, self-hosted Garage S3, native Solid Queue. Zero vendor hostage bills.
 
