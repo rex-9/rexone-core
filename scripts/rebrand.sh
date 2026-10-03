@@ -11,6 +11,13 @@ CORE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 WORKSPACE_DIR="$(cd "$CORE_DIR/.." && pwd)"
 
 CONFIG_FILE="${1:-$CORE_DIR/brand.config.json}"
+if [[ "$CONFIG_FILE" != /* ]]; then
+  if [ -f "$PWD/$CONFIG_FILE" ]; then
+    CONFIG_FILE="$PWD/$CONFIG_FILE"
+  elif [ -f "$CORE_DIR/$CONFIG_FILE" ]; then
+    CONFIG_FILE="$CORE_DIR/$CONFIG_FILE"
+  fi
+fi
 
 echo "============================================================"
 echo "🏛️  REXONE ECOSYSTEM REBRANDING ENGINE"
@@ -27,29 +34,45 @@ echo "📖 Reading brand configuration from: $(basename "$CONFIG_FILE")..."
 # Helper to read JSON values via node, python3, or ruby
 read_json() {
   local key_path="$1"
-  node -e "
-    const fs = require('fs');
-    try {
-      const c = JSON.parse(fs.readFileSync('$CONFIG_FILE', 'utf8'));
-      const parts = '$key_path'.split('.');
-      let val = c;
-      for (const p of parts) {
-        val = (val && typeof val === 'object') ? val[p] : undefined;
-      }
-      if (val !== undefined && val !== null) console.log(val);
-    } catch (_) {}
-  " 2>/dev/null || \
-  python3 -c "
-    import json
-    try:
-      c = json.load(open('$CONFIG_FILE'))
-      parts = '$key_path'.split('.')
-      val = c
-      for p in parts:
+  if command -v node >/dev/null 2>&1 && node -e "process.exit(0)" 2>/dev/null; then
+    node -e "
+      const fs = require('fs');
+      try {
+        const c = JSON.parse(fs.readFileSync('$CONFIG_FILE', 'utf8'));
+        const parts = '$key_path'.split('.');
+        let val = c;
+        for (const p of parts) {
+          val = (val && typeof val === 'object') ? val[p] : undefined;
+        }
+        if (val !== undefined && val !== null) console.log(val);
+      } catch (_) {}
+    " 2>/dev/null
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 -c "
+import json
+try:
+    with open('$CONFIG_FILE') as f:
+        c = json.load(f)
+    parts = '$key_path'.split('.')
+    val = c
+    for p in parts:
         val = val[p] if isinstance(val, dict) else None
-      if val is not None: print(val)
-    except Exception: pass
-  " 2>/dev/null || true
+    if val is not None:
+        print(val)
+except Exception:
+    pass
+" 2>/dev/null
+  elif command -v ruby >/dev/null 2>&1; then
+    ruby -rjson -e "
+      begin
+        c = JSON.parse(File.read('$CONFIG_FILE'))
+        parts = '$key_path'.split('.')
+        val = parts.inject(c) { |acc, k| acc.is_a?(Hash) ? acc[k] : nil }
+        puts val unless val.nil?
+      rescue
+      end
+    " 2>/dev/null
+  fi
 }
 
 BRAND_NAME=$(read_json "brand.name")
@@ -222,7 +245,11 @@ if [ -f "$CORE_DIR/config/app_config.rb" ]; then
   sedi -E "s/env_or\.call\(\"SMTP_DOMAIN\", \"[^\"]*\"\)/env_or.call(\"SMTP_DOMAIN\", \"${RESOLVED_SMTP_DOMAIN}\")/g" "$CORE_DIR/config/app_config.rb"
   sedi -E "s/env_or\.call\(\"FROM_EMAIL\", \"[^\"]*\"\)/env_or.call(\"FROM_EMAIL\", \"${RESOLVED_FROM_EMAIL}\")/g" "$CORE_DIR/config/app_config.rb"
   sedi -E "s/env_or\.call\(\"S3_BUCKET\", \"[^\"]*\"\)/env_or.call(\"S3_BUCKET\", \"${BRAND_SLUG_KEBAB}\")/g" "$CORE_DIR/config/app_config.rb"
-  sedi -E "s/\"[a-z0-9_-]+:\/\/\"\)/\"${BRAND_SLUG_KEBAB}:\/\/\")/g" "$CORE_DIR/config/app_config.rb"
+  core_url_scheme="${BRAND_SLUG_FLAT}"
+  if [ "$BRAND_NAME" = "RexOne" ]; then
+    core_url_scheme="rexone"
+  fi
+  sedi -E "s/\"[a-z0-9_-]+:\/\/\"\)/\"${core_url_scheme}:\/\/\")/g" "$CORE_DIR/config/app_config.rb"
   echo "  ✅ Core: Synchronized config/app_config.rb fallbacks"
 fi
 
@@ -307,7 +334,7 @@ fi
 
 # Update Core admin stylesheet comment
 if [ -f "$CORE_DIR/app/assets/stylesheets/admin.css" ]; then
-  sedi -E "s/[a-zA-Z0-9_-]+ Design Tokens/${BRAND_NAME} Design Tokens/g" "$CORE_DIR/app/assets/stylesheets/admin.css"
+  sedi -E "s/[^ \t\r\n].* Design Tokens/${BRAND_NAME} Design Tokens/g" "$CORE_DIR/app/assets/stylesheets/admin.css"
   echo "  ✅ Core: Synchronized admin.css"
 fi
 
@@ -458,10 +485,10 @@ if [ -d "$WEB_DIR" ]; then
 
   # Update Web speech controller and api service comments
   if [ -f "$WEB_DIR/src/services/api.service.ts" ]; then
-    sedi -E "s|// [a-zA-Z0-9_-]+ Core locale|// ${BRAND_NAME} Core locale|g" "$WEB_DIR/src/services/api.service.ts"
+    sedi -E "s|// .* Core locale|// ${BRAND_NAME} Core locale|g" "$WEB_DIR/src/services/api.service.ts"
   fi
   if [ -f "$WEB_DIR/src/modules/speech/speech.controller.ts" ]; then
-    sedi -E "s|using [a-zA-Z0-9_-]+ Core STT|using ${BRAND_NAME} Core STT|g" "$WEB_DIR/src/modules/speech/speech.controller.ts"
+    sedi -E "s|using .* Core STT|using ${BRAND_NAME} Core STT|g" "$WEB_DIR/src/modules/speech/speech.controller.ts"
   fi
 
   # Copy logo if provided
