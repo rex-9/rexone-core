@@ -28,11 +28,11 @@
     "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable",
     "[ruby]": {
       "editor.defaultFormatter": "misogi.ruby-rubocop",
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
     },
     "ruby.rubocop.executePath": "./bin/",
     "ruby.rubocop.useBundler": false,
     "ruby.rubocop.onSave": true,
-    "ruby.rubocop.suppressRubocopWarnings": true
+    "ruby.rubocop.suppressRubocopWarnings": true,
   },
 }
