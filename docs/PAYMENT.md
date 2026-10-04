@@ -132,7 +132,7 @@ RexOne supports 100% bi-directional synchronization between the Stripe catalog a
   "provider": "google_play", // or "app_store"
   "product_id": "81ab5c7b-2677-451a-adb5-763985260086",
   "purchase_token": "inapp:...", // for Google Play
-  "package_name": "com.rex9.rexone", // for Google Play
+  "package_name": "com.company.app", // for Google Play
   "receipt_data": "MIIT...", // for Apple App Store
   "transaction_id": "GPA.1234-5678-9012",
   "coupon_code": "SUMMER50" // optional: server-side promo coupon

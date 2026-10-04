@@ -276,6 +276,7 @@ Permissions follow a clean, four-level administrative model:
 - **Offline Media & SQLite (Drift)**: AES-GCM encrypted sandbox downloads backed by local Drift SQLite database (`rexone_offline`). Local-first playback preferences and storage management dialog.
 - **Client Telemetry**: Uncaught Flutter and platform dispatcher errors dispatched to Core via `POST /v1/client/logs`.
 - **Localization**: 100% translated in English (`en_US`), Spanish (`es_ES`), and Burmese (`my_MM`). Synchronizes `X-Locale` and `Accept-Language` headers on every HTTP request.
+- **Dual-App Architecture & Store CI/CD**: Side-by-side Prod & UAT application IDs (`<com.company.app>` vs `<com.company.app>.uat`) for isolated physical testing, automated GitHub Actions release builds, Google Play Internal testing track delivery, and direct GitHub Release APK downloads.
 
 ---
 
@@ -316,6 +317,8 @@ Permissions follow a clean, four-level administrative model:
 | **Admin AI Control Panel (Profiles & Runs Telemetry)**                |      ✅       |          ✅          |           N/A            |
 | **In-App Version Upgrader & Splash Check**                            |      ✅       |          ✅          |            ✅            |
 | **AI Discovery & Generative Engine Optimization (GEO)**               |      N/A      |          ✅          |           N/A            |
+| **Dual-App Store Architecture (Prod vs UAT)**                         |      N/A      |         N/A          |            ✅            |
+| **Automated Android CI/CD (Google Play & GitHub Releases)**           |      N/A      |         N/A          |            ✅            |
 
 ---
 
