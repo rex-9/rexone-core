@@ -50,9 +50,11 @@ Building any modern commercial digital product across Backend, Web, and Native M
 Standardized across the ecosystem for any derivative product (custom TLD):
 
 - **Demo Tier**: `rexone.rex9.me` (Web) & `api.rexone.rex9.me` (API)
-- **Product Prod**: `<product>.<tld>` (e.g. `rexone.me`) & `api.<product>.<tld>` (e.g. `api.rexone.me`)
-- **Product UAT**: `uat.<product>.<tld>` (e.g. `uat.rexone.me`) & `uat.api.<product>.<tld>` (e.g. `uat.api.rexone.me`)
-- **Product Dev**: `dev.<product>.<tld>` (e.g. `dev.rexone.me`) & `dev.api.<product>.<tld>` (e.g. `dev.api.rexone.me`)
+- **Product Prod**: `<product>.<tld>` (e.g. `example.com`) & `api.<product>.<tld>` (e.g. `api.example.com`)
+  - **Mobile App**: `<App Name>` (Android: `<com.company.app>`, iOS: `<com.company.app>`), deep link: `<scheme>://`
+- **Product UAT**: `uat.<product>.<tld>` (e.g. `uat.example.com`) & `uat.api.<product>.<tld>` (e.g. `uat.api.example.com`)
+  - **Mobile App**: `<App Name> UAT` (Android: `<com.company.app>.uat`, iOS: `<com.company.app>.uat`), deep link: `<scheme>-uat://`
+- **Product Dev**: `dev.<product>.<tld>` (e.g. `dev.example.com`) & `dev.api.<product>.<tld>` (e.g. `dev.api.example.com`)
 
 ---
 
