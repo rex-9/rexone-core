@@ -407,18 +407,32 @@ if [ -d "$WEB_DIR" ]; then
     fi
     update_env_var "$WEB_DIR/.env.example" "VITE_REACT_APP_NAME" "$web_env_name"
     update_env_var "$WEB_DIR/.env.example" "VITE_REACT_APP_FROM_EMAIL" "${RESOLVED_FROM_EMAIL}"
-    node -e "
-      const fs = require('fs');
-      const f = '$WEB_DIR/.env.example';
-      let c = fs.readFileSync(f, 'utf8');
-      c = c.replace(/# Production Tier \(e\.g\. [^)]*\):\n#\s+VITE_REACT_APP_CLIENT_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_WS_BASE_URL=[^\n]*/,
-        '# Production Tier (e.g. $BRAND_NAME):\n#   VITE_REACT_APP_CLIENT_BASE_URL=https://$web_domain\n#   VITE_REACT_APP_SERVER_BASE_URL=https://api.$web_domain\n#   VITE_REACT_APP_SERVER_WS_BASE_URL=wss://api.$web_domain');
-      c = c.replace(/# UAT Tier:\n#\s+VITE_REACT_APP_CLIENT_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_WS_BASE_URL=[^\n]*/,
-        '# UAT Tier:\n#   VITE_REACT_APP_CLIENT_BASE_URL=https://uat.$web_domain\n#   VITE_REACT_APP_SERVER_BASE_URL=https://uat.api.$web_domain\n#   VITE_REACT_APP_SERVER_WS_BASE_URL=wss://uat.api.$web_domain');
-      c = c.replace(/# Dev Tier:\n#\s+VITE_REACT_APP_CLIENT_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_WS_BASE_URL=[^\n]*/,
-        '# Dev Tier:\n#   VITE_REACT_APP_CLIENT_BASE_URL=https://dev.$web_domain\n#   VITE_REACT_APP_SERVER_BASE_URL=https://dev.api.$web_domain\n#   VITE_REACT_APP_SERVER_WS_BASE_URL=wss://dev.api.$web_domain');
-      fs.writeFileSync(f, c);
-    " 2>/dev/null || true
+    python3 -c "
+import re
+f = '$WEB_DIR/.env.example'
+try:
+    with open(f, 'r') as fp:
+        c = fp.read()
+    c = re.sub(
+        r'# Production Tier \(e\.g\. [^)]*\):\n#\s+VITE_REACT_APP_CLIENT_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_WS_BASE_URL=[^\n]*',
+        '# Production Tier (e.g. $BRAND_NAME):\n#   VITE_REACT_APP_CLIENT_BASE_URL=https://$web_domain\n#   VITE_REACT_APP_SERVER_BASE_URL=https://api.$web_domain\n#   VITE_REACT_APP_SERVER_WS_BASE_URL=wss://api.$web_domain',
+        c
+    )
+    c = re.sub(
+        r'# UAT Tier:\n#\s+VITE_REACT_APP_CLIENT_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_WS_BASE_URL=[^\n]*',
+        '# UAT Tier:\n#   VITE_REACT_APP_CLIENT_BASE_URL=https://uat.$web_domain\n#   VITE_REACT_APP_SERVER_BASE_URL=https://uat.api.$web_domain\n#   VITE_REACT_APP_SERVER_WS_BASE_URL=wss://uat.api.$web_domain',
+        c
+    )
+    c = re.sub(
+        r'# Dev Tier:\n#\s+VITE_REACT_APP_CLIENT_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_BASE_URL=[^\n]*\n#\s+VITE_REACT_APP_SERVER_WS_BASE_URL=[^\n]*',
+        '# Dev Tier:\n#   VITE_REACT_APP_CLIENT_BASE_URL=https://dev.$web_domain\n#   VITE_REACT_APP_SERVER_BASE_URL=https://dev.api.$web_domain\n#   VITE_REACT_APP_SERVER_WS_BASE_URL=wss://dev.api.$web_domain',
+        c
+    )
+    with open(f, 'w') as fp:
+        fp.write(c)
+except Exception:
+    pass
+" 2>/dev/null || true
     echo "  ✅ Web: Updated .env.example"
   fi
 
