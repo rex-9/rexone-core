@@ -10,7 +10,7 @@ gem "json", "< 3.0" # Don't update this one here, it's for JSON.parse compat wit
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3"
 # Use postgresql as the database for Active Record
-gem "pg", "~> 1.5"
+gem "pg", "~> 1.7"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 8.0"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
