@@ -34,16 +34,17 @@ Building any modern commercial digital product across Backend, Web, and Native M
 | Resource                     | Scope & Canonical Specification                                                                                                                           |
 | :--------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 📜 **Constitutional Law**    | Strict engineering constraints and architectural rules: **[LAW.md](LAW.md)** _(Zero exceptions)_                                                          |
-| 🤝 **Governance & RFCs**     | Community guidelines, Code of Conduct, and BDFL/RFC governance: **[GOVERNANCE.md](GOVERNANCE.md)** & **[CONTRIBUTING.md](CONTRIBUTING.md)**               |
-| 🤖 **Anti-Vibe AI Policy**   | Machine-enforced coding standards for AI assistants & contributors: **[AI Contribution Policy](docs/AI_CONTRIBUTION_POLICY.md)**                          |
-| 🎓 **GSoC & Grants Roadmap** | Google Summer of Code project ideas catalog & institutional grant roadmap: **[GSoC Ideas Catalog](docs/GSOC_IDEAS.md)**                                   |
-| 🌐 **Public Distribution**   | Curated directories, Awesome-lists, and community launch indexes: **[docs/DISTRIBUTION.md](docs/DISTRIBUTION.md)**                                        |
-| 📖 **API Docs & Swagger**    | Complete OpenAPI v1 schema and interactive Swagger UI at `/admin/api-docs`: **[swagger.yaml](swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`)      |
+| 🤝 **Governance & RFCs**     | Community guidelines, Code of Conduct, and BDFL/RFC governance: **[GOVERNANCE.md](https://github.com/rex-9/rexone-core/blob/dev/GOVERNANCE.md)** & **[CONTRIBUTING.md](CONTRIBUTING.md)** |
+| 🤖 **Anti-Vibe AI Policy**   | Machine-enforced coding standards for AI assistants & contributors: **[AI Contribution Policy](https://github.com/rex-9/rexone-core/blob/dev/docs/AI_CONTRIBUTION_POLICY.md)** |
+| 🎓 **GSoC & Grants Roadmap** | Google Summer of Code project ideas catalog & institutional grant roadmap: **[GSoC Ideas Catalog](https://github.com/rex-9/rexone-core/blob/dev/docs/GSOC_IDEAS.md)** |
+| 🌐 **Public Distribution**   | Curated directories, Awesome-lists, and community launch indexes: **[Public Distribution](https://github.com/rex-9/rexone-core/blob/dev/docs/DISTRIBUTION.md)** |
+| 📖 **API Docs & Swagger**    | Complete OpenAPI v1 schema and interactive Swagger UI at `/admin/api-docs`: **[swagger.yaml](https://github.com/rex-9/rexone-core/blob/dev/swagger/v1/swagger.yaml)** (Spec: `spec/openapi/v1.rb`) |
 | 🌐 **Live Web Demo**         | Production web application preview: **[rexone.rex9.me](https://rexone.rex9.me)** (API: `api.rexone.rex9.me`)                                              |
-| 🗺️ **Visual Walkthrough**    | Screenshot tour across Core, Web, Mobile, and operations: **[VISUAL_WALKTHROUGH.md](./docs/VISUAL_WALKTHROUGH.md)**                                       |
-| 🛡️ **Production Operations** | Production hardening, Cloudflare edge defense, and DDoS protection: **[Production Deployment](docs/DEPLOYMENT.md)** & **[DDoS Protection](docs/DDOS.md)** |
-| 🌐 **AI Discovery & GEO**    | Machine-readable context files (`/llms.txt`, `/llms-full.txt`), crawler policies: **[AI Discovery & GEO Guide](../rexone-web/docs/SEO_GEO.md)**           |
-| 🎞️ **Media Playback**        | Short-lived signed provider URLs and streaming roadmaps: **[Media Playback](docs/MEDIA_PLAYBACK.md)** & **[Roadmap](docs/roadmaps/MEDIA_STREAMING.md)**   |
+| 🗺️ **Visual Walkthrough**    | Screenshot tour across Core, Web, Mobile, and operations: **[Visual Walkthrough](https://github.com/rex-9/rexone-core/blob/dev/docs/VISUAL_WALKTHROUGH.md)** |
+| 🛡️ **Production Operations** | Production hardening, Cloudflare edge defense, and DDoS protection: **[Core Deployment](https://github.com/rex-9/rexone-core/blob/dev/docs/DEPLOYMENT.md)** & **[DDoS Protection](https://github.com/rex-9/rexone-core/blob/dev/docs/DDOS.md)** |
+| 📱 **Mobile Store CI/CD**    | Google Play & Apple TestFlight automated release pipelines: **[Mobile Deployment](https://github.com/rex-9/rexone-mobile/blob/dev/docs/DEPLOYMENT.md)** |
+| 🌐 **AI Discovery & GEO**    | Machine-readable context files (`/llms.txt`, `/llms-full.txt`), crawler policies: **[AI Discovery & GEO Guide](https://github.com/rex-9/rexone-web/blob/dev/docs/SEO_GEO.md)** |
+| 🎞️ **Media Playback**        | Short-lived signed provider URLs and streaming roadmaps: **[Media Playback](https://github.com/rex-9/rexone-core/blob/dev/docs/MEDIA_PLAYBACK.md)** & **[Roadmap](https://github.com/rex-9/rexone-core/blob/dev/docs/roadmaps/MEDIA_STREAMING.md)** |
 
 ### 🌐 Multi-Environment Domain Strategy
 
@@ -254,9 +255,9 @@ Permissions follow a clean, four-level administrative model:
 
 ### 🛠️ Tech Stack & Architecture
 
-- **Framework**: Flutter `3.x`, Dart `3.x`.
-- **Architecture**: GetX MVC (Pages $\rightarrow$ Controllers $\rightarrow$ Services $\rightarrow$ Models), dependency injection via `InitialBinding`.
-- **Core Packages**: `GetStorage` (persistence), `Drift` (local SQLite database), `Flutter ScreenUtil` (375x812 baseline), `Flutter Dotenv` (`.env.dev`, `.env.uat`, `.env.prod`), `Google Sign In`, `OneSignal Flutter`, `Firebase Analytics`, `media_kit`, `upgrader`.
+- **Framework**: Flutter `3.x`, Dart `3.x` (pure native 60fps).
+- **Architecture**: GetX Clean MVC (Pages $\rightarrow$ Controllers $\rightarrow$ Services $\rightarrow$ Models), dependency injection via `InitialBinding`.
+- **Core Packages**: `get` (reactive state management & DI), `drift` & `drift_flutter` (type-safe SQLite local database), `flutter_screenutil` (375x812 baseline), `flutter_dotenv` (`.env.dev`, `.env.uat`, `.env.prod`), `google_sign_in`, `onesignal_flutter`, `firebase_analytics`, `better_player` (hardware-accelerated video), `just_audio` & `just_audio_background` (background audio engine), `background_downloader` & `live_activities`, `cryptography` (AES-256-GCM sandbox encryption), `in_app_purchase` (Google Play Billing & StoreKit), `app_links` (universal deep linking).
 
 ### 🎨 Mobile Design System (`lib/design/`)
 
@@ -272,11 +273,11 @@ Permissions follow a clean, four-level administrative model:
 - **Product Analytics**: Firebase GA4 integration using constantized `action_noun` events (`sign_up`, `sign_in`, `view_product`, `purchase_product`, `open_notification`) tagged with platform (`android`, `ios`).
 - **Stripe & Billing**: In-app Stripe Checkout WebView (`CheckoutPage`), subscription management cards, cancellation confirmation, canonical currency minimum charge limits (`StripeMinimumAmounts`).
 - **AI Assistant**: Persistent multi-room chat, JSON:API response parsing, background thinking indicators, real-time completion toasts over WebSocket.
-- **Media Playback & Lyrics**: Mixed audio/video playlist from `GET /v1/assets`, signed streaming URLs from `GET /v1/assets/:id/playback`, background audio player, inline video (`media_kit`), and synced `.srt` subtitles/lyrics with per-track selection.
-- **Offline Media & SQLite (Drift)**: AES-GCM encrypted sandbox downloads backed by local Drift SQLite database (`rexone_offline`). Local-first playback preferences and storage management dialog.
+- **Media Playback & Lyrics**: Mixed audio/video playlist from `GET /v1/assets`, signed streaming URLs from `GET /v1/assets/:id/playback`, background audio player (`just_audio` + `just_audio_background`), hardware-accelerated inline video (`better_player` with dynamic 16:9 layout helper, audio focus tuning, and 100MB chunk caching), and synced `.srt` subtitles/lyrics with per-track selection and gap bridging.
+- **Offline Media & SQLite (Drift)**: AES-256-GCM encrypted local application sandbox downloads backed by local Drift SQLite database (`rexone_offline`). Schema parity mirroring backend polymorphic tables (`local_assets`, `local_child_assets`). Local-first playback preferences and offline playlist mode with pre-fetched SRT subtitles and zero network-choke.
 - **Client Telemetry**: Uncaught Flutter and platform dispatcher errors dispatched to Core via `POST /v1/client/logs`.
 - **Localization**: 100% translated in English (`en_US`), Spanish (`es_ES`), and Burmese (`my_MM`). Synchronizes `X-Locale` and `Accept-Language` headers on every HTTP request.
-- **Dual-App Architecture & Store CI/CD**: Side-by-side Prod & UAT application IDs (`<com.company.app>` vs `<com.company.app>.uat`) for isolated physical testing, automated GitHub Actions release builds, Google Play Internal testing track delivery, and direct GitHub Release APK downloads.
+- **Dual-App Architecture & Store CI/CD**: Side-by-side Prod & UAT application IDs (`<com.company.app>` vs `<com.company.app>.uat`) preventing physical device overwrites, automated GitHub Actions release builds on Linux runners with direct upload to Google Play **Internal Testing**, and native local Apple Silicon CLI (`./scripts/release_ios.sh`) pre-validating and deploying release IPAs directly to Apple **TestFlight** in ~90 seconds with zero cloud cost (see [Mobile Deployment](https://github.com/rex-9/rexone-mobile/blob/dev/docs/DEPLOYMENT.md)).
 
 ---
 
@@ -319,6 +320,14 @@ Permissions follow a clean, four-level administrative model:
 | **AI Discovery & Generative Engine Optimization (GEO)**               |      N/A      |          ✅          |           N/A            |
 | **Dual-App Store Architecture (Prod vs UAT)**                         |      N/A      |         N/A          |            ✅            |
 | **Automated Android CI/CD (Google Play & GitHub Releases)**           |      N/A      |         N/A          |            ✅            |
+| **Native iOS TestFlight CLI Pipeline (`release_ios.sh`)**              |      N/A      |         N/A          |            ✅            |
+| **Single-Command Multi-Platform Rebranding Engine**                   |      ✅       |          ✅          |            ✅            |
+| **Modular Coolify PaaS VPS Deployment**                               |      ✅       |          ✅          |           N/A            |
+| **Zero-JSON LLM Pipeline (TOON Compression 30–60%)**                  |      ✅       |          ✅          |            ✅            |
+| **Omnichannel In-App Purchases (Stripe, Play Store, App Store)**      |      ✅       |         N/A          |            ✅            |
+| **Hardware-Accelerated Media Streaming (Vidstack / BetterPlayer)**    |      ✅       |          ✅          |            ✅            |
+| **AES-256-GCM Encrypted Media Downloads (Drift SQLite)**              |      N/A      |         N/A          |            ✅            |
+| **Universal Deep Linking (`rexone://`) & Continue URLs**              |      N/A      |          ✅          |            ✅            |
 
 ---
 
@@ -683,6 +692,40 @@ A unified, tamper-proof protocol across Web and Mobile that preserves user navig
       - If user is already authenticated: guarantees `Home` is the base of the backstack (`Get.offAllNamed(home)` then `Get.toNamed(target)`) so native back navigation always leads back to `Home`.
 - **Session Purge on Sign Out**:
   - Explicit sign-out (`signOut`) and auth dialog dismissal (`handleClose`) automatically clear `continueUrl` from local storage to prevent stale redirects.
+
+---
+
+### 10. Single-Command Multi-Platform Rebrand Engine Specification
+
+RexOne includes a sovereign, zero-friction rebranding engine executed via a single master command from `rexone-core`:
+
+```bash
+# Full ecosystem synchronization (Core API, Web SPA, and Mobile Flutter simultaneously):
+./scripts/rebrand.sh "Acme Product" "com.acme.product" "path/to/logo.png" [BrandName] [domain.com]
+```
+
+#### Deterministic Cross-Repository Parameter Contracts (Law U14):
+1. **RexOne Core (Rails API)**:
+   - Synchronizes `config/app_config.rb` default parameters (`RAILS_JWT_SECRET_KEY`, `SMTP_DOMAIN`, `FROM_EMAIL`, `S3_BUCKET`).
+   - Updates `docker-compose.yaml` (Production / Coolify) and `docker-compose.dev.yaml` with kebab-case container slugs (`prod-acme-api`, `prod-acme-waka`, `prod-acme-media`, `prod-acme-db`, `acme-garage`).
+   - Synchronizes PostgreSQL database names (`acme_production`, `acme_development`) and Garage S3 bucket names (`acme`).
+   - Updates database backup scripts (`backup_db.sh`, `backup_garage.sh`, `dev_garage.sh`, `prod_garage_init.sh`).
+   - Updates checked-in `.env.example` templates with matching parameter examples.
+2. **RexOne Web (React SPA)**:
+   - Synchronizes `package.json` package name and HTML application titles.
+   - Synchronizes branding locales (`src/locales/en.json`, `src/locales/my.json`).
+   - Updates public brand assets (`public/brand/logo.png`, `public/favicon.png`) and image alt tokens (`src/assets/index.ts`).
+   - Synchronizes `scripts/uat.sh` and `scripts/prod.sh` target API hostnames (`https://api.domain.com`, `https://uat.api.domain.com`).
+   - Synchronizes checked-in `.env.example` templates.
+3. **RexOne Mobile (Flutter Client)**:
+   - Updates application display names dynamically in Android (`AndroidManifest.xml` via `appName`) and iOS (`Info.plist` via `CFBundleDisplayName`).
+   - Synchronizes native application ID and iOS bundle ID (`com.acme.product` and `com.acme.product.uat`).
+   - Synchronizes release keystore filenames (`acme-upload-keystore.jks`) in `build.gradle.kts`.
+   - Synchronizes parameter contracts inside `./scripts/release_android.sh`, `./scripts/release_ios.sh`, and `.github/workflows/build_android.yaml`.
+   - Generates native launcher icons across all screen densities from source logo via `flutter_launcher_icons`.
+4. **Secret Isolation Protocol (Rule 5 & Law U16)**:
+   - Automation **NEVER** touches live gitignored `.env` files (`.env`, `.env.dev`, `.env.prod`, `.env.uat`).
+   - Product creators apply live secret values manually using synchronized `.env.example` reference files.
 
 ---
 
