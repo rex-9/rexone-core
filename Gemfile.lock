@@ -325,7 +325,7 @@ GEM
       net-ssh (>= 2.6.5, < 8.0.0)
     net-sftp (4.0.0)
       net-ssh (>= 5.0.0, < 8.0.0)
-    net-smtp (0.5.1)
+    net-smtp (0.5.2)
       net-protocol
     net-ssh (7.3.3)
     netrc (0.11.0)
@@ -424,7 +424,7 @@ GEM
     rails-html-sanitizer (1.7.1)
       loofah (~> 2.25, >= 2.25.2)
       nokogiri (>= 1.15.7, != 1.16.7, != 1.16.6, != 1.16.5, != 1.16.4, != 1.16.3, != 1.16.2, != 1.16.1, != 1.16.0.rc1, != 1.16.0)
-    rails_error_dashboard (0.14.2)
+    rails_error_dashboard (0.14.4)
       concurrent-ruby (~> 1.3)
       groupdate (~> 6.0)
       pagy (~> 43.0)
@@ -716,7 +716,7 @@ DEPENDENCIES
   rack-attack (~> 6.8)
   rack-cors (~> 3.0)
   rails (~> 8.1.3)
-  rails_error_dashboard (~> 0.14.0)
+  rails_error_dashboard (~> 0.14.4)
   rails_pulse (~> 0.4.0)
   rest-client (~> 2.1)
   rspec-rails (~> 8.0)
@@ -865,7 +865,7 @@ CHECKSUMS
   net-protocol (0.4.0) sha256=f9f90c8c6f64794a45160bf422177a336db12809de3beeeaa26b88fcd2e8c853
   net-scp (4.1.0) sha256=a99b0b92a1e5d360b0de4ffbf2dc0c91531502d3d4f56c28b0139a7c093d1a5d
   net-sftp (4.0.0) sha256=65bb91c859c2f93b09826757af11b69af931a3a9155050f50d1b06d384526364
-  net-smtp (0.5.1) sha256=ed96a0af63c524fceb4b29b0d352195c30d82dd916a42f03c62a3a70e5b70736
+  net-smtp (0.5.2) sha256=35103cc04d6b2d94632f9928ede07483c24b70b9c0db1f231fea43909b678f3c
   net-ssh (7.3.3) sha256=831def58b2c51dcef66ec00d29397d4f210de89c19fe78f95873ca30f386e86a
   netrc (0.11.0) sha256=de1ce33da8c99ab1d97871726cba75151113f117146becbe45aa85cb3dabee3f
   nio4r (2.7.5) sha256=6c90168e48fb5f8e768419c93abb94ba2b892a1d0602cb06eef16d8b7df1dca1
@@ -910,7 +910,7 @@ CHECKSUMS
   rails (8.1.4) sha256=5f3ecdf9a2a3b79b2e31b8fee3b64a00f7284d76e5631f87d0e58e665911a33b
   rails-dom-testing (2.3.0) sha256=8acc7953a7b911ca44588bf08737bc16719f431a1cc3091a292bca7317925c1d
   rails-html-sanitizer (1.7.1) sha256=e797a7c9b01e567307e317c576b49ab4168017e63eea4dba9ce3cb587e2f22c2
-  rails_error_dashboard (0.14.2) sha256=94bb4cd136f24de86974f88cd3968b6a4801b33df7894dbeeab1eb5e32193515
+  rails_error_dashboard (0.14.4) sha256=ad8707be56bc79e29c0bcfd90cfed6a1799666440dc38e658f56f919b7c83928
   rails_pulse (0.4.1) sha256=7402d0a59eb46f75669d54005f47dd22088ed13c76329bb6fe32ebc216e60f02
   railties (8.1.4) sha256=b5e7a8e8984e33114d68af62227971960aae1e6c02bd7c9d826ffad97fff583c
   rainbow (3.1.1) sha256=039491aa3a89f42efa1d6dec2fc4e62ede96eb6acd95e52f1ad581182b79bc6a
