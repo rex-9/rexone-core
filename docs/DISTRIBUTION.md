@@ -10,8 +10,10 @@ A centralized registry of public software indexes, curated lists, and developer 
 | :---------------------------- | :------------------------------------------------------------------ | :--------: | :----------------------------------------------------------------------------------------------------------- |
 | **AlternativeTo**             | Open-source alternative to Supabase, Firebase, Appwrite, PocketBase |  ✅ Live   | [AlternativeTo Profile](https://alternativeto.net/software/rexone/)                                          |
 | **SaaSHub**                    | Alternative to Supabase, ShipFast, Makerkit, Flutter Starter        |  ✅ Live   | [RexOne on SaaSHub](https://www.saashub.com/rexone)                                                          |
+| **StackShare**                | Architecture Tech Stack Profile (Rails 8, React 19, Flutter 3)      |  ✅ Live   | [RexOne on StackShare](https://stackshare.io/rex9.tech/rexone)                                                |
 | **Selfh.st**                  | Self-Hosted Application Directory & Weekly Feature                   | ⏳ In Review| [selfh.st/apps](https://selfh.st/apps)                                                                       |
 | **Awesome-Flutter**           | `Open Source Apps` / `Top`                                          | ⏳ PR Open | [awesome-flutter PR #1078](https://github.com/Solido/awesome-flutter/pull/1078)                              |
+| **It's All Widgets!**         | Flutter Open Source App & Template Directory                        |  ✅ Live   | [RexOne on It's All Widgets!](https://itsallwidgets.com/rexone)                                             |
 | **Awesome-Rails**             | `Open Source Rails Apps`                                            | ✅ Merged  | [awesome-rails PR #158](https://github.com/gramantin/awesome-rails/pull/158)                                 |
 | **Awesome-SaaS-Boilerplates** | `Ruby on Rails` & `Open Source`                                     | ⏳ PR Open | [xcomptek/awesome-saas-boilerplates PR #236](https://github.com/xcomptek/awesome-saas-boilerplates/pull/236) |
 
@@ -32,6 +34,7 @@ A centralized registry of public software indexes, curated lists, and developer 
 | **Reddit r/ruby**       | Rails 8 & Solid Queue Showcase             | Ruby & Rails developers                     | `reddit.com/r/ruby`                                                   |
 | **Reddit r/rails**      | Rails 8 & Solid Queue Showcase             | Ruby & Rails developers                     | `reddit.com/r/rails`                                                  |
 | **Reddit r/FlutterDev** | Offline Drift SQLite & Multi-tier Mobile   | Flutter & Dart mobile engineers             | `reddit.com/r/FlutterDev`                                             |
+| **FreeCodeCamp Forum**  | Open Source Showcase & Architecture Review | Global full-stack developers & architects   | [freeCodeCamp Forum](https://forum.freecodecamp.org)                                                   |
 | **Reddit r/reactjs**    | Decoupled React 19 + Vite SPA Architecture | React & Frontend developers                 | `reddit.com/r/reactjs`                                                |
 
 ---
@@ -43,6 +46,7 @@ A centralized registry of public software indexes, curated lists, and developer 
 | **DEV Community**   | *Why I Open-Sourced RexOne: The Sovereign Antidote to $200–$800 Boilerplates & AI Vibe-Coding* |  ✅ Live  | [DEV.to Article](https://dev.to/rex9/why-i-built-rexone-an-open-source-sovereign-alternative-to-firebase-nextjs-boilerplates-200m) |
 | **Hashnode**        | *Why I Open-Sourced RexOne: The Sovereign Antidote to $200–$800 Boilerplates & AI Vibe-Coding* |  ✅ Live  | [Hashnode Article](https://rex9.hashnode.dev/why-i-open-sourced-rexone-the-sovereign-antidote-to-200-800-boilerplates-ai-vibe-coding) |
 | **Medium**          | *Why I Open-Sourced RexOne: The Sovereign Antidote to $200–$800 Boilerplates & AI Vibe-Coding* |  ✅ Live  | [Medium Article](https://medium.com/@rex9.tech/why-i-open-sourced-rexone-the-sovereign-antidote-to-200-800-boilerplates-ai-vibe-coding-3a2e6bed13b4) |
+| **Hacker Noon**     | *Why I Open-Sourced RexOne: The Sovereign Antidote to $200–$800 Boilerplates & AI Vibe-Coding* | ⏳ Under Review | [Hacker Noon Draft / Submission](https://app.hackernoon.com/articles/6ac4cc3d630261c8e70bc8b9) |
 
 ---
 
