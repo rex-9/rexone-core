@@ -101,7 +101,7 @@ GEM
     aws-sdk-kms (1.132.0)
       aws-sdk-core (~> 3, >= 3.256.0)
       aws-sigv4 (~> 1.5)
-    aws-sdk-s3 (1.232.3)
+    aws-sdk-s3 (1.233.1)
       aws-sdk-core (~> 3, >= 3.256.0)
       aws-sdk-kms (~> 1)
       aws-sigv4 (~> 1.5)
@@ -115,7 +115,7 @@ GEM
     bigdecimal (4.1.3)
     bootsnap (1.26.0)
       msgpack (~> 1.5)
-    brakeman (8.0.6)
+    brakeman (8.1.0)
       racc
     builder (3.3.0)
     bundler-audit (0.9.3)
@@ -364,12 +364,12 @@ GEM
     parser (3.3.12.0)
       ast (~> 2.4.1)
       racc
-    pg (1.6.3)
-    pg (1.6.3-aarch64-linux)
-    pg (1.6.3-aarch64-linux-musl)
-    pg (1.6.3-arm64-darwin)
-    pg (1.6.3-x86_64-linux)
-    pg (1.6.3-x86_64-linux-musl)
+    pg (1.7.0)
+    pg (1.7.0-aarch64-linux)
+    pg (1.7.0-aarch64-linux-musl)
+    pg (1.7.0-arm64-darwin)
+    pg (1.7.0-x86_64-linux)
+    pg (1.7.0-x86_64-linux-musl)
     pp (0.6.4)
       prettyprint
     prettyprint (0.2.0)
@@ -424,12 +424,12 @@ GEM
     rails-html-sanitizer (1.7.1)
       loofah (~> 2.25, >= 2.25.2)
       nokogiri (>= 1.15.7, != 1.16.7, != 1.16.6, != 1.16.5, != 1.16.4, != 1.16.3, != 1.16.2, != 1.16.1, != 1.16.0.rc1, != 1.16.0)
-    rails_error_dashboard (0.14.2)
+    rails_error_dashboard (0.14.4)
       concurrent-ruby (~> 1.3)
       groupdate (~> 6.0)
       pagy (~> 43.0)
       rails (>= 7.0.0)
-    rails_pulse (0.4.1)
+    rails_pulse (0.4.2)
       rails (>= 7.1.0, < 9.0.0)
       ransack (>= 4.0, < 6)
       request_store (~> 1.5)
@@ -628,7 +628,7 @@ GEM
       net-ssh (>= 2.8.0)
       ostruct
     stringio (3.2.0)
-    stripe (19.6.2)
+    stripe (20.0.0)
       bigdecimal
       logger
     thor (1.5.0)
@@ -689,7 +689,7 @@ PLATFORMS
 DEPENDENCIES
   administrate (~> 1.0)
   async (~> 2.46)
-  aws-sdk-s3 (~> 1.232.3)
+  aws-sdk-s3 (~> 1.233.1)
   bcrypt (~> 3.1)
   bootsnap
   brakeman
@@ -716,8 +716,8 @@ DEPENDENCIES
   rack-attack (~> 6.8)
   rack-cors (~> 3.0)
   rails (~> 8.1.3)
-  rails_error_dashboard (~> 0.14.0)
-  rails_pulse (~> 0.4.0)
+  rails_error_dashboard (~> 0.14.4)
+  rails_pulse (~> 0.4.2)
   rest-client (~> 2.1)
   rspec-rails (~> 8.0)
   rswag (~> 2.17)
@@ -731,7 +731,7 @@ DEPENDENCIES
   solid_queue
   solid_web_ui (~> 0.4.0)
   sprockets-rails (~> 3.5)
-  stripe (~> 19.6)
+  stripe (~> 20.0)
   thruster
   tzinfo-data
   websocket-client-simple (~> 0.9)
@@ -757,7 +757,7 @@ CHECKSUMS
   aws-partitions (1.1292.0) sha256=c7fbe8b878640f12e24c975fd14c30401f4dd112416a2d21f834d3a823c8c4b8
   aws-sdk-core (3.257.0) sha256=a92ad19c7ff668cec6688ee3200ee562da80647a3bbeed9fda02e8b0ca6492c6
   aws-sdk-kms (1.132.0) sha256=094b0097bb3be9d5c1ac87e971ca7f5aebb746801dfb5f0f576480bf98dca69c
-  aws-sdk-s3 (1.232.3) sha256=9d15dbf5559f068d4eb3a6c81d4e1d2c572c0068453dd0f0673696d61f1feeca
+  aws-sdk-s3 (1.233.1) sha256=cdfb5051266354ae7e93a1443ae3878cceca531d81a890cf8185458ec62919e9
   aws-sigv4 (1.12.1) sha256=6973ff95cb0fd0dc58ba26e90e9510a2219525d07620c8babeb70ef831826c00
   backport (1.2.0) sha256=912c7dfdd9ee4625d013ddfccb6205c3f92da69a8990f65c440e40f5b2fc7f75
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
@@ -766,7 +766,7 @@ CHECKSUMS
   benchmark (0.5.0) sha256=465df122341aedcb81a2a24b4d3bd19b6c67c1530713fd533f3ff034e419236c
   bigdecimal (4.1.3) sha256=61ebe1e5e559bdc3cc6f2c0ee7f427321fc838f59611c294356eb04d6e21cf66
   bootsnap (1.26.0) sha256=ca96237015e6cd74a02963d5821cf00ac5ea134653b323e8cd6d702a7718bf1b
-  brakeman (8.0.6) sha256=759cc69341115e6c2dcd47b6fd8649a0b9bd540e3585ac8a0a94e31c66fee386
+  brakeman (8.1.0) sha256=cfa9e5214e4925842f4bc849a64f8a7e6c5d0425fe98eac8d7b7bc60fdc17e07
   builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
   bundler (4.0.16) sha256=d6ca5dd440c24f9abce9844cf44cc8e18c6a553de65a47efb4544137af92c47d
   bundler-audit (0.9.3) sha256=81c8766c71e47d0d28a0f98c7eed028539f21a6ea3cd8f685eb6f42333c9b4e9
@@ -885,12 +885,12 @@ CHECKSUMS
   parallel (2.2.0) sha256=e1059c5fd7b649558a0aec38a769f06a42942bdb40503d005a59c352fe011cd8
   parlour (9.1.2) sha256=446ce24243e125f0e8c4f9b5722c3b86063d42d8b106c847a7d73a8cc693c382
   parser (3.3.12.0) sha256=21a6d7f755d5a24dfbdc6e6b772e4e879a52e7631a88bc5a3a134606052c9828
-  pg (1.6.3) sha256=1388d0563e13d2758c1089e35e973a3249e955c659592d10e5b77c468f628a99
-  pg (1.6.3-aarch64-linux) sha256=0698ad563e02383c27510b76bf7d4cd2de19cd1d16a5013f375dd473e4be72ea
-  pg (1.6.3-aarch64-linux-musl) sha256=06a75f4ea04b05140146f2a10550b8e0d9f006a79cdaf8b5b130cde40e3ecc2c
-  pg (1.6.3-arm64-darwin) sha256=7240330b572e6355d7c75a7de535edb5dfcbd6295d9c7777df4d9dddfb8c0e5f
-  pg (1.6.3-x86_64-linux) sha256=5d9e188c8f7a0295d162b7b88a768d8452a899977d44f3274d1946d67920ae8d
-  pg (1.6.3-x86_64-linux-musl) sha256=9c9c90d98c72f78eb04c0f55e9618fe55d1512128e411035fe229ff427864009
+  pg (1.7.0) sha256=f7b536501284e883d4c9ef86dbde0313063e4aaafc23575b0017b0d572a26afb
+  pg (1.7.0-aarch64-linux) sha256=101dd3a261000eb64b03ff41a5890674b735b626dbdce88652969b59fb0b1157
+  pg (1.7.0-aarch64-linux-musl) sha256=5ca4d4619a1a39fb22de47350130956ece69cf0512858ee68dca926e46f65e4a
+  pg (1.7.0-arm64-darwin) sha256=9fa895bbe28bdd579b83ccc80464c01d1015ea7549a7919134c9f8f10c060e4b
+  pg (1.7.0-x86_64-linux) sha256=d0a24f448b3c874c8b2658d4efbbbefce7315c228ede84f6f6f42089d1d704b6
+  pg (1.7.0-x86_64-linux-musl) sha256=0c9bc93b6e0aca2a5b07daef00b7ec4f9882bfe21ef3872b4371f8ecffe1f1e1
   pp (0.6.4) sha256=dfcb0fce700c41456265922884f9fe195d7fbb0674a3578e6c0f69588e82b570
   prettyprint (0.2.0) sha256=2bc9e15581a94742064a3cc8b0fb9d45aae3d03a1baa6ef80922627a0766f193
   prism (1.9.0) sha256=7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85
@@ -910,8 +910,8 @@ CHECKSUMS
   rails (8.1.4) sha256=5f3ecdf9a2a3b79b2e31b8fee3b64a00f7284d76e5631f87d0e58e665911a33b
   rails-dom-testing (2.3.0) sha256=8acc7953a7b911ca44588bf08737bc16719f431a1cc3091a292bca7317925c1d
   rails-html-sanitizer (1.7.1) sha256=e797a7c9b01e567307e317c576b49ab4168017e63eea4dba9ce3cb587e2f22c2
-  rails_error_dashboard (0.14.2) sha256=94bb4cd136f24de86974f88cd3968b6a4801b33df7894dbeeab1eb5e32193515
-  rails_pulse (0.4.1) sha256=7402d0a59eb46f75669d54005f47dd22088ed13c76329bb6fe32ebc216e60f02
+  rails_error_dashboard (0.14.4) sha256=ad8707be56bc79e29c0bcfd90cfed6a1799666440dc38e658f56f919b7c83928
+  rails_pulse (0.4.2) sha256=6e45b077e73c52080b6c86b9eb2cdd38b658903dd0cd77a59b2f3ef710c768f7
   railties (8.1.4) sha256=b5e7a8e8984e33114d68af62227971960aae1e6c02bd7c9d826ffad97fff583c
   rainbow (3.1.1) sha256=039491aa3a89f42efa1d6dec2fc4e62ede96eb6acd95e52f1ad581182b79bc6a
   rake (13.4.2) sha256=cb825b2bd5f1f8e91ca37bddb4b9aaf345551b4731da62949be002fa89283701
@@ -960,7 +960,7 @@ CHECKSUMS
   sprockets-rails (3.5.2) sha256=a9e88e6ce9f8c912d349aa5401509165ec42326baf9e942a85de4b76dbc4119e
   sshkit (1.25.1) sha256=be3f10b9d6eb0b44d5eaba3f7cbe41bc6bb894bce4339688ac20124391455b78
   stringio (3.2.0) sha256=c37cb2e58b4ffbd33fe5cd948c05934af997b36e0b6ca6fdf43afa234cf222e1
-  stripe (19.6.2) sha256=9a614976a25aba0adbef9ce770c1e242b0e7fcb20d61924fed5e79e1e10dd49c
+  stripe (20.0.0) sha256=00059df3a845418dc4e73e52f7d98f5803ed5810242dbe9d440f6da528311e7d
   thor (1.5.0) sha256=e3a9e55fe857e44859ce104a84675ab6e8cd59c650a49106a05f55f136425e73
   thruster (0.1.26) sha256=6e45e807086b29d51404841bd1ad493b67cd95892fd65dc5afcdd32e82e94ce8
   thruster (0.1.26-aarch64-linux) sha256=2171cb34928c0250830008f535c4ab2ee57846cc3f5d3e96c3475f7b3de7a541
