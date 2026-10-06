@@ -23,6 +23,8 @@ RSpec.describe "CORS Policy", type: :request do
     end
 
     it "allows Demo tier with http, https, and www (rexone.rex9.me, www.rexone.rex9.me)" do
+      stub_const("AppConfig::PRODUCT_DOMAIN", "rexone.rex9.me")
+
       check_cors("https://rexone.rex9.me")
       expect(response.headers["Access-Control-Allow-Origin"]).to eq("https://rexone.rex9.me")
 

@@ -110,7 +110,7 @@ module AppConfig
   CLOUDINARY_API_SECRET       = env_or.call("CLOUDINARY_API_SECRET", "")
 
   # Local Storage
-  LOCAL_STORAGE_PATH          = env_or.call("LOCAL_STORAGE_PATH", File.expand_path("../../storage", __dir__))
+  LOCAL_STORAGE_PATH          = env_or.call("LOCAL_STORAGE_PATH", File.expand_path("../storage", __dir__))
 
   # Media Processing & Hardware Limits
   MEDIA_CONTAINER_ENABLED     = env_or.call("MEDIA_CONTAINER_ENABLED", "true") == "true"
