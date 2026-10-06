@@ -101,7 +101,7 @@ gem "aws-sdk-s3", "~> 1.233.1" # need only when STORAGE_PROVIDER=garage
 # Utilities
 # ============================================================
 
-gem "pagy", "~> 43.6"
+gem "pagy", "~> 43.7"
 
 # ============================================================
 # Development / Test

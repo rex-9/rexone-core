@@ -351,7 +351,7 @@ GEM
     open3 (0.2.1)
     orm_adapter (0.5.0)
     ostruct (0.6.3)
-    pagy (43.6.3)
+    pagy (43.7.0)
       json
       uri
       yaml
@@ -709,7 +709,7 @@ DEPENDENCIES
   jsonapi-serializer (~> 2.2)
   jwt (~> 3.3)
   kamal
-  pagy (~> 43.6)
+  pagy (~> 43.7)
   pg (~> 1.5)
   psych (~> 5.5.0)
   puma (>= 8.0)
@@ -881,7 +881,7 @@ CHECKSUMS
   open3 (0.2.1) sha256=8e2d7d2113526351201438c1aa35c8139f0141c9e8913baa007c898973bf3952
   orm_adapter (0.5.0) sha256=aa5d0be5d540cbb46d3a93e88061f4ece6a25f6e97d6a47122beb84fe595e9b9
   ostruct (0.6.3) sha256=95a2ed4a4bd1d190784e666b47b2d3f078e4a9efda2fccf18f84ddc6538ed912
-  pagy (43.6.3) sha256=3b7cd5b5b08e975b85cb48c1e7b729d90125a46c9ac14bd830fde1a8c6719a85
+  pagy (43.7.0) sha256=877fd7f531eeb7a406b8046dfafb81b499e2b4352c976ce116e0a4909e82fd3d
   parallel (2.2.0) sha256=e1059c5fd7b649558a0aec38a769f06a42942bdb40503d005a59c352fe011cd8
   parlour (9.1.2) sha256=446ce24243e125f0e8c4f9b5722c3b86063d42d8b106c847a7d73a8cc693c382
   parser (3.3.12.0) sha256=21a6d7f755d5a24dfbdc6e6b772e4e879a52e7631a88bc5a3a134606052c9828
