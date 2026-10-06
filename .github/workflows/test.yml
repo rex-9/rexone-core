@@ -2,6 +2,19 @@ name: Core CI
 
 on:
   pull_request:
+    branches: [ main, uat ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
+  push:
+    branches: [ main, uat ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   workflow_dispatch:
 
 concurrency:
@@ -11,6 +24,8 @@ concurrency:
 jobs:
   test:
     name: Build & Tests
+    # Skip redundant push runs if this commit was already tested in a PR merge
+    if: github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'Merge pull request')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -19,6 +34,7 @@ jobs:
       RAILS_SECRET_KEY_BASE: ci-secret-key-base
       RAILS_JWT_SECRET_KEY: ci-jwt-secret-key
       STORAGE_PROVIDER: local
+      MEDIA_CONTAINER_ENABLED: "false"
     services:
       postgres:
         image: postgres:18-alpine
