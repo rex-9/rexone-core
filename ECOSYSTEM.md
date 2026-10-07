@@ -701,26 +701,29 @@ RexOne includes a sovereign, zero-friction rebranding engine executed via a sing
 
 ```bash
 # Full ecosystem synchronization (Core API, Web SPA, and Mobile Flutter simultaneously):
-./scripts/rebrand.sh "Acme Product" "com.acme.product" "path/to/logo.png" [BrandName] [domain.com]
+./scripts/rebrand.sh brand.config.json
 ```
+
+For the comprehensive guide and operational matrix, see **[docs/REBRANDING.md](docs/REBRANDING.md)**.
 
 #### Deterministic Cross-Repository Parameter Contracts (Law U14):
 1. **RexOne Core (Rails API)**:
    - Synchronizes `config/app_config.rb` default parameters (`RAILS_JWT_SECRET_KEY`, `SMTP_DOMAIN`, `FROM_EMAIL`, `S3_BUCKET`).
-   - Updates `docker-compose.yaml` (Production / Coolify) and `docker-compose.dev.yaml` with kebab-case container slugs (`prod-acme-api`, `prod-acme-waka`, `prod-acme-media`, `prod-acme-db`, `acme-garage`).
-   - Synchronizes PostgreSQL database names (`acme_production`, `acme_development`) and Garage S3 bucket names (`acme`).
+   - Updates `docker-compose.yaml` (Production / Coolify) and `docker-compose.dev.yaml` with kebab-case container slugs (`prod-<kebab>-api`, `prod-<kebab>-waka`, `prod-<kebab>-media`, `prod-<kebab>-db`, `<kebab>-garage`).
+   - Synchronizes PostgreSQL database names (`<snake>_production`, `<snake>_development`) and Garage S3 bucket names (`<kebab>`).
    - Updates database backup scripts (`backup_db.sh`, `backup_garage.sh`, `dev_garage.sh`, `prod_garage_init.sh`).
    - Updates checked-in `.env.example` templates with matching parameter examples.
 2. **RexOne Web (React SPA)**:
-   - Synchronizes `package.json` package name and HTML application titles.
+   - Synchronizes `package.json` package name (`<kebab>-web`) and HTML application titles.
    - Synchronizes branding locales (`src/locales/en.json`, `src/locales/my.json`).
    - Updates public brand assets (`public/brand/logo.png`, `public/favicon.png`) and image alt tokens (`src/assets/index.ts`).
    - Synchronizes `scripts/uat.sh` and `scripts/prod.sh` target API hostnames (`https://api.domain.com`, `https://uat.api.domain.com`).
    - Synchronizes checked-in `.env.example` templates.
 3. **RexOne Mobile (Flutter Client)**:
    - Updates application display names dynamically in Android (`AndroidManifest.xml` via `appName`) and iOS (`Info.plist` via `CFBundleDisplayName`).
-   - Synchronizes native application ID and iOS bundle ID (`com.acme.product` and `com.acme.product.uat`).
-   - Synchronizes release keystore filenames (`acme-upload-keystore.jks`) in `build.gradle.kts`.
+   - Synchronizes native application ID and iOS bundle ID (`com.brand.app` and `com.brand.app.uat`).
+   - Synchronizes release keystore filenames (`<flat>-upload-keystore.jks`) in `build.gradle.kts`.
+   - Synchronizes Dart `pubspec.yaml` package name and updates **all package imports** across `lib/`, `test/`, and `integration_test/`.
    - Synchronizes parameter contracts inside `./scripts/release_android.sh`, `./scripts/release_ios.sh`, and `.github/workflows/build_android.yaml`.
    - Generates native launcher icons across all screen densities from source logo via `flutter_launcher_icons`.
 4. **Secret Isolation Protocol (Rule 5 & Law U16)**:

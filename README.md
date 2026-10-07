@@ -522,20 +522,20 @@ All logs and database monitoring tables are governed by automated retention poli
 
 ## 🎨 Rebranding
 
-RexOne Core serves as the master rebranding engine for the entire ecosystem:
+RexOne Core serves as the master rebranding engine for the entire ecosystem. Product creators can rebrand Core, Web, and Mobile simultaneously in a single command:
 
 ```bash
-# 1. Rebrand all 3 repositories from rexone-core:
+# 1. Edit brand.config.json (or use brand.single_word.json / brand.multi_word.json as a template)
+# 2. Add your 1024x1024 app icon at brand/logo.png
+# 3. Run the rebrand engine from rexone-core:
 ./scripts/rebrand.sh brand.config.json
-
-# 2. Local environment variables in .env:
-APP_NAME="My New App Name"
-DEFAULT_MAIL_SENDER="no-reply@mynewapp.com"
-FROM_EMAIL="support@mynewapp.com"
 ```
 
+For the comprehensive guide, automated synchronization matrix, and manual credential setups (Firebase, Google SSO, Keystores), see:
+👉 **[Ecosystem Rebranding Guide (docs/REBRANDING.md)](docs/REBRANDING.md)** and **[Naming Conventions (docs/NAMING_CONVENTIONS.md)](docs/NAMING_CONVENTIONS.md)**.
+
 > [!NOTE]
-> The rebranding script intentionally leaves the **landing module** (`src/modules/landing`) and **SEO / AI discovery assets** (`index.html` metadata/Schema.org, `robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt`) completely untouched. RexOne SEO belongs to the foundation architecture; product-specific landing and SEO design are 100% the developer's responsibility.
+> The rebranding script automatically synchronizes code, package names, Docker services, databases, deep links, Dart imports, and launcher icons. In adherence to strict security standards, **local gitignored files (`.env`, keystores, Firebase configs)** and **product-specific landing/SEO assets** are left for manual developer configuration.
 
 ---
 

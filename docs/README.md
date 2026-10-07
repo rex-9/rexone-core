@@ -41,7 +41,7 @@ All development tasks are automated via deterministic shell scripts located in `
 | `./scripts/enter_api.sh`          | Enters the running API container bash shell or executes arbitrary commands          | `[cmd...]`                                    |
 | `./scripts/docker_clean.sh`       | Safely prunes stopped containers, orphan networks, and build cache (preserves DB)   | `-y`, `--force` (bypass prompts), `--volumes` |
 | `./scripts/vps_cleanup.sh`        | Safe recurring production VPS maintenance for Coolify (prunes images older than 7d) | `IMAGE_RETENTION_HOURS=168`                   |
-| `./scripts/rebrand.sh`            | Master rebranding automation across Core, Web, and Mobile ecosystems                | `<config.json>`                               |
+| [`./scripts/rebrand.sh`](REBRANDING.md) | Master rebranding automation across Core, Web, and Mobile ecosystems ([guide](REBRANDING.md)) | `<config.json>`                               |
 | `./scripts/generate_secrets.sh`   | Generates high-entropy cryptographically secure production secret keys              | None                                          |
 | `./scripts/check_secrets.sh`      | Pre-commit secret scanner blocking live API keys and untracked `.env` files         | `--install`, `--all`                          |
 | `./scripts/install_pre_commit.sh` | Installs the master git pre-commit hook into your local `.git/hooks/`               | None                                          |

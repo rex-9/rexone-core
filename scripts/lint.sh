@@ -18,7 +18,7 @@
 set -u
 
 # Ensure standard binary paths are in PATH when invoked by GUI git clients
-export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:${HOME:-}/.docker/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH="${HOME:-}/.rbenv/shims:${HOME:-}/.asdf/shims:${HOME:-}/.rvm/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:${HOME:-}/.docker/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
 
 COMPOSE_FILE="docker-compose.dev.yaml"
 SERVICE="api"
@@ -36,8 +36,14 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
+# 1. Prefer fast native host RuboCop if Ruby and bundler are available locally (<1s)
+if command -v bundle >/dev/null 2>&1 && bundle exec rubocop --version >/dev/null 2>&1; then
+  exec bundle exec rubocop "$@"
+fi
+
+# 2. Fall back to Docker API container if native host Ruby is not present
 if ! docker info >/dev/null 2>&1; then
-  printf '%s\n' "Docker is not running. Start Docker and try again." >&2
+  printf '%s\n' "Docker is not running and native Ruby was not found. Start Docker and try again." >&2
   exit 1
 fi
 

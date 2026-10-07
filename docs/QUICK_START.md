@@ -222,6 +222,7 @@ Stripe, Brevo, OneSignal, Google, DeepSeek, Cloudinary, Nova, and Azure require 
 ## Next reading
 
 - [Foundation capabilities](FOUNDATION.md)
+- [Ecosystem rebranding guide](REBRANDING.md)
 - [Ecosystem architecture](../ECOSYSTEM.md)
 - [Development law](../LAW.md)
 - [Production deployment](DEPLOYMENT.md)
