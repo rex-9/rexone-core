@@ -226,8 +226,14 @@ In the Coolify UI dashboard:
 
 ### Step 2: Deploy Standalone Garage S3 on Coolify
 
-1. In Coolify Dashboard, click **New Resource** → **Docker Compose** (or Service).
-2. Use the standalone Garage configuration:
+1. **Generate High-Entropy Production Secrets:**
+   Run `./scripts/generate_secrets.sh` (or generate random 32-byte hex tokens) to get your:
+   - `GARAGE_RPC_SECRET` (`openssl rand -hex 32`)
+   - `S3_ADMIN_TOKEN` (`openssl rand -hex 32`)
+
+2. In Coolify Dashboard, click **New Resource** → **Docker Compose** (or Service).
+
+3. Paste the standalone Garage configuration using Coolify's native `content:` volume block (Coolify automatically writes the file on the server without triggering Docker's "missing file creates directory" trap):
 
 ```yaml
 services:
@@ -236,9 +242,29 @@ services:
     container_name: rexone-garage
     restart: unless-stopped
     volumes:
-      - /data/rexone/garage.toml:/etc/garage.toml:ro
       - rexone-garage-meta:/var/lib/garage/meta
       - rexone-garage-data:/var/lib/garage/data
+      - type: bind
+        source: /data/rexone/garage.toml
+        target: /etc/garage.toml
+        content: |
+          metadata_dir = "/var/lib/garage/meta"
+          data_dir = "/var/lib/garage/data"
+          db_engine = "sqlite"
+          replication_factor = 1
+
+          rpc_bind_addr = "[::]:3901"
+          rpc_secret = "<PASTE_GENERATED_RPC_SECRET_HERE>"
+
+          [s3_api]
+          s3_region = "garage"
+          api_bind_addr = "[::]:3100"
+          root_domain = ".s3.garage.localhost"
+
+          [admin]
+          api_bind_addr = "[::]:3101"
+          admin_token = "<PASTE_GENERATED_S3_ADMIN_TOKEN_HERE>"
+          metrics_token = "<PASTE_GENERATED_S3_ADMIN_TOKEN_HERE>"
     networks:
       - prod-rexone-net
       - uat-rexone-net
@@ -262,6 +288,10 @@ volumes:
   rexone-garage-data:
     name: rexone-garage-data
 ```
+
+> **Note (Admin Port 3101 Security)**: Garage's admin API (`:3101`) is intentionally **not** mapped to public ports or exposed via Traefik. It communicates exclusively across the private Docker network (`prod-rexone-net`), shielding it from public access.
+>
+> **Alternative UI Method**: Instead of embedding `content:` in YAML, you can omit the bind mount in the Compose YAML and add it via Coolify's UI: navigate to **Persistent Storage** → **Add File Mount** → set Destination to `/etc/garage.toml` and paste the TOML configuration.
 
 3. **Bootstrap the Garage Cluster (One-Time Execution):**
    Once the container is healthy, run the initialization script on the VPS:
@@ -288,7 +318,8 @@ _(This automatically assigns the cluster layout, creates bucket `rexone`, and co
 | `MEDIA_CONTAINER_NAME`  | `prod-rexone-media`                                              | `uat-rexone-media`                                       |
 | `DOCKER_NETWORK`        | `prod-rexone-net`                                                | `uat-rexone-net`                                         |
 | `EXTERNAL_NETWORK`      | `true`                                                           | `true`                                                   |
-| `RAILS_DATABASE_URL`    | `postgres://postgres:<PW>@prod-rexone-db:5432/rexone_production` | `postgres://postgres:<PW>@uat-rexone-db:5432/rexone_uat` |
+| `PG_PASSWORD`           | `<GENERATE_VIA_SECRET_GENERATOR>`                                | `<GENERATE_VIA_SECRET_GENERATOR>`                        |
+| `RAILS_DATABASE_URL`    | `postgres://postgres:<PG_PASSWORD>@prod-rexone-db:5432/rexone_production` | `postgres://postgres:<PG_PASSWORD>@uat-rexone-db:5432/rexone_uat` |
 | `RAILS_MASTER_KEY`      | `<VALUE_FROM_CONFIG_MASTER_KEY>`                                 | `<VALUE_FROM_CONFIG_MASTER_KEY>`                         |
 | `RAILS_SECRET_KEY_BASE` | `<GENERATE_VIA_RAILS_SECRET>`                                    | `<GENERATE_VIA_RAILS_SECRET>`                            |
 | `RAILS_JWT_SECRET_KEY`  | `<STRONG_RANDOM_SECRET>`                                         | `<STRONG_RANDOM_SECRET>`                                 |
@@ -303,6 +334,8 @@ _(This automatically assigns the cluster layout, creates bucket `rexone`, and co
 | `S3_FOLDER_PREFIX`      | `prod`                                                           | `uat`                                                    |
 | `S3_ACCESS_KEY`         | `<FROM_GARAGE_INIT>`                                             | `<FROM_GARAGE_INIT>`                                     |
 | `S3_SECRET_KEY`         | `<FROM_GARAGE_INIT>`                                             | `<FROM_GARAGE_INIT>`                                     |
+| `S3_ADMIN_ENDPOINT`     | `http://rexone-garage:3101`                                      | `http://rexone-garage:3101`                               |
+| `S3_ADMIN_TOKEN`        | `<PASTE_SAME_TOKEN_AS_IN_STEP_2>`                                | `<PASTE_SAME_TOKEN_AS_IN_STEP_2>`                         |
 
 4. In the **Traefik Configuration** for `api`:
    - Production: `https://api.rexone.me`

@@ -160,7 +160,7 @@ services:
       - rexone-garage-data:/var/lib/garage/data
     ports:
       - "${S3_PORT_MAP:-3100:3100}"
-      - "${S3_ADMIN_PORT_MAP:-3101:3101}"
+      - "${S3_ADMIN_PORT_MAP:-127.0.0.1:3101:3101}"
     labels:
       - traefik.enable=true
       - traefik.http.services.garage.loadbalancer.server.port=3100

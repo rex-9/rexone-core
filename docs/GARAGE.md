@@ -3,7 +3,7 @@
 > **Storage Provider:** Self-Hosted S3-Compatible Object Storage
 > **Container Image:** `dxflrs/garage:v1.0.1`
 > **S3 API Endpoint:** `http://localhost:3100` (Host) / `http://garage:3100` (Docker Network)
-> **Admin REST API:** `http://localhost:3101` (Host)
+> **Admin REST API:** `http://localhost:3101` (Host Loopback Only / Private)
 > **Internal RPC:** `3901` (Container Network)
 > **Default Bucket:** `rexone`
 > **Default Region:** `garage`
@@ -189,7 +189,7 @@ graph TD
 | Port     | Service     | Scope                                            | Default Host Binding             |
 | :------- | :---------- | :----------------------------------------------- | :------------------------------- |
 | **3100** | S3 API      | Upload, download, delete, presigned URLs         | `http://localhost:3100`          |
-| **3101** | Admin API   | Node clustering, layout, key & bucket management | `http://localhost:3101`          |
+| **3101** | Admin API   | Node clustering, layout, key & bucket management | `http://localhost:3101` (Loopback Only)          |
 | **3901** | Cluster RPC | Internal cluster node synchronization            | Container internal (`[::]:3901`) |
 
 ---
