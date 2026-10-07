@@ -34,6 +34,7 @@ cp .env.example .env
 ```
 
 ### 🛡️ Pre-Commit Safety Guardrail
+
 **Running `./scripts/install_pre_commit.sh` is mandatory before making any commits.** It installs local Git hooks that automatically prevent committing unignored `.env` files, high-entropy cloud keys (Stripe, AWS, OpenAI, Google), unlocalized strings, and RuboCop lint violations. See [Security Architecture](SECURITY.md) for full details.
 
 ## Configure Core
@@ -106,13 +107,24 @@ Garage and the media worker are not required when the application uses another f
 
 Start the database before the API when running scripts individually. Core runs `db:prepare` when the API starts; wait until the API and database are ready before seeding.
 
-## 3. Seed IAM and development users
+## 3. Seed IAM and Super Admin
 
 ```bash
+# 1. Seed default IAM roles, permissions, AI profiles, and initial client version
 docker compose -f docker-compose.dev.yaml exec api bin/rails db:seed
+
+# 2. Seed the initial Super Admin account manually
+./scripts/seed_super_admin.sh
 ```
 
-The seed task creates default roles, permissions, assignments, and development accounts. Read the seed output for the current local credentials and replace development credentials before any non-local deployment.
+> [!TIP]
+> Running `./scripts/seed_super_admin.sh` without arguments automatically reads `SEED_SUPER_ADMIN_EMAIL` and `SEED_SUPER_ADMIN_PASSWORD` from your `.env` file. You can also pass explicit credentials:
+>
+> ```bash
+> ./scripts/seed_super_admin.sh admin@example.com my_password [optional_username]
+> ```
+>
+> Once seeded, log in to the administrative dashboards (`/admin`, `/admin/pulse`, `/admin/red`, `/admin/api-docs`) using your credentials.
 
 ## 4. Verify the API
 

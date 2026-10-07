@@ -1,14 +1,15 @@
 # Production Deployment Guide: Contabo VPS + Coolify
 
 ### ⚠️ Prerequisite Security Requirement
+
 **Complete the edge, proxy, origin-firewall, and rate-limit steps in [Production DDoS and API Abuse Protection](DDOS.md) before exposing a production API.**
 
-| Parameter | Production Value |
-| :--- | :--- |
-| **Target Platform** | Contabo Cloud VPS (Ubuntu 22.04 / 24.04 LTS) |
-| **Deployment Orchestrator** | Coolify (Self-hosted PaaS) |
-| **Project Scope** | `rexone` (isolated namespaces for UAT and Production) |
-| **Core Architecture** | Modular Architecture (Standalone PostgreSQL per Environment + Single Dedicated Project Garage S3 with Folder Partitioning + Core App Stack + Static Nginx Web) |
+| Parameter                   | Production Value                                                                                                                                               |
+| :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Target Platform**         | Contabo Cloud VPS (Ubuntu 22.04 / 24.04 LTS)                                                                                                                   |
+| **Deployment Orchestrator** | Coolify (Self-hosted PaaS)                                                                                                                                     |
+| **Project Scope**           | `rexone` (isolated namespaces for UAT and Production)                                                                                                          |
+| **Core Architecture**       | Modular Architecture (Standalone PostgreSQL per Environment + Single Dedicated Project Garage S3 with Folder Partitioning + Core App Stack + Static Nginx Web) |
 
 ---
 
@@ -189,10 +190,11 @@ sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'
 EOF
 ```
 
-* **`defaultKeepStorage: "20GB"`**: Instructs Docker BuildKit to automatically garbage-collect build cache when it exceeds 20GB.
-* **`max-size: 10m` & `max-file: 3`**: Strictly caps every container's log file on the VPS to 30MB maximum (10MB $\times$ 3 files).
+- **`defaultKeepStorage: "20GB"`**: Instructs Docker BuildKit to automatically garbage-collect build cache when it exceeds 20GB.
+- **`max-size: 10m` & `max-file: 3`**: Strictly caps every container's log file on the VPS to 30MB maximum (10MB $\times$ 3 files).
 
 Restart Docker to apply the daemon settings:
+
 ```bash
 sudo systemctl restart docker
 ```
@@ -200,6 +202,7 @@ sudo systemctl restart docker
 ### 3.5 Coolify Dashboard Server Cleanup Settings
 
 In the Coolify UI dashboard:
+
 1. Navigate to **Server** (top navigation) → select your server → **Docker Cleanup**.
 2. **Enable Docker Cleanup**: Toggle **ON** (runs on schedule).
 3. Ensure **Clean Images** and **Clean Builder Cache** checkboxes are enabled.
@@ -310,32 +313,32 @@ _(This automatically assigns the cluster layout, creates bucket `rexone`, and co
 2. Set the compose file path: `docker-compose.yaml`.
 3. Fill in the **Environment Variables** in Coolify:
 
-| Variable                | Production Value                                                 | UAT Value                                                |
-| :---------------------- | :--------------------------------------------------------------- | :------------------------------------------------------- |
-| `RAILS_ENV`             | `production`                                                     | `production`                                             |
-| `RAILS_CONTAINER_NAME`  | `prod-rexone-api`                                                | `uat-rexone-api`                                         |
-| `WAKA_CONTAINER_NAME`   | `prod-rexone-waka`                                               | `uat-rexone-waka`                                        |
-| `MEDIA_CONTAINER_NAME`  | `prod-rexone-media`                                              | `uat-rexone-media`                                       |
-| `DOCKER_NETWORK`        | `prod-rexone-net`                                                | `uat-rexone-net`                                         |
-| `EXTERNAL_NETWORK`      | `true`                                                           | `true`                                                   |
-| `PG_PASSWORD`           | `<GENERATE_VIA_SECRET_GENERATOR>`                                | `<GENERATE_VIA_SECRET_GENERATOR>`                        |
+| Variable                | Production Value                                                          | UAT Value                                                         |
+| :---------------------- | :------------------------------------------------------------------------ | :---------------------------------------------------------------- |
+| `RAILS_ENV`             | `production`                                                              | `production`                                                      |
+| `RAILS_CONTAINER_NAME`  | `prod-rexone-api`                                                         | `uat-rexone-api`                                                  |
+| `WAKA_CONTAINER_NAME`   | `prod-rexone-waka`                                                        | `uat-rexone-waka`                                                 |
+| `MEDIA_CONTAINER_NAME`  | `prod-rexone-media`                                                       | `uat-rexone-media`                                                |
+| `DOCKER_NETWORK`        | `prod-rexone-net`                                                         | `uat-rexone-net`                                                  |
+| `EXTERNAL_NETWORK`      | `true`                                                                    | `true`                                                            |
+| `PG_PASSWORD`           | `<GENERATE_VIA_SECRET_GENERATOR>`                                         | `<GENERATE_VIA_SECRET_GENERATOR>`                                 |
 | `RAILS_DATABASE_URL`    | `postgres://postgres:<PG_PASSWORD>@prod-rexone-db:5432/rexone_production` | `postgres://postgres:<PG_PASSWORD>@uat-rexone-db:5432/rexone_uat` |
-| `RAILS_MASTER_KEY`      | `<VALUE_FROM_CONFIG_MASTER_KEY>`                                 | `<VALUE_FROM_CONFIG_MASTER_KEY>`                         |
-| `RAILS_SECRET_KEY_BASE` | `<GENERATE_VIA_RAILS_SECRET>`                                    | `<GENERATE_VIA_RAILS_SECRET>`                            |
-| `RAILS_JWT_SECRET_KEY`  | `<STRONG_RANDOM_SECRET>`                                         | `<STRONG_RANDOM_SECRET>`                                 |
-| `PRODUCT_DOMAIN`        | `rexone.me` (or custom product domain)                           | `rexone.me`                                              |
-| `RAILS_CLIENT_BASE_URL` | `https://rexone.me`                                              | `https://uat.rexone.me`                                  |
-| `RAILS_SERVER_BASE_URL` | `https://api.rexone.me`                                          | `https://uat.api.rexone.me`                              |
-| `STORAGE_PROVIDER`      | `garage`                                                         | `garage`                                                 |
-| `S3_ENDPOINT`           | `http://rexone-garage:3100`                                      | `http://rexone-garage:3100`                              |
-| `S3_PUBLIC_ENDPOINT`    | `https://s3.rexone.me`                                           | `https://s3.rexone.me`                                   |
-| `S3_BUCKET`             | `rexone`                                                         | `rexone`                                                 |
-| `S3_REGION`             | `garage`                                                         | `garage`                                                 |
-| `S3_FOLDER_PREFIX`      | `prod`                                                           | `uat`                                                    |
-| `S3_ACCESS_KEY`         | `<FROM_GARAGE_INIT>`                                             | `<FROM_GARAGE_INIT>`                                     |
-| `S3_SECRET_KEY`         | `<FROM_GARAGE_INIT>`                                             | `<FROM_GARAGE_INIT>`                                     |
-| `S3_ADMIN_ENDPOINT`     | `http://rexone-garage:3101`                                      | `http://rexone-garage:3101`                               |
-| `S3_ADMIN_TOKEN`        | `<PASTE_SAME_TOKEN_AS_IN_STEP_2>`                                | `<PASTE_SAME_TOKEN_AS_IN_STEP_2>`                         |
+| `RAILS_MASTER_KEY`      | `<VALUE_FROM_CONFIG_MASTER_KEY>`                                          | `<VALUE_FROM_CONFIG_MASTER_KEY>`                                  |
+| `RAILS_SECRET_KEY_BASE` | `<GENERATE_VIA_RAILS_SECRET>`                                             | `<GENERATE_VIA_RAILS_SECRET>`                                     |
+| `RAILS_JWT_SECRET_KEY`  | `<STRONG_RANDOM_SECRET>`                                                  | `<STRONG_RANDOM_SECRET>`                                          |
+| `PRODUCT_DOMAIN`        | `rexone.me` (or custom product domain)                                    | `rexone.me`                                                       |
+| `RAILS_CLIENT_BASE_URL` | `https://rexone.me`                                                       | `https://uat.rexone.me`                                           |
+| `RAILS_SERVER_BASE_URL` | `https://api.rexone.me`                                                   | `https://uat.api.rexone.me`                                       |
+| `STORAGE_PROVIDER`      | `garage`                                                                  | `garage`                                                          |
+| `S3_ENDPOINT`           | `http://rexone-garage:3100`                                               | `http://rexone-garage:3100`                                       |
+| `S3_PUBLIC_ENDPOINT`    | `https://s3.rexone.me`                                                    | `https://s3.rexone.me`                                            |
+| `S3_BUCKET`             | `rexone`                                                                  | `rexone`                                                          |
+| `S3_REGION`             | `garage`                                                                  | `garage`                                                          |
+| `S3_FOLDER_PREFIX`      | `prod`                                                                    | `uat`                                                             |
+| `S3_ACCESS_KEY`         | `<FROM_GARAGE_INIT>`                                                      | `<FROM_GARAGE_INIT>`                                              |
+| `S3_SECRET_KEY`         | `<FROM_GARAGE_INIT>`                                                      | `<FROM_GARAGE_INIT>`                                              |
+| `S3_ADMIN_ENDPOINT`     | `http://rexone-garage:3101`                                               | `http://rexone-garage:3101`                                       |
+| `S3_ADMIN_TOKEN`        | `<PASTE_SAME_TOKEN_AS_IN_STEP_2>`                                         | `<PASTE_SAME_TOKEN_AS_IN_STEP_2>`                                 |
 
 4. In the **Traefik Configuration** for `api`:
    - Production: `https://api.rexone.me`
@@ -346,6 +349,20 @@ _(This automatically assigns the cluster layout, creates bucket `rexone`, and co
    - **Healthcheck Path:** Set to `/up` (interval: 10s, timeout: 5s, retries: 5). Rails 8 automatically excludes `/up` from host authorization and SSL redirect.
    - **Pre-deployment Migration (Optional):** If using Coolify's pre-deployment command, set `bundle exec rake db:migrate` and pass `SKIP_DB_PREPARE=true` to runtime containers to avoid redundant migrations on horizontal replicas.
    - **Database Connection Flexibility:** Both `RAILS_DATABASE_URL` and standard Coolify `DATABASE_URL` are recognized automatically.
+
+5. **Seed Initial Super Admin & IAM Data (One-Time Execution):**
+   Once the Core API container is deployed and running:
+
+   ```bash
+   # Seed default IAM roles, permissions, AI profiles, and initial version
+   docker exec -it <RAILS_CONTAINER_NAME> bin/rails db:seed
+
+   # Seed the initial Super Admin account manually using credentials from .env:
+   ./scripts/seed_super_admin.sh
+   # (Or pass custom credentials: ./scripts/seed_super_admin.sh admin@domain.com password username)
+   ```
+
+   Log in to administrative dashboards (`/admin`, `/admin/pulse`, `/admin/red`, `/admin/api-docs`) using your credentials.
 
 ---
 
@@ -382,10 +399,12 @@ To ensure that the VPS disk remains healthy indefinitely without manual develope
    sudo crontab -e
    ```
 2. Add the scheduled weekly maintenance job (runs every Sunday at 03:00 UTC):
+
    ```bash
    0 3 * * 0 /path/to/rexone-core/scripts/vps_cleanup.sh -y >> /var/log/rexone_vps_cleanup.log 2>&1
    ```
-   *(Replace `/path/to/rexone-core` with the absolute path to your cloned repository on the host, e.g. `/data/coolify/applications/.../rexone-core`)*
+
+   _(Replace `/path/to/rexone-core` with the absolute path to your cloned repository on the host, e.g. `/data/coolify/applications/.../rexone-core`)_
 
 3. **What this automated job cleans every week:**
    - 🧹 **Dead/Exited Containers**: Pruned via `docker container prune -f`.
@@ -416,13 +435,16 @@ After deploying all services, verify each component:
 ## 6. Ongoing Operations & Maintenance Playbook ("Zero to Infinity")
 
 ### 6.1 Zero-Downtime Rolling Redeployments in Coolify
+
 When pushing new code updates to your Git repository:
+
 1. Coolify pulls the latest commit, builds the new Docker image using BuildKit, and boots the new container.
 2. The new container runs its native healthcheck (`curl -f http://127.0.0.1:3000/up` with `start_period: 25s`, `interval: 10s`).
 3. **Traefik Traffic Switching**: Only after the new container is marked **healthy** does Traefik switch inbound traffic to it.
 4. **Graceful Draining**: The old container receives `SIGTERM` and has `stop_grace_period: 30s` to finish processing any active in-flight requests and database transactions before terminating.
 
 ### 6.2 Database Migrations During Updates
+
 - **Single Replica (Default)**: `docker-entrypoint` automatically executes `rake db:prepare` during startup.
 - **Horizontal Scaling / Pre-Deploy Command**: If running multiple API replicas, specify the Pre-deployment command in Coolify:
   ```bash
@@ -431,6 +453,7 @@ When pushing new code updates to your Git repository:
   And set `SKIP_DB_PREPARE=true` on runtime containers to prevent concurrent migration attempts.
 
 ### 6.3 Host Disk & Resource Inspection (Cheat Sheet)
+
 Run these commands on the VPS host to audit system health:
 
 ```bash
@@ -451,7 +474,9 @@ docker exec -it prod-rexone-api bundle exec rails runner "puts SolidQueue::Job.c
 ```
 
 ### 6.4 Rollback Procedure
+
 If an issue occurs after deploying a new release:
+
 1. In the Coolify Dashboard for `rexone-core` or `rexone-web`, navigate to **Deployments**.
 2. Select the previous stable deployment and click **Redeploy**.
 3. If database restoration is required, navigate to the PostgreSQL resource → **Backups** tab → select the desired daily snapshot → click **Restore**.

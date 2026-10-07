@@ -202,6 +202,13 @@ module AppConfig
   IOS_STORE_URL               = env_or.call("IOS_STORE_URL", nil)
   ANDROID_STORE_URL           = env_or.call("ANDROID_STORE_URL", nil)
   # ----------------------------------------------------------------------------
+  # 👑 Initial Super Admin Seeding
+  # ----------------------------------------------------------------------------
+  SEED_SUPER_ADMIN_EMAIL      = env_or.call("SEED_SUPER_ADMIN_EMAIL", nil)
+  SEED_SUPER_ADMIN_PASSWORD   = env_or.call("SEED_SUPER_ADMIN_PASSWORD", nil)
+  SEED_SUPER_ADMIN_USERNAME   = env_or.call("SEED_SUPER_ADMIN_USERNAME", nil)
+
+  # ----------------------------------------------------------------------------
   # 🛡️ Diagnostics & Boot Guard
   # ----------------------------------------------------------------------------
   ENFORCE_BOOT_GUARD          = env_or.call("ENFORCE_BOOT_GUARD") == "true"

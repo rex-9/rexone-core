@@ -32,20 +32,21 @@ This directory serves as the technical documentation manual for **RexOne Core** 
 
 All development tasks are automated via deterministic shell scripts located in `scripts/`:
 
-| Script                            | Purpose                                                                             | Options / Flags                               |
-| :-------------------------------- | :---------------------------------------------------------------------------------- | :-------------------------------------------- |
-| `./scripts/dev.sh`                | Starts all 5 Core containers (API, DB, Waka worker, Garage S3, Media)               | None                                          |
-| `./scripts/ci.sh`                 | Runs full automated test suite (RSpec, API contracts, RuboCop, locales)             | `contracts` (run contract validation only)    |
-| `./scripts/check_locales.sh`      | Verifies English & Burmese translation parity and message constants                 | `--unused` (audit unreferenced keys)          |
-| `./scripts/console.sh`            | Opens an interactive Rails console inside the running API container                 | None                                          |
-| `./scripts/enter_api.sh`          | Enters the running API container bash shell or executes arbitrary commands          | `[cmd...]`                                    |
-| `./scripts/docker_clean.sh`       | Safely prunes stopped containers, orphan networks, and build cache (preserves DB)   | `-y`, `--force` (bypass prompts), `--volumes` |
-| `./scripts/vps_cleanup.sh`        | Safe recurring production VPS maintenance for Coolify (prunes images older than 7d) | `IMAGE_RETENTION_HOURS=168`                   |
+| Script                                  | Purpose                                                                                       | Options / Flags                               |
+| :-------------------------------------- | :-------------------------------------------------------------------------------------------- | :-------------------------------------------- |
+| `./scripts/dev.sh`                      | Starts all 5 Core containers (API, DB, Waka worker, Garage S3, Media)                         | None                                          |
+| `./scripts/ci.sh`                       | Runs full automated test suite (RSpec, API contracts, RuboCop, locales)                       | `contracts` (run contract validation only)    |
+| `./scripts/check_locales.sh`            | Verifies English & Burmese translation parity and message constants                           | `--unused` (audit unreferenced keys)          |
+| `./scripts/console.sh`                  | Opens an interactive Rails console inside the running API container                           | None                                          |
+| `./scripts/enter_api.sh`                | Enters the running API container bash shell or executes arbitrary commands                    | `[cmd...]`                                    |
+| `./scripts/docker_clean.sh`             | Safely prunes stopped containers, orphan networks, and build cache (preserves DB)             | `-y`, `--force` (bypass prompts), `--volumes` |
+| `./scripts/vps_cleanup.sh`              | Safe recurring production VPS maintenance for Coolify (prunes images older than 7d)           | `IMAGE_RETENTION_HOURS=168`                   |
 | [`./scripts/rebrand.sh`](REBRANDING.md) | Master rebranding automation across Core, Web, and Mobile ecosystems ([guide](REBRANDING.md)) | `<config.json>`                               |
-| `./scripts/generate_secrets.sh`   | Generates high-entropy cryptographically secure production secret keys              | None                                          |
-| `./scripts/check_secrets.sh`      | Pre-commit secret scanner blocking live API keys and untracked `.env` files         | `--install`, `--all`                          |
-| `./scripts/install_pre_commit.sh` | Installs the master git pre-commit hook into your local `.git/hooks/`               | None                                          |
-| `./scripts/lint.sh`               | Runs RuboCop inside the API container with auto-correction support                  | `[-a]`, `[-A]`, `[path...]`                   |
+| `./scripts/generate_secrets.sh`         | Generates high-entropy cryptographically secure production secret keys                        | None                                          |
+| `./scripts/check_secrets.sh`            | Pre-commit secret scanner blocking live API keys and untracked `.env` files                   | `--install`, `--all`                          |
+| `./scripts/install_pre_commit.sh`       | Installs the master git pre-commit hook into your local `.git/hooks/`                         | None                                          |
+| `./scripts/lint.sh`                     | Runs RuboCop inside the API container with auto-correction support                            | `[-a]`, `[-A]`, `[path...]`                   |
+| `./scripts/seed_super_admin.sh`         | Seeds/updates Super Admin account manually (auto-reads `.env` or takes CLI args)              | `[email] [password] [username]`               |
 
 ---
 
