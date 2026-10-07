@@ -1,6 +1,6 @@
 # Future HLS / Adaptive Media Streaming Roadmap
 
-> **Status:** Future roadmap
+> **Status:** Lowest Priority / Deferred Post-Grant Roadmap (Auth, Security & Core Data Sovereignty take precedence)
 > **Current shipped baseline:** progressive audio/video playback through Core-authorized provider URLs
 > **Future target:** HLS + CMAF / fragmented MP4 only when adaptive streaming is justified
 
