@@ -93,8 +93,8 @@ That's it! In ~10 seconds, the engine synchronizes all three codebases.
 
 | Component | Automated Synchronizations |
 | :--- | :--- |
-| **Core Backend** | • Updates `.env.example` (PostgreSQL DB, S3 bucket, SMTP domains, container names, store URLs)<br>• Updates `docker-compose.yaml` and `docker-compose.dev.yaml` container and volume names<br>• Updates database configs (`config/database.yml`, `database.example.yml`)<br>• Updates Ruby module name (`config/application.rb`) and application fallbacks (`config/app_config.rb`)<br>• Updates Garage S3 storage configs and authentication tokens (`config/garage.toml`)<br>• Updates maintenance scripts (`backup_db.sh`, `backup_garage.sh`, `dev_garage.sh`)<br>• Updates notification templates, Swagger API title, and transactional email templates |
-| **Web Client** | • Updates `package.json` project name (`<slug>-web`)<br>• Updates `AppConfig.tsx` default `APP_NAME` and `FROM_EMAIL`<br>• Updates React Query cache key (`<slug>_react_query_cache`)<br>• Updates English and Myanmar localization catalogs (`en.json`, `my.json`)<br>• Updates `.env.example`, `docker-compose.yaml`, and `docker-compose.dev.yaml`<br>• Updates deployment scripts (`scripts/uat.sh`, `scripts/prod.sh`)<br>• Copies and activates favicon and brand logo assets |
+| **Core Backend** | • Updates `docker-compose.yaml` and `docker-compose.dev.yaml` container and volume names<br>• Updates database configs (`config/database.yml`)<br>• Updates Ruby module name (`config/application.rb`) and application fallbacks (`config/app_config.rb`)<br>• Updates Garage S3 storage configs and authentication tokens (`config/garage.toml`)<br>• Updates maintenance scripts (`backup_db.sh`, `backup_garage.sh`, `dev_garage.sh`)<br>• Updates notification templates, Swagger API title, and transactional email templates |
+| **Web Client** | • Updates `package.json` project name (`<slug>-web`)<br>• Updates `AppConfig.tsx` default `APP_NAME` and `FROM_EMAIL`<br>• Updates React Query cache key (`<slug>_react_query_cache`)<br>• Updates English and Myanmar localization catalogs (`en.json`, `my.json`)<br>• Updates `docker-compose.yaml` and `docker-compose.dev.yaml`<br>• Updates deployment scripts (`scripts/uat.sh`, `scripts/prod.sh`)<br>• Copies and activates favicon and brand logo assets |
 | **Mobile Client** | • Updates Android `namespace` and `applicationId` (both Production and UAT)<br>• Relocates Kotlin `MainActivity.kt` and Patrol `MainActivityTest.java` to match the new package path<br>• Updates iOS bundle identifier in `project.pbxproj` (App, Tests, and Widget Extension)<br>• Updates iOS `Info.plist` (`CFBundleDisplayName`, `CFBundleName`, custom URL scheme)<br>• Updates iOS App Group entitlements (`group.<package_name>`) and Swift ActionStore<br>• Updates `pubspec.yaml` package name and synchronizes **every Dart import statement** across `lib/`, `test/`, and `integration_test/`<br>• Updates Drift local offline SQLite database name (`<slug>_offline`)<br>• Updates secure storage salt seed and platform method channels<br>• Regenerates all Android & iOS app launcher icons |
 
 ---
@@ -104,10 +104,10 @@ That's it! In ~10 seconds, the engine synchronizes all three codebases.
 In compliance with strict security protocols and Constitutional Law, the rebrand engine **never touches local credentials, gitignored files, or external third-party accounts**. Complete the following manual steps:
 
 ### 1. Local Environment Files (`.env`, `.env.dev`)
-Local environment files are gitignored and intentionally untouched by automation.
-- In **Core**: Update `.env` using values from the newly synchronized `.env.example`.
-- In **Web**: Update `.env` using values from `.env.example`.
-- In **Mobile**: Update `.env.dev`, `.env.uat`, or `.env.prod` with your API URLs and credentials.
+Local environment files are gitignored and intentionally untouched by automation. All committed `*.example` files strictly retain generic dummy placeholders per Constitutional Law 5.
+- In **Core**: Configure `.env` with your brand domain, database name, and service keys.
+- In **Web**: Configure `.env` with your backend API and WebSocket endpoints.
+- In **Mobile**: Configure `.env.dev`, `.env.uat`, or `.env.prod` with your API URLs and credentials.
 
 ### 2. Firebase & Google SSO Configuration
 Firebase and Google Cloud configuration files are platform-generated and gitignored:
