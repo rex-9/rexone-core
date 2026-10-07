@@ -59,15 +59,21 @@ Every product eventually meets the same old enemies: accounts, permissions, bill
 
 RexOne Core exists because this ground should never have to be conquered again for every product.
 
+### ⚓ The Aircraft Carrier vs. The Speedboat
+
+While commercial kits charge hundreds of dollars for single-framework templates, **RexOne Core is not competing with boilerplates. It is competing with entire platform teams.**
+
+Comparing RexOne to lightweight starters (like Create T3 App or Supabase templates) is like comparing a loaded aircraft carrier to a speedboat. Speedboats (`npx create-next-app`) launch in 30 seconds, but capsize the moment you need transactional billing, background queue topologies, persistent WebSockets, native mobile sync, or S3 storage. RexOne is an aircraft carrier: one command (`./scripts/dev.sh`) boots an entire sovereign platform team in a box.
+
 ### The Purpose: Start from One. Not from Zero.
 
 Software has never been easier to generate, but more code does not automatically mean better systems. Human developers and AI coding agents can move fast, but speed without disciplined architecture burns money, AI compute, and human energy—wasting thousands of expensive tokens rewriting weak abstractions, fixing hallucinatory debt, or having to rebuild the exact same foundation again and again for every product.
 
 RexOne turns that repeated, expensive grind into a battle-tested, sovereign baseline.
 
-### Discipline-Driven Development (DDD): The Unvarnished Truth
+### Discipline-Driven Development: The Unvarnished Truth
 
-RexOne pioneers **Discipline-Driven Development (DDD)**. While legacy paradigms spent decades debating Domain-Driven Design or Test-Driven Development, the AI era created a fundamentally different reality: **typing code is free**. Generating 10,000 lines of code takes 30 seconds.
+RexOne pioneers **Discipline-Driven Development**. While legacy paradigms spent decades debating Domain-Driven Design or Test-Driven Development, the AI era created a fundamentally different reality: **typing code is free**. Generating 10,000 lines of code takes 30 seconds.
 
 90% of modern software projects never survive to master the business domain because their architecture collapses first under an avalanche of hallucinatory abstractions, conflicting shims, and zombie code. Tests cannot save a rotten architecture.
 
@@ -82,6 +88,14 @@ Discipline-Driven Development establishes that **architectural discipline, sover
 3. **The Full-Stack Monolith Lie**: Stuffing API controllers, database queries, background tasks, and client hydration into a single node runtime creates fragile, unmaintainable monoliths. True engineering enforces client-server separation.
 4. **Deprecation Cowardice & Zombie Code**: Retaining dead code, backwards-compatibility shims, and duplicate parameter aliases is cowardice. Under Constitutional Law U14, if code is replaced, the old code is wiped out completely. No shims. No legacy bloat.
 5. **100% Free Sovereignty**: Unlike commercial boilerplates charging $300–$800 for basic auth or gating features behind "pro licenses", RexOne is 100% free, Apache 2.0 open-source, and sovereign. You own your code, your data, and your infrastructure.
+
+### 💎 Why Ruby on Rails 8 for the Core? (Instead of a TypeScript/Node Monolith)
+
+A frequent question in today’s JavaScript-heavy landscape is: *“The Node/TypeScript ecosystem is larger—why choose Ruby on Rails for the backend Core?”*
+
+1. **Platform Concurrency & ACID Durability**: Full-stack Node monoliths struggle when managing long-lived WebSockets, multi-stage background media compression, and transactional billing ledgers. Rails 8 with **Solid Queue** (Fiber + Thread hybrid concurrency) and PostgreSQL 18 provides rock-solid durability without external Redis brokers, queue services, or 10-second serverless execution limits.
+2. **Zero Cloud Hostage Fees**: BaaS solutions (Supabase, Firebase) and serverless hosts (Vercel) lure developers in with "5-minute MVPs," but quickly turn into \$500–\$5,000/mo cloud ransoms. RexOne Core runs the entire sovereign platform (API, PostgreSQL, Solid Queue, Solid Cable, self-hosted Garage S3) on a single \$10–\$20 VPS.
+3. **AI Agent Determinism (The Antidote to JS Churn)**: Autonomous AI coding agents (Claude, Cursor, Copilot) frequently hallucinate or break when operating in the fragmented JavaScript ecosystem with its endless package churn and conflicting patterns. Rails 8's strict convention-over-configuration—reinforced by `LAW.md` and `AGENTS.md`—gives AI coding agents deterministic rails to run on, producing clean, durable code without technical debt.
 
 ### ⏱️ The 9-Month Delusion: How Teams Waste $200,000 Rebuilding the Exact Same Wheel
 
@@ -557,7 +571,7 @@ RexOne is architected, forged, and maintained by Rex ([@rex-9](https://github.co
 
 ## Author
 
-Architected with Discipline-Driven Development (DDD), by **Htet Naing (Rex9)**.
+Architected with Discipline-Driven Development, by **Htet Naing (Rex9)**.
 
 A full-stack architect, product craftsman, and long-time practitioner of meditation.
 
