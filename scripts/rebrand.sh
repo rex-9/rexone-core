@@ -180,25 +180,8 @@ update_env_var() {
 # ------------------------------------------------------------
 echo "⚙️  Rebranding Core Backend & Infrastructure..."
 
-# Update Core .env.example file (Law U16 & Secret Isolation: never touch local gitignored .env files)
-if [ -f "$CORE_DIR/.env.example" ]; then
-  update_env_var "$CORE_DIR/.env.example" "PG_DATABASE" "${BRAND_SLUG_SNAKE}_core"
-  update_env_var "$CORE_DIR/.env.example" "S3_BUCKET" "${BRAND_SLUG_KEBAB}"
-  update_env_var "$CORE_DIR/.env.example" "FROM_EMAIL" "${RESOLVED_FROM_EMAIL}"
-  update_env_var "$CORE_DIR/.env.example" "RAILS_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-api"
-  update_env_var "$CORE_DIR/.env.example" "WAKA_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-waka"
-  update_env_var "$CORE_DIR/.env.example" "DB_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-db"
-  update_env_var "$CORE_DIR/.env.example" "MEDIA_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-media"
-  update_env_var "$CORE_DIR/.env.example" "GARAGE_CONTAINER_NAME" "dev-${BRAND_SLUG_KEBAB}-core-garage"
-  # Support both uncommented and commented variants across all tiers
-  sedi -E "s|^#?[[:space:]]*PRODUCT_DOMAIN=.*|PRODUCT_DOMAIN=${RESOLVED_SMTP_DOMAIN}|g" "$CORE_DIR/.env.example"
-  sedi -E "s|^#?[[:space:]]*CORS_ORIGINS=.*|CORS_ORIGINS=http://localhost:4000,https://${RESOLVED_SMTP_DOMAIN},https://uat.${RESOLVED_SMTP_DOMAIN}|g" "$CORE_DIR/.env.example"
-  sedi -E "s|^#?[[:space:]]*SMTP_DOMAIN=.*|# SMTP_DOMAIN=${RESOLVED_SMTP_DOMAIN}|g" "$CORE_DIR/.env.example"
-  sedi -E "s|^#?[[:space:]]*GOOGLE_PLAY_PACKAGE_NAME=.*|# GOOGLE_PLAY_PACKAGE_NAME=${MOBILE_PACKAGE}|g" "$CORE_DIR/.env.example"
-  sedi -E "s|^#?[[:space:]]*APPLE_APP_STORE_BUNDLE_ID=.*|# APPLE_APP_STORE_BUNDLE_ID=${MOBILE_PACKAGE}|g" "$CORE_DIR/.env.example"
-  sedi -E "s|^#?[[:space:]]*ANDROID_STORE_URL=.*|# ANDROID_STORE_URL=https://play.google.com/store/apps/details?id=${MOBILE_PACKAGE}|g" "$CORE_DIR/.env.example"
-  echo "  ✅ Core: Updated .env.example"
-fi
+# Note: Committed *.example files (.env.example, etc.) remain strictly generic stubs and are NEVER touched.
+
 
 # Update Core docker-compose.yaml (Production / Coolify)
 if [ -f "$CORE_DIR/docker-compose.yaml" ]; then
@@ -268,8 +251,8 @@ if [ -f "$CORE_DIR/config/app_config.rb" ]; then
   echo "  ✅ Core: Synchronized config/app_config.rb fallbacks"
 fi
 
-# Update Core database configuration templates
-for db_file in "$CORE_DIR/config/database.yml" "$CORE_DIR/config/database.example.yml"; do
+# Update Core database configuration (database.example.yml is a committed stub and remains untouched)
+for db_file in "$CORE_DIR/config/database.yml"; do
   if [ -f "$db_file" ]; then
     sedi -E "s/[a-z0-9_]+_core_development/${BRAND_SLUG_SNAKE}_core_development/g" "$db_file"
     sedi -E "s/[a-z0-9_]+_core_test/${BRAND_SLUG_SNAKE}_core_test/g" "$db_file"
@@ -416,24 +399,8 @@ if [ -n "$WEB_DIR" ] && [ -d "$WEB_DIR" ]; then
     echo "  ✅ Web: Updated brand references in src/locales/my.json"
   fi
 
-  # Update Web .env.example (Law U16 & Secret Isolation)
-  if [ -f "$WEB_DIR/.env.example" ]; then
-    web_env_name="$BRAND_NAME"
-    web_env_name="${WEB_APP_NAME:-$BRAND_NAME}"
-    web_domain="${RESOLVED_SMTP_DOMAIN}"
-    update_env_var "$WEB_DIR/.env.example" "VITE_REACT_APP_NAME" "$web_env_name"
-    update_env_var "$WEB_DIR/.env.example" "VITE_REACT_APP_FROM_EMAIL" "${RESOLVED_FROM_EMAIL}"
-    sedi -E "s|# Production Tier \(e\.g\. [^)]*\):|# Production Tier (e.g. ${BRAND_NAME}):|g" "$WEB_DIR/.env.example"
-    sedi -E "s|https://api\.[a-zA-Z0-9_.-]+|https://api.${web_domain}|g" "$WEB_DIR/.env.example"
-    sedi -E "s|wss://api\.[a-zA-Z0-9_.-]+|wss://api.${web_domain}|g" "$WEB_DIR/.env.example"
-    sedi -E "s|https://uat\.api\.[a-zA-Z0-9_.-]+|https://uat.api.${web_domain}|g" "$WEB_DIR/.env.example"
-    sedi -E "s|wss://uat\.api\.[a-zA-Z0-9_.-]+|wss://uat.api.${web_domain}|g" "$WEB_DIR/.env.example"
-    sedi -E "s|https://dev\.api\.[a-zA-Z0-9_.-]+|https://dev.api.${web_domain}|g" "$WEB_DIR/.env.example"
-    sedi -E "s|wss://dev\.api\.[a-zA-Z0-9_.-]+|wss://dev.api.${web_domain}|g" "$WEB_DIR/.env.example"
-    sedi -E "s|https://uat\.[a-zA-Z0-9_.-]+|https://uat.${web_domain}|g" "$WEB_DIR/.env.example"
-    sedi -E "s|https://dev\.[a-zA-Z0-9_.-]+|https://dev.${web_domain}|g" "$WEB_DIR/.env.example"
-    echo "  ✅ Web: Updated .env.example"
-  fi
+  # Note: Committed Web *.example files (.env.example, etc.) remain strictly generic stubs and are NEVER touched.
+
 
   # Update Web uat.sh and prod.sh scripts default URLs
   web_script_domain="${BRAND_DOMAIN}"

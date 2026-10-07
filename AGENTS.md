@@ -23,8 +23,10 @@
 
 5. **Environment File & Secret Isolation Protocol**:
    - NEVER read, view, parse, or directly modify local gitignored `.env` files.
-   - Only `.env.example` may be inspected, modified, or maintained.
-   - Always provide explicit, clean copy-paste snippets for developers to apply to their local `.env` manually.
+   - Only `.env.example` (and other `*.example` files) may be maintained for schema definitions (adding new configuration keys).
+   - Committed `*.example` files (`.env.example`, `google-services.json.example`, `GoogleService-Info.plist.example`, `database.example.yml`) MUST strictly contain generic dummy placeholders (`example.com`, `YOUR_PROJECT_ID`, `YOUR_PROJECT_NUMBER`, `YOUR_API_KEY`, `changeme_...`). They must NEVER contain real brand domain names, private infrastructure IDs, live Firebase project names/buckets, package identifiers, or secrets.
+   - Rebranding scripts and automation MUST NEVER touch or mutate `*.example` files.
+   - Always provide explicit, clean copy-paste snippets for developers to apply to their local gitignored files manually.
    - Do NOT run out-of-band scripts or commands that mutate local state without leaving traces in git source control.
 
 6. **Zero Loose Code & Clean Parameter Contracts (Law U14)**:
