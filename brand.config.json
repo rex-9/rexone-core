@@ -13,7 +13,7 @@
     "logoPath": "brand/logo.png"
   },
   "mobile": {
-    "appName": "RexOne Mobile",
+    "appName": "RexOne",
     "packageName": "com.rex9.rexone",
     "bundleId": "com.rex9.rexone"
   },
