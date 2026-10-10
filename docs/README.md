@@ -1,6 +1,6 @@
 # RexOne Core: Technical Documentation & Subsystem Reference
 
-This directory serves as the technical documentation manual for **RexOne Core** (`rexone-core`), the sovereign Ruby on Rails 8 API engine for modern web and mobile applications.
+This directory serves as the technical documentation manual for **RexOne Core** (`rexone-core`), the production-grade Ruby on Rails 8 API engine for modern web and mobile applications.
 
 ---
 

@@ -1,6 +1,6 @@
 # RexOne Security Architecture & Zero-Leak Defense
 
-This document outlines the sovereign security architecture, cryptographic safeguards, and defense-in-depth mechanisms engineered into RexOne to protect open-source downstream derivatives and enterprise deployments.
+This document outlines the foundational security architecture, cryptographic safeguards, and defense-in-depth mechanisms engineered into RexOne to protect open-source downstream derivatives and enterprise deployments.
 
 ---
 

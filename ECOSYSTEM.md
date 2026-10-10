@@ -1,12 +1,12 @@
-# 🏛️ The RexOne Ecosystem
+# 🏛️ The RexOne Architecture Foundation: Unified Ecosystem Specification
 
-A unified architectural specification and cross-platform contract spanning **RexOne Core** (Rails), **RexOne Web** (React), and **RexOne Mobile** (Flutter).
+A unified architectural specification and cross-platform contract spanning **RexOne Core** (Rails API), **RexOne Web** (React SPA), and **RexOne Mobile** (Flutter Native).
 
 ---
 
 ## 📜 Architectural Baseline
 
-RexOne establishes a disciplined, production-grade foundation for modern digital products:
+RexOne establishes the **RexOne Architecture Foundation**—a disciplined, production-grade tri-platform standard for modern digital products:
 
 - **Identity & IAM**: Passwordless/passcode auth, Google SSO, granular role-based access control.
 - **Commerce & Subscriptions**: Stripe Checkout, recurring billing, coupon redemptions, access entitlement ledger.
@@ -697,7 +697,7 @@ A unified, tamper-proof protocol across Web and Mobile that preserves user navig
 
 ### 10. Single-Command Multi-Platform Rebrand Engine Specification
 
-RexOne includes a sovereign, zero-friction rebranding engine executed via a single master command from `rexone-core`:
+RexOne includes a built-in, zero-friction rebranding engine executed via a single master command from `rexone-core`:
 
 ```bash
 # Full ecosystem synchronization (Core API, Web SPA, and Mobile Flutter simultaneously):

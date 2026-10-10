@@ -2,11 +2,11 @@
 
 <div align="center">
 
-# RexOne Core
+# RexOne Architecture Foundation (Core)
 
 ### Start from One. Not from Zero. A battle-hardened Rails foundation, forged so the product can wage the interesting war.
 
-A sovereign, production-grade API core for modern web and mobile products. Authentication, hierarchical IAM, Stripe billing, access control, media pipelines, notifications, durable AI queues, real-time Action Cable WebSockets, background job topologies, operational administration, and glass-box observability stand ready—not as scattered trophies, but as one disciplined system.
+A battle-hardened, production-grade API core for modern web and mobile products. Authentication, hierarchical IAM, Stripe billing, access control, media pipelines, notifications, durable AI queues, real-time Action Cable WebSockets, background job topologies, operational administration, and glass-box observability stand ready—not as scattered trophies, but as one disciplined system.
 
 Built under an immutable creed: **Start from One. Not from Zero. Clear in thought, exact in structure, simple in use, and strong enough to endure what comes after launch.**
 
@@ -53,6 +53,41 @@ Built under an immutable creed: **Start from One. Not from Zero. Clear in though
 
 ---
 
+## 🏛️ The RexOne Architecture Foundation (The RexOne Approach)
+
+RexOne is not merely a starter kit—it is an **Architectural Foundation**. It establishes an authoritative, battle-tested engineering standard designed for founders and teams building mission-critical products.
+
+### The Architectural Sweet Spot: Neither Extreme Monolith Nor Overrated Microservices
+
+Modern software architecture often forces developers into two dysfunctional extremes:
+
+```text
+❌ Extreme "All-in-One" Monolith       ✅ RexOne Architecture Foundation        ❌ Overrated Microservices
+(Single fragile process / runtime)       (Modular Code + Workload Isolation)      (Distributed Transaction Hell)
+┌─────────────────────────────────┐      ┌───────────────────────────────────┐    ┌───────┐ ┌───────┐ ┌───────┐
+│ API + HTML + DB Queries         │      │ API-First Modular Monolith        │    │ Auth  │ │Billing│ │ Media │
+│ + Background Jobs + Transcoding │      │ (Single codebase, pure contracts, │    └───┬───┘ └───┬───┘ └───┬───┘
+│ crammed into one node/web host  │      │ unified DB, 0 network latency)    │        │       │       │
+└────────────────┬────────────────┘      └─────────────────┬─────────────────┘        ▼       ▼       ▼
+                 ▼                                         ▼                      Distributed transactions,
+CPU spike in transcoding freezes API     Isolated Docker runtime containers:      network lag, 15 repos,
+& drops all web traffic. Sluggish        • API (Puma HTTP / WebSockets)           DevOps nightmare for a small
+webview shell masquerading as app.       • Waka (I/O jobs / Fibers)               team.
+                                         • Media (CPU FFmpeg / libvips)
+                                         • Database (PostgreSQL 18)
+                                         • Storage (Self-hosted Garage S3)
+                                         + Decoupled React 19 & Flutter 3
+```
+
+1. **Why Not an Extreme Monolith?**
+   Traditional extreme monoliths (and single-framework runtimes) cram API routing, database models, background queues, CPU-bound video transcoding, and frontend rendering into one single process. When an image upload or queue spike pegs CPU or leaks memory, the entire customer-facing site drops offline. Furthermore, extreme web monoliths treat mobile apps as an afterthought, wrapping web pages in sluggish webview shells. RexOne eliminates this fragility: backend workloads are container-isolated (`api`, `waka`, `media`, `db`, `garage`), while web and mobile exist as independent, first-class clients.
+2. **Why Not Overrated Microservices?**
+   Microservices are an organizational pattern for 500-person enterprises. For early- and growth-stage teams, microservices introduce distributed transaction hell, network latency between internal services, API version choreography across a dozen repositories, and an enormous DevOps tax. RexOne unifies all models, business workflows, database migrations, and IAM authorization into a single, cohesive, modular Rails 8 engine with zero internal network hops.
+3. **The Sweet Spot — The RexOne Architectural Foundation**:
+   An **API-First Modular Monolith** at the code level, deployed as **workload-isolated containers** at the infrastructure level, serving decoupled, pure **React 19 Web** and 60fps **Flutter 3 Native Mobile** clients under an unyielding engineering constitution (`LAW.md`).
+
+---
+
 ## Why RexOne Core?
 
 Every product eventually meets the same old enemies: accounts, permissions, billing, uploads, jobs, notifications, dashboards, audit trails, failures, and the darkness between _“it works”_ and _“we know why it works.”_ Especially, the ultimate killer of momentum: _“it works on my machine.”_
@@ -63,13 +98,13 @@ RexOne Core exists because this ground should never have to be conquered again f
 
 While commercial kits charge hundreds of dollars for single-framework templates, **RexOne Core is not competing with boilerplates. It is competing with entire platform teams.**
 
-Comparing RexOne to lightweight starters (like Create T3 App or Supabase templates) is like comparing a loaded aircraft carrier to a speedboat. Speedboats (`npx create-next-app`) launch in 30 seconds, but capsize the moment you need transactional billing, background queue topologies, persistent WebSockets, native mobile sync, or S3 storage. RexOne is an aircraft carrier: one command (`./scripts/dev.sh`) boots an entire sovereign platform team in a box.
+Comparing RexOne to lightweight starters (like Create T3 App or Supabase templates) is like comparing a loaded aircraft carrier to a speedboat. Speedboats (`npx create-next-app`) launch in 30 seconds, but capsize the moment you need transactional billing, background queue topologies, persistent WebSockets, native mobile sync, or S3 storage. RexOne is an aircraft carrier: one command (`./scripts/dev.sh`) boots an entire complete platform team in a box.
 
 ### The Purpose: Start from One. Not from Zero.
 
 Software has never been easier to generate, but more code does not automatically mean better systems. Human developers and AI coding agents can move fast, but speed without disciplined architecture burns money, AI compute, and human energy—wasting thousands of expensive tokens rewriting weak abstractions, fixing hallucinatory debt, or having to rebuild the exact same foundation again and again for every product.
 
-RexOne turns that repeated, expensive grind into a battle-tested, sovereign baseline.
+RexOne turns that repeated, expensive grind into a battle-tested architectural baseline.
 
 ### Discipline-Driven Development: The Unvarnished Truth
 
@@ -77,24 +112,24 @@ RexOne pioneers **Discipline-Driven Development**. While legacy paradigms spent 
 
 90% of modern software projects never survive to master the business domain because their architecture collapses first under an avalanche of hallucinatory abstractions, conflicting shims, and zombie code. Tests cannot save a rotten architecture.
 
-Discipline-Driven Development establishes that **architectural discipline, sovereign foundation, and constitutional law are the primary drivers of sustainable engineering**.
+Discipline-Driven Development establishes that **architectural discipline, an unyielding foundation, and constitutional law are the primary drivers of sustainable engineering**.
 
 > _You bring the idea. AI writes the code. RexOne keeps both of you from destroying the foundation._
 
 #### The Brutal Realities Others Hesitate to Reveal:
 
 1. **The Vibe-Coding Delusion**: Prompting an AI to generate code without an immutable constitution isn't velocity; it's compounding debt at 100x speed. Speed without discipline is just accelerating toward a brick wall.
-2. **The BaaS Trap**: Serverless "5-minute backends" lure developers in with toys, then slap them with a $5,000/mo cloud hostage bill when they need relational integrity, background queues, or compliance audits. Real software runs sovereign PostgreSQL, native queues (Solid Queue), and self-hosted S3 (Garage).
+2. **The BaaS Trap**: Serverless "5-minute backends" lure developers in with toys, then slap them with a $5,000/mo cloud hostage bill when they need relational integrity, background queues, or compliance audits. Real software runs self-hosted PostgreSQL, native queues (Solid Queue), and self-hosted S3 (Garage).
 3. **The Full-Stack Monolith Lie**: Stuffing API controllers, database queries, background tasks, and client hydration into a single node runtime creates fragile, unmaintainable monoliths. True engineering enforces client-server separation.
 4. **Deprecation Cowardice & Zombie Code**: Retaining dead code, backwards-compatibility shims, and duplicate parameter aliases is cowardice. Under Constitutional Law U14, if code is replaced, the old code is wiped out completely. No shims. No legacy bloat.
-5. **100% Free Sovereignty**: Unlike commercial boilerplates charging $300–$800 for basic auth or gating features behind "pro licenses", RexOne is 100% free, Apache 2.0 open-source, and sovereign. You own your code, your data, and your infrastructure.
+5. **100% Free & Open-Source (Apache 2.0)**: Unlike commercial boilerplates charging $300–$800 for basic auth or gating features behind "pro licenses", RexOne is 100% free and Apache 2.0 open-source. You own your code, your data, and your infrastructure.
 
 ### 💎 Why Ruby on Rails 8 for the Core? (Instead of a TypeScript/Node Monolith)
 
 A frequent question in today’s JavaScript-heavy landscape is: *“The Node/TypeScript ecosystem is larger—why choose Ruby on Rails for the backend Core?”*
 
 1. **Platform Concurrency & ACID Durability**: Full-stack Node monoliths struggle when managing long-lived WebSockets, multi-stage background media compression, and transactional billing ledgers. Rails 8 with **Solid Queue** (Fiber + Thread hybrid concurrency) and PostgreSQL 18 provides rock-solid durability without external Redis brokers, queue services, or 10-second serverless execution limits.
-2. **Zero Cloud Hostage Fees**: BaaS solutions (Supabase, Firebase) and serverless hosts (Vercel) lure developers in with "5-minute MVPs," but quickly turn into \$500–\$5,000/mo cloud ransoms. RexOne Core runs the entire sovereign platform (API, PostgreSQL, Solid Queue, Solid Cable, self-hosted Garage S3) on a single \$10–\$20 VPS.
+2. **Zero Cloud Hostage Fees**: BaaS solutions (Supabase, Firebase) and serverless hosts (Vercel) lure developers in with "5-minute MVPs," but quickly turn into \$500–\$5,000/mo cloud ransoms. RexOne Core runs the entire platform (API, PostgreSQL, Solid Queue, Solid Cable, self-hosted Garage S3) cleanly on a single VPS via Docker Compose.
 3. **AI Agent Determinism (The Antidote to JS Churn)**: Autonomous AI coding agents (Claude, Cursor, Copilot) frequently hallucinate or break when operating in the fragmented JavaScript ecosystem with its endless package churn and conflicting patterns. Rails 8's strict convention-over-configuration—reinforced by `LAW.md` and `AGENTS.md`—gives AI coding agents deterministic rails to run on, producing clean, durable code without technical debt.
 
 ### ⏱️ The 9-Month Delusion: How Teams Waste $200,000 Rebuilding the Exact Same Wheel
@@ -146,7 +181,7 @@ Here is the unvarnished, brutal truth of what actually happens over the subseque
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  STARTING FROM ONE (REXONE SOVEREIGN FOUNDATION)                                      │
+│  STARTING FROM ONE (REXONE ARCHITECTURE FOUNDATION)                                    │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  Day 1:   Spin up Docker. Rails 8 + React 19 + Flutter 3 + Garage S3 + Postgres 18.   │
 │           Full Auth, 96 IAM permissions, Stripe billing, and WebSockets live.          │
@@ -162,9 +197,9 @@ Result: 8 to 11 months of soul-crushing plumbing deleted. You launch in weeks.
 
 ### 📊 Architectural Comparison: RexOne vs Commercial Boilerplates
 
-| Dimension / Capability       | 🛡️ **RexOne Sovereign Trinity**                                                               | ⚡ **ShipFast & Indie Kits ($169–$299)**                                               | 🏢 **Makerkit & Supastarter ($299–$699)**                                                 | 🚂 **Jumpstart Pro & Bullet Train ($249–$749)**                                   | 🐍 **SaaS Pegasus & Larafast ($99–$795)**                                         |
+| Dimension / Capability       | 🛡️ **RexOne Architecture Foundation**                                                          | ⚡ **ShipFast & Indie Kits ($169–$299)**                                               | 🏢 **Makerkit & Supastarter ($299–$699)**                                                 | 🚂 **Jumpstart Pro & Bullet Train ($249–$749)**                                   | 🐍 **SaaS Pegasus & Larafast ($99–$795)**                                         |
 | :--------------------------- | :-------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------- |
-| **Architectural Model**      | ✅ **Sovereign Tri-Platform**: Rails 8 API + React 19 SPA + pure Flutter 3 native client      | ❌ **Node Monolith**: API, DB, jobs & DOM crammed into 1 fragile runtime             | ❌ **Client-Heavy BaaS**: Direct client DB queries + scattered edge functions     | ⚠️ **HTML Monolith**: Server-rendered HTML with Turbo/Livewire                    | ⚠️ **Monolithic Web**: Django/Laravel web-only runtimes with no mobile client     |
+| **Architectural Model**      | ✅ **Tri-Platform Architecture Foundation**: Rails 8 API + React 19 SPA + pure Flutter 3 client | ❌ **Node Monolith**: API, DB, jobs & DOM crammed into 1 fragile runtime             | ❌ **Client-Heavy BaaS**: Direct client DB queries + scattered edge functions     | ⚠️ **HTML Monolith**: Server-rendered HTML with Turbo/Livewire                    | ⚠️ **Monolithic Web**: Django/Laravel web-only runtimes with no mobile client     |
 | **Native Mobile App**        | ✅ **Native 60fps Flutter**: Dual-app store architecture (Prod vs UAT), automated CI/CD & hardware media | ❌ **None or Webview Shell**: Sluggish Capacitor/Cordova wrapper                     | ⚠️ **Fragmented SDKs**: Direct queries with zero encapsulation                           | ⚠️ **Turbo / Webview**: Web pages wrapped in a native navigation shell            | ❌ **None**: No mobile client provided                                            |
 | **Offline-First Durability** | ✅ **Drift SQLite (`rexone_offline`)**: Schema mirroring, offline subtitles & AES-256 saves   | ❌ **None**: Application breaks entirely on network disconnect                       | ⚠️ **No Relational Offline**: Unreliable offline sync across foreign keys         | ❌ **None**: Server-rendered pages require constant connectivity                  | ❌ **None**: Application breaks on disconnect                                      |
 | **Database Integrity**       | ✅ **Strict Relational PostgreSQL**: Foreign keys, ACID, UUIDs, soft-deletes                  | ⚠️ **ORM Inconsistencies**: Serverless connection pool limits on Prisma/Drizzle      | ✅ **PostgreSQL**: Relational integrity via managed Postgres instance             | ✅ **PostgreSQL / MySQL**: Mature relational ORM (ActiveRecord)                   | ✅ **PostgreSQL / MySQL**: Mature relational ORM (Django ORM / Eloquent)           |
@@ -173,7 +208,7 @@ Result: 8 to 11 months of soul-crushing plumbing deleted. You launch in weeks.
 | **Object Storage**           | ✅ **Self-Hosted Garage S3**: High-performance local S3, zero egress bills                    | ❌ **Vendor Cloud**: AWS S3 / Cloudflare R2 egress fees                              | ⚠️ **Proprietary Storage**: Vendor-locked BaaS pricing ladders                    | ⚠️ **ActiveStorage**: Tied to third-party cloud S3 bucket bills                   | ⚠️ **Flysystem / S3**: Tied to third-party cloud S3 bucket bills                   |
 | **AI Workflows & Speech**    | ✅ **Durable Queued AI**: Chunked streaming, 16kHz live STT, binary MP3 TTS                   | ⚠️ **Edge Timeouts**: LLM streams crash on cold starts or Vercel limits              | ❌ **Client Leaks**: Client-side API keys or basic Edge Function calls            | ⚠️ **Basic Wrappers**: Simple synchronous chat endpoints                          | ⚠️ **Basic Wrappers**: Simple synchronous chat endpoints                          |
 | **Anti-Vibe Governance**     | ✅ **Constitutional Law (`LAW.md`)**: Laws U14/U15 stop AI tech debt and zombie code          | ❌ **Unguided Vibe-Coding**: Fragile abstractions, dead shims & runaway debt         | ❌ **Scattered Cloud Logic**: Code fragmented across dozens of uncoordinated functions   | ⚠️ **Conventions Only**: No explicit constitutional AI agent rules                | ⚠️ **Conventions Only**: No explicit constitutional AI agent rules                |
-| **Cost & Sovereignty**       | ✅ **100% Free & Open (Apache 2.0)**: Zero paywalls, zero "Pro" upsells, sovereign VPS deploy | ❌ **$169–$299 Paid License**: Single-stack Next.js web MVPs (ShipFast, LaunchFast)   | ❌ **$299–$699 Paid License**: Closed-source seat paywalls (Makerkit, Supastarter) | ❌ **$249–$749 Paid License**: Proprietary paywalls (Jumpstart Pro, Bullet Train)  | ❌ **$99–$795 Paid License**: Commercial starter kit paywalls (Pegasus, Larafast)  |
+| **Cost & Freedom**           | ✅ **100% Free & Open (Apache 2.0)**: Zero paywalls, zero "Pro" upsells, single-server VPS   | ❌ **$169–$299 Paid License**: Single-stack Next.js web MVPs (ShipFast, LaunchFast)   | ❌ **$299–$699 Paid License**: Closed-source seat paywalls (Makerkit, Supastarter) | ❌ **$249–$749 Paid License**: Proprietary paywalls (Jumpstart Pro, Bullet Train)  | ❌ **$99–$795 Paid License**: Commercial starter kit paywalls (Pegasus, Larafast)  |
 
 ### 🥊 RexOne vs The Competition (ShipFast, Makerkit, Supastarter, Jumpstart Pro, SaaS Pegasus, Bullet Train, Larafast)
 
@@ -273,15 +308,15 @@ Just deliberate engineering, tested boundaries, and a foundation built to remain
 
 ## 🌟 RexOne Feature Showcase
 
-### ⚡ At a Glance: The 8 Sovereign Pillars (Quick Scan)
+### ⚡ At a Glance: The 8 Core Architectural Pillars (Quick Scan)
 
-| Sovereign Pillar | Flagship Capabilities | Differentiator vs Traditional Stacks |
+| Architectural Pillar | Flagship Capabilities | Differentiator vs Traditional Stacks |
 | :--- | :--- | :--- |
 | 🔐 **Identity & Security** | Devise + JWT, 6-digit passcode auth, Google SSO, single-session lock, self-account deletion | Complete zero-trust lifecycle; zero vendor lock-in to Auth0 or Clerk ($$$). |
 | 🛡️ **IAM & Access Control** | Granular RBAC, 96+ system permissions across 23 resources, declarative `user.can?`, frontend `<AccessGate>` | Eliminates clumsy hardcoded roles; scales seamlessly from simple app to enterprise IAM. |
 | 💳 **Universal Commerce** | Stripe checkout & billing, Google Play / Apple IAP contracts, discount coupons, referral ledger, durable access entitlements | Multi-provider architecture; entitlement engine divorces billing vendor from access rights. |
 | ⚡ **Hybrid Queues (Solid Queue)** | Rails 8 Fiber isolation (50 I/O workers) + isolated OS threads for media & cron, zero Redis dependency | Blazing fast concurrency on PostgreSQL; zero extra server RAM or external Redis costs. |
-| 📦 **S3 Storage & Media Engine** | Self-hosted Garage S3, async libvips image optimization, FFmpeg video transcoding, SRT subtitles, signed URLs | 100% sovereign object storage with zero egress fees; dedicated media container prevents CPU lockup. |
+| 📦 **S3 Storage & Media Engine** | Self-hosted Garage S3, async libvips image optimization, FFmpeg video transcoding, SRT subtitles, signed URLs | 100% self-hosted object storage with zero egress fees; dedicated media container prevents CPU lockup. |
 | 🤖 **Queued AI & Speech** | DeepSeek V3/V4 + Gemini 2.5 Flash, universal TOON serialization, Telegram chunking, live 16kHz STT & binary TTS | Saves 30–60% tokens (no raw JSON); background queued inference survives client disconnects. |
 | 📱 **Native Tri-Platform Synchrony** | Rails 8.1 API + React 19 SPA + Flutter 3 native app, shared OpenAPI v1 specs, Drift SQLite offline storage | Exact contract parity across Web and Mobile; true 60fps native Flutter with offline-first sync. |
 | 📊 **Glass-Box Observability** | Rails Pulse metrics, Rails Error Dashboard (RED), client log ingestion, dual admin portals (internal + API) | Zero external SaaS monitoring fees (Datadog/Sentry); complete operational visibility out of the box. |

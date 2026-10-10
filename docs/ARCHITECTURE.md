@@ -1,24 +1,28 @@
 # RexOne Universal Architecture Manual
 
-> **Creed:** *Start from One. Not from Zero.* A sovereign, production-grade foundation across backend, web, and mobile.
+> **Creed:** *Start from One. Not from Zero.* A battle-hardened, production-grade foundation across backend, web, and mobile.
 > **Scope:** Full-System Architecture (`rexone-core`, `rexone-web`, `rexone_mobile`)
 
 ---
 
-## 🏛️ 1. The Sovereign Tri-Platform Creed
+## 🏛️ 1. The RexOne Architecture Foundation (The RexOne Approach)
 
-RexOne pioneers **Discipline-Driven Development (DDD)**. In modern engineering, code generation is trivial—the true battle is preventing architectural collapse, zombie code, and state fragmentation across platforms. 
+RexOne pioneers **Discipline-Driven Development**. In modern engineering, code generation is trivial—the true battle is preventing architectural collapse, zombie code, and state fragmentation across platforms.
 
-RexOne organizes software as an immutable, synchronized trinity:
+### The Architectural Sweet Spot: Neither Extreme Monolith Nor Overrated Microservices
+
+RexOne deliberately rejects both modern extremes:
+- **Not an Extreme Monolith**: Traditional extreme monoliths (and full-stack single-framework runtimes) cram API routing, database models, background queues, CPU-heavy media transcoding, and DOM rendering into a single fragile process. When a background job or transcoding task pegs the CPU, user traffic drops. Furthermore, web monoliths relegate mobile to sluggish webview shells. RexOne solves this by strictly isolating workloads at the infrastructure level into dedicated Docker containers (`api`, `waka`, `media`, `db`, `garage`), while maintaining decoupled, pure native client frontends.
+- **Not Overrated Microservices**: Microservices are designed for 500-person engineering organizations. Adopting them prematurely introduces distributed transactions, network latency between internal services, API version fragmentation across dozens of repos, and crushing DevOps overhead. RexOne unifies all domain models, database migrations, background queues, and business services into a single, cohesive, modular Rails 8 engine with zero internal network latency.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                 REXONE SOVEREIGN TRINITY                               │
+│                              REXONE ARCHITECTURE FOUNDATION                            │
 ├────────────────────────────┬─────────────────────────────┬─────────────────────────────┤
 │      rexone-core           │         rexone-web          │        rexone_mobile        │
 │  (Ruby on Rails 8 API)     │    (React 19 / Vite SPA)    │    (Flutter 3 / GetX iOS+Android)│
 ├────────────────────────────┼─────────────────────────────┼─────────────────────────────┤
-│ • Sovereign API Engine     │ • Ambient Scarlet Frontend  │ • Native 60fps Mobile App   │
+│ • API-First Core Engine    │ • Ambient Scarlet Frontend  │ • Native 60fps Mobile App   │
 │ • PostgreSQL 18 (UUIDs)    │ • DaisyUI 5 / Tailwind v4   │ • Drift SQLite Offline DB   │
 │ • Solid Queue Concurrency  │ • Vidstack Subtitle Player  │ • Biometrics & Push Notis   │
 │ • Self-hosted Garage S3    │ • AudioWorklet Speech Stream│ • Dual Native Media Players │
@@ -175,7 +179,7 @@ flowchart TD
 
 ### 3.2 Hierarchical IAM & Permissions Matrix
 - **Three-Tier Administrative Hierarchy**:
-  - `super_admin`: Sovereign system control (cannot be deleted or demoted).
+  - `super_admin`: Full system control (cannot be deleted or demoted).
   - `admin`: Operational governance (cannot mutate IAM, users, or system version records).
   - Scoped Roles (`*_admin`): Granular resource/action permissions explicitly granted.
 - **Resource/Action Grid**: Matrix resolving actions to standard CRUD: `create`, `read`, `update`, `delete`.
