@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "V1 Versions API", type: :request do
   describe "GET /v1/client/versions/current" do
-    it "returns an empty version payload without requiring authentication" do
+    it "returns an empty version payload with skip_premium true for app store review mode when no version is published" do
       get "/v1/client/versions/current", params: { version: "1.0.0" }
 
       expect(response).to have_http_status(:ok)
@@ -11,8 +11,16 @@ RSpec.describe "V1 Versions API", type: :request do
       expect(version_attrs["number"]).to be_nil
       expect(version_attrs["update_required"]).to be(false)
       expect(version_attrs["must_update"]).to be(false)
-      expect(version_attrs["skip_premium"]).to be(false)
+      expect(version_attrs["skip_premium"]).to be(true)
       expect(Client::UserVersion.count).to eq(0)
+    end
+
+    it "returns skip_premium false when client version is omitted or blank" do
+      get "/v1/client/versions/current"
+
+      expect(response).to have_http_status(:ok)
+      version_attrs = response_data["attributes"] || response_data
+      expect(version_attrs["skip_premium"]).to be(false)
     end
 
     it "returns the latest live release and computed update flags" do

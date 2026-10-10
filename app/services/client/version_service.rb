@@ -67,7 +67,8 @@ class Client::VersionService
 
     def skip_premium?(client_number:, latest:, platform: nil, build_number: nil)
       client_version = parse_semver(client_number)
-      return false if client_version.blank? || latest.blank?
+      return false if client_version.blank?
+      return true if latest.blank?
 
       latest_version = Gem::Version.new(latest.number)
       return true if client_version > latest_version

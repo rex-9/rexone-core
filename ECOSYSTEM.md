@@ -413,7 +413,7 @@ Permissions follow a clean, four-level administrative model:
 - **Response Flags**:
   - `update_required`: `true` when client version is strictly behind the live published version (triggers non-blocking update prompt).
   - `must_update`: `true` when the live version is flagged as force update and is newer than the client (triggers mandatory blocking modal).
-  - `skip_premium`: `true` when client version is strictly newer than the live published version (e.g. app store review builds).
+  - `skip_premium`: `true` when no live version is published yet in the catalog (initial app store review dark launch) or when client version is strictly newer than the live published version (app store review builds).
   - `store_url`: Platform store URL configured via `IOS_STORE_URL` or `ANDROID_STORE_URL`.
 - **Client Handling**:
   - Mobile: When `must_update` is true, `SplashPage` presents an un-bypassable `PopScope(canPop: false)` blocking screen. Optional updates (`update_required: true && !must_update`) prompt on `HomePage` via `AppDialog.update(...)`. `VersionModel.fromJson` and `ApiService#parseRecord` seamlessly resolve both JSON:API attributes envelopes and flat key structures.
