@@ -95,7 +95,7 @@ gem "rack-attack", "~> 6.8"
 gem "cloudinary", "~> 2.4"
 gem "stripe", "~> 20.0"
 gem "websocket-client-simple", "~> 0.9"
-gem "aws-sdk-s3", "~> 1.233.1" # need only when STORAGE_PROVIDER=garage
+gem "aws-sdk-s3", "~> 1.233.2" # need only when STORAGE_PROVIDER=garage
 
 # ============================================================
 # Utilities
