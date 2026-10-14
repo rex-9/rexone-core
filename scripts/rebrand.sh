@@ -496,6 +496,45 @@ else
   echo "ℹ️  Mobile repository not found at $MOBILE_DIR (skipping)"
 fi
 
+# ------------------------------------------------------------
+# 4. Synchronize Multi-Root Workspace (.code-workspace)
+# ------------------------------------------------------------
+target_web_rel=""
+target_mobile_rel=""
+if [ -n "$WEB_DIR" ]; then
+  target_web_rel="../$(basename "$WEB_DIR")"
+fi
+if [ -n "$MOBILE_DIR" ]; then
+  target_mobile_rel="../$(basename "$MOBILE_DIR")"
+fi
+
+for ws_file in "$CORE_DIR"/*.code-workspace "$WORKSPACE_DIR"/*.code-workspace; do
+  if [ -f "$ws_file" ]; then
+    python3 -c "
+import os, re
+
+f = '$ws_file'
+web_rel = '$target_web_rel'
+mobile_rel = '$target_mobile_rel'
+
+if os.path.exists(f):
+    try:
+        with open(f, 'r+', encoding='utf-8') as fp:
+            c = fp.read()
+            if web_rel:
+                c = re.sub(r'\"path\":\s*\"(\.\./[^\"]*(?:web)[^\"]*)\"', f'\"path\": \"{web_rel}\"', c)
+            if mobile_rel:
+                c = re.sub(r'\"path\":\s*\"(\.\./[^\"]*(?:mobile)[^\"]*)\"', f'\"path\": \"{mobile_rel}\"', c)
+            fp.seek(0)
+            fp.write(c)
+            fp.truncate()
+    except Exception:
+        pass
+" 2>/dev/null || true
+    echo "  ✅ Workspace: Synchronized $(basename "$ws_file") folder paths"
+  fi
+done
+
 echo "============================================================"
 echo "🎉 REBRANDING COMPLETED SUCCESSFULLY FOR: $BRAND_NAME"
 echo "   Docker Kebab Slug:    $BRAND_SLUG_KEBAB"

@@ -50,6 +50,7 @@ This application is built upon the **RexOne Ecosystem** (`rex-9`). These are imm
   - [U15. Human-Readable Code, Plain English \& Zero Alien Syntax](#u15-human-readable-code-plain-english--zero-alien-syntax)
   - [U16. Immutable Ecosystem Lineage \& Universal Moral Attribution Code](#u16-immutable-ecosystem-lineage--universal-moral-attribution-code)
   - [U17. Zero-JSON LLM Pipeline Law: LLM Never Eats JSON, LLM Never Spits JSON](#u17-zero-json-llm-pipeline-law-llm-never-eats-json-llm-never-spits-json)
+  - [U18. Universal Contrast Hierarchy & Foreground Inversion Law (`bg secondary ➔ text primary`, `text secondary ➔ bg primary`)](#u18-universal-contrast-hierarchy--foreground-inversion-law-bg-secondary--text-primary-text-secondary--bg-primary)
 - [⚙️ Part I: RexOne Core Architectural Laws (Backend / Rails API)](#️-part-i-rexone-core-architectural-laws-backend--rails-api)
   - [C1. Strict 3-Tier MCS Architecture (Model, Controller, Service)](#c1-strict-3-tier-mcs-architecture-model-controller-service)
   - [C2. Standardized JSON:API Envelope](#c2-standardized-jsonapi-envelope)
@@ -205,6 +206,21 @@ The following foundational principles apply universally across all three reposit
 - **Server Reception & Client Transparency**: Upon receiving model completions, the server transparently converts all TOON structures back into clean, standard formatted JSON via `Ai::ToonService.toon_to_json` before database persistence, Action Cable WebSocket broadcasting, and REST responses. External clients (Web, Mobile, REST APIs) deal exclusively in standard JSON. The LLM operates exclusively in TOON. Zero JSON leaks inward; zero TOON leaks outward.
 - **Unified Pipeline, Zero Dead Code (Law U14)**: Prompt processing, user messages, and system instructions MUST use the exact same unified `Ai::ToonService.json_to_toon` and `Ai::ToonService.toon_to_json` pipeline. No redundant converters, duplicate aliases, dead stubs, or parallel conversion shims are permitted.
 
+### U18. Universal Contrast Hierarchy & Foreground Inversion Law (`bg secondary ➔ text primary`, `text secondary ➔ bg primary`)
+
+- **Supreme Contrast Axiom**: Visibility, readability, and optical clarity are sacred, non-negotiable constitutional mandates across every screen, surface, and component. UI components must NEVER render low-contrast, washed-out, or illegible text, icons, or glyphs under any theme, background lighting, or device illumination condition.
+- **The Inversion Principle (`bg secondary ➔ text primary`)**:
+  - Whenever any button, badge, chip, card, surface, or container uses a **secondary background** (e.g. secondary tint, silver surface, light silver gradient, or secondary highlight):
+    - The foreground text, icons, and glyphs **MUST strictly resolve to primary color** (e.g. deep forest primary emerald / `Design.colors.primaryDark` on mobile, `--emerald-dim` / `text-primary` on web).
+    - NEVER render white, silver, or light-colored text/icons on secondary silver backgrounds.
+- **The Reciprocal Principle (`text secondary ➔ bg primary`)**:
+  - Whenever any button, badge, chip, card, surface, or container uses a **primary background** (e.g. primary gradient, solid emerald, rich brand tone):
+    - The foreground text, icons, and glyphs **MUST strictly resolve to secondary color** (e.g. luminous moonlit silver / `Design.colors.secondaryLight` on mobile, `--silver-bright` / `text-secondary` on web) or semantic on-primary contrast.
+    - NEVER render dark-on-dark or low-contrast text on primary backgrounds.
+- **Zero Illegible Theme Overrides**:
+  - Reusable components (`AppButton`, `AppBadge`, `AppCard`, `Button`, `Badge`) MUST enforce this contract internally through deterministic `DefaultTextStyle`, `IconTheme`, and explicit foreground tokens.
+  - Generic theme cascade defaults (such as raw `onSurface` white/black) are strictly forbidden from overriding or masking the semantic foreground contract of a component.
+
 ---
 
 # ⚙️ Part I: RexOne Core Architectural Laws (Backend / Rails API)
@@ -338,6 +354,7 @@ Service Layer (app/services/)
 
 - **Tailwind v4 Spacing Scale**: Strictly adhere to the standard Tailwind continuous spacing scale (`p-2`, `p-3`, `p-4`, `p-6`, `gap-3`, `space-y-4`, `w-55`, `w-65`, `w-90`, `h-90`, `max-w-55`, `shrink-0`). Arbitrary pixel classes matching standard scale increments (e.g. `[220px]` $\rightarrow$ `55`, `[260px]` $\rightarrow$ `65`, `[360px]` $\rightarrow$ `90`, `flex-shrink-0` $\rightarrow$ `shrink-0`) MUST use the standard utility classes to prevent deprecation.
 - **Semantic Tokens**: NEVER import directly from `src/design/elements/` for inline component styles. Always use semantic Tailwind and DaisyUI utility classes (`bg-base-100`, `bg-base-200`, `text-primary`, `text-base-content`, `shadow-sm`, `btn-primary`). Light and dark themes adapt automatically.
+- **Universal Contrast Hierarchy (Law U18)**: Reusable components (`Button`, `Badge`, `Card`, `Chip`) and custom view layouts must strictly enforce the contrast inversion hierarchy (`bg secondary ➔ text primary`, `text secondary ➔ bg primary`). Never apply raw un-inverted foreground styles (e.g., light text on a light/secondary background) or allow global cascade themes to wash out readable foreground contracts.
 
 ### W3. Centralized Asset Registry & Icons (`src/assets/index.ts`)
 
@@ -423,6 +440,7 @@ Transport Layer   (src/services/api.service.ts)
 
 - **Zero Hardcoded Colors**: NEVER hardcode `Color(0xFF...)` or `Colors.white`/`Colors.black` directly in feature widgets.
 - ALWAYS access theme tokens through context extensions (`context.colors.primary`, `context.colors.surface`, `context.colors.background`, `context.colors.textPrimary`, `context.typography.titleLarge`, `context.typography.bodyMedium`).
+- **Universal Contrast Hierarchy (Law U18)**: Reusable components (`AppButton`, `AppBadge`, `AppCard`, `AppChip`) and custom layouts must enforce the contrast inversion hierarchy (`bg secondary ➔ text primary`, `text secondary ➔ bg primary`). Text and icons rendered on a secondary background must resolve to primary dark (`Design.colors.primaryDark`), while text and icons on primary backgrounds resolve to secondary light (`Design.colors.secondaryLight`). Theme typography defaults (`context.typo.button` with `onSurface`) must NEVER override or wash out component foreground contracts.
 
 ### M3. Architecture & Strict GetX Ecosystem Adherence
 
