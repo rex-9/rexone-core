@@ -18,8 +18,8 @@ development:
   <<: *default
   workers:
     # High-concurrency non-blocking Fiber reactor for I/O-bound workloads
-    # Dynamically scales across queues: payments -> ai -> notifications -> default
-    - queues: [payments, notifications, ai, default]
+    # Dynamically scales across queues: payments -> notifications -> error_notifications -> ai -> default
+    - queues: [payments, notifications, error_notifications, ai, default]
       fibers: <%= AppConfig::SOLID_QUEUE_FIBERS %>
       polling_interval: <%= AppConfig::SOLID_QUEUE_POLLING_INTERVAL %>
 
@@ -39,8 +39,8 @@ production:
   <<: *default
   workers:
     # High-concurrency non-blocking Fiber reactor for I/O-bound workloads
-    # Dynamically scales across queues: payments -> ai -> notifications -> default
-    - queues: [payments, notifications, ai, default]
+    # Dynamically scales across queues: payments -> notifications -> error_notifications -> ai -> default
+    - queues: [payments, notifications, error_notifications, ai, default]
       fibers: <%= AppConfig::SOLID_QUEUE_FIBERS %>
       polling_interval: <%= AppConfig::SOLID_QUEUE_POLLING_INTERVAL %>
 

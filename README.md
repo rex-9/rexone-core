@@ -446,6 +446,7 @@ Solid Queue is part of the application architecture, not an afterthought. RexOne
 | Payment webhook processing & batch coupon sync | `payments`              | **Fibers** (50 concurrent)          | Durable ingestion, idempotency, non-blocking HTTP verification, async provider coupon generation (`Payment::SyncBatchCouponsJob`) |
 | AI completions & TTS synthesis                | `ai`                    | **Fibers** (50 concurrent)          | I/O-bound LLM socket streaming; 50 in-flight requests without thread exhaustion                                                 |
 | Socket, push, and email delivery              | `notifications`         | **Fibers** (50 concurrent)          | Provider latency (OneSignal, Brevo, ActionCable) must not block OS threads                                                      |
+| Incident alerts & issue tracking (RED)        | `error_notifications`   | **Fibers** (50 concurrent)          | Non-blocking Rails Error Dashboard alert webhooks (Slack, Email, PagerDuty, GitHub issues)                                      |
 | Default application tasks                     | `default`               | **Fibers** (50 concurrent)          | Dynamic shared capacity with instant failover                                                                                   |
 | System maintenance & recurring cron           | `solid_queue_recurring` | **Threads** (2 isolated OS threads) | Sequential, transactional DB table maintenance ([`config/recurring.yml`](config/recurring.yml))                                 |
 | Media transcoding & image processing          | `media`                 | **Threads** (2 isolated OS threads) | Isolated in dedicated `media` worker/container; prevents CPU-heavy libvips/FFmpeg from starving I/O                             |
@@ -453,7 +454,7 @@ Solid Queue is part of the application architecture, not an afterthought. RexOne
 #### Dynamic Workload Elasticity Under All Conditions
 
 1. **Uneven Workload Spikes** (e.g. zero AI traffic, surge in notifications):
-   All I/O queues (`[ payments, ai, notifications, default ]`) are pooled under the fiber worker with deterministic priority order. When notifications surge, **all 50 fibers instantly pivot to deliver notifications**. When AI requests spike, free fibers immediately prioritize AI completions. Zero idle worker capacity is wasted.
+   All I/O queues (`[ payments, notifications, error_notifications, ai, default ]`) are pooled under the fiber worker with deterministic priority order. When notifications surge, **all 50 fibers instantly pivot to deliver notifications**. When AI requests spike, free fibers immediately prioritize AI completions. Zero idle worker capacity is wasted.
 2. **Low Workload / Idle State**:
    Fibers run on a single cooperative event reactor. When queues are empty, context switching drops to zero, CPU usage is near-zero, and Active Record releases idle database connections back to PostgreSQL.
 3. **Full System Saturation**:
