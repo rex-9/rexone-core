@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_21_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -874,6 +874,56 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.index ["started_at"], name: "index_rails_pulse_deployments_on_started_at"
   end
 
+  create_table "rails_pulse_events", force: :cascade do |t|
+    t.string "kind", null: false, comment: "What noticed it, e.g. writer_heartbeat"
+    t.string "subject", comment: "Who it is about: host:pid, rule name, job name, exception class"
+    t.string "outcome", null: false, comment: "sampled, triggered, clean, insufficient_data, ran"
+    t.decimal "value", precision: 15, scale: 6, comment: "The number behind it: requests dropped since the last sample, or the triggered metric value"
+    t.datetime "occurred_at", null: false
+    t.text "message"
+    t.text "metadata", comment: "JSON with the kind-specific detail"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind", "occurred_at"], name: "index_rp_events_on_kind_and_occurred_at"
+    t.index ["kind", "subject", "occurred_at"], name: "index_rp_events_on_kind_subject_and_occurred_at"
+  end
+
+  create_table "rails_pulse_exception_groups", force: :cascade do |t|
+    t.string "fingerprint", null: false, comment: "SHA256 of exception_class + relative first app-code location"
+    t.string "exception_class", null: false, comment: "e.g. ActiveRecord::RecordNotFound"
+    t.string "location", comment: "Relative first app-code frame, e.g. app/models/user.rb#save"
+    t.text "message", comment: "Message from the most recent occurrence"
+    t.datetime "first_seen_at", null: false
+    t.datetime "last_seen_at", null: false
+    t.integer "occurrence_count", default: 0, null: false
+    t.string "status", default: "open", null: false, comment: "open, resolved, ignored"
+    t.datetime "resolved_at", comment: "When the group was last resolved"
+    t.boolean "preserve", default: false, null: false, comment: "Exempt from all automatic cleanup including occurrence rows"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["exception_class"], name: "index_rp_exception_groups_on_class"
+    t.index ["fingerprint"], name: "index_rp_exception_groups_on_fingerprint", unique: true
+    t.index ["last_seen_at"], name: "index_rp_exception_groups_on_last_seen_at"
+    t.index ["status"], name: "index_rp_exception_groups_on_status"
+  end
+
+  create_table "rails_pulse_exception_occurrences", force: :cascade do |t|
+    t.bigint "exception_group_id", null: false, comment: "FK to the group this occurrence belongs to"
+    t.string "exception_class", null: false
+    t.text "message"
+    t.text "backtrace", comment: "JSON array of {file, line, method} frames (first 50)"
+    t.string "request_url", comment: "Nullable — web requests only"
+    t.string "request_method", comment: "GET, POST, etc."
+    t.string "environment", comment: "production, staging, etc."
+    t.string "deploy_sha", comment: "Captured at occurrence time — cannot backfill later"
+    t.text "request_params", comment: "JSON hash of filtered request params — web requests only"
+    t.datetime "occurred_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["exception_group_id"], name: "index_rp_exception_occurrences_on_group_id"
+    t.index ["occurred_at"], name: "index_rp_exception_occurrences_on_occurred_at"
+  end
+
   create_table "rails_pulse_job_runs", force: :cascade do |t|
     t.bigint "job_id", null: false, comment: "Link to job definition"
     t.string "run_id", null: false, comment: "Adapter specific run id"
@@ -972,6 +1022,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
     t.integer "response_size_bytes", comment: "HTTP response body size in bytes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "method", comment: "HTTP method used for this specific request (e.g., GET, POST)"
     t.index ["created_at", "route_id"], name: "idx_requests_for_aggregation"
     t.index ["occurred_at"], name: "index_rails_pulse_requests_on_occurred_at"
     t.index ["request_uuid"], name: "index_rails_pulse_requests_on_request_uuid", unique: true
@@ -980,13 +1031,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
   end
 
   create_table "rails_pulse_routes", force: :cascade do |t|
-    t.string "method", null: false, comment: "HTTP method (e.g., GET, POST)"
     t.string "path", null: false, comment: "Request path (e.g., /posts/index)"
     t.text "tags", comment: "JSON array of tags for filtering and categorization"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["method", "path"], name: "index_rails_pulse_routes_on_method_and_path", unique: true
+    t.string "controller_action", comment: "Rails controller and action handling this route (e.g., admin/users#show)"
+    t.text "http_methods", null: false, comment: "JSON array of HTTP methods accepted by this route (e.g., [\"GET\",\"POST\"])"
+    t.index ["controller_action", "path"], name: "index_rails_pulse_routes_on_controller_action_and_path", unique: true
     t.index ["path"], name: "index_rails_pulse_routes_on_path"
+    t.index ["path"], name: "index_rails_pulse_routes_on_path_without_action", unique: true, where: "(controller_action IS NULL)"
   end
 
   create_table "rails_pulse_summaries", force: :cascade do |t|
@@ -1404,6 +1457,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_173001) do
   add_foreign_key "rails_error_dashboard_error_comments", "rails_error_dashboard_error_logs", column: "error_log_id"
   add_foreign_key "rails_error_dashboard_error_logs", "rails_error_dashboard_applications", column: "application_id"
   add_foreign_key "rails_error_dashboard_error_occurrences", "rails_error_dashboard_error_logs", column: "error_log_id"
+  add_foreign_key "rails_pulse_exception_occurrences", "rails_pulse_exception_groups", column: "exception_group_id"
   add_foreign_key "rails_pulse_job_runs", "rails_pulse_jobs", column: "job_id"
   add_foreign_key "rails_pulse_operations", "rails_pulse_job_runs", column: "job_run_id"
   add_foreign_key "rails_pulse_operations", "rails_pulse_queries", column: "query_id"
