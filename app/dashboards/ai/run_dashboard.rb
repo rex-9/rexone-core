@@ -16,6 +16,7 @@ class Ai::RunDashboard < Administrate::BaseDashboard
     provider: Field::String,
     model: Field::String,
     status: Field::String,
+    cost: Field::Number.with_options(decimals: 6, prefix: "$"),
     latency_ms: Field::Number,
     total_tokens: Field::Number,
     prompt_tokens: Field::Number,
@@ -24,7 +25,7 @@ class Ai::RunDashboard < Administrate::BaseDashboard
     input_chars: Field::Number,
     output_chars: Field::Number,
     error: Field::Text,
-    request_metadata: Field::String.with_options(searchable: false),
+    metadata: Field::String.with_options(searchable: false),
     created_at: Field::DateTime,
     updated_at: Field::DateTime,
     discarded_at: Field::DateTime
@@ -36,6 +37,7 @@ class Ai::RunDashboard < Administrate::BaseDashboard
     profile
     model
     status
+    cost
     total_tokens
     latency_ms
     created_at
@@ -50,6 +52,7 @@ class Ai::RunDashboard < Administrate::BaseDashboard
     provider
     model
     status
+    cost
     latency_ms
     total_tokens
     prompt_tokens
@@ -58,7 +61,7 @@ class Ai::RunDashboard < Administrate::BaseDashboard
     input_chars
     output_chars
     error
-    request_metadata
+    metadata
     created_at
     updated_at
   ].freeze

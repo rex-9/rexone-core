@@ -7,6 +7,9 @@ class Notification < ApplicationRecord
   # ===== ASSOCIATIONS =====
   has_many :user_notifications, dependent: :nullify
 
+  has_metadata Notification::Metadata
+  has_metadata Notification::InAppData, attribute_name: :in_app_data
+
   # ===== VALIDATIONS =====
   validates :event, presence: true,
                     uniqueness: true,

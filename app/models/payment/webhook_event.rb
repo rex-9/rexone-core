@@ -12,10 +12,10 @@ class Payment::WebhookEvent < ApplicationRecord
 
   # ===== ENUMS =====
   enum :status, {
-    pending: "pending",
-    processing: "processing",
-    processed: "processed",
-    failed: "failed"
+    pending: PaymentConstants::WebhookStatus::PENDING,
+    processing: PaymentConstants::WebhookStatus::PROCESSING,
+    processed: PaymentConstants::WebhookStatus::PROCESSED,
+    failed: PaymentConstants::WebhookStatus::FAILED
   }
 
   # ===== VALIDATIONS =====
@@ -25,6 +25,7 @@ class Payment::WebhookEvent < ApplicationRecord
   validates :status, presence: true
   validates :payload, presence: true
   validates :received_at, presence: true
+  validate :validate_payload
 
   validates :attempt_count,
             numericality: {
@@ -34,19 +35,19 @@ class Payment::WebhookEvent < ApplicationRecord
 
   # ===== SCOPES =====
   scope :recent, -> { order(received_at: :desc) }
-  scope :retryable, -> { where(status: %w[pending failed]) }
+  scope :retryable, -> { where(status: [ PaymentConstants::WebhookStatus::PENDING, PaymentConstants::WebhookStatus::FAILED ]) }
 
   scope :processed_before, ->(time) {
-    where(status: "processed").where("processed_at < ?", time)
+    where(status: PaymentConstants::WebhookStatus::PROCESSED).where("processed_at < ?", time)
   }
   scope :failed_before, ->(time) {
-    where(status: "failed").where("updated_at < ?", time)
+    where(status: PaymentConstants::WebhookStatus::FAILED).where("updated_at < ?", time)
   }
 
   # ===== INSTANCE METHODS =====
   def start_processing!
     update!(
-      status: "processing",
+      status: PaymentConstants::WebhookStatus::PROCESSING,
       processing_started_at: Time.current,
       attempt_count: attempt_count + 1,
       last_error: nil
@@ -55,7 +56,7 @@ class Payment::WebhookEvent < ApplicationRecord
 
   def mark_as_processed!
     update!(
-      status: "processed",
+      status: PaymentConstants::WebhookStatus::PROCESSED,
       processed_at: Time.current,
       last_error: nil
     )
@@ -63,7 +64,7 @@ class Payment::WebhookEvent < ApplicationRecord
 
   def mark_as_failed!(error)
     update!(
-      status: "failed",
+      status: PaymentConstants::WebhookStatus::FAILED,
       last_error: error.message
     )
   end
@@ -89,5 +90,11 @@ class Payment::WebhookEvent < ApplicationRecord
       processed_deleted: processed_count,
       failed_deleted: failed_count
     }
+  end
+
+  private
+
+  def validate_payload
+    errors.add(:payload, "must be a valid key-value object") unless payload.is_a?(Hash)
   end
 end

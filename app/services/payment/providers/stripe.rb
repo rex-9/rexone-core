@@ -692,7 +692,7 @@ module Payment
           cancel_at: stripe_time(stripe_subscription.cancel_at),
           ended_at: stripe_time(stripe_subscription.ended_at),
           canceled_at: stripe_time(stripe_subscription.canceled_at),
-          metadata: stripe_subscription.metadata&.to_h || {}
+          metadata: clean_subscription_metadata(stripe_subscription.metadata)
         }
 
         if payment_info.present?
@@ -936,7 +936,7 @@ module Payment
             payment_method_id: payment_method_id,
             payment_method_type: payment_info[:type],
             payment_method_details: payment_info[:details],
-            metadata: stripe_sub.metadata&.to_h || {}
+            metadata: clean_subscription_metadata(stripe_sub.metadata)
           )
 
           subscription.save!
@@ -1003,7 +1003,7 @@ module Payment
             payment_method_id: payment_method_id,
             payment_method_type: payment_info[:type],
             payment_method_details: payment_info[:details],
-            metadata: pi.metadata&.to_h || {}
+            metadata: clean_purchase_metadata(pi.metadata)
           )
 
           purchase.save!
@@ -1041,11 +1041,12 @@ module Payment
         coupon = Payment::Coupon.with_discarded.find_by(provider_coupon_id: stripe_coupon.id) ||
                  Payment::Coupon.with_discarded.find_by(code: stripe_coupon.id.to_s.strip.upcase)
         if coupon
+          merged_metadata = clean_coupon_metadata(coupon.metadata.to_h.merge(stripe_coupon.metadata&.to_h || {}))
           coupon.update!(
             provider_coupon_id: stripe_coupon.id,
             title: stripe_coupon.name.presence || coupon.title,
             active: stripe_coupon.valid,
-            metadata: (coupon.metadata || {}).merge(stripe_coupon.metadata&.to_h || {})
+            metadata: merged_metadata
           )
           Rails.logger.info("#{STRIPE_LOG_PREFIX} Linked existing coupon from webhook: #{coupon.code} (Stripe ID: #{stripe_coupon.id})")
           return
@@ -1068,7 +1069,7 @@ module Payment
           max_usage: stripe_coupon.max_redemptions || 0,
           expires_at: stripe_coupon.redeem_by ? Time.at(stripe_coupon.redeem_by) : nil,
           active: stripe_coupon.valid,
-          metadata: stripe_coupon.metadata&.to_h || {}
+          metadata: clean_coupon_metadata(stripe_coupon.metadata&.to_h || {})
         )
         coupon.save!
         Rails.logger.info("#{STRIPE_LOG_PREFIX} Coupon created from webhook: #{coupon.code} (Stripe ID: #{stripe_coupon.id})")
@@ -1087,7 +1088,7 @@ module Payment
           active: stripe_coupon.valid
         }
         if stripe_coupon.metadata.present?
-          attrs[:metadata] = (coupon.metadata || {}).merge(stripe_coupon.metadata.to_h)
+          attrs[:metadata] = clean_coupon_metadata(coupon.metadata.to_h.merge(stripe_coupon.metadata.to_h))
         end
 
         coupon.update!(attrs)
@@ -1119,6 +1120,40 @@ module Payment
           canceled_at: subscription.canceled_at || Time.current,
           ended_at: subscription.ended_at || Time.current
         )
+      end
+
+      # Whitelists incoming Stripe subscription metadata strictly to known Payment::Subscription::Metadata attributes.
+      # Prevents duplicate database foreign keys ('user_id', 'product_id') and undeclared provider tags
+      # from entering JSON metadata (Law U14 & U19).
+      def clean_subscription_metadata(raw_metadata)
+        return {} if raw_metadata.blank?
+
+        known_keys = Payment::Subscription::Metadata.attribute_names.to_set
+        raw_metadata.to_h.stringify_keys.slice(*known_keys)
+      end
+
+      # Whitelists incoming Stripe payment intent metadata strictly to known Payment::Purchase::Metadata attributes.
+      # Prevents duplicate database foreign keys ('user_id', 'product_id') and undeclared provider tags
+      # from entering JSON metadata (Law U14 & U19).
+      def clean_purchase_metadata(raw_metadata)
+        return {} if raw_metadata.blank?
+
+        known_keys = Payment::Purchase::Metadata.attribute_names.to_set
+        raw_metadata.to_h.stringify_keys.slice(*known_keys)
+      end
+
+      # Sanitizes incoming Stripe coupon metadata.
+      # Whitelists strictly to known Payment::Coupon::Metadata attributes:
+      # - 'status': remote sync lifecycle status ('pending', 'processing', 'succeeded', 'failed')
+      # - 'sync_error': error message if remote synchronization failed
+      # - 'failed_at': ISO 8601 timestamp when remote sync failed
+      # - 'synced_at': ISO 8601 timestamp when remote sync completed
+      # This prevents arbitrary third-party tags on Stripe coupons from triggering ActiveModel validation errors.
+      def clean_coupon_metadata(raw_metadata)
+        return {} if raw_metadata.blank?
+
+        known_keys = Payment::Coupon::Metadata.attribute_names.to_set
+        raw_metadata.to_h.stringify_keys.slice(*known_keys)
       end
     end
   end

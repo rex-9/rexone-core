@@ -36,26 +36,30 @@ RSpec.describe Chat::Message, type: :model do
   it "declares the supported AI metadata fields" do
     message = build(
       :chat_message,
-      ai_status: described_class::STATUSES[:queued],
-      ai_temperature: 0.4,
-      ai_max_tokens: 500
+      metadata: {
+        status: described_class::STATUSES[:queued],
+        temperature: 0.4,
+        max_tokens: 500
+      }
     )
 
-    expect(message).to have_attributes(
-      ai_status: "queued",
-      ai_temperature: 0.4,
-      ai_max_tokens: 500
+    expect(message.metadata).to have_attributes(
+      status: "queued",
+      temperature: 0.4,
+      max_tokens: 500
     )
   end
 
   it "declares TTS metadata fields" do
     message = build(
       :chat_message,
-      tts_status: described_class::STATUSES[:completed],
-      tts_error: nil
+      metadata: {
+        tts_status: described_class::STATUSES[:completed],
+        tts_error: nil
+      }
     )
 
-    expect(message).to have_attributes(
+    expect(message.metadata).to have_attributes(
       tts_status: "completed",
       tts_error: nil
     )

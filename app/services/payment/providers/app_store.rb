@@ -95,7 +95,9 @@ module Payment
           }.compact,
           amount_received: product.unit_amount,
           paid_at: Time.current,
-          metadata: payload
+          metadata: {
+            "order_id" => transaction_id
+          }
         )
         purchase.save!
 
@@ -140,7 +142,7 @@ module Payment
             "original_transaction_id" => original_transaction_id,
             "bundle_id" => bundle_id
           }.compact,
-          metadata: payload
+          metadata: {}
         )
         subscription.save!
 

@@ -1,6 +1,6 @@
 # app/serializers/log/client_serializer.rb
 class Client::LogSerializer < ApplicationSerializer
-  attributes :id, :message, :severity, :context, :stack_trace,
+  attributes :id, :message, :severity, :metadata, :stack_trace,
              :local_storage_keys, :session_storage_keys, :cookies,
              :platform, :environment, :version_id,
              :browser, :os, :os_version, :device, :user_agent,
@@ -13,7 +13,7 @@ class Client::LogSerializer < ApplicationSerializer
     log_client.version&.number
   end
 
-  attribute :formatted_context, &:formatted_context
+  attribute :formatted_metadata, &:formatted_metadata
   attribute :display_name, &:display_name
   attribute :storage_snapshot, &:storage_snapshot
   attribute :has_storage_issues, &:has_storage_issues?

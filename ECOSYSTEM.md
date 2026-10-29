@@ -142,7 +142,7 @@ All tables use **UUID** primary keys (`gen_random_uuid()`), soft deletes via **D
 | **IAM (RBAC)**       | `Iam::Role`, `Iam::Permission`, `Iam::UserRole`, `Iam::RolePermission`                                                              | Granular action-resource permissions (`user.can?(action, resource)`). System roles (`super_admin`, `admin`, default `user`). Dynamic auto-assignment on signup.                                                                |
 | **Commerce**         | `Payment::Product`, `Payment::Subscription`, `Payment::Purchase`, `Payment::Coupon`, `Payment::UserCoupon`, `Payment::WebhookEvent` | Stripe product/price catalog, subscription items snapshot, percentage/fixed coupons with referral generation, targeting restrictions, immutable redemption ledger, purchase receipts, durable webhooks.                        |
 | **Entitlements**     | `Access`                                                                                                                            | Granted, revoked, and expired product access records tied to users and products.                                                                                                                                               |
-| **AI / Chat**        | `Chat::Room`, `Chat::Message`, `Ai::Profile`, `Ai::Run`                                                                             | Flexible chat rooms (`ai`, `direct`, `group`, hybrid), message processing jobs, 2,000-char message chunking (`split_id`, `chunk_index`, `total_chunks`), provider abstraction, execution telemetry.                            |
+| **AI / Chat**        | `Chat::Room`, `Chat::Message`, `Ai::Profile`, `Ai::Run`, `Ai::Price`                                                                 | Flexible chat rooms (`ai`, `direct`, `group`, hybrid), message processing jobs, 2,000-char message chunking (`split_id`, `chunk_index`, `total_chunks`), provider abstraction, execution telemetry, open pricing registry sync. |
 | **Media**            | `Asset`                                                                                                                             | Unified media records, Garage S3 storage keys (`user/{user_id}/...`, `admin/...`), compression telemetry, status (`pending`, `processing`, `ready`, `optimal`), child assets (`parent_asset_id` for thumbnails and subtitles). |
 | **Telemetry**        | `Client::Log`                                                                                                                       | Client error ingest (stack traces, device, OS, browser, URL, severity, cookies, storage keys), linked to optional `version_id`.                                                                                                |
 | **Feedback**         | `Feedback`                                                                                                                          | User rating (1–10), auto-inferred category (`bug`, `feature_request`, `improvement`, `general`), urgency (`low`, `normal`, `high`, `urgent`), device/route telemetry.                                                          |
@@ -157,7 +157,7 @@ Solid Queue operates under a hybrid concurrency architecture configured in `conf
   - Non-blocking Ruby Fibers (`async`) running on Solid Queue with `config.active_support.isolation_level = :fiber`.
   - Runs up to 50 concurrent fibers on a single event loop across prioritized queues:
     - `payments`: Highest priority. Handles Stripe webhook fulfillment (`Payment::ProcessWebhookJob`) with strict idempotency.
-    - `ai`: Handles chat workflows (`Chat::ProcessMessageJob`), provider streaming (DeepSeek, Gemini via OpenAI-compatible endpoints), and text-to-speech jobs (`Speech::ProcessTtsJob`).
+    - `ai`: Handles chat workflows (`Chat::ProcessMessageJob`), provider streaming (DeepSeek, Gemini via OpenAI-compatible endpoints), text-to-speech jobs (`Speech::ProcessTtsJob`), and daily model price catalog sync (`Ai::SyncModelPricesJob`).
     - `notifications`: Fans out Action Cable broadcasts, OneSignal push notifications, and Brevo transactional emails via `Notification::DispatchJob` and `Notification::DeliverJob`.
     - `default`: General asynchronous operations.
 - **Thread Maintenance Worker**:
@@ -245,7 +245,7 @@ Permissions follow a clean, four-level administrative model:
 - **AI Workspace**: Queued conversational interface. Displays thinking states, streams responses over WebSocket (`useAiSocket`), and auto-refreshes conversation history.
 - **Speech & Audio**: Streams binary MP3 audio directly from `/v1/speech/tts` without base64 overhead, plays message TTS, and connects live WebSocket audio recognition.
 - **Asset Control Center (`/admin/assets`)**: Live VPS and Garage storage dashboard, multi-file batch uploads with optimistic progress, searchable parent asset picker (`AdminParentAssetSelect`), real-time compression badges, and secondary compression triggers.
-- **Admin AI Control Panel (`/admin/ai`)**: Profiles management (`AdminAiProfileCreatePage`, `AdminAiProfileEditPage`) with provider/model selectors, temperature/token boundaries, and prompt editors; AI execution audit log (`AdminAiRunsPage`) with latency and token breakdowns.
+- **Admin AI Control Panel (`/admin/ai`)**: Profiles management (`AdminAiProfileCreatePage`, `AdminAiProfileEditPage`) with provider/model selectors, temperature/token boundaries, and prompt editors; AI execution audit log (`AdminAiRunsPage`, `AdminAiRunDetailPage`) with latency, token usage, and dynamic cost calculation display ($USD).
 - **AI Discovery & SEO/GEO**: Standardized `/llms.txt`, `/llms-full.txt` (llmstxt.org standard), comprehensive crawler rules in `robots.txt`, and Schema.org `SoftwareApplication` rich results in `index.html`.
 - **Admin Portal Governance**: Route guards (`AdminRootRoute`), client-side permission checks (`usePermissions`), confirmation status badges (`confirmed` / `unconfirmed`), and operational KPI navigation.
 
@@ -729,6 +729,27 @@ For the comprehensive guide and operational matrix, see **[docs/REBRANDING.md](d
 4. **Secret Isolation Protocol (Rule 5 & Law U16)**:
    - Automation **NEVER** touches live gitignored `.env` files (`.env`, `.env.dev`, `.env.prod`, `.env.uat`).
    - Product creators apply live secret values manually using synchronized `.env.example` reference files.
+
+### 11. Strict JSONB Metadata & Contract Typing Standards (Law U14 & Law U15)
+
+All semi-structured metadata attributes across the ecosystem adhere to deterministic, typed parameter contracts (Law U19). Raw string literals for dictionary keys, lifecycle statuses, and loose parameters are strictly forbidden. Direct hash subscripting (`record.metadata["key"]`), gambling, or `.dig` chains on ActiveRecord metadata columns are completely eradicated in favor of typed sub-models. All metadata schemas are explicitly published in OpenAPI / Swagger specifications, eliminating untyped object placeholders.
+
+1. **Backend Typed Metadata Architecture (`rexone-core`)**:
+   - Built on [`ApplicationMetadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/application_metadata.rb) (`ActiveModel::Model` + `ActiveModel::Attributes`) and mounted on ActiveRecord models via the unified `has_metadata` macro (`ActiveRecord::Type::Json`).
+   - **Unified Accessor (`record.metadata`)**: `record.metadata` directly returns the strongly-typed `ApplicationMetadata` sub-model instance. Legacy dual accessors (`typed_metadata`) and parent model delegators (`sync_status`, `app_version`, `component`, `action`, `tts_status`, etc.) are completely eradicated; all metadata fields strictly live inside `record.metadata.*`.
+   - **Strict Whitelisting & Rogue Key Rejection**: `ApplicationMetadata.from_h` dynamically validates all incoming keys against declared model attributes, rejecting unrecognized rogue keys with validation errors on save.
+   - **ActiveJob & Hash Interoperability**: `ApplicationMetadata` provides custom `ActiveJob::Serializers::ObjectSerializer` for seamless background job delivery, along with full hash delegation (`[]`, `[]=`, `key?`, `dig`, `to_h`, `merge`, `symbolize_keys`).
+   - **Format-Discriminated Media Contracts**: Polymorphic media metadata contracts dispatch automatically by format and type (`Asset::VideoMetadata`, `Asset::AudioMetadata`, `Asset::ImageMetadata`, `Asset::SubtitleMetadata`, and general fallback [`Asset::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/metadata.rb)).
+   - Domain sub-models govern all JSONB columns: `Client::Log::Metadata`, `Client::Version::Metadata`, `Feedback::Metadata`, `UserNotification::Metadata`, `Notification::Metadata`, `Notification::InAppData`, `Payment::Coupon::Metadata`, `Payment::Purchase::Metadata`, `Payment::PaymentMethodDetails`, `Ai::Run::Metadata`, `Ai::Profile::Settings`, `Chat::Message::Metadata`, `Chat::Room::Metadata`, `Asset::Metadata`.
+   - **Single Source of Truth (SSOT)**: Sub-models declare all typed attributes and introspection (`attribute_names`), completely eliminating redundant duplicate constant dictionaries (`module Metadata`), dual maintenance, and key drift.
+   - Structural validations enforce that metadata payloads are valid key-value objects and numerical dimensions (width, height, bitrate, duration) are non-negative integers.
+
+2. **Frontend Type Contracts (`rexone-web`)**:
+   - Generic `Record<string, unknown>` and `any` types for domain metadata have been replaced with concrete, strongly typed TypeScript interfaces: `IAssetMetadata`, `IAdminAiRunMetadata`, `ICouponMetadata`, `IPaymentMethodDetails`, `IPaymentMetadata`, `INotificationMetadata`, `IFeedbackMetadata`, and `IClientVersionMetadata`.
+   - Form payloads and API client methods strictly consume these typed structures.
+
+3. **Mobile Type Contracts (`rexone_mobile`)**:
+   - Centralized constant keys (`AssetKeys`, `PaymentKeys`, `AiKeys`, `NotificationKeys`, `FeedbackKeys`) govern all serialization and deserialization, matching backend namespaces with 100% key fidelity.
 
 ---
 

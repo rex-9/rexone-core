@@ -14,6 +14,9 @@ class Payment::Subscription < ApplicationRecord
           inverse_of: false
   has_one :coupon, through: :user_coupon, class_name: "Payment::Coupon"
 
+  has_metadata Payment::Subscription::Metadata
+  has_metadata Payment::PaymentMethodDetails, attribute_name: :payment_method_details
+
   # ===== ENUMS =====
   enum :status, {
     incomplete: PaymentConstants::SubscriptionStatus::INCOMPLETE,
@@ -69,36 +72,36 @@ class Payment::Subscription < ApplicationRecord
   end
 
   def active?
-    status == "active"
+    status == PaymentConstants::SubscriptionStatus::ACTIVE
   end
 
   def canceled?
-    status == "canceled"
+    status == PaymentConstants::SubscriptionStatus::CANCELED
   end
 
   def past_due?
-    status == "past_due"
+    status == PaymentConstants::SubscriptionStatus::PAST_DUE
   end
 
   def trialing?
-    status == "trialing"
+    status == PaymentConstants::SubscriptionStatus::TRIALING
   end
 
   def paused?
-    status == "paused"
+    status == PaymentConstants::SubscriptionStatus::PAUSED
   end
 
   def incomplete?
-    status == "incomplete"
+    status == PaymentConstants::SubscriptionStatus::INCOMPLETE
   end
 
   def ended?
-    status == "canceled" || ended_at.present?
+    status == PaymentConstants::SubscriptionStatus::CANCELED || ended_at.present?
   end
 
   def expired?
-    status == "incomplete_expired" ||
-      status == "canceled" ||
+    status == PaymentConstants::SubscriptionStatus::INCOMPLETE_EXPIRED ||
+      status == PaymentConstants::SubscriptionStatus::CANCELED ||
       (ended_at.present? && ended_at <= Time.current)
   end
 
@@ -111,7 +114,7 @@ class Payment::Subscription < ApplicationRecord
   end
 
   def cancelable?
-    %w[active trialing].include?(status) &&
+    [ PaymentConstants::SubscriptionStatus::ACTIVE, PaymentConstants::SubscriptionStatus::TRIALING ].include?(status) &&
       !scheduled_for_cancellation? &&
       !ended?
   end
@@ -132,11 +135,11 @@ class Payment::Subscription < ApplicationRecord
 
   # Payment method display
   def card_last4
-    payment_method_details&.dig("last4")
+    payment_method_details.last4
   end
 
   def card_brand
-    payment_method_details&.dig("brand") || payment_method_type || "card"
+    payment_method_details.brand.presence || payment_method_type.presence || "card"
   end
 
   def masked_card_number

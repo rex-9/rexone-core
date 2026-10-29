@@ -17,6 +17,9 @@ class Payment::Purchase < ApplicationRecord
           inverse_of: false
   has_one :coupon, through: :user_coupon, class_name: "Payment::Coupon"
 
+  has_metadata Payment::Purchase::Metadata
+  has_metadata Payment::PaymentMethodDetails, attribute_name: :payment_method_details
+
   # ===== ENUMS =====
   # Stripe Payment Intent statuses (sync with Stripe)
   enum :status, {
@@ -52,15 +55,20 @@ class Payment::Purchase < ApplicationRecord
   end
 
   def pending?
-    %w[processing requires_action requires_confirmation requires_payment_method].include?(status)
+    [
+      PaymentConstants::PurchaseStatus::PROCESSING,
+      PaymentConstants::PurchaseStatus::REQUIRES_ACTION,
+      PaymentConstants::PurchaseStatus::REQUIRES_CONFIRMATION,
+      PaymentConstants::PurchaseStatus::REQUIRES_PAYMENT_METHOD
+    ].include?(status)
   end
 
   def failed?
-    status == "canceled"
+    status == PaymentConstants::PurchaseStatus::CANCELED
   end
 
   def requires_action?
-    status == "requires_action"
+    status == PaymentConstants::PurchaseStatus::REQUIRES_ACTION
   end
 
   def stripe?
@@ -126,11 +134,11 @@ class Payment::Purchase < ApplicationRecord
 
   # Payment method display
   def card_last4
-    payment_method_details&.dig("last4")
+    payment_method_details.last4
   end
 
   def card_brand
-    payment_method_details&.dig("brand") || payment_method_type || "card"
+    payment_method_details.brand.presence || payment_method_type.presence || "card"
   end
 
   def masked_card_number

@@ -39,6 +39,7 @@ module IamConstants
     # Module-namespaced resources
     AI_PROFILES           = "ai_profiles".freeze
     AI_RUNS               = "ai_runs".freeze
+    AI_PRICES             = "ai_prices".freeze
     CHAT_ROOMS            = "chat_rooms".freeze
     CHAT_MESSAGES         = "chat_messages".freeze
     CLIENT_LOGS           = "client_logs".freeze
@@ -57,7 +58,7 @@ module IamConstants
 
     ALL = [
       USERS, ACCESSES, ASSETS, NOTIFICATIONS, USER_NOTIFICATIONS, FEEDBACKS, ANALYTICS, SPEECH,
-      AI_PROFILES, AI_RUNS, CHAT_ROOMS, CHAT_MESSAGES,
+      AI_PROFILES, AI_RUNS, AI_PRICES, CHAT_ROOMS, CHAT_MESSAGES,
       CLIENT_LOGS, CLIENT_VERSIONS, CLIENT_USER_VERSIONS,
       IAM_ROLES, IAM_PERMISSIONS, IAM_USER_ROLES,
       PAYMENT_PRODUCTS, PAYMENT_PAYMENTS, PAYMENT_SUBSCRIPTIONS, PAYMENT_PURCHASES,

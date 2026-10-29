@@ -48,8 +48,9 @@ class CreateAiProfilesAndRuns < ActiveRecord::Migration[8.1]
       t.integer :completion_tokens
       t.integer :total_tokens
       t.integer :latency_ms
+      t.decimal :cost, precision: 12, scale: 6, default: 0.0, null: false
       t.text :error
-      t.jsonb :request_metadata, null: false, default: {}
+      t.jsonb :metadata, null: false, default: {}
       t.datetime :discarded_at
       t.uuid :created_by_id
       t.uuid :updated_by_id

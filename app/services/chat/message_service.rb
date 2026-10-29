@@ -76,9 +76,9 @@ module Chat
           chunks.each_with_index do |chunk_text, index|
             metadata = {}
             if split_id
-              metadata[AiConstants::ChunkMetadata::SPLIT_ID] = split_id
-              metadata[AiConstants::ChunkMetadata::CHUNK_INDEX] = index
-              metadata[AiConstants::ChunkMetadata::TOTAL_CHUNKS] = chunks.size
+              metadata[:split_id] = split_id
+              metadata[:chunk_index] = index
+              metadata[:total_chunks] = chunks.size
             end
 
             msg = room.messages.create!(
@@ -111,16 +111,16 @@ module Chat
             is_last = (index == chunks.size - 1)
             metadata = {}
             if split_id
-              metadata[AiConstants::ChunkMetadata::SPLIT_ID] = split_id
-              metadata[AiConstants::ChunkMetadata::CHUNK_INDEX] = index
-              metadata[AiConstants::ChunkMetadata::TOTAL_CHUNKS] = chunks.size
+              metadata[:split_id] = split_id
+              metadata[:chunk_index] = index
+              metadata[:total_chunks] = chunks.size
             end
 
             if is_last
-              metadata["status"] = Chat::Message::STATUSES[:queued]
-              metadata["system_prompt"] = profile.system_prompt
-              metadata["temperature"] = profile.temperature.to_f
-              metadata["max_tokens"] = profile.max_output_tokens
+              metadata[:status] = Chat::Message::STATUSES[:queued]
+              metadata[:system_prompt] = profile.system_prompt
+              metadata[:temperature] = profile.temperature.to_f
+              metadata[:max_tokens] = profile.max_output_tokens
 
               message = room.messages.create!(
                 role: AiConstants::ChatRole::USER,
@@ -162,7 +162,7 @@ module Chat
 
       def process_ai_response!(message_id)
         message = Chat::Message.find(message_id)
-        return if message.ai_status == Chat::Message::STATUSES[:completed]
+        return if message.metadata.status == Chat::Message::STATUSES[:completed]
 
         update_status!(message, Chat::Message::STATUSES[:processing])
         notify_operation(
@@ -177,7 +177,7 @@ module Chat
           profile_key: message.ai_profile&.key || AiConstants::ProfileKey::CHAT_DEFAULT,
           messages: conversation_for(message),
           chat_message: message,
-          request_metadata: { AiConstants::RequestMetadata::ROOM_ID => message.room_id }
+          metadata: { room_id: message.room_id }
         )
 
         raise Ai::Providers::Error, result[:error] if result[:error].present?
@@ -200,7 +200,7 @@ module Chat
       def fail_ai_response!(message_id, error)
         message = Chat::Message.find_by(id: message_id)
         return unless message
-        return if message.ai_status == Chat::Message::STATUSES[:completed]
+        return if message.metadata.status == Chat::Message::STATUSES[:completed]
 
         update_status!(message, Chat::Message::STATUSES[:failed], error: error.message)
 
@@ -239,8 +239,8 @@ module Chat
       end
 
       def update_status!(message, status, error: nil)
-        message.ai_status = status
-        message.ai_error = error if error.present?
+        message.metadata.status = status
+        message.metadata.error = error if error.present?
         message.save!
       end
 
@@ -255,7 +255,7 @@ module Chat
 
         grouped = []
         all_messages.each do |msg|
-          split_id = msg.metadata&.dig(AiConstants::ChunkMetadata::SPLIT_ID)
+          split_id = msg.metadata.split_id
           if split_id.present? && grouped.last && grouped.last[:split_id] == split_id && grouped.last[:role] == msg.role
             grouped.last[:content] = "#{grouped.last[:content]}\n\n#{msg.content}"
           else
@@ -269,7 +269,7 @@ module Chat
 
         payload = grouped.map { |item| { role: item[:role], content: item[:content] } }
 
-        system_prompt = message.ai_system_prompt.presence || message.ai_profile&.system_prompt
+        system_prompt = message.metadata.system_prompt.presence || message.ai_profile&.system_prompt
         payload.unshift(role: AiConstants::ChatRole::SYSTEM, content: system_prompt) if system_prompt.present?
 
         payload
@@ -289,15 +289,15 @@ module Chat
         Chat::Message.transaction do
           chunks.each_with_index do |chunk_text, index|
             metadata = {
-              "status" => Chat::Message::STATUSES[:completed],
-              "model" => model
+              status: Chat::Message::STATUSES[:completed],
+              model: model
             }
             if split_id
-              metadata[AiConstants::ChunkMetadata::SPLIT_ID] = split_id
-              metadata[AiConstants::ChunkMetadata::CHUNK_INDEX] = index
-              metadata[AiConstants::ChunkMetadata::TOTAL_CHUNKS] = chunks.size
+              metadata[:split_id] = split_id
+              metadata[:chunk_index] = index
+              metadata[:total_chunks] = chunks.size
             end
-            metadata["usage"] = usage if index == 0
+            metadata[:usage] = usage if index == 0
 
             msg = user_message.room.messages.create!(
               role: AiConstants::ChatRole::ASSISTANT,
@@ -308,9 +308,9 @@ module Chat
             assistant_messages << msg
           end
 
-          user_message.ai_assistant_message_id = assistant_messages.first.id
-          user_message.ai_status = Chat::Message::STATUSES[:completed]
-          user_message.ai_error = nil
+          user_message.metadata.assistant_message_id = assistant_messages.first.id
+          user_message.metadata.status = Chat::Message::STATUSES[:completed]
+          user_message.metadata.error = nil
           user_message.save!
 
           room = user_message.room

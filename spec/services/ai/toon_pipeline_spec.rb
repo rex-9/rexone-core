@@ -301,7 +301,7 @@ RSpec.describe "Universal Bidirectional JSON <-> TOON AI Pipeline" do
       end
 
       described_class = Ai::Providers::Client
-      described_class.chat(messages: [ { role: "user", content: 'Payload: {"raw": "json"}' } ])
+      described_class.chat(provider: "deepseek", messages: [ { role: "user", content: 'Payload: {"raw": "json"}' } ])
     end
   end
 

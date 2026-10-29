@@ -16,6 +16,8 @@ module Ai
     validates :max_output_tokens, :context_max_tokens, :history_max_messages, :timeout_seconds,
               numericality: { only_integer: true, greater_than: 0 }
 
+    has_metadata Ai::Profile::Settings, attribute_name: :settings
+
     scope :enabled, -> { where(enabled: true) }
   end
 end

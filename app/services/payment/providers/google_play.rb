@@ -95,7 +95,9 @@ module Payment
           }.compact,
           amount_received: product.unit_amount,
           paid_at: Time.current,
-          metadata: payload
+          metadata: {
+            "order_id" => order_id
+          }
         )
         purchase.save!
 
@@ -139,7 +141,7 @@ module Payment
             "purchase_token" => purchase_token,
             "package_name" => package_name
           }.compact,
-          metadata: payload
+          metadata: {}
         )
         subscription.save!
 

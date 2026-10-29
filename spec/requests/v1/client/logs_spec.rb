@@ -84,6 +84,47 @@ RSpec.describe "V1 Client Logs API", type: :request do
       expect(Client::Log.find(response_data["id"]).version_id).to be_nil
     end
 
+    it "stores and strictly types metadata" do
+      post "/v1/client/logs",
+           params: {
+             log: {
+               message: "Crash in checkout",
+               severity: "error",
+               platform: "web",
+               environment: "production",
+               metadata: {
+                 component: "CheckoutModal",
+                 action: "pay",
+                 attempt: 2
+               }
+             }
+           }
+
+      expect(response).to have_http_status(:created)
+      log = Client::Log.find(response_data["id"])
+      expect(log.metadata.component).to eq("CheckoutModal")
+      expect(log.metadata.action).to eq("pay")
+      expect(log.metadata.attempt).to eq(2)
+    end
+
+    it "rejects unrecognized rogue keys in metadata" do
+      post "/v1/client/logs",
+           params: {
+             log: {
+               message: "Rogue crash",
+               severity: "error",
+               platform: "web",
+               environment: "production",
+               metadata: {
+                 rogue_key: "forbidden"
+               }
+             }
+           }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_body.dig("status", "error")).to include("unrecognized metadata key")
+    end
+
     it "increments occurrence count for identical existing logs" do
       log = create(
         :log_client,

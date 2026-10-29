@@ -74,6 +74,7 @@ Rails.application.routes.draw do
     namespace :ai do
       resources :profiles, only: %i[index show new create edit update destroy]
       resources :runs, only: %i[index show destroy]
+      resources :prices, only: %i[index show new create edit update destroy]
     end
 
     resources :notifications, only: %i[index show new create edit update destroy]

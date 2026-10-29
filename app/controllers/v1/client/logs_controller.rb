@@ -25,10 +25,10 @@ class V1::Client::LogsController < V1::ApplicationController
       if raw_version
         matched_version = Client::Version.lookup_by_number(raw_version)
         log_client.version_id = matched_version&.id
-        log_client.context = (log_client.context || {}).merge("app_version" => raw_version)
+        log_client.metadata.app_version = raw_version
       end
       log_client.user = current_user if current_user.present?
-      log_client.severity ||= "error"
+      log_client.severity ||= LogConstants::Severity::ERROR
       log_client.request_id ||= request.request_id
       log_client.url ||= request.referer || request.url
       log_client.method ||= request.method
@@ -145,7 +145,7 @@ class V1::Client::LogsController < V1::ApplicationController
       :message, :severity, :platform, :environment,
       :app_version, :browser, :user_agent, :os, :os_version, :device,
       :url, :method,
-      context: {},
+      metadata: {},
       stack_trace: [],
       local_storage_keys: [],
       session_storage_keys: [],
@@ -196,10 +196,10 @@ end
 #   "log": {
 #     "message": "Failed to fetch user data: Network request failed", # required
 #     "severity": "error", # required
-#     "context": {
+#     "metadata": {
 #       "component": "UserDashboard",
 #       "action": "loadUserProfile",
-#       "userId": "usr_123",
+#       "user_id": "usr_123",
 #       "attempt": 3,
 #       "endpoint": "/api/v1/users/current"
 #     },

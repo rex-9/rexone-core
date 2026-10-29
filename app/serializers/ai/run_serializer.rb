@@ -16,9 +16,13 @@ class Ai::RunSerializer < ApplicationSerializer
              :total_tokens,
              :latency_ms,
              :error,
-             :request_metadata,
+             :metadata,
              :created_at,
              :updated_at
+
+  attribute :cost do |run|
+    run.cost&.to_f || 0.0
+  end
 
   attribute :profile_key do |run|
     run.profile&.key

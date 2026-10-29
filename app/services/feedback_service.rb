@@ -73,7 +73,7 @@ class FeedbackService
       end
     end
 
-    def create(params, user: nil, platform: "web")
+    def create(params, user: nil, platform: AuthConstants::Platform::WEB)
       content = params[:content].to_s.strip
       rating = params[:rating].presence&.to_i
 
@@ -83,7 +83,7 @@ class FeedbackService
       raw_version = params[:app_version].to_s.strip.presence
       matched_version = Client::Version.lookup_by_number(raw_version) if raw_version
       meta = (params[:metadata] || {}).to_h
-      meta["app_version"] = raw_version if raw_version.present? && matched_version.nil?
+      meta[:app_version] = raw_version if raw_version.present? && matched_version.nil?
 
       feedback = Feedback.new(
         user: user,

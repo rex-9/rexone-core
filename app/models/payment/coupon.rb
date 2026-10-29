@@ -41,6 +41,8 @@ class Payment::Coupon < ApplicationRecord
   validate :validate_immutable_fields, on: :update
   validate :validate_failed_status_cannot_be_active, on: :update
 
+  has_metadata Payment::Coupon::Metadata
+
   # ===== CALLBACKS =====
   before_validation :normalize_code
   before_discard :deactivate
@@ -69,20 +71,16 @@ class Payment::Coupon < ApplicationRecord
     coupon_type_fixed?
   end
 
-  def sync_status
-    metadata&.dig("status").to_s.downcase.presence
-  end
-
   def sync_processing?
-    sync_status == PaymentConstants::SyncStatus::PROCESSING
+    metadata.processing?
   end
 
   def sync_succeeded?
-    %w[succeeded success].include?(sync_status)
+    metadata.succeeded?
   end
 
   def sync_failed?
-    %w[failed failure].include?(sync_status)
+    metadata.failed?
   end
 
   def calculate_discount(product)

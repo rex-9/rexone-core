@@ -87,7 +87,7 @@ module NotificationService
                 message: user_notification.message,
                 link: user_notification.link,
                 clients: user_notification.clients,
-                data: user_notification.metadata,
+                data: user_notification.metadata.to_h,
                 read_at: user_notification.read_at,
                 created_at: user_notification.created_at.iso8601
               }.compact

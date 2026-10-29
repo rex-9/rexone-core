@@ -28,9 +28,12 @@ class Client::Log < ApplicationRecord
   belongs_to :resolved_by, class_name: "User", optional: true
   belongs_to :version, class_name: "Client::Version", optional: true
 
+  has_metadata Client::Log::Metadata
+
   # ===== VALIDATIONS =====
   validates :message, presence: true
   validates :severity, presence: true
+  validate :validate_json
 
   # ===== SCOPES =====
   scope :by_severity, ->(severity) { where(severity: severity) }
@@ -42,7 +45,7 @@ class Client::Log < ApplicationRecord
   scope :authenticated, -> { where.not(user_id: nil) }
   scope :recent, -> { order(created_at: :desc).limit(100) }
   scope :for_today, -> { where("created_at >= ?", Time.current.beginning_of_day) }
-  scope :with_storage_issues, -> { where("local_storage_keys != '[]' OR session_storage_keys != '[]'") }
+  scope :with_storage_issues, -> { where("cardinality(local_storage_keys) > 0 OR cardinality(session_storage_keys) > 0") }
 
   # ===== INSTANCE METHODS =====
   def resolved?
@@ -65,11 +68,11 @@ class Client::Log < ApplicationRecord
     "[#{severity.upcase}] #{message.truncate(100)}"
   end
 
-  def formatted_context
-    return "" if context.blank?
-    JSON.pretty_generate(context)
+  def formatted_metadata
+    return "" if metadata.blank?
+    JSON.pretty_generate(metadata)
   rescue
-    context.to_s
+    metadata.to_s
   end
 
   def has_storage_issues?
@@ -91,5 +94,20 @@ class Client::Log < ApplicationRecord
 
   def unresolve!
     update!(resolved_at: nil, resolved_by: nil)
+  end
+
+  private
+
+  def validate_json
+    if cookies.present?
+      if !cookies.is_a?(Hash)
+        errors.add(:cookies, "must be a valid key-value object")
+      elsif !cookies.values.all? { |v| v.is_a?(String) || v.is_a?(Numeric) || v.nil? }
+        errors.add(:cookies, "must contain only scalar string or numeric values")
+      end
+    end
+    errors.add(:stack_trace, "must be a valid array") if stack_trace.present? && !stack_trace.is_a?(Array)
+    errors.add(:local_storage_keys, "must be a valid array") if local_storage_keys.present? && !local_storage_keys.is_a?(Array)
+    errors.add(:session_storage_keys, "must be a valid array") if session_storage_keys.present? && !session_storage_keys.is_a?(Array)
   end
 end

@@ -10,7 +10,7 @@ class Client::LogDashboard < Administrate::BaseDashboard
   ATTRIBUTE_TYPES = {
     id: Field::String,
     browser: Field::String,
-    context: Field::String.with_options(searchable: false),
+    metadata: Field::String.with_options(searchable: false),
     cookies: Field::String.with_options(searchable: false),
     created_by_id: Field::String,
     creator: Field::BelongsTo,
@@ -55,7 +55,7 @@ class Client::LogDashboard < Administrate::BaseDashboard
     platform
     version
     browser
-    context
+    metadata
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES
@@ -64,7 +64,7 @@ class Client::LogDashboard < Administrate::BaseDashboard
     id
     version
     browser
-    context
+    metadata
     cookies
     created_by_id
     creator
@@ -102,7 +102,7 @@ class Client::LogDashboard < Administrate::BaseDashboard
   FORM_ATTRIBUTES = %i[
     version
     browser
-    context
+    metadata
     cookies
     created_by_id
     creator

@@ -41,12 +41,10 @@ module Payment
       ::Payment::Coupon.where(id: coupon_ids, active: false).find_each do |coupon|
         next if coupon.sync_succeeded?
 
-        new_metadata = (coupon.metadata || {}).merge(
-          "status" => PaymentConstants::SyncStatus::FAILED,
-          "sync_error" => "Exhausted retries: #{error.message}",
-          "failed_at" => Time.current.iso8601
-        )
-        coupon.update_columns(active: false, metadata: new_metadata)
+        coupon.metadata.status = PaymentConstants::SyncStatus::FAILED
+        coupon.metadata.sync_error = "Exhausted retries: #{error.message}"
+        coupon.metadata.failed_at = Time.current.iso8601
+        coupon.update_columns(active: false, metadata: coupon.metadata.to_h)
       end
     end
 
@@ -55,14 +53,14 @@ module Payment
     def sync_coupon(coupon)
       stripe_id = CouponService.ensure_stripe_coupon(coupon, raise_on_error: true)
       if stripe_id.present?
-        new_metadata = (coupon.metadata || {}).merge(
-          "status" => PaymentConstants::SyncStatus::SUCCEEDED,
-          "synced_at" => Time.current.iso8601
-        ).except("sync_error", "failed_at")
+        coupon.metadata.status = PaymentConstants::SyncStatus::SUCCEEDED
+        coupon.metadata.synced_at = Time.current.iso8601
+        coupon.metadata.sync_error = nil
+        coupon.metadata.failed_at = nil
 
         coupon.update_columns(
           active: true,
-          metadata: new_metadata
+          metadata: coupon.metadata.to_h
         )
       else
         mark_as_failed(coupon, "Stripe coupon creation returned empty ID")
@@ -76,14 +74,13 @@ module Payment
     end
 
     def mark_as_failed(coupon, error_message)
-      new_metadata = (coupon.metadata || {}).merge(
-        "status" => PaymentConstants::SyncStatus::FAILED,
-        "sync_error" => error_message,
-        "failed_at" => Time.current.iso8601
-      )
+      coupon.metadata.status = PaymentConstants::SyncStatus::FAILED
+      coupon.metadata.sync_error = error_message
+      coupon.metadata.failed_at = Time.current.iso8601
+
       coupon.update_columns(
         active: false,
-        metadata: new_metadata
+        metadata: coupon.metadata.to_h
       )
       Rails.logger.error("[SyncBatchCouponsJob] Failed to sync coupon #{coupon.code}: #{error_message}")
     end

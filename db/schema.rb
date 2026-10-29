@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_21_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_21_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "uuid-ossp"
@@ -39,9 +39,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_000001) do
     t.index ["status"], name: "index_accesses_on_status"
     t.index ["undiscarded_by_id"], name: "index_accesses_on_undiscarded_by_id"
     t.index ["updated_by_id"], name: "index_accesses_on_updated_by_id"
-    t.index ["user_id", "product_id"], name: "index_accesses_on_user_id_and_product_id"
+    t.index ["user_id", "product_id"], name: "index_accesses_on_user_id_and_product_id", unique: true
     t.index ["user_id", "status"], name: "index_accesses_on_user_id_and_status"
     t.index ["user_id"], name: "index_accesses_on_user_id"
+  end
+
+  create_table "ai_prices", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "provider", null: false
+    t.string "model", null: false
+    t.string "currency", default: "usd", null: false
+    t.decimal "input_cost_per_million", precision: 12, scale: 6, default: "0.0", null: false
+    t.decimal "cached_cost_per_million", precision: 12, scale: 6, default: "0.0", null: false
+    t.decimal "output_cost_per_million", precision: 12, scale: 6, default: "0.0", null: false
+    t.datetime "discarded_at"
+    t.uuid "created_by_id"
+    t.uuid "updated_by_id"
+    t.uuid "discarded_by_id"
+    t.datetime "undiscarded_at"
+    t.uuid "undiscarded_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["discarded_at"], name: "index_ai_prices_on_discarded_at"
+    t.index ["provider", "model"], name: "index_ai_prices_on_provider_and_model", unique: true, where: "(discarded_at IS NULL)"
   end
 
   create_table "ai_profiles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -85,8 +104,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_000001) do
     t.integer "completion_tokens"
     t.integer "total_tokens"
     t.integer "latency_ms"
+    t.decimal "cost", precision: 12, scale: 6, default: "0.0", null: false
     t.text "error"
-    t.jsonb "request_metadata", default: {}, null: false
+    t.jsonb "metadata", default: {}, null: false
     t.datetime "discarded_at"
     t.uuid "created_by_id"
     t.uuid "updated_by_id"
@@ -191,10 +211,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_000001) do
   create_table "client_logs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "message", null: false
     t.string "severity", default: "error", null: false
-    t.jsonb "context", default: {}
-    t.jsonb "stack_trace", default: []
-    t.jsonb "local_storage_keys", default: []
-    t.jsonb "session_storage_keys", default: []
+    t.jsonb "metadata", default: {}, null: false
+    t.text "stack_trace", default: [], array: true
+    t.string "local_storage_keys", default: [], array: true
+    t.string "session_storage_keys", default: [], array: true
     t.jsonb "cookies", default: {}
     t.string "platform"
     t.string "environment"
@@ -1012,6 +1032,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_000001) do
 
   create_table "rails_pulse_requests", force: :cascade do |t|
     t.bigint "route_id", null: false, comment: "Link to the route"
+    t.string "method", comment: "HTTP method used for this request (e.g., GET, POST)"
     t.decimal "duration", precision: 15, scale: 6, null: false, comment: "Total request duration in milliseconds"
     t.integer "status", null: false, comment: "HTTP status code (e.g., 200, 500)"
     t.boolean "is_error", default: false, null: false, comment: "True if status >= 500"
@@ -1022,7 +1043,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_000001) do
     t.integer "response_size_bytes", comment: "HTTP response body size in bytes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "method", comment: "HTTP method used for this specific request (e.g., GET, POST)"
     t.index ["created_at", "route_id"], name: "idx_requests_for_aggregation"
     t.index ["occurred_at"], name: "index_rails_pulse_requests_on_occurred_at"
     t.index ["request_uuid"], name: "index_rails_pulse_requests_on_request_uuid", unique: true
@@ -1031,12 +1051,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_000001) do
   end
 
   create_table "rails_pulse_routes", force: :cascade do |t|
-    t.string "path", null: false, comment: "Request path (e.g., /posts/index)"
+    t.text "http_methods", null: false, comment: "JSON array of HTTP methods accepted by this route (e.g., [\"GET\",\"POST\"])"
+    t.string "path", null: false, comment: "Normalized request path (e.g., /posts/:id)"
     t.text "tags", comment: "JSON array of tags for filtering and categorization"
+    t.string "controller_action", comment: "Rails controller and action handling this route (e.g., articles#show)"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "controller_action", comment: "Rails controller and action handling this route (e.g., admin/users#show)"
-    t.text "http_methods", null: false, comment: "JSON array of HTTP methods accepted by this route (e.g., [\"GET\",\"POST\"])"
     t.index ["controller_action", "path"], name: "index_rails_pulse_routes_on_controller_action_and_path", unique: true
     t.index ["path"], name: "index_rails_pulse_routes_on_path"
     t.index ["path"], name: "index_rails_pulse_routes_on_path_without_action", unique: true, where: "(controller_action IS NULL)"
@@ -1358,6 +1378,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_000001) do
   add_foreign_key "accesses", "users", column: "discarded_by_id"
   add_foreign_key "accesses", "users", column: "undiscarded_by_id"
   add_foreign_key "accesses", "users", column: "updated_by_id"
+  add_foreign_key "ai_prices", "users", column: "created_by_id"
+  add_foreign_key "ai_prices", "users", column: "discarded_by_id"
+  add_foreign_key "ai_prices", "users", column: "undiscarded_by_id"
+  add_foreign_key "ai_prices", "users", column: "updated_by_id"
   add_foreign_key "ai_profiles", "users", column: "created_by_id"
   add_foreign_key "ai_profiles", "users", column: "discarded_by_id"
   add_foreign_key "ai_profiles", "users", column: "undiscarded_by_id"

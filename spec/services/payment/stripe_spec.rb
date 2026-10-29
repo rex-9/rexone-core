@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Payment::Providers::Stripe do
   describe "Stripe 2026-08-26.dahlia subscription mapping" do
-    let(:service) { described_class.new }
+    let!(:service) { described_class.new }
     let(:stripe_subscription) do
       Stripe::Subscription.construct_from(
         id: "sub_snapshot",
@@ -767,7 +767,7 @@ RSpec.describe Payment::Providers::Stripe do
           coupon_type: :percentage,
           amount: 20,
           currency: "usd",
-          metadata: { tier: "vip" }
+          metadata: { status: "succeeded" }
         )
 
         expect(result[:data]).to be_a(Payment::Coupon)
@@ -777,7 +777,7 @@ RSpec.describe Payment::Providers::Stripe do
             id: "WELCOME20",
             name: "Welcome 20% Off",
             percent_off: 20,
-            metadata: { "tier" => "vip" }
+            metadata: { "status" => "succeeded" }
           )
         )
       end
@@ -810,13 +810,13 @@ RSpec.describe Payment::Providers::Stripe do
         coupon = create(:payment_coupon, provider_coupon_id: "STRIPE_CPN_1", title: "Old Title")
         allow(Stripe::Coupon).to receive(:update)
 
-        result = service.update_coupon(coupon.id, title: "New Title", metadata: { "env" => "staging" })
+        result = service.update_coupon(coupon.id, title: "New Title", metadata: { "status" => "succeeded" })
 
         expect(result[:data].reload.title).to eq("New Title")
         expect(Stripe::Coupon).to have_received(:update).with(
           "STRIPE_CPN_1",
           name: "New Title",
-          metadata: { "env" => "staging" }
+          metadata: { "status" => "succeeded" }
         )
       end
     end
@@ -844,7 +844,7 @@ RSpec.describe Payment::Providers::Stripe do
           max_redemptions: 100,
           redeem_by: 1_790_000_000,
           valid: true,
-          metadata: { "channel" => "email" }
+          metadata: { "status" => "succeeded" }
         )
       end
 
@@ -855,7 +855,7 @@ RSpec.describe Payment::Providers::Stripe do
         expect(coupon.title).to eq("Summer 50% Off")
         expect(coupon.amount).to eq(50)
         expect(coupon.percentage?).to be(true)
-        expect(coupon.metadata).to eq({ "channel" => "email" })
+        expect(coupon.metadata.status).to eq("succeeded")
       end
 
       it "links existing coupon by code on coupon.created webhook without error" do
@@ -865,7 +865,7 @@ RSpec.describe Payment::Providers::Stripe do
 
         expect(existing.reload.provider_coupon_id).to eq("SUMMER50")
         expect(existing.title).to eq("Summer 50% Off")
-        expect(existing.metadata).to eq({ "channel" => "email" })
+        expect(existing.metadata.status).to eq("succeeded")
       end
 
       it "updates coupon from coupon.updated webhook" do
@@ -874,13 +874,13 @@ RSpec.describe Payment::Providers::Stripe do
           id: "SUMMER50",
           name: "Updated Summer Title",
           valid: true,
-          metadata: { "ref" => "twitter" }
+          metadata: { "status" => "succeeded" }
         )
 
         service.send(:handle_coupon_updated, updated_obj)
 
         expect(coupon.reload.title).to eq("Updated Summer Title")
-        expect(coupon.metadata).to eq({ "ref" => "twitter" })
+        expect(coupon.metadata.status).to eq("succeeded")
       end
 
       it "permanently deletes coupon from coupon.deleted webhook" do

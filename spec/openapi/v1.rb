@@ -311,7 +311,7 @@ module Openapi
           expires_at: DATE_TIME,
           referrer_id: UUID.merge(nullable: true),
           active: { type: :boolean, default: true },
-          metadata: { type: :object, nullable: true },
+          metadata: ref(:coupon_metadata),
           target_role_ids: { type: :array, items: UUID, default: [] },
           target_user_ids: { type: :array, items: UUID, default: [] },
           target_user_emails: { type: :array, items: { type: :string, format: :email }, default: [] },
@@ -326,7 +326,7 @@ module Openapi
           max_usage_per_user: { type: :integer, minimum: 0, default: 1 },
           referrer_id: UUID.merge(nullable: true),
           active: { type: :boolean, default: true },
-          metadata: { type: :object, nullable: true },
+          metadata: ref(:coupon_metadata),
           target_role_ids: { type: :array, items: UUID, default: [] },
           target_user_ids: { type: :array, items: UUID, default: [] },
           target_user_emails: { type: :array, items: { type: :string, format: :email }, default: [] },
@@ -349,7 +349,7 @@ module Openapi
           expires_at: DATE_TIME,
           referrer_id: UUID.merge(nullable: true),
           active: { type: :boolean, default: true },
-          metadata: { type: :object, nullable: true },
+          metadata: ref(:coupon_metadata),
           target_role_ids: { type: :array, items: UUID, default: [] },
           target_user_ids: { type: :array, items: UUID, default: [] },
           target_user_emails: { type: :array, items: { type: :string, format: :email }, default: [] },
@@ -421,7 +421,7 @@ module Openapi
           device: { type: :string, nullable: true, example: "MacBookPro" },
           browser: { type: :string, nullable: true, example: "Chrome" },
           page: { type: :string, nullable: true, example: "/home" },
-          metadata: { type: :object, nullable: true, additionalProperties: true }
+          metadata: ref(:feedback_metadata)
         )
       ),
       admin_feedback_update_request: object(
@@ -448,7 +448,7 @@ module Openapi
           size_bytes: { type: :integer, nullable: true },
           duration_secs: { type: :integer, nullable: true },
           extension: { type: :string, nullable: true },
-          metadata: { type: :object, nullable: true }
+          metadata: ref(:asset_metadata)
         )
       ),
       asset_update_request: object(
@@ -466,7 +466,7 @@ module Openapi
           size_bytes: { type: :integer, nullable: true },
           duration_secs: { type: :integer, nullable: true },
           extension: { type: :string, nullable: true },
-          metadata: { type: :object, nullable: true }
+          metadata: ref(:asset_metadata)
         )
       ),
       user_role_request: object(
@@ -477,12 +477,16 @@ module Openapi
         required: [ :user_id ],
         user_id: UUID.merge(description: "User UUID to assign to the path role.")
       ),
-      client_log_context: {
-        type: :object,
-        description: "Free-form, JSON-safe diagnostic context supplied by the client. Do not include secrets or tokens.",
-        additionalProperties: true,
-        example: { component: "CheckoutPage", action: "loadSession", attempt: 2 }
-      },
+      client_log_metadata: object(
+        app_version: { type: :string, nullable: true },
+        component: { type: :string, nullable: true },
+        action: { type: :string, nullable: true },
+        endpoint: { type: :string, nullable: true },
+        attempt: { type: :integer, nullable: true },
+        user_id: UUID.merge(nullable: true),
+        status_code: { type: :integer, nullable: true },
+        error_type: { type: :string, nullable: true }
+      ),
       client_log_request: object(
         required: [ :log ],
         log: object(
@@ -503,7 +507,7 @@ module Openapi
           device: { type: :string, nullable: true },
           url: { type: :string, format: :uri, nullable: true },
           method: { type: :string, example: "POST", nullable: true },
-          context: ref(:client_log_context),
+          metadata: ref(:client_log_metadata),
           stack_trace: { type: :array, items: { type: :string } },
           local_storage_keys: { type: :array, items: { type: :string } },
           session_storage_keys: { type: :array, items: { type: :string } },
@@ -631,7 +635,7 @@ module Openapi
         receipt_data: { type: :string, nullable: true, description: "Receipt payload or signed data." },
         package_name: { type: :string, nullable: true, description: "App package identifier." },
         coupon_code: { type: :string, nullable: true, description: "Optional coupon or promo code applied." },
-        metadata: { type: :object, nullable: true, description: "Optional raw metadata or client payload." }
+        metadata: ref(:purchase_metadata)
       ),
       ai_chat_request: object(
         required: [ :message ],
@@ -813,6 +817,76 @@ module Openapi
         model: { type: :string, nullable: true, description: "Provider model identifier used for the response." },
         tts_status: { type: :string, enum: STATUSES, nullable: true, description: "Async TTS state for assistant messages." },
         tts_error: { type: :string, nullable: true, description: "Last TTS failure message when tts_status is failed or retrying." }
+      ),
+      coupon_metadata: object(
+        status: { type: :string, enum: PaymentConstants::SyncStatus::ALL, nullable: true },
+        sync_error: { type: :string, nullable: true },
+        failed_at: DATE_TIME,
+        synced_at: DATE_TIME
+      ),
+      purchase_metadata: object(
+        coupon_id: UUID.merge(nullable: true),
+        order_id: { type: :string, nullable: true }
+      ),
+      subscription_metadata: object(
+        coupon_id: UUID.merge(nullable: true),
+        cancel_reason: { type: :string, nullable: true }
+      ),
+      ai_run_metadata: object(
+        endpoint: { type: :string, nullable: true },
+        room_id: UUID.merge(nullable: true),
+        language: { type: :string, nullable: true },
+        analysis_type: { type: :string, nullable: true }
+      ),
+      client_version_metadata: object(
+        release_notes: { type: :string, nullable: true },
+        min_os_version: { type: :string, nullable: true },
+        force_update: { type: :boolean, default: false }
+      ),
+      feedback_metadata: object(
+        app_version: { type: :string, nullable: true },
+        screen: { type: :string, nullable: true },
+        route: { type: :string, nullable: true },
+        locale: { type: :string, nullable: true },
+        user_agent: { type: :string, nullable: true },
+        viewport: { type: :string, nullable: true }
+      ),
+      asset_metadata: object(
+        width: { type: :integer, nullable: true },
+        height: { type: :integer, nullable: true },
+        duration_secs: { type: :integer, nullable: true },
+        bitrate: { type: :integer, nullable: true },
+        channels: { type: :integer, nullable: true },
+        sample_rate: { type: :integer, nullable: true },
+        fps: { type: :number, nullable: true },
+        codec: { type: :string, nullable: true },
+        language: { type: :string, nullable: true },
+        content: { type: :string, nullable: true },
+        original_filename: { type: :string, nullable: true }
+      ),
+      chat_room_metadata: object(
+        topic: { type: :string, nullable: true },
+        context_summary: { type: :string, nullable: true }
+      ),
+      user_notification_metadata: object(
+        operation_id: { type: :string, nullable: true },
+        operation_type: { type: :string, nullable: true },
+        operation_status: { type: :string, nullable: true },
+        link: { type: :string, nullable: true },
+        type: { type: :string, nullable: true },
+        source: { type: :string, nullable: true },
+        user_name: { type: :string, nullable: true },
+        product_name: { type: :string, nullable: true },
+        active_until: { type: :string, nullable: true },
+        amount: { type: :string, nullable: true },
+        currency: { type: :string, nullable: true },
+        asset_id: UUID.merge(nullable: true),
+        status: { type: :string, nullable: true },
+        size_bytes: { type: :integer, nullable: true },
+        url: { type: :string, format: :uri, nullable: true },
+        message_id: UUID.merge(nullable: true),
+        room_id: UUID.merge(nullable: true),
+        notification_id: UUID.merge(nullable: true)
       ),
       response_status: object(
         required: %i[code success message],
@@ -1171,7 +1245,7 @@ module Openapi
         duration_secs: { type: :integer, nullable: true },
         source: { type: :string, enum: [ AssetConstants::AssetSource::UPLOAD, AssetConstants::AssetSource::GOOGLE ] },
         status: { type: :string, enum: MediaConstants::Status::ALL },
-        metadata: { type: :object, description: "Arbitrary JSONB metadata" },
+        metadata: ref(:asset_metadata),
         assetable_type: { type: :string, nullable: true, description: "Polymorphic owner model, e.g. chat_message or user." },
         assetable_id: UUID.merge(nullable: true),
         parent_asset_id: UUID.merge(nullable: true),
@@ -1186,7 +1260,7 @@ module Openapi
                 name: { type: :string },
                 title: { type: :string, nullable: true },
                 description: { type: :string, nullable: true },
-                metadata: { type: :object, description: "Arbitrary JSONB metadata" },
+                metadata: ref(:asset_metadata),
                 url: { type: :string, format: :uri },
                 type: { type: :string, enum: AssetConstants::AssetType::ALL },
                 format: { type: :string, enum: AssetConstants::AssetFormat::ALL, nullable: true },
@@ -1208,7 +1282,7 @@ module Openapi
                   name: { type: :string },
                   title: { type: :string, nullable: true },
                   description: { type: :string, nullable: true },
-                  metadata: { type: :object, description: "Arbitrary JSONB metadata" },
+                  metadata: ref(:asset_metadata),
                   url: { type: :string, format: :uri },
                   type: { type: :string, enum: AssetConstants::AssetType::ALL },
                   format: { type: :string, enum: AssetConstants::AssetFormat::ALL, nullable: true },
@@ -1231,11 +1305,7 @@ module Openapi
         id: UUID,
         user_id: UUID,
         title: { type: :string },
-        metadata: {
-          type: :object,
-          description: "Server-owned room metadata. No public request currently accepts room metadata.",
-          additionalProperties: true
-        },
+        metadata: ref(:chat_room_metadata),
         message_count: { type: :integer },
         last_message: { type: :string, nullable: true },
         created_at: DATE_TIME,

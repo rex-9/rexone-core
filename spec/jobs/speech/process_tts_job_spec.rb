@@ -50,10 +50,8 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
       assetable_id: message.id
     )
     expect(asset.status).to eq("pending")
-    expect(message).to have_attributes(
-      tts_status: "completed",
-      tts_error: nil
-    )
+    expect(message.metadata.tts_status).to eq("completed")
+    expect(message.metadata.tts_error).to be_nil
     expect(SpeechService::Client).to have_received(:text_to_speech).with(text: "Hello there")
     expect(StorageService::Client).to have_received(:upload).with(
       anything,
@@ -115,7 +113,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
     expect { described_class.perform_now(message.id) }.not_to change(Asset, :count)
 
     expect(existing.reload.url).to eq("https://cdn.example.com/new.mp3")
-    expect(message.reload.tts_status).to eq("completed")
+    expect(message.reload.metadata.tts_status).to eq("completed")
   end
 
   it "is idempotent once TTS has completed" do
@@ -134,16 +132,16 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
       described_class.perform_now(message.id)
     end.to have_enqueued_job(described_class).with(message.id)
 
-    expect(message.reload.tts_status).to eq("retrying")
-    expect(message.tts_error).to eq("temporarily unavailable")
+    expect(message.reload.metadata.tts_status).to eq("retrying")
+    expect(message.metadata.tts_error).to eq("temporarily unavailable")
   end
 
   it "records unexpected terminal failures and alerts the user" do
     allow(SpeechService::Client).to receive(:text_to_speech).and_raise(RuntimeError, "broken")
 
     expect { described_class.perform_now(message.id) }.to raise_error(RuntimeError, "broken")
-    expect(message.reload.tts_status).to eq("failed")
-    expect(message.tts_error).to eq("broken")
+    expect(message.reload.metadata.tts_status).to eq("failed")
+    expect(message.metadata.tts_error).to eq("broken")
     expect(NotificationService::Center).to have_received(:notify).with(
       hash_including(
         data: hash_including(type: "tts_failed", assets: []),

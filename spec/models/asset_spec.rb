@@ -46,6 +46,41 @@ RSpec.describe Asset, type: :model do
     expect(asset.reload.metadata).to eq({ "width" => 1920, "height" => 1080 })
   end
 
+  describe "Format-specific typed metadata" do
+    it "casts video assets to Asset::VideoMetadata with video attributes" do
+      asset = create(:asset, format: "video", url: "https://example.com/clip.mp4", metadata: { "width" => 1920, "height" => 1080, "fps" => 60.0, "codec" => "h264", "bitrate" => 5000, "duration_secs" => 120 })
+      expect(asset.reload.metadata).to be_a(Asset::VideoMetadata)
+      expect(asset.metadata.width).to eq(1920)
+      expect(asset.metadata.height).to eq(1080)
+      expect(asset.metadata.fps).to eq(60.0)
+      expect(asset.metadata.codec).to eq("h264")
+      expect(asset.metadata.bitrate).to eq(5000)
+      expect(asset.metadata.duration_secs).to eq(120)
+    end
+
+    it "casts audio assets to Asset::AudioMetadata with audio attributes" do
+      asset = create(:asset, format: "audio", url: "https://example.com/song.mp3", metadata: { "bitrate" => 320, "channels" => 2, "sample_rate" => 44100, "duration_secs" => 240 })
+      expect(asset.reload.metadata).to be_a(Asset::AudioMetadata)
+      expect(asset.metadata.bitrate).to eq(320)
+      expect(asset.metadata.channels).to eq(2)
+      expect(asset.metadata.sample_rate).to eq(44100)
+      expect(asset.metadata.duration_secs).to eq(240)
+    end
+
+    it "casts subtitle assets to Asset::SubtitleMetadata with subtitle attributes" do
+      asset = create(:asset, type: "subtitle", format: "subtitle", url: "https://example.com/sub.srt", metadata: { "content" => "WEBVTT", "language" => "en" })
+      expect(asset.reload.metadata).to be_a(Asset::SubtitleMetadata)
+      expect(asset.metadata.content).to eq("WEBVTT")
+      expect(asset.metadata.language).to eq("en")
+    end
+
+    it "rejects invalid unrecognized keys for the asset's specific format" do
+      asset = build(:asset, format: "audio", url: "https://example.com/song.mp3", metadata: { "width" => 1920 })
+      expect(asset).not_to be_valid
+      expect(asset.errors[:metadata]).to include("unrecognized metadata key 'width'")
+    end
+  end
+
   it "infers extension and format from the URL and keeps unclassified as nil" do
     asset = build(:asset, url: "https://example.com/report.pdf", format: nil)
     asset.validate

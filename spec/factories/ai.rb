@@ -21,6 +21,15 @@ FactoryBot.define do
     provider { AiConstants::Provider::DEEPSEEK }
     model { "deepseek-chat" }
     status { AiConstants::RunStatus::PROCESSING }
-    request_metadata { {} }
+    metadata { {} }
+  end
+
+  factory :ai_price, class: "Ai::Price" do
+    provider { AiConstants::Provider::DEEPSEEK }
+    model { "deepseek-chat" }
+    currency { AiConstants::Pricing::DEFAULT_CURRENCY }
+    input_cost_per_million { 0.14 }
+    cached_cost_per_million { 0.014 }
+    output_cost_per_million { 0.28 }
   end
 end

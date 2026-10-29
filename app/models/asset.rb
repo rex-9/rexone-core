@@ -35,9 +35,11 @@ class Asset < ApplicationRecord
   validate :only_one_thumbnail_per_parent
   validate :child_asset_type_immutable, on: :update
   validate :parent_asset_validations
+  validate :validate_metadata
 
   before_validation :set_default_title
   before_validation :set_extension_and_format
+  before_save :sync_metadata
   after_destroy_commit :delete_from_storage, if: :uploaded_file?
 
   scope :uploaded, -> { where(source: AssetConstants::AssetSource::UPLOAD) }
@@ -75,6 +77,39 @@ class Asset < ApplicationRecord
 
   def display_name
     title.presence || name
+  end
+
+  def metadata
+    target_class = metadata_class
+    raw = read_attribute(:metadata) || {}
+
+    if @metadata_instance && @metadata_instance.is_a?(target_class)
+      @metadata_instance
+    else
+      @metadata_instance = target_class.from_h(raw.is_a?(ApplicationMetadata) ? raw.to_h : raw)
+    end
+  end
+
+  def metadata=(val)
+    @metadata_instance = nil
+    if val.is_a?(ApplicationMetadata)
+      write_attribute(:metadata, val.to_h)
+    elsif val.is_a?(Hash)
+      write_attribute(:metadata, val.deep_stringify_keys)
+    elsif val.nil?
+      write_attribute(:metadata, {})
+    else
+      write_attribute(:metadata, val)
+    end
+  end
+
+  def metadata_class
+    Asset::Metadata.for(format: format, type: type)
+  end
+
+  def reload(*)
+    @metadata_instance = nil
+    super
   end
 
   def storage_url(options = {})
@@ -206,6 +241,23 @@ class Asset < ApplicationRecord
   end
 
   private
+
+  def validate_metadata
+    meta = metadata
+    return if meta.blank? || meta.valid?
+
+    meta.errors.each do |error|
+      if error.attribute == :base
+        errors.add(:metadata, error.message)
+      else
+        errors.add("metadata.#{error.attribute}", error.message)
+      end
+    end
+  end
+
+  def sync_metadata
+    write_attribute(:metadata, metadata.to_h)
+  end
 
   def compression_cache_key
     "asset_compression_count:#{id}"

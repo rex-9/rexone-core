@@ -36,7 +36,7 @@ RSpec.describe Chat::ProcessMessageJob, type: :job do
       "status" => "completed",
       "assistant_message_id" => assistant.id
     )
-    expect(user_message.ai_error).to be_nil
+    expect(user_message.metadata.error).to be_nil
     expect(room.reload.title).to eq("How are you?")
     expect(Ai::Providers::Client).to have_received(:chat).with(
       messages: [ { role: "user", content: "How are you?" } ],

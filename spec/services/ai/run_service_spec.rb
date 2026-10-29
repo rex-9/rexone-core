@@ -32,6 +32,7 @@ RSpec.describe Ai::RunService do
       expect(run.prompt_tokens).to eq(15)
       expect(run.completion_tokens).to eq(8)
       expect(run.total_tokens).to eq(23)
+      expect(run.cost).to be >= 0
       expect(run.latency_ms).to be >= 0
     end
 

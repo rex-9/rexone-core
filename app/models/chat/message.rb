@@ -12,19 +12,7 @@ module Chat
     }.freeze
     PROCESSING_STATUSES = AiConstants::ChatStatus::PROCESSING_SET
 
-    store_accessor :metadata,
-                   :status,
-                   :system_prompt,
-                   :temperature,
-                   :max_tokens,
-                   :assistant_message_id,
-                   :error,
-                   :usage,
-                   :model,
-                   prefix: :ai
-
-    store_accessor :metadata, :tts_status, :tts_error
-    store_accessor :metadata, :chunk_index, :total_chunks, :split_id
+    has_metadata Chat::Message::Metadata
 
     belongs_to :room, class_name: "Chat::Room"
     belongs_to :ai_profile, class_name: "Ai::Profile", optional: true
@@ -51,11 +39,11 @@ module Chat
     end
 
     def ai_processing?
-      user? && ai_status.in?(PROCESSING_STATUSES)
+      user? && metadata.status.in?(PROCESSING_STATUSES)
     end
 
     def chunked?
-      split_id.present?
+      metadata.split_id.present?
     end
 
     def tts_asset

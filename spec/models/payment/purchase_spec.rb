@@ -21,7 +21,7 @@ RSpec.describe Payment::Purchase, type: :model do
     intent = OpenStruct.new(
       status: "succeeded", amount: 1_000, currency: "usd",
       amount_received: 1_000, amount_capturable: 0,
-      client_secret: "secret", metadata: { "order" => "1" }
+      client_secret: "secret", metadata: { "order_id" => "1" }
     )
     purchase.sync_with_payment_intent(intent)
     expect(purchase.reload).to have_attributes(

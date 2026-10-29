@@ -7,6 +7,8 @@ module Chat
     belongs_to :user
     has_many :messages, class_name: "Chat::Message", dependent: :destroy
 
+    has_metadata Chat::Room::Metadata
+
     validates :title, presence: true
 
     scope :recent, -> { order(SortConstants::Columns::CHAT_ROOM.first => SortConstants::Order::DESC) }

@@ -61,6 +61,11 @@ production:
     command: "Ai::Run.where('created_at < ?', 90.days.ago).delete_all"
     schedule: at 4am every Sunday
 
+  # Sync AI model pricing table from upstream open registry - Daily at 4:30am
+  sync_ai_model_prices:
+    class: Ai::SyncModelPricesJob
+    schedule: at 4:30am every day
+
   # Example: Send weekly reports
   # weekly_report:
   #   class: WeeklyReportJob
@@ -112,6 +117,10 @@ development:
   clear_old_ai_runs:
     command: "Ai::Run.where('created_at < ?', 90.days.ago).delete_all"
     schedule: at 4am every Sunday
+
+  sync_ai_model_prices:
+    class: Ai::SyncModelPricesJob
+    schedule: at 4:30am every day
 
 test:
   # No recurring jobs in test

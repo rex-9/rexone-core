@@ -18,7 +18,7 @@ RSpec.describe Chat::MessageService do
 
         expect(result.message).to be_persisted
         expect(result.message.role).to eq(AiConstants::ChatRole::USER)
-        expect(result.message.ai_status).to eq(Chat::Message::STATUSES[:queued])
+        expect(result.message.metadata.status).to eq(Chat::Message::STATUSES[:queued])
         expect(result.message.ai_profile).to eq(profile)
         expect(result.job).to be_present
       }.to have_enqueued_job(Chat::ProcessMessageJob)
@@ -47,15 +47,15 @@ RSpec.describe Chat::MessageService do
 
       expect(result.messages.size).to be > 1
       expect(result.message).to eq(result.messages.last)
-      expect(result.message.ai_status).to eq(Chat::Message::STATUSES[:queued])
+      expect(result.message.metadata.status).to eq(Chat::Message::STATUSES[:queued])
 
-      split_ids = result.messages.map { |m| m.metadata[AiConstants::ChunkMetadata::SPLIT_ID] }
+      split_ids = result.messages.map { |m| m.metadata.split_id }
       expect(split_ids.uniq.size).to eq(1)
       expect(split_ids.first).to be_present
 
       result.messages.each_with_index do |m, idx|
-        expect(m.metadata[AiConstants::ChunkMetadata::CHUNK_INDEX]).to eq(idx)
-        expect(m.metadata[AiConstants::ChunkMetadata::TOTAL_CHUNKS]).to eq(result.messages.size)
+        expect(m.metadata.chunk_index).to eq(idx)
+        expect(m.metadata.total_chunks).to eq(result.messages.size)
       end
     end
   end
@@ -66,7 +66,7 @@ RSpec.describe Chat::MessageService do
         role: AiConstants::ChatRole::USER,
         content: "Hello",
         ai_profile: profile,
-        ai_status: Chat::Message::STATUSES[:queued]
+        metadata: { "status" => Chat::Message::STATUSES[:queued] }
       )
     end
 
@@ -80,8 +80,8 @@ RSpec.describe Chat::MessageService do
 
       described_class.process_ai_response!(user_message.id)
 
-      expect(user_message.reload.ai_status).to eq(Chat::Message::STATUSES[:completed])
-      assistant_message = Chat::Message.find(user_message.ai_assistant_message_id)
+      expect(user_message.reload.metadata.status).to eq(Chat::Message::STATUSES[:completed])
+      assistant_message = Chat::Message.find(user_message.metadata.assistant_message_id)
       expect(assistant_message.role).to eq(AiConstants::ChatRole::ASSISTANT)
       expect(assistant_message.content).to eq("Hello! How can I assist you today?")
     end
@@ -97,12 +97,12 @@ RSpec.describe Chat::MessageService do
 
       described_class.process_ai_response!(user_message.id)
 
-      expect(user_message.reload.ai_status).to eq(Chat::Message::STATUSES[:completed])
+      expect(user_message.reload.metadata.status).to eq(Chat::Message::STATUSES[:completed])
       assistant_messages = room.messages.where(role: AiConstants::ChatRole::ASSISTANT).chronological
       expect(assistant_messages.size).to be > 1
-      expect(user_message.ai_assistant_message_id).to eq(assistant_messages.first.id)
+      expect(user_message.metadata.assistant_message_id).to eq(assistant_messages.first.id)
 
-      split_ids = assistant_messages.map { |m| m.metadata[AiConstants::ChunkMetadata::SPLIT_ID] }
+      split_ids = assistant_messages.map { |m| m.metadata.split_id }
       expect(split_ids.uniq.size).to eq(1)
       expect(split_ids.first).to be_present
     end
@@ -117,8 +117,7 @@ RSpec.describe Chat::MessageService do
         role: AiConstants::ChatRole::USER,
         content: "Part 2 of question.",
         ai_profile: profile,
-        ai_status: Chat::Message::STATUSES[:queued],
-        metadata: { "split_id" => "split-xyz", "chunk_index" => 1, "total_chunks" => 2 }
+        metadata: { "status" => Chat::Message::STATUSES[:queued], "split_id" => "split-xyz", "chunk_index" => 1, "total_chunks" => 2 }
       )
 
       fake_response = {
@@ -149,7 +148,7 @@ RSpec.describe Chat::MessageService do
       expect(message).to be_persisted
       expect(message.role).to eq(AiConstants::ChatRole::USER)
       expect(message.content).to eq("Hello in direct chat")
-      expect(message.ai_status).to be_nil
+      expect(message.metadata.status).to be_nil
     end
 
     it "chunks long content into multiple messages sharing split_id" do
@@ -162,7 +161,7 @@ RSpec.describe Chat::MessageService do
 
       expect(messages).to be_an(Array)
       expect(messages.size).to be > 1
-      split_ids = messages.map { |m| m.metadata[AiConstants::ChunkMetadata::SPLIT_ID] }
+      split_ids = messages.map { |m| m.metadata.split_id }
       expect(split_ids.uniq.size).to eq(1)
     end
   end

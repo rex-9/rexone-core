@@ -24,11 +24,11 @@ module Ai
         Ai::Run.includes(:profile, :user, :chat_message).find(id)
       end
 
-      def execute_chat(user:, feature:, profile_key:, messages:, chat_message: nil, prompt_values: {}, request_metadata: {})
+      def execute_chat(user:, feature:, profile_key:, messages:, chat_message: nil, prompt_values: {}, metadata: {})
         profile = Ai::ProfileService.resolve!(profile_key)
         prepared_messages = with_system_prompt(profile, messages, prompt_values)
         llm_messages = Ai::ToonService.prepare_messages_for_llm(prepared_messages)
-        run = create_run!(user, profile, feature, llm_messages, chat_message, request_metadata)
+        run = create_run!(user, profile, feature, llm_messages, chat_message, metadata)
         started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
         result = Ai::Providers::Client.chat(
@@ -41,15 +41,15 @@ module Ai
         )
 
         latency_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000).round
-        choice = result.dig("choices", 0) || {}
-        message_obj = choice["message"] || {}
-        output = message_obj["content"].to_s
+        choice = result.dig(AiConstants::ResponseKeys::CHOICES, 0) || {}
+        message_obj = choice[AiConstants::ResponseKeys::MESSAGE] || {}
+        output = message_obj[AiConstants::ResponseKeys::CONTENT].to_s
 
         if result[:error].present?
           fail_run!(run, result[:error], latency_ms, result)
         elsif output.blank?
-          finish_reason = choice["finish_reason"]
-          error_msg = if finish_reason == "length"
+          finish_reason = choice[AiConstants::ResponseKeys::FINISH_REASON]
+          error_msg = if finish_reason == AiConstants::ResponseKeys::LENGTH
             "AI provider token limit exceeded during generation (finish_reason: length)"
           else
             ::MessageService::Ai.t(::MessageService::Ai::NO_RESPONSE)
@@ -58,7 +58,7 @@ module Ai
           result[:error] = error_msg
         else
           converted_output = Ai::ToonService.toon_to_json(output)
-          message_obj["content"] = converted_output
+          message_obj[AiConstants::ResponseKeys::CONTENT] = converted_output
           complete_run!(run, result, latency_ms)
         end
         result
@@ -73,12 +73,12 @@ module Ai
       def with_system_prompt(profile, messages, prompt_values)
         prompt = Ai::ProfileService.prompt_for(profile, **prompt_values)
         return messages if prompt.blank?
-        return messages if messages.any? { |msg| msg[:role] == AiConstants::ChatRole::SYSTEM || msg["role"] == AiConstants::ChatRole::SYSTEM }
+        return messages if messages.any? { |msg| msg[:role] == AiConstants::ChatRole::SYSTEM || msg[AiConstants::ResponseKeys::ROLE] == AiConstants::ChatRole::SYSTEM }
 
         [ { role: AiConstants::ChatRole::SYSTEM, content: prompt }, *messages ]
       end
 
-      def create_run!(user, profile, feature, messages, chat_message, request_metadata)
+      def create_run!(user, profile, feature, messages, chat_message, metadata)
         Ai::Run.create!(
           user: user,
           profile: profile,
@@ -88,38 +88,78 @@ module Ai
           model: profile.model,
           status: AiConstants::RunStatus::PROCESSING,
           input_messages_count: messages.size,
-          input_chars: messages.sum { |msg| msg[:content].to_s.length + msg["content"].to_s.length },
-          request_metadata: request_metadata
+          input_chars: messages.sum { |msg| msg[:content].to_s.length + msg[AiConstants::ResponseKeys::CONTENT].to_s.length },
+          metadata: metadata
         )
       end
 
       def complete_run!(run, result, latency_ms)
-        usage = result["usage"] || {}
-        choice = result.dig("choices", 0) || {}
-        message_obj = choice["message"] || {}
-        output = message_obj["content"].to_s
+        usage = result[AiConstants::UsageKeys::USAGE] || {}
+        choice = result.dig(AiConstants::ResponseKeys::CHOICES, 0) || {}
+        message_obj = choice[AiConstants::ResponseKeys::MESSAGE] || {}
+        output = message_obj[AiConstants::ResponseKeys::CONTENT].to_s
+        prompt_tokens = usage[AiConstants::UsageKeys::PROMPT_TOKENS].to_i
+        completion_tokens = usage[AiConstants::UsageKeys::COMPLETION_TOKENS].to_i
+        cached_tokens = extract_cached_tokens(usage)
+
+        cost = Ai::CostCalculator.calculate(
+          provider: run.provider,
+          model: run.model,
+          prompt_tokens: prompt_tokens,
+          completion_tokens: completion_tokens,
+          cached_tokens: cached_tokens
+        )
+
         run.update!(
           status: AiConstants::RunStatus::COMPLETED,
           output_chars: output.length,
-          prompt_tokens: usage["prompt_tokens"],
-          completion_tokens: usage["completion_tokens"],
-          total_tokens: usage["total_tokens"],
+          prompt_tokens: prompt_tokens,
+          completion_tokens: completion_tokens,
+          total_tokens: usage[AiConstants::UsageKeys::TOTAL_TOKENS] || (prompt_tokens + completion_tokens),
+          cost: cost,
           latency_ms: latency_ms,
           error: nil
         )
       end
 
       def fail_run!(run, error, latency_ms, result = nil)
-        usage = result ? (result["usage"] || {}) : {}
+        usage = result ? (result[AiConstants::UsageKeys::USAGE] || {}) : {}
+        prompt_tokens = usage[AiConstants::UsageKeys::PROMPT_TOKENS].to_i
+        completion_tokens = usage[AiConstants::UsageKeys::COMPLETION_TOKENS].to_i
+        cached_tokens = extract_cached_tokens(usage)
+
+        cost = if prompt_tokens.positive? || completion_tokens.positive?
+          Ai::CostCalculator.calculate(
+            provider: run.provider,
+            model: run.model,
+            prompt_tokens: prompt_tokens,
+            completion_tokens: completion_tokens,
+            cached_tokens: cached_tokens
+          )
+        else
+          0.0
+        end
+
         run.update!(
           status: AiConstants::RunStatus::FAILED,
           output_chars: 0,
-          prompt_tokens: usage["prompt_tokens"],
-          completion_tokens: usage["completion_tokens"],
-          total_tokens: usage["total_tokens"],
+          prompt_tokens: prompt_tokens,
+          completion_tokens: completion_tokens,
+          total_tokens: usage[AiConstants::UsageKeys::TOTAL_TOKENS] || (prompt_tokens + completion_tokens),
+          cost: cost,
           latency_ms: latency_ms,
           error: error
         )
+      end
+
+      def extract_cached_tokens(usage)
+        return 0 unless usage.is_a?(Hash)
+
+        usage.dig(AiConstants::UsageKeys::PROMPT_TOKENS_DETAILS, AiConstants::UsageKeys::CACHED_TOKENS) ||
+          usage[AiConstants::UsageKeys::CACHE_READ_INPUT_TOKENS] ||
+          usage.dig(AiConstants::UsageKeys::USAGE_METADATA, AiConstants::UsageKeys::CACHED_CONTENT_TOKEN_COUNT) ||
+          usage[AiConstants::UsageKeys::CACHED_TOKENS] ||
+          0
       end
     end
   end

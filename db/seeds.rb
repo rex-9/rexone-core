@@ -100,6 +100,10 @@ puts "🌱 Seeding AI profiles..."
 Ai::ProfileService.create_defaults!
 puts "✅ #{Ai::Profile.count} AI profiles ready"
 
+puts "🌱 Syncing live AI pricing registry..."
+Ai::PriceSyncService.sync!
+puts "✅ #{Ai::Price.count} AI model prices ready"
+
 # ===== INITIAL CLIENT VERSION =====
 puts "🌱 Seeding initial client version..."
 initial_version = Client::Version.find_or_initialize_by(number: "1.0.0")
@@ -123,4 +127,5 @@ puts "  - #{Iam::RolePermission.count} role-permission assignments"
 puts "  - #{Iam::UserRole.count} user-role assignments"
 puts "  - #{User.count} users"
 puts "  - #{Ai::Profile.count} AI profiles"
+puts "  - #{Ai::Price.count} AI model prices"
 puts "  - #{Client::Version.count} client versions"

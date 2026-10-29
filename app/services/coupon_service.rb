@@ -137,11 +137,6 @@ class CouponService
 
       stripe_params[:max_redemptions] = coupon.max_usage if coupon.max_usage.to_i.positive?
       stripe_params[:redeem_by] = coupon.expires_at.to_i if coupon.expires_at.present?
-      if coupon.metadata.present? && coupon.metadata.is_a?(Hash)
-        sync_keys = %w[status sync_error failed_at synced_at]
-        domain_metadata = coupon.metadata.except(*sync_keys)
-        stripe_params[:metadata] = domain_metadata.transform_values(&:to_s) if domain_metadata.present?
-      end
 
       begin
         stripe_coupon = Stripe::Coupon.create(stripe_params)

@@ -125,9 +125,9 @@ RSpec.describe Payment::Coupon, type: :model do
     coupon = create(:payment_coupon, title: "Original Title", amount: 20, coupon_type: :percentage)
 
     # Allowed updates
-    expect(coupon.update(title: "Updated Title", active: false, metadata: { "tier" => "gold" })).to be(true)
+    expect(coupon.update(title: "Updated Title", active: false, metadata: { "status" => "succeeded" })).to be(true)
     expect(coupon.reload.title).to eq("Updated Title")
-    expect(coupon.metadata).to eq({ "tier" => "gold" })
+    expect(coupon.metadata.status).to eq("succeeded")
 
     # Prohibited financial updates
     expect(coupon.update(amount: 30)).to be(false)

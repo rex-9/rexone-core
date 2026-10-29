@@ -26,6 +26,8 @@ class Client::Version < ApplicationRecord
   validates :android_build_number, numericality: { only_integer: true, greater_than: 0 },
             uniqueness: true, allow_nil: true
 
+  has_metadata Client::Version::Metadata
+
   scope :live, -> {
     where(status: VersionConstants::Status::PUBLISHED)
       .where("released_at IS NULL OR released_at <= ?", Time.current)

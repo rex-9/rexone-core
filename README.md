@@ -437,6 +437,21 @@ For example, queued AI chat orchestrates message chunking, multi-provider execut
 
 The same principle applies to product-specific functionality: the foundation provides the structure, while the product remains free to define its own domain, workflows, and experience.
 
+#### 🛡️ Deterministic Typed Metadata Architecture & Zero Loose Code (Laws U14, U15 & U19)
+
+Every semi-structured payload stored in JSONB columns (`metadata`, `payment_method_details`, `settings`, `in_app_data`) is strictly governed by:
+- **Unified `has_metadata` Architecture**: Mounted directly on `ApplicationRecord` models (`has_metadata MetadataClass`). Uses `ActiveRecord::Type::Json` to natively cast and serialize the column as a strongly-typed `ApplicationMetadata` sub-model instance.
+- **Single Source of Truth & Zero Delegator Leakage**: `record.metadata` directly returns the typed sub-model instance. Legacy dual accessors (`typed_metadata`) and parent model delegators (`sync_status`, `app_version`, `component`, `action`, `tts_status`, etc.) are completely wiped out; all metadata fields strictly live inside `record.metadata.*`.
+- **Deterministic Typed Sub-models (`ApplicationMetadata`)**: Backed by `ActiveModel::Model` and `ActiveModel::Attributes`, providing automatic type coercion, getter/setter contracts, and strict key validation that rejects unknown or rogue keys upon save.
+- **Format-Discriminated Media Contracts**: Polymorphic format-specific sub-models ([`Asset::VideoMetadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/video_metadata.rb), [`Asset::AudioMetadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/audio_metadata.rb), [`Asset::ImageMetadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/image_metadata.rb), [`Asset::SubtitleMetadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/subtitle_metadata.rb), and general fallback [`Asset::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/metadata.rb)) ensure video, audio, image, and subtitle metadata contracts are strictly enforced with clean, human-readable typing and documentation.
+- **Zero Loose Hash Access & Zero `.dig` Gambling**: Direct hash subscripting (`record.metadata["key"]`), gambling, or `.dig` chains on ActiveRecord metadata columns are completely eradicated across the codebase in favor of clean typed method contracts.
+- **ActiveJob & Hash Interoperability**: `ApplicationMetadata` provides custom `ActiveJob::Serializers::ObjectSerializer` for transparent background worker payloads alongside full hash delegation (`[]`, `[]=`, `key?`, `dig`, `to_h`, `merge`, `symbolize_keys`).
+- **Single Source of Truth (SSOT)**: Sub-models declare all typed attributes and introspection (`attribute_names`), completely eradicating duplicate string constant dictionaries, dual maintenance, and key drift.
+- **Zero Raw String Literals**: Dictionary keys, status values, and lifecycle steps are frozen symbols/constants.
+- **OpenAPI / Swagger Transparency**: All metadata properties are explicitly typed and documented in OpenAPI specifications and Swagger UI, eradicating untyped objects and "Arbitrary JSONB" placeholders.
+- **Cross-Platform Contract Parity**: Strongly typed TypeScript interfaces in `rexone-web` and typed Dart key mappings in `rexone_mobile`.
+
+
 ### Background processing & Concurrency Architecture
 
 Solid Queue is part of the application architecture, not an afterthought. RexOne leverages a **hybrid Fiber + Thread concurrency model** powered by Ruby Fibers (`async`), Rails 8 fiber isolation (`config.active_support.isolation_level = :fiber`), and Solid Queue 1.7.0:
@@ -499,7 +514,7 @@ cd ../rexone-web && ./scripts/dev.sh
 Built-in operational consoles are mounted directly into the engine, secured by administrative authorization and centralized through `AdminAuthService` (with automated attempt cooldowns, IP failure lockouts, and `Rack::Attack` rate limiting):
 
 - **Resource Administration**: `/admin` (Administrate engine for core models, users, and credentials)
-- **AI Profiles & Diagnostics**: `/admin/ai/profiles` (prompt models) & `/admin/ai/runs` (telemetry audit)
+- **AI Profiles, Runs & Pricing**: `/admin/ai/profiles` (prompt models), `/admin/ai/runs` (telemetry & cost audit), & `/admin/ai/prices` (model pricing catalog)
 - **Application Performance Monitoring (APM)**: `/admin/pulse` (request, SQL query, and job latency metrics)
 - **Error Tracking**: `/admin/red` (Rails Error Dashboard with stack traces and request parameters)
 - **Queue & Real-Time Inspection**: `/admin/queue` (Solid Queue), `/admin/cache`, and `/admin/cable`
@@ -552,6 +567,7 @@ All logs and database monitoring tables are governed by automated retention poli
 | **Solid Queue (Finished Jobs)**      | Continuous batch clean                         | Hourly at minute :12 | `clear_solid_queue_finished_jobs`                    |
 | **Solid Cache (Expired Entries)**    | **24 hours** (`1.day.ago`)                     | Daily at 02:00 AM    | `clear_solid_cache_expired_entries`                  |
 | **AI Telemetry (`Ai::Run`)**         | **90 days** (`90.days.ago`)                    | Sundays at 04:00 AM  | `clear_old_ai_runs`                                  |
+| **AI Model Pricing Sync**            | Upstream open pricing registry sync            | Daily at 04:30 AM    | `Ai::SyncModelPricesJob`                             |
 | **Payment Webhook Records**          | **30 days**                                    | Daily at 03:30 AM    | `clear_old_payment_webhook_events`                   |
 | **User Notifications**               | **30 days** (read / discarded)                 | Daily at 02:30 AM    | `notification_cleanup`                               |
 | **Docker Images & Build Cache**      | **7 days** (168 hours)                         | Weekly host cron     | [`./scripts/vps_cleanup.sh`](scripts/vps_cleanup.sh) |

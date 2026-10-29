@@ -13,12 +13,18 @@ RSpec.describe Ai::Providers::Client do
     expect(result.dig("choices", 0, "message", "content")).to eq("Gemini response")
   end
 
-  it "defaults to DeepSeek provider when no provider is specified" do
+  it "routes to DeepSeek provider when requested" do
     fake_deepseek = instance_double(Ai::Providers::DeepSeek)
     allow(Ai::Providers::DeepSeek).to receive(:new).and_return(fake_deepseek)
     allow(fake_deepseek).to receive(:chat).and_return("choices" => [ { "message" => { "content" => "DeepSeek response" } } ])
 
-    result = described_class.chat(messages: [ { role: "user", content: "hi" } ])
+    result = described_class.chat(provider: "deepseek", messages: [ { role: "user", content: "hi" } ])
     expect(result.dig("choices", 0, "message", "content")).to eq("DeepSeek response")
+  end
+
+  it "raises ArgumentError when provider is missing" do
+    expect {
+      described_class.chat(messages: [ { role: "user", content: "hi" } ])
+    }.to raise_error(ArgumentError, /missing keyword: :?provider/)
   end
 end

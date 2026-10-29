@@ -7,12 +7,12 @@ class CreateClientLogs < ActiveRecord::Migration[8.1]
       t.string :severity, null: false, default: "error"               # debug | info | warning | error | critical
 
       # ===== CONTEXT & METADATA =====
-      t.jsonb :context, default: {}                                   # Arbitrary context
-      t.jsonb :stack_trace, default: []                               # Stack trace lines
+      t.jsonb :metadata, default: {}, null: false                     # Deterministic client log metadata
+      t.text :stack_trace, array: true, default: []                   # Stack trace lines
 
       # ===== STORAGE SNAPSHOT =====
-      t.jsonb :local_storage_keys, default: []                        # Keys in localStorage
-      t.jsonb :session_storage_keys, default: []                      # Keys in sessionStorage
+      t.string :local_storage_keys, array: true, default: []          # Keys in localStorage
+      t.string :session_storage_keys, array: true, default: []        # Keys in sessionStorage
       t.jsonb :cookies, default: {}                                   # Cookie key-value pairs
 
       # ===== PLATFORM & APP =====

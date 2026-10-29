@@ -21,7 +21,7 @@ class Speech::ProcessTtsJob < ApplicationJob
 
   def perform(message_id)
     message = Chat::Message.find(message_id)
-    return if message.tts_status == Chat::Message::STATUSES[:completed]
+    return if message.metadata.tts_status == Chat::Message::STATUSES[:completed]
 
     update_tts!(message, Chat::Message::STATUSES[:processing])
 
@@ -113,7 +113,7 @@ class Speech::ProcessTtsJob < ApplicationJob
   def mark_as_failed!(message_id, error)
     message = Chat::Message.find_by(id: message_id)
     return unless message
-    return if message.tts_status == Chat::Message::STATUSES[:completed]
+    return if message.metadata.tts_status == Chat::Message::STATUSES[:completed]
 
     update_tts!(message, Chat::Message::STATUSES[:failed], tts_error: error.message)
 
@@ -144,8 +144,8 @@ class Speech::ProcessTtsJob < ApplicationJob
   end
 
   def update_tts!(message, status, tts_error: :unchanged)
-    message.tts_status = status
-    message.tts_error = tts_error unless tts_error == :unchanged
+    message.metadata.tts_status = status
+    message.metadata.tts_error = tts_error unless tts_error == :unchanged
     message.save!
   end
 

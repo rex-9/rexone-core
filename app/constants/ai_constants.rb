@@ -7,10 +7,50 @@ module AiConstants
   end
 
   module Provider
-    DEEPSEEK = "deepseek".freeze
-    GEMINI   = "gemini".freeze
+    DEEPSEEK  = "deepseek".freeze
+    GEMINI    = "gemini".freeze
+    OPENAI    = "openai".freeze
+    ANTHROPIC = "anthropic".freeze
 
-    ALL = [ DEEPSEEK, GEMINI ].freeze
+    ALL = [ DEEPSEEK, GEMINI, OPENAI, ANTHROPIC ].freeze
+  end
+
+  module Pricing
+    DEFAULT_CURRENCY = "usd".freeze
+    DECIMAL_PRECISION = 6
+    PER_MILLION = 1_000_000
+    DEFAULT_CACHE_DISCOUNT_RATIO = 0.5
+    PRICING_REGISTRY_URL = "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json".freeze
+    SYNC_OPEN_TIMEOUT = 5
+    SYNC_READ_TIMEOUT = 10
+
+    module RegistryKeys
+      PROVIDER = "litellm_provider".freeze
+      INPUT_COST = "input_cost_per_token".freeze
+      CACHED_INPUT_COST = "cache_read_input_token_cost".freeze
+      OUTPUT_COST = "output_cost_per_token".freeze
+    end
+  end
+
+  module UsageKeys
+    USAGE                      = "usage".freeze
+    PROMPT_TOKENS              = "prompt_tokens".freeze
+    COMPLETION_TOKENS          = "completion_tokens".freeze
+    TOTAL_TOKENS               = "total_tokens".freeze
+    CACHED_TOKENS              = "cached_tokens".freeze
+    PROMPT_TOKENS_DETAILS      = "prompt_tokens_details".freeze
+    CACHE_READ_INPUT_TOKENS    = "cache_read_input_tokens".freeze
+    USAGE_METADATA             = "usage_metadata".freeze
+    CACHED_CONTENT_TOKEN_COUNT = "cached_content_token_count".freeze
+  end
+
+  module ResponseKeys
+    CHOICES       = "choices".freeze
+    MESSAGE       = "message".freeze
+    CONTENT       = "content".freeze
+    FINISH_REASON = "finish_reason".freeze
+    LENGTH        = "length".freeze
+    ROLE          = "role".freeze
   end
 
   module ProfileKey
@@ -56,12 +96,6 @@ module AiConstants
     ALL = [ CHAT, SUMMARIZE, TRANSLATE, ANALYZE ].freeze
   end
 
-  module RequestMetadata
-    ENDPOINT      = "endpoint".freeze
-    ROOM_ID       = "room_id".freeze
-    LANGUAGE      = "language".freeze
-    ANALYSIS_TYPE = "analysis_type".freeze
-  end
 
   module RunStatus
     PROCESSING = "processing".freeze
@@ -71,11 +105,6 @@ module AiConstants
     ALL = [ PROCESSING, COMPLETED, FAILED ].freeze
   end
 
-  module ChunkMetadata
-    CHUNK_INDEX  = "chunk_index".freeze
-    TOTAL_CHUNKS = "total_chunks".freeze
-    SPLIT_ID     = "split_id".freeze
-  end
 
   module Defaults
     TEMPERATURE          = 0.7

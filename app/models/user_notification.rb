@@ -6,6 +6,8 @@ class UserNotification < ApplicationRecord
   belongs_to :user
   belongs_to :notification, optional: true
 
+  has_metadata UserNotification::Metadata
+
   # ===== VALIDATIONS =====
   validates :title, presence: true
   validates :message, presence: true

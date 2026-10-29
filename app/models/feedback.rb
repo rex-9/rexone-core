@@ -24,6 +24,8 @@ class Feedback < ApplicationRecord
   validates :status, inclusion: { in: FeedbackConstants::Status::ALL }
   validates :platform, inclusion: { in: AuthConstants::Platform::ALL }
 
+  has_metadata Feedback::Metadata
+
   # ===== SCOPES =====
   scope :recent, -> { order(created_at: :desc) }
   scope :by_status, ->(status) { where(status: status) if status.present? }

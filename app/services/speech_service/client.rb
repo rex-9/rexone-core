@@ -12,8 +12,8 @@ module SpeechService
                to: :azure_provider
 
       def enqueue_message_tts(message)
-        message.tts_status = Chat::Message::STATUSES[:queued]
-        message.tts_error = nil
+        message.metadata.tts_status = Chat::Message::STATUSES[:queued]
+        message.metadata.tts_error = nil
         message.save!
 
         job = Speech::ProcessTtsJob.perform_later(message.id)

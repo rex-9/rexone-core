@@ -51,6 +51,7 @@ This application is built upon the **RexOne Ecosystem** (`rex-9`). These are imm
   - [U16. Immutable Ecosystem Lineage \& Universal Moral Attribution Code](#u16-immutable-ecosystem-lineage--universal-moral-attribution-code)
   - [U17. Zero-JSON LLM Pipeline Law: LLM Never Eats JSON, LLM Never Spits JSON](#u17-zero-json-llm-pipeline-law-llm-never-eats-json-llm-never-spits-json)
   - [U18. Universal Contrast Hierarchy & Foreground Inversion Law (`bg secondary ➔ text primary`, `text secondary ➔ bg primary`)](#u18-universal-contrast-hierarchy--foreground-inversion-law-bg-secondary--text-primary-text-secondary--bg-primary)
+  - [U19. Deterministic Metadata Transparency & Anti-Gambling Law](#u19-deterministic-metadata-transparency--anti-gambling-law)
 - [⚙️ Part I: RexOne Core Architectural Laws (Backend / Rails API)](#️-part-i-rexone-core-architectural-laws-backend--rails-api)
   - [C1. Strict 3-Tier MCS Architecture (Model, Controller, Service)](#c1-strict-3-tier-mcs-architecture-model-controller-service)
   - [C2. Standardized JSON:API Envelope](#c2-standardized-jsonapi-envelope)
@@ -220,6 +221,21 @@ The following foundational principles apply universally across all three reposit
 - **Zero Illegible Theme Overrides**:
   - Reusable components (`AppButton`, `AppBadge`, `AppCard`, `Button`, `Badge`) MUST enforce this contract internally through deterministic `DefaultTextStyle`, `IconTheme`, and explicit foreground tokens.
   - Generic theme cascade defaults (such as raw `onSurface` white/black) are strictly forbidden from overriding or masking the semantic foreground contract of a component.
+
+### U19. Deterministic Metadata Transparency & Anti-Gambling Law
+
+- **Supreme Anti-Gambling Mandate**: Database metadata columns (`jsonb`) must NEVER be treated as a dumping ground, wild-west garbage bin, or speculative gambling slot machine. The era of loose dictionaries, arbitrary untyped payloads, and hidden guessed keys is permanently abolished. Metadata is a deterministic, strongly typed, and transparent extension of the domain schema.
+- **ApplicationMetadata Governance**: Every model carrying a `jsonb` metadata attribute MUST be governed by a dedicated, strongly typed `ApplicationMetadata` sub-model (e.g. `Payment::Coupon::Metadata`, `Ai::Run::Metadata`, `Asset::GenericMetadata`, `Chat::Room::Metadata`, `Feedback::Metadata`) configured via `has_metadata`.
+- **Strict Attribute Whitelisting & Rogue Key Rejection**:
+  - All valid metadata keys MUST be explicitly declared as typed ActiveModel attributes (`attribute :status, :string`).
+  - Metadata initializers and validations MUST reject undeclared, rogue, or alien keys with deterministic validation errors (`validate_<noun>_structure`).
+  - Speculative guessing is strictly forbidden: NEVER define fallback synonym keys, legacy aliases, or redundant parameter permutations (violating Law U14).
+- **Public API & OpenAPI / Swagger Transparency**:
+  - REST and WebSocket interfaces MUST explicitly document every allowable metadata property and its data type in OpenAPI / Swagger specifications (`spec/openapi/v1.rb`).
+  - Generic untyped declarations like `{ type: :object, description: "Arbitrary JSONB metadata" }` or unstructured dictionaries are strictly forbidden. Clients, SDKs, and developers must have total deterministic visibility into exact schema shapes.
+- **Provider Gateway Boundary**:
+  - Domain metadata classes encapsulate internal domain contracts and lifecycle tracking.
+  - External provider payloads (e.g. Stripe, OpenAI, Google Play, Apple App Store) must be deterministically mapped, filtered, and stripped of internal metadata keys before dispatch. Provider concerns must never pollute domain metadata schemas.
 
 ---
 

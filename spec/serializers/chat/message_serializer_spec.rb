@@ -10,8 +10,10 @@ RSpec.describe Chat::MessageSerializer do
       :chat_message,
       role: "assistant",
       content: "Hello",
-      tts_status: Chat::Message::STATUSES[:queued],
-      tts_error: nil
+      metadata: {
+        tts_status: Chat::Message::STATUSES[:queued],
+        tts_error: nil
+      }
     )
 
     attributes = serialized_attributes(message)

@@ -48,6 +48,29 @@ end
      - Composite join/association unique keys (`iam_role_permissions [role_id, permission_id]`, `iam_user_roles [user_id, role_id]`, `iam_permissions [resource, action]`, `client_user_versions [user_id, platform]`) are standard and prevent duplicate join relations in the database.
      - Complex domain entitlements (`accesses [user_id, product_id]`, `user_notifications [user_id, operation_id]`) utilize clean standard query indexes with lifecycle uniqueness managed in Rails models.
    - **Zero Raw SQL Partial Indexes**: Raw SQL `WHERE` clauses (e.g. `where: "discarded_at IS NULL"`) in migrations are prohibited.
+5. **Deterministic Strictly-Typed JSONB Metadata Architecture (`ApplicationMetadata` & `has_metadata` - Law U19)**:
+   - Every JSONB metadata column across all ActiveRecord models is backed by a deterministic, typed sub-model inheriting from [`ApplicationMetadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/application_metadata.rb) (`ActiveModel::Model` + `ActiveModel::Attributes`).
+   - **Unified `has_metadata` Macro**: Models declare their metadata schema via `has_metadata MetadataClass` (or `has_metadata SubModelClass, attribute_name: :custom_attr`). ActiveRecord directly type-casts, validates, and serializes the column via `ActiveRecord::Type::Json`.
+   - **Single Unified Accessor (`record.metadata`)**: `record.metadata` directly returns the strongly-typed `ApplicationMetadata` sub-model instance. Legacy dual accessors (`typed_metadata`) and leaking parent model delegator methods (`sync_status`, `sync_error`, `failed_at`, `app_version`, `component`, `action`, `endpoint`, `attempt`, `tts_status`, `width`, `height`, etc.) are completely wiped out. All metadata fields strictly live inside `record.metadata.*`, eliminating parent namespace pollution and database column collisions.
+   - **Zero Loose Hash Access**: Direct hash subscripting (`record.metadata["key"]`), gambling, or `.dig` chains on ActiveRecord metadata columns are strictly banned across the codebase.
+   - **Strict Whitelisting & Rogue Key Rejection**: `ApplicationMetadata.from_h` dynamically validates all incoming keys against declared model attributes. Any unrecognized/rogue keys trigger ActiveModel validation errors on save via standardized `validate_<noun>_structure` callbacks.
+   - **OpenAPI / Swagger Full Transparency**: All metadata properties are explicitly exposed with precise types and constraints in `spec/openapi/v1.rb` and `swagger/v1/swagger.yaml`. Generic untyped `{ type: :object }` and "Arbitrary JSONB metadata" placeholders are strictly prohibited.
+   - **ActiveJob & Hash Interoperability**: `ApplicationMetadata` includes custom `ActiveJob::Serializers::ObjectSerializer` for seamless background job delivery, along with full hash-like delegation (`[]`, `[]=`, `key?`, `dig`, `to_h`, `merge`, `slice`, `symbolize_keys`).
+   - **Deterministic Media Metadata Contracts**: Media assets are backed by a unified typed metadata sub-model [`Asset::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/metadata.rb) governing dimensions, durations, codecs, bitrates, audio channels, subtitles, and origin user telemetry.
+   - **Model Ecosystem Mapping**:
+     - `Asset` -> [`Asset::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/metadata.rb)
+     - `Client::Version` -> [`Client::Version::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/client/version/metadata.rb)
+     - `Feedback` -> [`Feedback::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/feedback/metadata.rb)
+     - `UserNotification` -> [`UserNotification::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/user_notification/metadata.rb)
+     - `Notification` -> [`Notification::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/notification/metadata.rb), [`Notification::InAppData`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/notification/in_app_data.rb)
+     - `Payment::Coupon` -> [`Payment::Coupon::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/coupon/metadata.rb)
+     - `Payment::Purchase` -> [`Payment::Purchase::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/purchase/metadata.rb), [`Payment::PaymentMethodDetails`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/payment_method_details.rb)
+     - `Payment::Subscription` -> [`Payment::Subscription::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/subscription/metadata.rb), [`Payment::PaymentMethodDetails`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/payment_method_details.rb)
+     - `Ai::Run` -> [`Ai::Run::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/run/metadata.rb)
+     - `Client::Log` -> [`Client::Log::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/client/log/metadata.rb)
+     - `Ai::Profile` -> [`Ai::Profile::Settings`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/profile/settings.rb)
+     - `Chat::Message` -> [`Chat::Message::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/message/metadata.rb)
+     - `Chat::Room` -> [`Chat::Room::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/room/metadata.rb)
    - **Zero Sequence/Reordering Collisions**: Multi-column sequence unique indexes on ordering/positional columns are banned to prevent drag-and-drop / re-indexing deadlocks.
    - **Model-Led Business Validation Authority**: Model validations enforce uniqueness across all records (including discarded/recycled records). This ensures administrators are immediately alerted if an entity already exists in the Recycle Bin ("has already been taken"), prompting them to restore it (`undiscard`) or permanently purge it from the bin (`destroy`) before creating a duplicate.
 5. **Scope of this Document**:
@@ -361,8 +384,8 @@ erDiagram
 | `cancel_at_period_end`          | `boolean`  |    ❌    | `false`             | Whether cancel occurs at period boundary                                   |
 | `payment_method_id`             | `string`   |    ✔️    | `NULL`              | Payment method identifier                                                  |
 | `payment_method_type`           | `string`   |    ✔️    | `NULL`              | Payment method type (e.g. `card`, `in_app`)                                |
-| `payment_method_details`        | `jsonb`    |    ✔️    | `{}`                | Brand, last4, provider details                                             |
-| `metadata`                      | `jsonb`    |    ✔️    | `{}`                | Metadata payload                                                           |
+| `payment_method_details`        | `jsonb`    |    ✔️    | `{}`                | Typed hash (brand, last4, exp_month, exp_year, country, type, funding, etc.) |
+| `metadata`                      | `jsonb`    |    ✔️    | `{}`                | Validated key-value hash (Payment::Subscription::Metadata)                  |
 | `created_by_id`                 | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                          |
 | `updated_by_id`                 | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                         |
 | `discarded_by_id`               | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                        |
@@ -416,7 +439,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `paid_at`                | `datetime` |    ✔️    | `NULL`                      | When payment succeeded                                 |
 | `canceled_at`            | `datetime` |    ✔️    | `NULL`                      | When payment was canceled                              |
 | `refunded_at`            | `datetime` |    ✔️    | `NULL`                      | When purchase was refunded                             |
-| `metadata`               | `jsonb`    |    ✔️    | `{}`                        | Arbitrary metadata payload                             |
+| `metadata`               | `jsonb`    |    ✔️    | `{}`                        | Validated key-value hash (Payment::Purchase::Metadata)      |
 | `created_by_id`          | `uuid`     |    ✔️    | `NULL`                      | Auditing: Creator                                      |
 | `updated_by_id`          | `uuid`     |    ✔️    | `NULL`                      | Auditing: Modifier                                     |
 | `discarded_by_id`        | `uuid`     |    ✔️    | `NULL`                      | Auditing: Discarder                                    |
@@ -492,7 +515,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `coupon_type`        | `integer`  |    ❌    | `0`                 | Enum: `0: percentage` (1-100%), `1: fixed` (minor units)      |
 | `amount`             | `integer`  |    ❌    | —                   | Discount magnitude: percentage (1-100) or fixed minor units   |
 | `currency`           | `string`   |    ✔️    | `NULL`              | Minor units currency (e.g. `usd`). Nullable for percentage    |
-| `metadata`           | `jsonb`    |    ❌    | `{}`                | Arbitrary JSONB metadata payload                              |
+| `metadata`           | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (Payment::Coupon::Metadata: status, sync_error, failed_at, synced_at) |
 | `max_usage`          | `integer`  |    ❌    | `0`                 | Total allowable redemptions across all users (0 = unlimited)  |
 | `max_usage_per_user` | `integer`  |    ❌    | `1`                 | Maximum redemptions per individual user                       |
 | `used_count`         | `integer`  |    ❌    | `0`                 | Atomic redemption counter (reconciled by weekly DataSync)     |
@@ -752,9 +775,10 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `prompt_tokens`        | `integer`  |    ✔️    | `NULL`              | Provider prompt token count            |
 | `completion_tokens`    | `integer`  |    ✔️    | `NULL`              | Provider completion token count        |
 | `total_tokens`         | `integer`  |    ✔️    | `NULL`              | Provider total token count             |
+| `cost`                 | `decimal`  |    ❌    | `0.0`               | Financial expenditure in USD (precision: 12, scale: 6) |
 | `latency_ms`           | `integer`  |    ✔️    | `NULL`              | End-to-end provider latency            |
 | `error`                | `text`     |    ✔️    | `NULL`              | Normalized failure message             |
-| `request_metadata`     | `jsonb`    |    ❌    | `{}`                | Lightweight context labels             |
+| `metadata`             | `jsonb`    |    ❌    | `{}`                | Lightweight context labels (`Ai::Run::Metadata`) |
 | `created_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                      |
 | `updated_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                     |
 | `discarded_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                    |
@@ -774,6 +798,37 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 - `index_ai_runs_on_created_at` (`created_at`)
 - `index_ai_runs_on_discarded_at` (`discarded_at`)
 - FK to `ai_profiles(id)`, `users(id)`, and `chat_messages(id)`.
+
+---
+
+### 6.5. `ai_prices`
+
+- **Model**: [`Ai::Price`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/price.rb)
+- **Description**: Model pricing catalog storing token cost rates (per million tokens) for input, cached input, and output tokens in USD. Synced dynamically from the upstream open pricing registry.
+
+| Column                    | Type       | Nullable | Default             | Description / Notes                                    |
+| :------------------------ | :--------- | :------: | :------------------ | :----------------------------------------------------- |
+| `id`                      | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                            |
+| `provider`                | `string`   |    ❌    | —                   | Provider key (`deepseek`, `google`, `openai`, etc.)    |
+| `model`                   | `string`   |    ❌    | —                   | Model identifier (`deepseek-chat`, `gpt-4o`, etc.)     |
+| `currency`                | `string`   |    ❌    | `'usd'`             | Pricing currency (standardized to 3-letter lowercase usd) |
+| `input_cost_per_million`  | `decimal`  |    ❌    | `0.0`               | Cost per 1,000,000 uncached input tokens (12,6)        |
+| `cached_cost_per_million` | `decimal`  |    ❌    | `0.0`               | Cost per 1,000,000 prompt cache hit tokens (12,6)      |
+| `output_cost_per_million` | `decimal`  |    ❌    | `0.0`               | Cost per 1,000,000 generated output tokens (12,6)      |
+| `created_by_id`           | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                      |
+| `updated_by_id`           | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                     |
+| `discarded_by_id`         | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                    |
+| `undiscarded_by_id`       | `uuid`     |    ✔️    | `NULL`              | Auditing: Restorer                                     |
+| `discarded_at`            | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                  |
+| `undiscarded_at`          | `datetime` |    ✔️    | `NULL`              | Soft delete restoration timestamp                      |
+| `created_at`              | `datetime` |    ❌    | —                   | Timestamp                                              |
+| `updated_at`              | `datetime` |    ❌    | —                   | Timestamp                                              |
+
+**Indexes & Foreign Keys**:
+
+- `index_ai_prices_on_provider_and_model` (`provider, model`, unique, where: `discarded_at IS NULL`)
+- `index_ai_prices_on_discarded_at` (`discarded_at`)
+- FK to `users(id)` for created/updated/discarded/undiscarded user references.
 
 ---
 
@@ -799,7 +854,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `size_bytes`        | `bigint`   |    ✔️    | `NULL`              | File size in bytes                                                                              |
 | `duration_secs`     | `integer`  |    ✔️    | `NULL`              | Video/audio duration in seconds                                                                 |
 | `status`            | `string`   |    ❌    | `"pending"`         | Pipeline status: `pending`, `processing`, `ready`, `optimal`, `failed`                          |
-| `metadata`          | `jsonb`    |    ❌    | `{}`                | Arbitrary JSONB metadata payload                                                                |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Strictly typed metadata sub-model ([`Asset::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/metadata.rb)) |
 | `assetable_type`    | `string`   |    ✔️    | `NULL`              | Polymorphic owner type (`User`, `Chat::Message`, etc.)                                          |
 | `assetable_id`      | `uuid`     |    ✔️    | `NULL`              | Polymorphic owner ID                                                                            |
 | `parent_asset_id`   | `uuid`     |    ✔️    | `NULL`              | Source asset for a thumbnail or subtitle child (compressible video or audio parent)             |
@@ -864,7 +919,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `os`                | `string`   |    ✔️    | `NULL`              | Operating system                                                                                                                                   |
 | `device`            | `string`   |    ✔️    | `NULL`              | Client hardware                                                                                                                                    |
 | `page`              | `string`   |    ✔️    | `NULL`              | Source page URL or route                                                                                                                           |
-| `metadata`          | `jsonb`    |    ❌    | `{}`                | Diagnostic payload                                                                                                                                 |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (FeedbackConstants::Metadata: app_version, screen, route, locale, user_agent) |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                                                                  |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                                                                 |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                                                                                |
@@ -916,11 +971,11 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `last_occurred_at`     | `datetime` |    ✔️    | `NULL`              | Most recent occurrence timestamp                                                                                                                   |
 | `resolved_at`          | `datetime` |    ✔️    | `NULL`              | Triage resolution timestamp                                                                                                                        |
 | `resolved_by_id`       | `uuid`     |    ✔️    | `NULL`              | FK to `users.id` who resolved                                                                                                                      |
-| `context`              | `jsonb`    |    ✔️    | `{}`                | Contextual data dictionary                                                                                                                         |
+| `metadata`             | `jsonb`    |    ❌    | `{}`                | Deterministic typed metadata (`Client::Log::Metadata`)                                                                                              |
 | `cookies`              | `jsonb`    |    ✔️    | `{}`                | Cookie key snapshot                                                                                                                                |
-| `local_storage_keys`   | `jsonb`    |    ✔️    | `[]`                | LocalStorage keys present (GIN indexed)                                                                                                            |
-| `session_storage_keys` | `jsonb`    |    ✔️    | `[]`                | SessionStorage keys present (GIN indexed)                                                                                                          |
-| `stack_trace`          | `jsonb`    |    ✔️    | `[]`                | Structured stack trace frames                                                                                                                      |
+| `local_storage_keys`   | `string[]` |    ✔️    | `[]`                | LocalStorage keys present (native PostgreSQL array, GIN indexed)                                                                                   |
+| `session_storage_keys` | `string[]` |    ✔️    | `[]`                | SessionStorage keys present (native PostgreSQL array, GIN indexed)                                                                                 |
+| `stack_trace`          | `text[]`   |    ✔️    | `[]`                | Structured stack trace frames (native PostgreSQL array)                                                                                            |
 | `created_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                                                                  |
 | `updated_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                                                                 |
 | `discarded_at`         | `datetime` |    ✔️    | `NULL`              | Soft delete timestamp                                                                                                                              |
@@ -960,10 +1015,10 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `cta_text`          | `string`   |    ✔️    | `NULL`              | Call-to-action button text for destination link            |
 | `clients`           | `string[]` |    ❌    | `['web', 'mobile']` | Target client platforms (`web`, `mobile`)                  |
 | `admin`             | `boolean`  |    ❌    | `true`              | Indicates if notification is available for admin broadcast |
-| `metadata`          | `jsonb`    |    ❌    | `{}`                | Custom JSONB metadata payload                              |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (NotificationConstants::Metadata) |
 | `in_app_title`      | `string`   |    ✔️    | `NULL`              | In-app notification title template                         |
 | `in_app_body`       | `text`     |    ✔️    | `NULL`              | In-app notification body template                          |
-| `in_app_data`       | `jsonb`    |    ❌    | `{}`                | Custom in-app payload / placeholders                       |
+| `in_app_data`       | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (NotificationConstants::Metadata) |
 | `push_title`        | `string`   |    ✔️    | `NULL`              | Push notification title template                           |
 | `push_body`         | `text`     |    ✔️    | `NULL`              | Push notification body template                            |
 | `push_template_id`  | `string`   |    ✔️    | `NULL`              | Provider-agnostic push template ID                         |
@@ -1001,7 +1056,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `title`             | `string`   |    ❌    | —                   | Immutable rendered title                                              |
 | `message`           | `text`     |    ❌    | —                   | Immutable rendered body message                                       |
 | `link`              | `string`   |    ✔️    | `NULL`              | Deep link target URL or app route                                     |
-| `metadata`          | `jsonb`    |    ❌    | `{}`                | Custom payload / metadata                                             |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (NotificationConstants::Metadata) |
 | `read_at`           | `datetime` |    ✔️    | `NULL`              | Read status timestamp                                                 |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Creator FK (`users.id`)                                               |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Last updater FK (`users.id`)                                          |
@@ -1042,7 +1097,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `released_at`          | `datetime` |    ✔️    | `NULL`              | Set on first publish if blank; future value = scheduled. UTC.                                                 |
 | `ios_build_number`     | `integer`  |    ✔️    | `NULL`              | Informational iOS `CFBundleVersion`; unique among kept when present. Not used for `must_update`.              |
 | `android_build_number` | `integer`  |    ✔️    | `NULL`              | Informational Android `versionCode`; unique among kept when present. Not used for `must_update`.              |
-| `metadata`             | `jsonb`    |    ❌    | `{}`                | JSONB metadata payload                                                                                        |
+| `metadata`             | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (VersionConstants::Metadata: release_notes, min_os_version, force_update) |
 | `created_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                             |
 | `updated_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                            |
 | `discarded_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                                           |
@@ -1119,6 +1174,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `chat_messages`          | [`Chat::Message`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/message.rb)                  | AI / Chat      |      ✔️       |   ✔️    | `assets` (`assetable`)               |
 | `ai_profiles`            | [`Ai::Profile`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/profile.rb)                      | AI / Chat      |      ✔️       |   ✔️    | —                                    |
 | `ai_runs`                | [`Ai::Run`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/run.rb)                              | AI / Chat      |      ✔️       |   ✔️    | —                                    |
+| `ai_prices`              | [`Ai::Price`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/price.rb)                          | AI / Chat      |      ✔️       |   ✔️    | —                                    |
 | `assets`                 | [`Asset`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset.rb)                                 | Media          |      ✔️       |   ✔️    | Belongs to `assetable` (Polymorphic) |
 | `feedbacks`              | [`Feedback`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/feedback.rb)                           | Support        |      ✔️       |   ✔️    | —                                    |
 | `client_logs`            | [`Client::Log`](app/models/client/log.rb)                                                                       | Diagnostics    |      ✔️       |   ✔️    | —                                    |

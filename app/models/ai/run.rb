@@ -4,6 +4,8 @@ module Ai
   class Run < ApplicationRecord
     self.table_name = "ai_runs"
 
+    has_metadata Ai::Run::Metadata
+
     belongs_to :profile, class_name: "Ai::Profile", foreign_key: :ai_profile_id
     belongs_to :user
     belongs_to :chat_message, class_name: "Chat::Message", optional: true

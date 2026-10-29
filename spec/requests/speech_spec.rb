@@ -98,7 +98,7 @@ RSpec.describe "Speech synthesis", type: :request do
         "status" => "queued"
       )
       expect(response_data["job_id"]).to be_present
-      expect(message.reload.tts_status).to eq("queued")
+      expect(message.reload.metadata.tts_status).to eq("queued")
     end
 
     it "returns 404 when the message belongs to another user" do

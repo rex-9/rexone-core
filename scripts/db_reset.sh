@@ -54,18 +54,24 @@ if [ "$FORCE" = false ]; then
   esac
 fi
 
+if docker compose -f docker-compose.dev.yaml ps -q api 2>/dev/null | grep -q .; then
+  API_CMD="docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV=$TARGET_ENV api"
+else
+  API_CMD="docker compose -f docker-compose.dev.yaml run --rm -e RAILS_ENV=$TARGET_ENV api"
+fi
+
 echo "--> [1/4] Dropping database ($TARGET_ENV)..."
 rm -rf db/schema.rb
-docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$TARGET_ENV" api rails db:drop || true
+$API_CMD rails db:drop || true
 
 echo "--> [2/4] Creating new database ($TARGET_ENV)..."
-docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$TARGET_ENV" api rails db:create
+$API_CMD rails db:create
 
 echo "--> [3/4] Running migrations ($TARGET_ENV)..."
-docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$TARGET_ENV" api rails db:migrate
+$API_CMD rails db:migrate
 
 echo "--> [4/4] Seeding database ($TARGET_ENV)..."
-docker compose -f docker-compose.dev.yaml exec -e RAILS_ENV="$TARGET_ENV" api rails db:seed
+$API_CMD rails db:seed
 
 echo ""
 echo "✅ Database successfully reset and seeded for $TARGET_ENV!"

@@ -83,10 +83,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
         file,
         storage_key: storage_key,
         resource_type: determine_resource_type(file),
-        metadata: {
-          user_id: current_user.id.to_s,
-          original_filename: file.original_filename
-        }
+        metadata: { original_filename: file.original_filename }
       )
 
       parent_asset_id = upload[:parent_asset_id].presence
@@ -104,6 +101,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
         url: result[:url],
         type: asset_type,
         format: determine_asset_format(file),
+        metadata: { original_filename: file.original_filename },
         size_bytes: result[:bytes],
         duration_secs: duration_secs,
         source: AssetConstants::AssetSource::UPLOAD,

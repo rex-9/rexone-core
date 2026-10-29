@@ -6,16 +6,14 @@ module Ai
   module Providers
     class Client
       class << self
-        def chat(**kwargs)
-          provider_name = kwargs.delete(:provider)
+        def chat(provider:, **kwargs)
           kwargs[:messages] = Ai::ToonService.prepare_messages_for_llm(kwargs[:messages]) if kwargs[:messages].present?
-          provider(provider_name).chat(**kwargs)
+          provider(provider).chat(**kwargs)
         end
 
-        def stream_chat(**kwargs, &block)
-          provider_name = kwargs.delete(:provider)
+        def stream_chat(provider:, **kwargs, &block)
           kwargs[:messages] = Ai::ToonService.prepare_messages_for_llm(kwargs[:messages]) if kwargs[:messages].present?
-          provider(provider_name).stream_chat(**kwargs, &block)
+          provider(provider).stream_chat(**kwargs, &block)
         end
 
         def for_provider(name)
@@ -29,12 +27,14 @@ module Ai
 
         private
 
-        def provider(name = nil)
+        def provider(name)
           case name.to_s.downcase
           when AiConstants::Provider::GEMINI
             @gemini ||= Gemini.new
-          else
+          when AiConstants::Provider::DEEPSEEK
             @deepseek ||= DeepSeek.new
+          else
+            raise ArgumentError, "Unsupported AI provider: #{name.inspect}"
           end
         end
       end
