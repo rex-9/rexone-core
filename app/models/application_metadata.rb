@@ -17,7 +17,7 @@ class ApplicationMetadata
     def cast(value)
       if value.is_a?(@target_class)
         value
-      elsif value.is_a?(Hash)
+      elsif value.is_a?(Hash) || value.respond_to?(:to_unsafe_h) || value.respond_to?(:to_h)
         @target_class.from_h(value)
       elsif value.is_a?(String)
         begin
@@ -78,6 +78,10 @@ class ApplicationMetadata
   end
   alias_method :to_hash, :to_h
 
+  def to_json(*args)
+    to_h.to_json(*args)
+  end
+
   def as_json(options = nil)
     to_h.as_json(options)
   end
@@ -128,9 +132,18 @@ class ApplicationMetadata
     !empty?
   end
 
-  delegate :merge, :keys, :values, :slice, :except, :symbolize_keys, :deep_symbolize_keys, :stringify_keys, :deep_stringify_keys, to: :to_h
+  delegate :merge, :keys, :values, :slice, :except, :symbolize_keys, :deep_symbolize_keys, :stringify_keys, :deep_stringify_keys,
+           :each, :each_pair, :each_key, :each_value, :transform_values, :transform_keys, to: :to_h
 
-  def self.from_h(hash)
+  def self.from_h(raw)
+    hash =
+      if raw.respond_to?(:to_unsafe_h)
+        raw.to_unsafe_h
+      elsif raw.respond_to?(:to_h)
+        raw.to_h
+      else
+        {}
+      end
     data = hash.is_a?(Hash) ? hash.deep_stringify_keys : {}
     known = attribute_names.to_set
     unknown = data.keys.reject { |k| known.include?(k) }

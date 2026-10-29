@@ -141,6 +141,10 @@ class Payment::Purchase < ApplicationRecord
     payment_method_details.brand.presence || payment_method_type.presence || "card"
   end
 
+  def card_funding
+    payment_method_details.funding
+  end
+
   def masked_card_number
     "**** **** **** #{card_last4}" if card_last4.present?
   end

@@ -292,8 +292,8 @@ module Payment
             stripe_params[:redeem_by] = epoch if epoch
             attributes = attributes.merge(expires_at: TimeService.parse_utc(attributes[:expires_at]))
           end
-          if attributes[:metadata].present? && attributes[:metadata].is_a?(Hash)
-            stripe_params[:metadata] = attributes[:metadata].stringify_keys.transform_values(&:to_s)
+          if attributes[:metadata].present? && (attributes[:metadata].is_a?(Hash) || attributes[:metadata].respond_to?(:to_h))
+            stripe_params[:metadata] = attributes[:metadata].to_h.stringify_keys.transform_values(&:to_s)
           end
 
           begin
@@ -319,8 +319,8 @@ module Payment
           if coupon.provider_coupon_id.present?
             stripe_update_params = {}
             stripe_update_params[:name] = attributes[:title] if attributes[:title].present?
-            if attributes.key?(:metadata) && attributes[:metadata].is_a?(Hash)
-              stripe_update_params[:metadata] = attributes[:metadata].stringify_keys.transform_values(&:to_s)
+            if attributes.key?(:metadata) && (attributes[:metadata].is_a?(Hash) || attributes[:metadata].respond_to?(:to_h))
+              stripe_update_params[:metadata] = attributes[:metadata].to_h.stringify_keys.transform_values(&:to_s)
             end
 
             if stripe_update_params.any?
@@ -466,6 +466,7 @@ module Payment
               exp_month: pm.card&.exp_month,
               exp_year: pm.card&.exp_year,
               country: pm.card&.country,
+              funding: pm.card&.funding,
               type: pm.type
             }.compact
           }

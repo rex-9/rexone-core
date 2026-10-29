@@ -94,8 +94,10 @@ class Asset < ApplicationRecord
     @metadata_instance = nil
     if val.is_a?(ApplicationMetadata)
       write_attribute(:metadata, val.to_h)
-    elsif val.is_a?(Hash)
-      write_attribute(:metadata, val.deep_stringify_keys)
+    elsif val.respond_to?(:to_unsafe_h)
+      write_attribute(:metadata, val.to_unsafe_h.deep_stringify_keys)
+    elsif val.respond_to?(:to_h)
+      write_attribute(:metadata, val.to_h.deep_stringify_keys)
     elsif val.nil?
       write_attribute(:metadata, {})
     else

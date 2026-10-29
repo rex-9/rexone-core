@@ -83,6 +83,10 @@ class Payment::SubscriptionSerializer < ApplicationSerializer
     subscription.card_brand
   end
 
+  attribute :card_funding do |subscription|
+    subscription.card_funding
+  end
+
   attribute :masked_card_number do |subscription|
     subscription.masked_card_number
   end

@@ -40,7 +40,7 @@ module NotificationService
             message: notification.message,
             link: notification.link,
             clients: notification.clients,
-            data: notification.metadata,
+            data: notification.metadata.to_h,
             read_at: notification.read_at,
             created_at: notification.created_at.iso8601
           )

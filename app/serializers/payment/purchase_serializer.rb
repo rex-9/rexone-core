@@ -47,6 +47,10 @@ class Payment::PurchaseSerializer < ApplicationSerializer
     purchase.card_brand
   end
 
+  attribute :card_funding do |purchase|
+    purchase.card_funding
+  end
+
   attribute :masked_card_number do |purchase|
     purchase.masked_card_number
   end
