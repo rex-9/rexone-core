@@ -39,3 +39,10 @@
    - Code is written for humans to read, understand, review, and audit with zero mental friction.
    - Use compact, straightforward, natural English words for variables and methods. No cryptic abbreviations or acronym soup.
    - Avoid alien syntax, dense one-liners, nested ternaries, or esoteric metaprogramming. Prefer clean, idiomatic control flow.
+
+8. **Tailwind CSS v4 Canonical Class Standard (Web)**:
+   - Always write canonical Tailwind CSS v4 utility classes (`tailwindcss/canonical-classes` is strictly enforced in ESLint and `npm run check:architecture`):
+     - **Important modifier**: Use trailing `!` (`h-9! w-9! px-8!`), NEVER leading `!` (`!h-9 !w-9 !px-8`).
+     - **Opacity modifier**: Use shorthand percentage scale (`bg-white/4`, `hover:bg-white/8`), NEVER arbitrary decimal opacity (`bg-white/[0.04]`, `hover:bg-white/[0.08]`).
+     - **Spacing scale (`1` = `4px` / `0.25rem`)**: Use native numeric spacing scale (`min-w-45`, `w-100`, `max-h-75`), NEVER arbitrary pixel equivalents (`min-w-[180px]`, `w-[400px]`, `max-h-[300px]`).
+     - **Tailwind v4 utility names**: Use `shrink-0` (not `flex-shrink-0`), `grow` (not `flex-grow`), and `bg-linear-to-*` (not `bg-gradient-to-*`).

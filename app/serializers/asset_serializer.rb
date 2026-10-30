@@ -1,7 +1,7 @@
 # app/serializers/asset_serializer.rb
 
 class AssetSerializer < ApplicationSerializer
-  attributes :id, :name, :title, :description, :metadata, :type, :format, :extension, :size_bytes, :duration_secs, :source, :status, :assetable_type, :assetable_id, :parent_asset_id, :created_at, :updated_at
+  attributes :id, :name, :title, :description, :metadata, :type, :format, :extension, :size_bytes, :duration_secs, :source, :status, :storage_key, :assetable_type, :assetable_id, :parent_asset_id, :discarded_at, :created_at, :updated_at
 
   attribute :url do |asset|
     asset.storage_url
