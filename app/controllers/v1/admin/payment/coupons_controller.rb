@@ -279,10 +279,6 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
 
   private
 
-  def permission_resource_name
-    IamConstants::Resource::PAYMENT_COUPONS
-  end
-
   def set_active_coupon
     @coupon = ::Payment::Coupon.find(params.permit(:id)[:id])
   end

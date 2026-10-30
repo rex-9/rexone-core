@@ -94,10 +94,6 @@ class V1::Chat::RoomsController < V1::ApplicationController
     params.permit(:title)
   end
 
-  def permission_resource_name
-    IamConstants::Resource::CHAT_ROOMS
-  end
-
   def ai_message(key, **options)
     MessageService::Ai.t(key, **options)
   end

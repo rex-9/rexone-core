@@ -1168,6 +1168,7 @@ module Openapi
         payment_method_display: { type: :string, nullable: true },
         card_last4: { type: :string, nullable: true },
         card_brand: { type: :string, nullable: true },
+        card_funding: { type: :string, nullable: true },
         masked_card_number: { type: :string, nullable: true },
         product_name: { type: :string, nullable: true },
         price: { type: :string, nullable: true },
@@ -1208,6 +1209,7 @@ module Openapi
         payment_method_display: { type: :string, nullable: true },
         card_last4: { type: :string, nullable: true },
         card_brand: { type: :string, nullable: true },
+        card_funding: { type: :string, nullable: true },
         masked_card_number: { type: :string, nullable: true },
         product_name: { type: :string, nullable: true },
         created_at: DATE_TIME,
@@ -2235,8 +2237,8 @@ module Openapi
         }
       }
       paths["/v1/admin/assets/{id}/subtitle/upload"] = {
-        post: operation(tags: "Admin / Assets", summary: "Upload an SRT subtitle for a compressible video or audio asset",
-                        description: "Accepts an SRT file, stores it as type/format subtitle using raw object storage, and limits it with MEDIA_MAX_OTHER_SIZE_MB. Subtitle files require no media processing.",
+        post: operation(tags: "Admin / Assets", summary: "Upload an SRT or WebVTT subtitle for a compressible video or audio asset",
+                        description: "Accepts an SRT (.srt) or WebVTT (.vtt) file, stores it as type/format subtitle using raw object storage, and limits it with MEDIA_MAX_OTHER_SIZE_MB. Subtitle files require no media processing.",
                         parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422, 500 ])
       }
       paths["/v1/admin/assets/{id}/subtitle/upload"][:post][:requestBody] = {

@@ -14,8 +14,8 @@ RSpec.describe EmailService::TemplateRenderer do
       expect(html).to include("Reset your passcode")
       expect(html).to include("user@example.com")
       expect(html).to include("https://example.com/reset?token=&lt;bad&gt;")
-      expect(html).to include("REX<span style=\"color:#ffffff;\">ONE</span>")
-      expect(html).to include("ALERT CENTER")
+      expect(html).to include("REX<span style=\"color:#{DesignConstants::Colors::TEXT_PRIMARY};\">ONE</span>")
+      expect(html).to include(DesignConstants::Brand::EMAIL_HEADER_LABEL)
     end
 
     it "renders email_confirmation with prominent highlight code box" do

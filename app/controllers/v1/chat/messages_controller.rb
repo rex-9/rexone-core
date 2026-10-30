@@ -199,10 +199,6 @@ class V1::Chat::MessagesController < V1::ApplicationController
     )
   end
 
-  def permission_resource_name
-    IamConstants::Resource::CHAT_MESSAGES
-  end
-
   def ai_message(key, **options)
     MessageService::Ai.t(key, **options)
   end

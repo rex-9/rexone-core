@@ -4,10 +4,6 @@
 class V1::Admin::Ai::ProfilesController < V1::ApplicationController
   before_action :set_profile, only: %i[show update]
 
-  def permission_resource_name
-    IamConstants::Resource::AI_PROFILES
-  end
-
   # GET /v1/admin/ai/profiles
   def index
     profiles = Ai::ProfileService.list(index_params.except(:limit, :page, :sort_by, :sort_order))

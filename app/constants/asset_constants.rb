@@ -19,7 +19,7 @@ module AssetConstants
     VIDEO_EXTENSIONS    = %w[mp4 mov avi webm mkv].freeze
     DOC_EXTENSIONS      = %w[pdf doc docx txt rtf].freeze
     ZIP_EXTENSIONS      = %w[zip].freeze
-    SUBTITLE_EXTENSIONS = %w[srt].freeze
+    SUBTITLE_EXTENSIONS = [ MediaConstants::SUBTITLE_EXT_SRT, MediaConstants::SUBTITLE_EXT_VTT ].freeze
 
     EXTENSION_TO_FORMAT = (
       IMAGE_EXTENSIONS.to_h { |ext| [ ext, IMAGE ] }.merge(

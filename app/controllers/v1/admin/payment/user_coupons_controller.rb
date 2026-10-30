@@ -40,10 +40,6 @@ class V1::Admin::Payment::UserCouponsController < V1::ApplicationController
 
   private
 
-  def permission_resource_name
-    IamConstants::Resource::PAYMENT_USER_COUPONS
-  end
-
   def filter_params
     params.permit(:coupon_id, :user_id, :product_id, :payment_type, :search, :limit, :page)
   end

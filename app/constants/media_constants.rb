@@ -64,7 +64,8 @@ module MediaConstants
 
   # Subtitle format extensions
   SUBTITLE_EXT_SRT = "srt".freeze
-  SUBTITLE_CONTENT_TYPES = [ "application/x-subrip", "text/plain" ].freeze
+  SUBTITLE_EXT_VTT = "vtt".freeze
+  SUBTITLE_CONTENT_TYPES = [ "application/x-subrip", "text/vtt", "text/plain" ].freeze
 
   # Asset processing statuses
   module Status

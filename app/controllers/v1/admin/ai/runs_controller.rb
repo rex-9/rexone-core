@@ -4,10 +4,6 @@
 class V1::Admin::Ai::RunsController < V1::ApplicationController
   before_action :set_run, only: %i[show]
 
-  def permission_resource_name
-    IamConstants::Resource::AI_RUNS
-  end
-
   # GET /v1/admin/ai/runs
   def index
     filters = list_params

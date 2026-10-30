@@ -5,10 +5,6 @@ class V1::Admin::Chat::MessagesController < V1::ApplicationController
   before_action :set_active_message, only: %i[show update discard destroy]
   before_action :set_message_including_discarded, only: %i[undiscard]
 
-  def permission_resource_name
-    IamConstants::Resource::CHAT_MESSAGES
-  end
-
   # GET /v1/admin/chat/messages
   def index
     messages = Chat::MessageService.admin_list(filter_params)

@@ -1,58 +1,38 @@
 /* app/assets/stylesheets/admin.css */
+/*= require ./tokens */
 
 /* =========================================================
-   RexOne Design Tokens (Dark Theme)
-   Brand Neon Scarlet: #FF2238 | Surface: #160b11 | Cards: #1f1018
-   ========================================================= */
-
-:root {
-  --rex-primary: #FF2238;
-  --rex-primary-light: #FF5263;
-  --rex-primary-dark: #CC1125;
-  --rex-glow: rgba(255, 34, 56, 0.4);
-  --rex-glow-subtle: rgba(255, 34, 56, 0.15);
-  --rex-bg: #120c11;
-  --rex-surface: #180f16;
-  --rex-card: #20131d;
-  --rex-card-hover: #291825;
-  --rex-border: #381928;
-  --rex-border-glow: rgba(255, 34, 56, 0.45);
-  --rex-text: #ffffff;
-  --rex-text-muted: #c9b8be;
-  --rex-text-subtle: #8a777e;
-  --rex-success: #10B981;
-  --rex-warning: #F59E0B;
-  --rex-error: #EF4444;
-  --rex-info: #38BDF8;
-}
-
-/* =========================================================
-   Global Base & Typography
+   Global Base & Typography (Centralized Token Consumer)
    ========================================================= */
 
 html,
 body {
   margin: 0;
   min-height: 100%;
-  background: var(--rex-bg) !important;
-  color: var(--rex-text) !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
+  font-family: var(--font-sans) !important;
   -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background: var(--rex-bg) !important;
+  background: var(--color-bg) !important;
 }
 
 a {
-  color: var(--rex-primary-light);
+  color: var(--color-primary-light);
   text-decoration: none;
   transition: color 0.15s ease, text-shadow 0.15s ease;
 }
 
 a:hover {
-  color: #ffffff;
-  text-shadow: 0 0 8px var(--rex-glow);
+  color: var(--color-text);
+  text-shadow: 0 0 8px var(--color-glow);
+}
+
+code,
+pre {
+  font-family: var(--font-mono) !important;
 }
 
 /* =========================================================
@@ -61,27 +41,28 @@ a:hover {
 
 .app-container,
 .main-content {
-  background: var(--rex-bg) !important;
+  background: var(--color-bg) !important;
 }
 
 .main-content__header {
-  background: var(--rex-surface) !important;
-  border-bottom: 1px solid var(--rex-border) !important;
+  background: var(--color-surface) !important;
+  border-bottom: 1px solid var(--color-border) !important;
   padding: 1.25rem 2rem !important;
 }
 
 .main-content__header h1,
 .main-content__header .header__heading {
-  color: #ffffff !important;
-  font-size: 1.5rem !important;
+  color: var(--color-text) !important;
+  font-family: var(--font-display) !important;
+  font-size: 1.65rem !important;
   font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-  text-shadow: 0 0 16px rgba(255, 34, 56, 0.25);
+  letter-spacing: -0.01em !important;
+  text-shadow: var(--shadow-heading);
 }
 
 .main-content__body {
-  background: var(--rex-bg) !important;
-  color: var(--rex-text) !important;
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
   padding: 1.5rem 2rem !important;
 }
 
@@ -90,19 +71,20 @@ a:hover {
    ========================================================= */
 
 .navigation {
-  background: var(--rex-surface) !important;
-  border-right: 1px solid var(--rex-border) !important;
+  background: var(--color-surface) !important;
+  border-right: 1px solid var(--color-border) !important;
   padding: 1rem 0.75rem !important;
 }
 
 .navigation__header {
-  color: #ffffff !important;
-  font-weight: 800 !important;
+  color: var(--color-text) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
   letter-spacing: 0.05em !important;
   text-transform: uppercase !important;
   padding: 0.5rem 0.75rem !important;
   font-size: 0.85rem !important;
-  border-bottom: 1px solid var(--rex-border) !important;
+  border-bottom: 1px solid var(--color-border) !important;
   margin-bottom: 0.75rem !important;
 }
 
@@ -110,7 +92,7 @@ a:hover {
   display: flex !important;
   align-items: center !important;
   gap: 0.5rem !important;
-  color: var(--rex-text-muted) !important;
+  color: var(--color-text-muted) !important;
   text-decoration: none !important;
   border-radius: 0.5rem !important;
   padding: 0.55rem 0.85rem !important;
@@ -122,82 +104,116 @@ a:hover {
 }
 
 .navigation__link:hover {
-  color: #ffffff !important;
-  background: var(--rex-card) !important;
-  border-color: rgba(255, 34, 56, 0.3) !important;
+  color: var(--color-text) !important;
+  background: var(--color-card) !important;
+  border-color: var(--color-border-hover) !important;
   transform: translateX(2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .navigation__link--active {
-  color: #ffffff !important;
-  background: linear-gradient(135deg, rgba(255, 34, 56, 0.22), rgba(204, 17, 37, 0.12)) !important;
-  border-color: var(--rex-primary) !important;
+  color: var(--color-text) !important;
+  background: var(--gradient-nav-active) !important;
+  border-color: var(--color-primary) !important;
   font-weight: 600 !important;
-  box-shadow: 0 0 12px rgba(255, 34, 56, 0.2), inset 0 0 8px rgba(255, 34, 56, 0.1) !important;
+  box-shadow: var(--shadow-nav-active) !important;
 }
 
 .navigation__link--active:hover {
-  color: #ffffff !important;
-  background: linear-gradient(135deg, rgba(255, 34, 56, 0.28), rgba(204, 17, 37, 0.18)) !important;
-  border-color: var(--rex-primary-light) !important;
-  box-shadow: 0 0 16px rgba(255, 34, 56, 0.35) !important;
+  color: var(--color-text) !important;
+  background: var(--gradient-nav-active-hover) !important;
+  border-color: var(--color-primary-light) !important;
+  box-shadow: var(--shadow-nav-active-hover) !important;
 }
 
 /* =========================================================
    Administrate Tables & Data Display
    ========================================================= */
 
+table,
 .table {
   width: 100% !important;
-  background: var(--rex-surface) !important;
-  color: var(--rex-text) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
   border-collapse: separate !important;
   border-spacing: 0 !important;
-  border: 1px solid var(--rex-border) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 0.75rem !important;
   overflow: hidden !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
+table th,
 .table th {
-  background: var(--rex-card) !important;
-  color: var(--rex-text-muted) !important;
+  background: var(--color-card) !important;
+  color: var(--color-text-muted) !important;
   font-weight: 600 !important;
-  font-size: 0.8rem !important;
+  font-size: 0.78rem !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.85rem 1.2rem !important;
-  border-bottom: 1px solid var(--rex-border) !important;
+  border-bottom: 1px solid var(--color-border) !important;
   border-top: none !important;
 }
 
+table th a,
+.table th a,
+th.cell-label a {
+  color: var(--color-text-muted) !important;
+  text-decoration: none !important;
+}
+
+table th a:hover,
+.table th a:hover,
+th.cell-label a:hover {
+  color: var(--color-text) !important;
+}
+
+table td,
 .table td {
-  background: var(--rex-surface) !important;
-  color: var(--rex-text) !important;
-  border-bottom: 1px solid var(--rex-border) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border-bottom: 1px solid var(--color-border) !important;
   padding: 0.85rem 1.2rem !important;
   font-size: 0.875rem !important;
   transition: background-color 0.15s ease !important;
 }
 
+td.cell-data a.action-show {
+  color: var(--color-text) !important;
+  text-decoration: none !important;
+  text-shadow: none !important;
+}
+
+table tr:last-child td,
 .table tr:last-child td {
   border-bottom: none !important;
 }
 
 .js-table-row:hover td,
+table tbody tr:hover td,
 .table tr:hover td {
-  background: var(--rex-card-hover) !important;
-  color: #ffffff !important;
+  background: var(--color-card-hover) !important;
+  color: var(--color-text) !important;
 }
 
 .js-table-row:hover td:first-child,
+table tbody tr:hover td:first-child,
 .table tr:hover td:first-child {
-  box-shadow: inset 3px 0 0 var(--rex-primary) !important;
+  box-shadow: inset 3px 0 0 var(--color-primary) !important;
+}
+
+.attribute-label {
+  color: var(--color-text-muted) !important;
+  font-weight: 600 !important;
+}
+
+.attribute-data {
+  color: var(--color-text) !important;
 }
 
 /* =========================================================
-   Buttons & Actions
+   Buttons & Actions (Law U18 Contrast Hierarchy)
    ========================================================= */
 
 .button,
@@ -208,14 +224,15 @@ input[type="submit"],
   align-items: center !important;
   justify-content: center !important;
   appearance: none !important;
+  font-family: var(--font-sans) !important;
   border-radius: 0.5rem !important;
-  background: linear-gradient(135deg, var(--rex-primary), var(--rex-primary-dark)) !important;
-  color: #ffffff !important;
+  background: var(--gradient-primary) !important;
+  color: var(--color-text-on-primary) !important;
   font-weight: 600 !important;
   font-size: 0.875rem !important;
-  padding: 0.6rem 1.25rem !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 2px 10px rgba(255, 34, 56, 0.3) !important;
+  padding: 0.55rem 1.15rem !important;
+  border: 1px solid var(--color-border-subtle) !important;
+  box-shadow: var(--shadow-btn-primary) !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
 }
@@ -224,8 +241,9 @@ input[type="submit"],
 button:hover,
 input[type="submit"]:hover,
 .button--primary:hover {
-  background: linear-gradient(135deg, var(--rex-primary-light), var(--rex-primary)) !important;
-  box-shadow: 0 4px 18px rgba(255, 34, 56, 0.5) !important;
+  background: var(--gradient-primary-hover) !important;
+  color: var(--color-text-on-primary) !important;
+  box-shadow: var(--shadow-btn-primary-hover) !important;
   transform: translateY(-1px) !important;
 }
 
@@ -233,32 +251,53 @@ input[type="submit"]:hover,
 button:active,
 input[type="submit"]:active {
   transform: translateY(1px) !important;
-  box-shadow: 0 1px 5px rgba(255, 34, 56, 0.2) !important;
+  box-shadow: var(--shadow-btn-primary-active) !important;
 }
 
-.button--secondary {
-  background: var(--rex-card) !important;
-  border: 1px solid var(--rex-border) !important;
-  color: var(--rex-text) !important;
+.button--secondary,
+.action-edit {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--color-card) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-secondary) !important;
+  border-radius: 0.5rem !important;
+  padding: 0.45rem 0.9rem !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
   box-shadow: none !important;
 }
 
-.button--secondary:hover {
-  background: var(--rex-card-hover) !important;
-  border-color: var(--rex-primary) !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 10px var(--rex-glow-subtle) !important;
+.button--secondary:hover,
+.action-edit:hover {
+  background: var(--color-card-hover) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-text) !important;
+  box-shadow: 0 0 10px var(--color-glow-subtle) !important;
 }
 
-.button--danger {
-  background: linear-gradient(135deg, #DC2626, #991B1B) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+.button--danger,
+button.link--danger,
+button.text-color-red,
+a.text-color-red {
+  background: var(--color-error-bg) !important;
+  color: var(--color-error) !important;
+  border: 1px solid var(--color-error-border) !important;
+  border-radius: 0.5rem !important;
+  padding: 0.45rem 0.9rem !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
 }
 
-.button--danger:hover {
-  background: linear-gradient(135deg, #EF4444, #B91C1C) !important;
-  box-shadow: 0 0 14px rgba(239, 68, 68, 0.4) !important;
+.button--danger:hover,
+button.link--danger:hover,
+button.text-color-red:hover,
+a.text-color-red:hover {
+  background: var(--gradient-danger) !important;
+  color: var(--color-text-on-primary) !important;
+  border-color: var(--color-error) !important;
+  box-shadow: var(--shadow-btn-danger-hover) !important;
 }
 
 /* =========================================================
@@ -270,11 +309,14 @@ input[type="search"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
+input[type="url"],
+input[type="datetime-local"],
 textarea,
 select {
-  background: var(--rex-surface) !important;
-  color: #ffffff !important;
-  border: 1px solid var(--rex-border) !important;
+  background: var(--color-input-bg) !important;
+  color: var(--color-text) !important;
+  font-family: var(--font-sans) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 0.5rem !important;
   padding: 0.6rem 0.85rem !important;
   font-size: 0.875rem !important;
@@ -284,22 +326,59 @@ select {
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--rex-primary) !important;
+  border-color: var(--color-primary) !important;
   outline: none !important;
-  box-shadow: 0 0 0 3px rgba(255, 34, 56, 0.25) !important;
+  box-shadow: 0 0 0 3px var(--color-focus-ring) !important;
+}
+
+.search {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.search__eyeglass-icon {
+  position: absolute !important;
+  left: 0.85rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 1rem !important;
+  height: 1rem !important;
+  fill: var(--color-text-muted) !important;
+  pointer-events: none !important;
 }
 
 .search__input {
-  background: var(--rex-surface) !important;
-  border: 1px solid var(--rex-border) !important;
+  background: var(--color-input-bg) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 0.5rem !important;
-  color: #ffffff !important;
-  padding-left: 2.25rem !important;
+  color: var(--color-text) !important;
+  padding-left: 2.5rem !important;
+  padding-right: 2.25rem !important;
+}
+
+.search__input::placeholder {
+  color: var(--color-text-muted) !important;
 }
 
 .search__input:focus {
-  border-color: var(--rex-primary) !important;
-  box-shadow: 0 0 0 3px rgba(255, 34, 56, 0.25) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-focus-ring) !important;
+}
+
+.search__clear-link {
+  position: absolute !important;
+  right: 0.75rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.search__clear-icon {
+  width: 1rem !important;
+  height: 1rem !important;
+  fill: var(--color-text-muted) !important;
 }
 
 /* =========================================================
@@ -307,32 +386,32 @@ select:focus {
    ========================================================= */
 
 .selectize-input {
-  background: var(--rex-surface) !important;
-  border: 1px solid var(--rex-border) !important;
+  background: var(--color-input-bg) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 0.5rem !important;
-  color: #ffffff !important;
+  color: var(--color-text) !important;
   box-shadow: none !important;
 }
 
 .selectize-input.focus,
 .selectize-input.dropdown-active {
-  border-color: var(--rex-primary) !important;
-  box-shadow: 0 0 0 3px rgba(255, 34, 56, 0.25) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-focus-ring) !important;
 }
 
 .selectize-dropdown {
-  background: var(--rex-surface) !important;
-  border: 1px solid var(--rex-border) !important;
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 0.5rem !important;
-  color: var(--rex-text) !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6) !important;
+  color: var(--color-text) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
 .selectize-dropdown .option:hover,
 .selectize-dropdown .option.active {
-  background: var(--rex-card) !important;
-  color: #ffffff !important;
-  border-left: 2px solid var(--rex-primary) !important;
+  background: var(--color-card) !important;
+  color: var(--color-text) !important;
+  border-left: 2px solid var(--color-primary) !important;
 }
 
 /* =========================================================
@@ -340,9 +419,9 @@ select:focus {
    ========================================================= */
 
 .flash-notice {
-  background: rgba(16, 185, 129, 0.12) !important;
-  border: 1px solid rgba(16, 185, 129, 0.35) !important;
-  color: #6EE7B7 !important;
+  background: var(--color-success-bg) !important;
+  border: 1px solid var(--color-success-border) !important;
+  color: var(--color-success) !important;
   border-radius: 0.5rem !important;
   padding: 0.75rem 1rem !important;
   margin-bottom: 1rem !important;
@@ -350,9 +429,9 @@ select:focus {
 
 .flash-error,
 .flash-alert {
-  background: rgba(255, 34, 56, 0.12) !important;
-  border: 1px solid rgba(255, 34, 56, 0.35) !important;
-  color: #FFA3AF !important;
+  background: var(--color-error-bg) !important;
+  border: 1px solid var(--color-error-border) !important;
+  color: var(--color-error) !important;
   border-radius: 0.5rem !important;
   padding: 0.75rem 1rem !important;
   margin-bottom: 1rem !important;
@@ -364,35 +443,37 @@ select:focus {
 
 .solid-web-ui,
 [data-color-scheme] {
-  --swui-color-bg: var(--rex-bg) !important;
-  --swui-color-surface: var(--rex-surface) !important;
-  --swui-color-card: var(--rex-card) !important;
-  --swui-color-border: var(--rex-border) !important;
-  --swui-color-text: var(--rex-text) !important;
-  --swui-color-text-muted: var(--rex-text-muted) !important;
-  --swui-color-primary: var(--rex-primary) !important;
-  background: var(--rex-bg) !important;
-  color: var(--rex-text) !important;
+  --swui-color-bg: var(--color-bg) !important;
+  --swui-color-surface: var(--color-surface) !important;
+  --swui-color-card: var(--color-card) !important;
+  --swui-color-border: var(--color-border) !important;
+  --swui-color-text: var(--color-text) !important;
+  --swui-color-text-muted: var(--color-text-muted) !important;
+  --swui-color-primary: var(--color-primary) !important;
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
+  font-family: var(--font-sans) !important;
   min-height: 100vh;
 }
 
 .swui-page {
-  background: var(--rex-bg) !important;
-  color: var(--rex-text) !important;
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
 }
 
 .swui-page__header {
-  background: var(--rex-surface) !important;
-  border-bottom: 1px solid var(--rex-border) !important;
+  background: var(--color-surface) !important;
+  border-bottom: 1px solid var(--color-border) !important;
   padding: 1.25rem 2rem !important;
 }
 
 .swui-page__title {
-  color: #ffffff !important;
-  font-size: 1.5rem !important;
+  color: var(--color-text) !important;
+  font-family: var(--font-display) !important;
+  font-size: 1.65rem !important;
   font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-  text-shadow: 0 0 16px rgba(255, 34, 56, 0.25) !important;
+  letter-spacing: -0.01em !important;
+  text-shadow: var(--shadow-heading) !important;
 }
 
 .swui-nav {
@@ -402,7 +483,7 @@ select:focus {
 }
 
 .swui-nav__link {
-  color: var(--rex-text-muted) !important;
+  color: var(--color-text-muted) !important;
   text-decoration: none !important;
   border-radius: 0.5rem !important;
   padding: 0.5rem 1rem !important;
@@ -413,79 +494,79 @@ select:focus {
 }
 
 .swui-nav__link:hover {
-  color: #ffffff !important;
-  background: var(--rex-card) !important;
-  border-color: rgba(255, 34, 56, 0.3) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  color: var(--color-text) !important;
+  background: var(--color-card) !important;
+  border-color: var(--color-border-hover) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 .swui-nav__link--active {
-  color: #ffffff !important;
-  background: linear-gradient(135deg, rgba(255, 34, 56, 0.22), rgba(204, 17, 37, 0.12)) !important;
-  border-color: var(--rex-primary) !important;
+  color: var(--color-text) !important;
+  background: var(--gradient-nav-active) !important;
+  border-color: var(--color-primary) !important;
   font-weight: 600 !important;
-  box-shadow: 0 0 12px rgba(255, 34, 56, 0.25) !important;
+  box-shadow: var(--shadow-nav-active) !important;
 }
 
 .swui-card,
 .swui-stat-card,
 .swui-chart-card {
-  background: var(--rex-surface) !important;
-  border: 1px solid var(--rex-border) !important;
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 0.75rem !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: var(--shadow-md) !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .swui-card:hover,
 .swui-stat-card:hover {
-  border-color: rgba(255, 34, 56, 0.4) !important;
-  box-shadow: 0 6px 24px rgba(255, 34, 56, 0.15) !important;
+  border-color: var(--color-border-hover) !important;
+  box-shadow: var(--shadow-card-hover) !important;
 }
 
 .swui-stat__value {
-  color: #ffffff !important;
+  color: var(--color-text) !important;
   font-weight: 700 !important;
-  text-shadow: 0 0 10px rgba(255, 34, 56, 0.2) !important;
+  text-shadow: var(--shadow-stat-value) !important;
 }
 
 .swui-stat__label {
-  color: var(--rex-text-muted) !important;
+  color: var(--color-text-muted) !important;
   font-size: 0.8rem !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
 }
 
 .swui-table {
-  background: var(--rex-surface) !important;
-  color: var(--rex-text) !important;
-  border: 1px solid var(--rex-border) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 0.75rem !important;
   overflow: hidden !important;
 }
 
 .swui-table th {
-  background: var(--rex-card) !important;
-  color: var(--rex-text-muted) !important;
+  background: var(--color-card) !important;
+  color: var(--color-text-muted) !important;
   font-weight: 600 !important;
   font-size: 0.8rem !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
-  border-bottom: 1px solid var(--rex-border) !important;
+  border-bottom: 1px solid var(--color-border) !important;
   padding: 0.85rem 1.2rem !important;
 }
 
 .swui-table td {
-  background: var(--rex-surface) !important;
-  color: var(--rex-text) !important;
-  border-bottom: 1px solid var(--rex-border) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border-bottom: 1px solid var(--color-border) !important;
   padding: 0.85rem 1.2rem !important;
   transition: background-color 0.15s ease !important;
 }
 
 .swui-table tr:hover td {
-  background: var(--rex-card-hover) !important;
-  color: #ffffff !important;
+  background: var(--color-card-hover) !important;
+  color: var(--color-text) !important;
 }
 
 .swui-badge {
@@ -499,22 +580,22 @@ select:focus {
 }
 
 .swui-badge--success {
-  background: rgba(16, 185, 129, 0.15) !important;
-  color: #34D399 !important;
-  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  background: var(--color-success-bg) !important;
+  color: var(--color-success) !important;
+  border: 1px solid var(--color-success-border) !important;
 }
 
 .swui-badge--failed,
 .swui-badge--error {
-  background: rgba(255, 34, 56, 0.15) !important;
-  color: #FF5263 !important;
-  border: 1px solid rgba(255, 34, 56, 0.3) !important;
+  background: var(--color-error-bg) !important;
+  color: var(--color-error) !important;
+  border: 1px solid var(--color-error-border) !important;
 }
 
 .swui-refresh-bar {
-  background: var(--rex-surface) !important;
-  border: 1px solid var(--rex-border) !important;
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 0.5rem !important;
   padding: 0.5rem 1rem !important;
-  color: var(--rex-text-muted) !important;
+  color: var(--color-text-muted) !important;
 }

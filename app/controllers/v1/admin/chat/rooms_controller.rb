@@ -5,10 +5,6 @@ class V1::Admin::Chat::RoomsController < V1::ApplicationController
   before_action :set_active_room, only: %i[show update discard destroy]
   before_action :set_room_including_discarded, only: %i[undiscard]
 
-  def permission_resource_name
-    IamConstants::Resource::CHAT_ROOMS
-  end
-
   # GET /v1/admin/chat/rooms
   def index
     filters = list_params

@@ -71,10 +71,6 @@ class V1::Payment::CouponsController < V1::ApplicationController
 
   private
 
-  def permission_resource_name
-    IamConstants::Resource::PAYMENT_COUPONS
-  end
-
   def payment_message(key, **options)
     MessageService::Payment.t(key, **options)
   end

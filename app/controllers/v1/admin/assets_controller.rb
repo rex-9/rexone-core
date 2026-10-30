@@ -539,12 +539,25 @@ class V1::Admin::AssetsController < V1::ApplicationController
 
     result = nil
     begin
+      extension = File.extname(filename_for(file)).delete(".").downcase.presence || MediaConstants::SUBTITLE_EXT_SRT
+      raw_content = if file.respond_to?(:read)
+        content = file.read.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
+        file.rewind if file.respond_to?(:rewind)
+        content
+      end
       result = StorageService::Client.upload(
         file,
-        storage_key: AssetConstants::AssetName.subtitle_for(@asset, version: SecureRandom.uuid),
+        storage_key: AssetConstants::AssetName.subtitle_for(@asset, version: SecureRandom.uuid, extension: extension),
         resource_type: "raw"
       )
-      create_subtitle!(@asset, result, fallback_size: file.size)
+      create_subtitle!(
+        @asset,
+        result,
+        fallback_size: file.size,
+        extension: extension,
+        content: raw_content,
+        original_filename: filename_for(file)
+      )
       render_json_response(
         status_code: 200,
         message: admin_asset_message(MessageService::Admin::Asset::SUBTITLE_UPLOADED),
@@ -591,18 +604,22 @@ class V1::Admin::AssetsController < V1::ApplicationController
     thumbnail
   end
 
-  def create_subtitle!(asset, result, fallback_size:)
+  def create_subtitle!(asset, result, fallback_size:, extension: MediaConstants::SUBTITLE_EXT_SRT, content: nil, original_filename: nil)
     Asset.transaction do
       Asset.create!(
         name: result[:storage_key], url: result[:url],
         type: AssetConstants::AssetType::SUBTITLE,
         format: AssetConstants::AssetFormat::SUBTITLE,
-        extension: MediaConstants::SUBTITLE_EXT_SRT,
+        extension: extension,
         size_bytes: result[:bytes] || fallback_size,
         source: AssetConstants::AssetSource::UPLOAD,
         status: MediaConstants::Status::READY,
         storage_key: result[:storage_key], assetable: asset.assetable,
-        parent_asset: asset, created_by_id: current_user.id
+        parent_asset: asset, created_by_id: current_user.id,
+        metadata: {
+          original_filename: original_filename,
+          content: content
+        }.compact
       )
     end
   end

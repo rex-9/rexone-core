@@ -1,26 +1,23 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Rex9 Admin</title>
-
+    <title><%= DesignConstants::Brand::ADMIN_TITLE %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="<%= DesignConstants::Fonts::GOOGLE_FONTS_URL %>" rel="stylesheet">
+
+    <%= stylesheet_link_tag "tokens", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "admin", "data-turbo-track": "reload" %>
-    <script>
-      <%= raw Rails.root.join("app/assets/javascripts/admin_datetime.js").read %>
-    </script>
+    <%= javascript_include_tag "admin_datetime", "data-turbo-track": "reload", defer: true %>
 
     <%= solid_web_ui_head_tags %>
   </head>
 
-  <body>
-    <aside>
-      <!-- your admin sidebar -->
-    </aside>
-
-    <main>
-      <%= yield %>
-    </main>
+  <body class="bg-base-100 text-base-content">
+    <%= yield %>
   </body>
 </html>

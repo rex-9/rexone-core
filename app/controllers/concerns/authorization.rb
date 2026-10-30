@@ -36,8 +36,6 @@ module Authorization
   end
 
   def permission_resource
-    return permission_resource_name if respond_to?(:permission_resource_name, true)
-
     parts = controller_path.sub(%r{\Av\d+/}, "").sub(%r{\Aadmin/}, "").split("/")
     candidate = parts.join("_")
     return candidate if IamConstants::Resource::ALL.include?(candidate)

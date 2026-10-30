@@ -448,6 +448,7 @@ Every semi-structured payload stored in JSONB columns (`metadata`, `payment_meth
 - **ActiveJob & Hash Interoperability**: `ApplicationMetadata` provides custom `ActiveJob::Serializers::ObjectSerializer` for transparent background worker payloads alongside full hash delegation (`[]`, `[]=`, `key?`, `dig`, `to_h`, `merge`, `symbolize_keys`).
 - **Single Source of Truth (SSOT)**: Sub-models declare all typed attributes and introspection (`attribute_names`), completely eradicating duplicate string constant dictionaries, dual maintenance, and key drift.
 - **Zero Raw String Literals**: Dictionary keys, status values, and lifecycle steps are frozen symbols/constants.
+- **Centralized Server Design Tokens & Typography**: [`DesignConstants`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/constants/design_constants.rb) and [`app/assets/stylesheets/tokens.css`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/assets/stylesheets/tokens.css) serve as the single non-redundant source of truth for brand colors, surfaces, glows, contrast hierarchy (Law U18), and typography across Administrate, Solid Web UI (`app/assets/stylesheets/admin.css`), and transactional emails (`EmailService::TemplateRenderer`).
 - **OpenAPI / Swagger Transparency**: All metadata properties are explicitly typed and documented in OpenAPI specifications and Swagger UI, eradicating untyped objects and "Arbitrary JSONB" placeholders.
 - **Cross-Platform Contract Parity**: Strongly typed TypeScript interfaces in `rexone-web` and typed Dart key mappings in `rexone_mobile`.
 
