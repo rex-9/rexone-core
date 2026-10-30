@@ -32,6 +32,7 @@ module IamConstants
     ACCESSES              = "accesses".freeze
     ASSETS                = "assets".freeze
     NOTIFICATIONS         = "notifications".freeze
+    USER_NOTIFICATIONS    = "user_notifications".freeze
     FEEDBACKS             = "feedbacks".freeze
     ANALYTICS             = "analytics".freeze
     SPEECH                = "speech".freeze
@@ -54,7 +55,6 @@ module IamConstants
     PAYMENT_PURCHASES     = "payment_purchases".freeze
     PAYMENT_COUPONS       = "payment_coupons".freeze
     PAYMENT_USER_COUPONS  = "payment_user_coupons".freeze
-    USER_NOTIFICATIONS    = "user_notifications".freeze
 
     ALL = [
       USERS, ACCESSES, ASSETS, NOTIFICATIONS, USER_NOTIFICATIONS, FEEDBACKS, ANALYTICS, SPEECH,
@@ -64,20 +64,6 @@ module IamConstants
       PAYMENT_PRODUCTS, PAYMENT_PAYMENTS, PAYMENT_SUBSCRIPTIONS, PAYMENT_PURCHASES,
       PAYMENT_COUPONS, PAYMENT_USER_COUPONS
     ].freeze
-
-    # Compatibility aliases
-    ROLES         = IAM_ROLES
-    PERMISSIONS   = IAM_PERMISSIONS
-    USER_ROLES    = IAM_USER_ROLES
-    PRODUCTS      = PAYMENT_PRODUCTS
-    PAYMENTS      = PAYMENT_PAYMENTS
-    SUBSCRIPTIONS = PAYMENT_SUBSCRIPTIONS
-    PURCHASES     = PAYMENT_PURCHASES
-    COUPONS       = PAYMENT_COUPONS
-    USER_COUPONS  = PAYMENT_USER_COUPONS
-    LOGS          = CLIENT_LOGS
-    VERSIONS      = CLIENT_VERSIONS
-    USER_VERSIONS = CLIENT_USER_VERSIONS
   end
 
   module DefaultPermissions
