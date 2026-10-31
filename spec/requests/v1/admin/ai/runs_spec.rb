@@ -79,15 +79,17 @@ RSpec.describe "V1 Admin AI Runs API", type: :request do
       expect(response_data.first.dig("attributes", "model")).to eq("gemini-2.5-flash")
     end
 
-    it "filters runs by search term" do
-      create(:ai_run, feature: "chat", model: "deepseek-chat")
-      create(:ai_run, feature: "summarize", model: "gemini-2.5-pro")
+    it "filters runs by search term across feature, model, provider, and profile key" do
+      custom_profile = create(:ai_profile, key: "support_bot", name: "Support Bot")
+      create(:ai_run, profile: custom_profile, feature: "chat", provider: "anthropic", model: "claude-sonnet-4-6")
+      create(:ai_run, feature: "summarize", provider: "gemini", model: "gemini-2.5-pro")
 
-      get "/v1/admin/ai/runs", params: { search: "summarize" }, headers: headers
+      get "/v1/admin/ai/runs", params: { search: "support_bot" }, headers: headers
 
       expect(response).to have_http_status(:ok)
       expect(response_data.size).to eq(1)
-      expect(response_data.first.dig("attributes", "feature")).to eq("summarize")
+      expect(response_data.first.dig("attributes", "profile_key")).to eq("support_bot")
+      expect(response_meta.dig("config", "providers")).to be_an(Array)
     end
 
     it "sorts runs by latency_ms ascending" do

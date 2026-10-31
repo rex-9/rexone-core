@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe "Universal Bidirectional JSON <-> TOON AI Pipeline" do
   let(:user) { create(:user) }
-  let!(:profile) { Ai::ProfileService.resolve!(AiConstants::ProfileKey::CHAT_DEFAULT) }
+  let!(:profile) { Ai::ProfileService.resolve!(AiConstants::ProfileKey::CHAT) }
 
   after do
     Ai::Providers::Client.reset_providers!

@@ -515,7 +515,7 @@ cd ../rexone-web && ./scripts/dev.sh
 Built-in operational consoles are mounted directly into the engine, secured by administrative authorization and centralized through `AdminAuthService` (with automated attempt cooldowns, IP failure lockouts, and `Rack::Attack` rate limiting):
 
 - **Resource Administration**: `/admin` (Administrate engine for core models, users, and credentials)
-- **AI Profiles, Runs & Pricing**: `/admin/ai/profiles` (prompt models), `/admin/ai/runs` (telemetry & cost audit), & `/admin/ai/prices` (model pricing catalog)
+- **AI Profiles, Runs & Pricing**: `/admin/ai/profiles` (prompt models), `/admin/ai/runs` (telemetry & cost audit), & `/admin/ai/prices` (model pricing)
 - **Application Performance Monitoring (APM)**: `/admin/pulse` (request, SQL query, and job latency metrics)
 - **Error Tracking**: `/admin/red` (Rails Error Dashboard with stack traces and request parameters)
 - **Queue & Real-Time Inspection**: `/admin/queue` (Solid Queue), `/admin/cache`, and `/admin/cable`
@@ -539,7 +539,7 @@ To maintain high architectural discipline without cluttering the primary showcas
 | **🗄️ Database Schema & Models**        | Complete database schema, tables, UUID indexes, and associations: **[`docs/SCHEMA.md`](docs/SCHEMA.md)**                                                  |
 | **📦 Object Storage (Garage S3)**      | Self-hosted S3 Garage setup (port 3100), buckets, and Cyberduck: **[`docs/GARAGE.md`](docs/GARAGE.md)**                                                   |
 | **🎬 Media Streaming & Playback**      | Progressive video/audio, FFmpeg background compression, and SRT subtitles: **[`docs/MEDIA_PLAYBACK.md`](docs/MEDIA_PLAYBACK.md)**                         |
-| **🤖 AI Assistant & Speech**           | Queued chat, multi-message chunking, DeepSeek/Gemini, and TTS/STT: **[`docs/AI_MANUAL.md`](docs/AI_MANUAL.md)**                                           |
+| **🤖 AI Assistant & Speech**           | Queued chat, multi-message chunking, DeepSeek/Gemini/OpenAI/Anthropic, and TTS/STT: **[`docs/AI_MANUAL.md`](docs/AI_MANUAL.md)**                            |
 | **🛡️ Security & Boot Guard**           | Zero-trust CORS, startup secret validation, pre-commit scanners: **[`docs/SECURITY.md`](docs/SECURITY.md)**                                               |
 | **🛑 DDoS & Rate Limiting**            | Rack::Attack rate-limiting ladders, IP throttling, and abuse defense: **[`docs/DDOS.md`](docs/DDOS.md)**                                                  |
 | **🚀 Production Deployment**           | Multi-stage Docker, Coolify VPS maintenance, log rotation, and SSL: **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)**                                        |

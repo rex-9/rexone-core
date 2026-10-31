@@ -16,6 +16,9 @@ module Ai
 
       # Specific pipeline analysis task (e.g. "sentiment", "summary", "extraction").
       attribute :analysis_type, :string
+
+      # Number of prompt tokens served from provider prompt cache at discounted rate.
+      attribute :cached_tokens, :integer
     end
   end
 end

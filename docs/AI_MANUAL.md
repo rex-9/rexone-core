@@ -18,24 +18,27 @@ Chat::ProcessMessageJob
 Ai::RunService (Telemetry, Monotonic Timing & Audit)
         ↓
 Ai::Providers::Client (Swappable Provider Gateway)
-    ├── Ai::Providers::DeepSeek (api.deepseek.com)
-    └── Ai::Providers::Gemini   (generativelanguage.googleapis.com)
+    ├── Ai::Providers::DeepSeek  (api.deepseek.com)
+    ├── Ai::Providers::Gemini    (generativelanguage.googleapis.com)
+    ├── Ai::Providers::OpenAi    (api.openai.com)
+    └── Ai::Providers::Anthropic (api.anthropic.com)
 ```
 
 1. **Database-Driven Profiles (`Ai::Profile`)**:
    - Every AI behavior (conversational chat, code generation, summarization, translation) is governed by an `Ai::Profile` record.
-   - Profile attributes: `key`, `provider` (`"deepseek"`, `"gemini"`), `model`, `temperature`, `max_output_tokens`, `context_max_tokens`, `history_max_messages`, `timeout_seconds`, `system_prompt`, and `settings` (JSONB).
+   - Profile attributes: `key`, `provider` (`"deepseek"`, `"gemini"`, `"openai"`, `"anthropic"`), `model`, `temperature`, `max_output_tokens`, `context_max_tokens`, `history_max_messages`, `timeout_seconds`, `system_prompt`, and `settings` (JSONB).
 2. **Provider Isolation (`app/services/ai/providers/`)**:
    - Provider integrations are strictly quarantined behind `Ai::Providers::Base` and invoked via `Ai::Providers::Client`.
    - Adding or swapping a provider never leaks HTTP logic into controllers, models, or jobs.
-3. **Execution Telemetry (`Ai::Run`)**:
-   - Every LLM execution is logged with monotonic latency (`latency_ms`), input character count (`input_chars`), output characters (`output_chars`), prompt/completion/total token usage, and structured error traces if failures occur.
+3. **Execution Telemetry (`Ai::Run`) & Database Cost Calculation (`Ai::CostCalculator`)**:
+   - Every LLM execution is logged with monotonic latency (`latency_ms`), input character count (`input_chars`), output characters (`output_chars`), prompt/cached/completion/total token usage, USD cost (`cost`), and structured error traces if failures occur.
+   - `Ai::CostCalculator` resolves rates directly from active `Ai::Price` records in the database (populated via `Ai::PriceSyncService.sync!` and Admin Portal custom model pricing).
 
 ---
 
 ## 🔄 2. Swappable AI Providers
 
-RexOne natively supports multiple swappable AI providers:
+RexOne natively supports 4 swappable AI providers (`AI_DEFAULT_PROVIDER` defaults to `deepseek`, and `AI_PRICING_REGISTRY_URL` configures the upstream LiteLLM pricing registry):
 
 ### 2.1 Google Gemini (`gemini`)
 
@@ -43,7 +46,7 @@ RexOne natively supports multiple swappable AI providers:
 - **Environment Variables**:
   - `GEMINI_API_KEY`: API key generated from Google AI Studio.
   - `GEMINI_BASE_URL`: Defaults to `https://generativelanguage.googleapis.com/v1beta/openai`.
-  - `GEMINI_MODEL`: Default model (e.g. `gemini-2.5-flash`, `gemini-1.5-pro`, `gemini-1.5-flash`).
+  - `GEMINI_MODEL`: Default model (e.g. `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.0-flash`).
 
 ### 2.2 DeepSeek (`deepseek`)
 
@@ -51,7 +54,23 @@ RexOne natively supports multiple swappable AI providers:
 - **Environment Variables**:
   - `DEEPSEEK_API_KEY`: DeepSeek API key.
   - `DEEPSEEK_BASE_URL`: Defaults to `https://api.deepseek.com`.
-  - `DEEPSEEK_MODEL`: Default model (e.g. `deepseek-v4-flash`, `deepseek-chat`).
+  - `DEEPSEEK_MODEL`: Default model (e.g. `deepseek-chat`, `deepseek-reasoner`).
+
+### 2.3 OpenAI (`openai`)
+
+- **API Endpoint**: `https://api.openai.com/v1/chat/completions`.
+- **Environment Variables**:
+  - `OPENAI_API_KEY`: OpenAI API key.
+  - `OPENAI_BASE_URL`: Defaults to `https://api.openai.com/v1`.
+  - `OPENAI_MODEL`: Default model (e.g. `gpt-4o-mini`, `gpt-4o`, `gpt-4.1`, `gpt-4.1-mini`).
+
+### 2.4 Anthropic (`anthropic`)
+
+- **API Endpoint**: `https://api.anthropic.com/v1/messages` (native Messages API v1 with `anthropic-version: 2023-06-01`).
+- **Environment Variables**:
+  - `ANTHROPIC_API_KEY`: Anthropic API key.
+  - `ANTHROPIC_BASE_URL`: Defaults to `https://api.anthropic.com`.
+  - `ANTHROPIC_MODEL`: Default model (e.g. `claude-sonnet-4-0`, `claude-3-7-sonnet-latest`, `claude-3-5-haiku-latest`).
 
 ---
 
@@ -71,16 +90,16 @@ RexOne natively supports multiple swappable AI providers:
    - **System Prompt**: Specific instructions and personality constraints.
 4. Save the profile.
 
-### 3.2 Swapping Active Models in Production
+### 3.2 Swapping Active Models & Adding New Models in Production (Zero Code Changes)
 
-To immediately swap the model or provider for all users:
+To immediately swap the model or provider, or register a newly released upstream model (e.g. a new Gemini, OpenAI, Anthropic, or DeepSeek model) for all users:
 
-1. Open `/admin/ai/profiles` and select `chat_default` (or click row to view details).
+1. Open `/admin/ai/profiles` and select `chat` (or any profile).
 2. Click **Edit**.
-3. Change `provider` from `deepseek` to `gemini` (or vice versa).
-4. Update `model` to the desired target model.
+3. Select the target `provider` (`deepseek`, `gemini`, `openai`, or `anthropic`).
+4. Pick a model from the provider models dropdown **or** select **Custom Model Identifier** to type any newly released model identifier (e.g. `gemini-3.0-pro`) and optionally enter or update its **Input Rate ($ / 1M)**, **Cached Rate ($ / 1M)**, and **Output Rate ($ / 1M)**.
 5. Click **Save Changes**.
-6. **Zero downtime**: All subsequent chat runs will immediately execute against the newly selected provider and model without restarting server containers.
+6. **Zero code changes & zero downtime**: `Ai::ProfileService` persists the model on `ai_profiles` and automatically upserts the model and its pricing into `ai_prices` in the database so it immediately appears across all profile dropdowns and filters.
 
 ---
 

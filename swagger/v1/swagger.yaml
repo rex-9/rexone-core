@@ -1415,11 +1415,11 @@ components:
           type: string
           nullable: true
           enum:
-            - chat_default
+            - chat
             - summarize
             - translate
             - analyze
-          default: chat_default
+          default: chat
           description:
             Server-controlled AI profile. Raw provider parameters are not
             accepted from clients.
@@ -1461,6 +1461,33 @@ components:
           minLength: 1
           description: Omit to use the translated default room title.
       required: []
+    ai_profile_settings:
+      type: object
+      properties:
+        top_p:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          nullable: true
+        presence_penalty:
+          type: number
+          format: float
+          minimum: -2
+          maximum: 2
+          nullable: true
+        frequency_penalty:
+          type: number
+          format: float
+          minimum: -2
+          maximum: 2
+          nullable: true
+        stop_sequences:
+          type: array
+          items:
+            type: string
+          nullable: true
+      required: []
     ai_profile_create_request:
       type: object
       properties:
@@ -1479,11 +1506,27 @@ components:
                 - deepseek
                 - gemini
                 - openai
+                - anthropic
             enabled:
               type: boolean
             model:
               type: string
               minLength: 1
+            input_cost_per_million:
+              type: number
+              format: float
+              minimum: 0
+              nullable: true
+            cached_cost_per_million:
+              type: number
+              format: float
+              minimum: 0
+              nullable: true
+            output_cost_per_million:
+              type: number
+              format: float
+              minimum: 0
+              nullable: true
             temperature:
               type: number
               format: float
@@ -1505,8 +1548,7 @@ components:
               type: string
               nullable: true
             settings:
-              type: object
-              additionalProperties: true
+              "$ref": "#/components/schemas/ai_profile_settings"
           required:
             - key
             - name
@@ -1528,6 +1570,7 @@ components:
                 - deepseek
                 - gemini
                 - openai
+                - anthropic
             name:
               type: string
               minLength: 1
@@ -1536,6 +1579,21 @@ components:
             model:
               type: string
               minLength: 1
+            input_cost_per_million:
+              type: number
+              format: float
+              minimum: 0
+              nullable: true
+            cached_cost_per_million:
+              type: number
+              format: float
+              minimum: 0
+              nullable: true
+            output_cost_per_million:
+              type: number
+              format: float
+              minimum: 0
+              nullable: true
             temperature:
               type: number
               format: float
@@ -1557,8 +1615,7 @@ components:
               type: string
               nullable: true
             settings:
-              type: object
-              additionalProperties: true
+              "$ref": "#/components/schemas/ai_profile_settings"
           required: []
       required:
         - profile
@@ -1881,6 +1938,9 @@ components:
           nullable: true
         analysis_type:
           type: string
+          nullable: true
+        cached_tokens:
+          type: integer
           nullable: true
       required: []
     client_version_metadata:
@@ -15309,6 +15369,7 @@ paths:
               - deepseek
               - gemini
               - openai
+              - anthropic
         - name: model
           in: query
           required: false
@@ -15427,6 +15488,102 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/ai_profile_create_request"
+  "/v1/admin/ai/profiles/config":
+    get:
+      tags:
+        - Admin / AI
+      summary: Get AI configuration, providers, models, and pricing
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
+  "/v1/admin/ai/profiles/sync_prices":
+    post:
+      tags:
+        - Admin / AI
+      summary: Sync AI model prices from upstream and return updated providers
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
   "/v1/admin/ai/profiles/{id}":
     get:
       tags:
@@ -15558,6 +15715,71 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/ai_profile_update_request"
+    delete:
+      tags:
+        - Admin / AI
+      summary: Destroy a custom AI profile
+      parameters:
+        - name: X-Locale
+          in: header
+          required: false
+          description:
+            Response language. Accepts en or my; Accept-Language is also
+            supported.
+          schema:
+            type: string
+            enum:
+              - en
+              - my
+        - name: X-Platform
+          in: header
+          required: false
+          description: Active-session namespace.
+          schema:
+            type: string
+            enum:
+              - web
+              - mobile
+            default: web
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/response"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        "422":
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      security:
+        - bearerAuth: []
   "/v1/admin/ai/runs":
     get:
       tags:
@@ -15590,11 +15812,20 @@ paths:
           required: false
           schema:
             type: string
+            enum:
+              - chat
+              - summarize
+              - translate
+              - analyze
         - name: status
           in: query
           required: false
           schema:
             type: string
+            enum:
+              - processing
+              - completed
+              - failed
         - name: provider
           in: query
           required: false
@@ -15604,6 +15835,7 @@ paths:
               - deepseek
               - gemini
               - openai
+              - anthropic
         - name: model
           in: query
           required: false

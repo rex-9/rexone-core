@@ -10,11 +10,13 @@ class V1::Admin::Ai::RunsController < V1::ApplicationController
     runs = Ai::RunService.list(filters.except(:limit, :page, :sort_by, :sort_order))
     runs = sort(runs, columns: SortConstants::Columns::AI_RUN)
     pagy, records = pagy(:offset, runs, limit: filters[:limit])
+    serialized = Ai::RunSerializer.collection_pagy(records, pagy)
 
     render_json_response(
       status_code: 200,
       message: ai_message(MessageService::Ai::RUNS_FETCHED),
-      **Ai::RunSerializer.collection_pagy(records, pagy)
+      data: serialized[:data],
+      meta: serialized[:meta].merge(config: Ai::ProfileService.config)
     )
   end
 

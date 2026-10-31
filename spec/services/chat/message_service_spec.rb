@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe Chat::MessageService do
   let(:user) { create(:user) }
   let(:room) { create(:chat_room, user: user) }
-  let!(:profile) { Ai::ProfileService.resolve!(AiConstants::ProfileKey::CHAT_DEFAULT) }
+  let!(:profile) { Ai::ProfileService.resolve!(AiConstants::ProfileKey::CHAT) }
 
   describe ".queue_ai_response!" do
     it "persists queued user message and enqueues background job" do

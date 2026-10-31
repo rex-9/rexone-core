@@ -22,6 +22,24 @@ RSpec.describe Ai::Providers::Client do
     expect(result.dig("choices", 0, "message", "content")).to eq("DeepSeek response")
   end
 
+  it "routes to OpenAI provider when requested" do
+    fake_openai = instance_double(Ai::Providers::OpenAi)
+    allow(Ai::Providers::OpenAi).to receive(:new).and_return(fake_openai)
+    allow(fake_openai).to receive(:chat).and_return("choices" => [ { "message" => { "content" => "OpenAI response" } } ])
+
+    result = described_class.chat(provider: "openai", messages: [ { role: "user", content: "hi" } ])
+    expect(result.dig("choices", 0, "message", "content")).to eq("OpenAI response")
+  end
+
+  it "routes to Anthropic provider when requested" do
+    fake_anthropic = instance_double(Ai::Providers::Anthropic)
+    allow(Ai::Providers::Anthropic).to receive(:new).and_return(fake_anthropic)
+    allow(fake_anthropic).to receive(:chat).and_return("choices" => [ { "message" => { "content" => "Anthropic response" } } ])
+
+    result = described_class.chat(provider: "anthropic", messages: [ { role: "user", content: "hi" } ])
+    expect(result.dig("choices", 0, "message", "content")).to eq("Anthropic response")
+  end
+
   it "raises ArgumentError when provider is missing" do
     expect {
       described_class.chat(messages: [ { role: "user", content: "hi" } ])

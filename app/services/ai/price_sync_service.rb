@@ -10,12 +10,12 @@ module Ai
     class << self
       def sync!
         payload = fetch_pricing_payload
-        return if payload.blank?
+        return 0 if payload.blank?
 
         sync_from_payload(payload)
       rescue StandardError => e
         Rails.logger.warn("[Ai::PriceSyncService] Remote sync failed: #{e.message}")
-        nil
+        0
       end
 
       private
@@ -37,6 +37,7 @@ module Ai
 
       def sync_from_payload(data)
         tracked_providers = AiConstants::Provider::ALL
+        synced_count = 0
 
         data.each do |model_key, info|
           next unless info.is_a?(Hash)
@@ -61,14 +62,17 @@ module Ai
 
           clean_model = model_key.sub(%r{^[^/]+/}, "")
 
-          price = Ai::Price.find_or_initialize_by(provider: provider, model: clean_model)
+          price = Ai::Price.with_discarded.find_or_initialize_by(provider: provider, model: clean_model)
           price.input_cost_per_million = input_cost
           price.cached_cost_per_million = cached_cost
           price.output_cost_per_million = output_cost
           price.currency = AiConstants::Pricing::DEFAULT_CURRENCY
           price.discarded_at = nil
           price.save!
+          synced_count += 1
         end
+
+        synced_count
       end
     end
   end

@@ -645,7 +645,7 @@ module Openapi
           type: :string,
           nullable: true,
           enum: AiConstants::ProfileKey::ALL,
-          default: AiConstants::ProfileKey::CHAT_DEFAULT,
+          default: AiConstants::ProfileKey::CHAT,
           description: "Server-controlled AI profile. Raw provider parameters are not accepted from clients."
         }
       ),
@@ -665,39 +665,51 @@ module Openapi
       ai_room_request: object(
         title: { type: :string, minLength: 1, description: "Omit to use the translated default room title." }
       ),
+      ai_profile_settings: object(
+        top_p: { type: :number, format: :float, minimum: 0, maximum: 1, nullable: true },
+        presence_penalty: { type: :number, format: :float, minimum: -2, maximum: 2, nullable: true },
+        frequency_penalty: { type: :number, format: :float, minimum: -2, maximum: 2, nullable: true },
+        stop_sequences: { type: :array, items: { type: :string }, nullable: true }
+      ),
       ai_profile_create_request: object(
         required: [ :profile ],
         profile: object(
           required: %i[key name model],
           key: { type: :string, minLength: 1 },
           name: { type: :string, minLength: 1 },
-          provider: { type: :string, enum: %w[deepseek gemini openai] },
+          provider: { type: :string, enum: AiConstants::Provider::ALL },
           enabled: { type: :boolean },
           model: { type: :string, minLength: 1 },
+          input_cost_per_million: { type: :number, format: :float, minimum: 0, nullable: true },
+          cached_cost_per_million: { type: :number, format: :float, minimum: 0, nullable: true },
+          output_cost_per_million: { type: :number, format: :float, minimum: 0, nullable: true },
           temperature: { type: :number, format: :float, minimum: 0, maximum: 2 },
           max_output_tokens: { type: :integer, minimum: 1 },
           context_max_tokens: { type: :integer, minimum: 1 },
           history_max_messages: { type: :integer, minimum: 1 },
           timeout_seconds: { type: :integer, minimum: 1 },
           system_prompt: { type: :string, nullable: true },
-          settings: { type: :object, additionalProperties: true }
+          settings: ref(:ai_profile_settings)
         )
       ),
       ai_profile_update_request: object(
         required: [ :profile ],
         profile: object(
           key: { type: :string, minLength: 1 },
-          provider: { type: :string, enum: %w[deepseek gemini openai] },
+          provider: { type: :string, enum: AiConstants::Provider::ALL },
           name: { type: :string, minLength: 1 },
           enabled: { type: :boolean },
           model: { type: :string, minLength: 1 },
+          input_cost_per_million: { type: :number, format: :float, minimum: 0, nullable: true },
+          cached_cost_per_million: { type: :number, format: :float, minimum: 0, nullable: true },
+          output_cost_per_million: { type: :number, format: :float, minimum: 0, nullable: true },
           temperature: { type: :number, format: :float, minimum: 0, maximum: 2 },
           max_output_tokens: { type: :integer, minimum: 1 },
           context_max_tokens: { type: :integer, minimum: 1 },
           history_max_messages: { type: :integer, minimum: 1 },
           timeout_seconds: { type: :integer, minimum: 1 },
           system_prompt: { type: :string, nullable: true },
-          settings: { type: :object, additionalProperties: true }
+          settings: ref(:ai_profile_settings)
         )
       ),
       ai_text_request: object(
@@ -836,7 +848,8 @@ module Openapi
         endpoint: { type: :string, nullable: true },
         room_id: UUID.merge(nullable: true),
         language: { type: :string, nullable: true },
-        analysis_type: { type: :string, nullable: true }
+        analysis_type: { type: :string, nullable: true },
+        cached_tokens: { type: :integer, nullable: true }
       ),
       client_version_metadata: object(
         release_notes: { type: :string, nullable: true },
@@ -2358,7 +2371,7 @@ module Openapi
           summary: "List AI profiles",
           parameters: [
             query_parameter(:search, type: :string),
-            query_parameter(:provider, enum: %w[deepseek gemini openai]),
+            query_parameter(:provider, enum: AiConstants::Provider::ALL),
             query_parameter(:model, type: :string),
             query_parameter(:status, type: :string),
             query_parameter(:enabled, type: :boolean),
@@ -2372,21 +2385,31 @@ module Openapi
         post: operation(tags: "Admin / AI", summary: "Create an AI profile",
                         body: ref(:ai_profile_create_request), success: 201, errors: [ 401, 403, 422 ])
       }
+      paths["/v1/admin/ai/profiles/config"] = {
+        get: operation(tags: "Admin / AI", summary: "Get AI configuration, providers, models, and pricing",
+                       errors: [ 401, 403 ])
+      }
+      paths["/v1/admin/ai/profiles/sync_prices"] = {
+        post: operation(tags: "Admin / AI", summary: "Sync AI model prices from upstream and return updated configuration",
+                        errors: [ 401, 403 ])
+      }
       paths["/v1/admin/ai/profiles/{id}"] = {
         get: operation(tags: "Admin / AI", summary: "Get an AI profile",
                        parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404 ]),
         put: operation(tags: "Admin / AI", summary: "Update an AI profile",
                        parameters: [ path_parameter(:id) ], body: ref(:ai_profile_update_request),
-                       errors: [ 401, 403, 404, 422 ])
+                       errors: [ 401, 403, 404, 422 ]),
+        delete: operation(tags: "Admin / AI", summary: "Destroy a custom AI profile",
+                          parameters: [ path_parameter(:id) ], errors: [ 401, 403, 404, 422 ])
       }
       paths["/v1/admin/ai/runs"] = {
         get: operation(
           tags: "Admin / AI",
           summary: "List AI runs",
           parameters: [
-            query_parameter(:feature, type: :string),
-            query_parameter(:status, type: :string),
-            query_parameter(:provider, enum: %w[deepseek gemini openai]),
+            query_parameter(:feature, enum: AiConstants::RunFeature::ALL),
+            query_parameter(:status, enum: AiConstants::RunStatus::ALL),
+            query_parameter(:provider, enum: AiConstants::Provider::ALL),
             query_parameter(:model, type: :string),
             query_parameter(:profile_id, type: :string),
             query_parameter(:user_id, type: :string),

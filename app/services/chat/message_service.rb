@@ -174,7 +174,7 @@ module Chat
         result = Ai::RunService.execute_chat(
           user: message.room.user,
           feature: AiConstants::RunFeature::CHAT,
-          profile_key: message.ai_profile&.key || AiConstants::ProfileKey::CHAT_DEFAULT,
+          profile_key: message.ai_profile&.key || AiConstants::ProfileKey::CHAT,
           messages: conversation_for(message),
           chat_message: message,
           metadata: { room_id: message.room_id }
@@ -182,9 +182,9 @@ module Chat
 
         raise Ai::Providers::Error, result[:error] if result[:error].present?
 
-        choice = result.dig("choices", 0) || {}
-        message_obj = choice["message"] || {}
-        response = message_obj["content"]
+        choice = result.dig(AiConstants::ResponseKeys::CHOICES, 0) || {}
+        message_obj = choice[AiConstants::ResponseKeys::MESSAGE] || {}
+        response = message_obj[AiConstants::ResponseKeys::CONTENT]
         raise Ai::Providers::Error, ::MessageService::Ai.t(::MessageService::Ai::NO_RESPONSE) if response.blank?
 
         assistant_message = persist_response!(message, response, result)
@@ -283,8 +283,8 @@ module Chat
         chunks = Chat::TextService.chunk(response_text)
         split_id = chunks.size > 1 ? SecureRandom.uuid : nil
         assistant_messages = []
-        usage = result["usage"] || {}
-        model = result["model"] || user_message.ai_profile&.model
+        usage = result[AiConstants::UsageKeys::USAGE] || {}
+        model = result[AiConstants::ResponseKeys::MODEL] || user_message.ai_profile&.model
 
         Chat::Message.transaction do
           chunks.each_with_index do |chunk_text, index|

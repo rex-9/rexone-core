@@ -38,18 +38,18 @@ module Ai
                  Ai::Price.kept.find_by(model: clean_model)
 
         if record
-          {
+          return {
             input: record.input_cost_per_million.to_d,
             cached: record.cached_cost_per_million.to_d,
             output: record.output_cost_per_million.to_d
           }
-        else
-          {
-            input: 0.0.to_d,
-            cached: 0.0.to_d,
-            output: 0.0.to_d
-          }
         end
+
+        {
+          input: 0.0.to_d,
+          cached: 0.0.to_d,
+          output: 0.0.to_d
+        }
       end
     end
   end

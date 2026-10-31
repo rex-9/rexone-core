@@ -736,7 +736,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `history_max_messages` | `integer`  |    ❌    | `20`                | Chat history window                        |
 | `timeout_seconds`      | `integer`  |    ❌    | `30`                | Provider HTTP timeout                      |
 | `system_prompt`        | `text`     |    ✔️    | `NULL`              | Server-controlled instruction prompt       |
-| `settings`             | `jsonb`    |    ❌    | `{}`                | Reserved structured controls               |
+| `settings`             | `jsonb`    |    ❌    | `{}`                | Structured sampling controls (`Ai::Profile::Settings`) |
 | `created_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                          |
 | `updated_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                         |
 | `discarded_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                        |

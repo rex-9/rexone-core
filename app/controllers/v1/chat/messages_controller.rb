@@ -88,7 +88,7 @@ class V1::Chat::MessagesController < V1::ApplicationController
       message: ai_message(MessageService::Ai::QUEUE_FAILED),
       error: ai_message(MessageService::Ai::QUEUE_FAILED)
     )
-  rescue Ai::Providers::Error => error
+  rescue Ai::Providers::Error, Ai::ProfileService::Error => error
     render_json_response(
       status_code: 422,
       message: ai_message(MessageService::Ai::SERVICE_ERROR),

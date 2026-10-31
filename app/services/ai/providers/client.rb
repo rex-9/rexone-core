@@ -21,21 +21,18 @@ module Ai
         end
 
         def reset_providers!
-          @gemini = nil
-          @deepseek = nil
+          @providers = {}
         end
 
         private
 
         def provider(name)
-          case name.to_s.downcase
-          when AiConstants::Provider::GEMINI
-            @gemini ||= Gemini.new
-          when AiConstants::Provider::DEEPSEEK
-            @deepseek ||= DeepSeek.new
-          else
-            raise ArgumentError, "Unsupported AI provider: #{name.inspect}"
-          end
+          key = name.to_s.downcase
+          klass = AiConstants::Provider::CONFIG.dig(key, :client)
+          raise ArgumentError, "Unsupported AI provider: #{name.inspect}" unless klass
+
+          @providers ||= {}
+          @providers[key] ||= klass.new
         end
       end
     end

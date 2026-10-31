@@ -24,6 +24,10 @@ class Ai::RunSerializer < ApplicationSerializer
     run.cost&.to_f || 0.0
   end
 
+  attribute :cached_tokens do |run|
+    run.metadata&.cached_tokens || 0
+  end
+
   attribute :profile_key do |run|
     run.profile&.key
   end

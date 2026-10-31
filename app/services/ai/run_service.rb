@@ -8,14 +8,17 @@ module Ai
     class << self
       def list(params = {})
         scope = Ai::Run.includes(:profile, :user, :chat_message)
-        scope = scope.where(feature: params[:feature]) if params[:feature].present? && params[:feature] != "all"
-        scope = scope.where(status: params[:status]) if params[:status].present? && params[:status] != "all"
-        scope = scope.where(provider: params[:provider]) if params[:provider].present? && params[:provider] != "all"
-        scope = scope.where(model: params[:model]) if params[:model].present? && params[:model] != "all"
+        scope = scope.where(feature: params[:feature]) if params[:feature].present? && params[:feature] != AiConstants::Filter::ALL
+        scope = scope.where(status: params[:status]) if params[:status].present? && params[:status] != AiConstants::Filter::ALL
+        scope = scope.where(provider: params[:provider]) if params[:provider].present? && params[:provider] != AiConstants::Filter::ALL
+        scope = scope.where(model: params[:model]) if params[:model].present? && params[:model] != AiConstants::Filter::ALL
         scope = scope.where(ai_profile_id: params[:profile_id]) if params[:profile_id].present?
         scope = scope.where(user_id: params[:user_id]) if params[:user_id].present?
         if params[:search].present?
-          scope = scope.where("ai_runs.model ILIKE :q OR ai_runs.feature ILIKE :q", q: "%#{params[:search]}%")
+          scope = scope.left_joins(:profile).where(
+            "ai_runs.model ILIKE :q OR ai_runs.feature ILIKE :q OR ai_runs.provider ILIKE :q OR ai_profiles.key ILIKE :q",
+            q: "%#{params[:search]}%"
+          )
         end
         scope
       end
@@ -110,6 +113,7 @@ module Ai
           cached_tokens: cached_tokens
         )
 
+        run.metadata.cached_tokens = cached_tokens if cached_tokens.positive?
         run.update!(
           status: AiConstants::RunStatus::COMPLETED,
           output_chars: output.length,
@@ -140,6 +144,7 @@ module Ai
           0.0
         end
 
+        run.metadata.cached_tokens = cached_tokens if cached_tokens.positive?
         run.update!(
           status: AiConstants::RunStatus::FAILED,
           output_chars: 0,

@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe Ai::RunService do
   let(:user) { create(:user) }
-  let!(:profile) { Ai::ProfileService.resolve!(AiConstants::ProfileKey::CHAT_DEFAULT) }
+  let!(:profile) { Ai::ProfileService.resolve!(AiConstants::ProfileKey::CHAT) }
 
   describe ".execute_chat" do
     it "records an Ai::Run and updates telemetry on completion" do

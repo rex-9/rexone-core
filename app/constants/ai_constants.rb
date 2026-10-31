@@ -12,7 +12,39 @@ module AiConstants
     OPENAI    = "openai".freeze
     ANTHROPIC = "anthropic".freeze
 
-    ALL = [ DEEPSEEK, GEMINI, OPENAI, ANTHROPIC ].freeze
+    CONFIG = {
+      DEEPSEEK => {
+        label:    "DeepSeek",
+        client:   Ai::Providers::DeepSeek,
+        api_key:  AppConfig::DEEPSEEK_API_KEY,
+        base_url: AppConfig::DEEPSEEK_BASE_URL,
+        model:    AppConfig::DEEPSEEK_MODEL
+      }.freeze,
+      GEMINI => {
+        label:    "Google Gemini",
+        client:   Ai::Providers::Gemini,
+        api_key:  AppConfig::GEMINI_API_KEY,
+        base_url: AppConfig::GEMINI_BASE_URL,
+        model:    AppConfig::GEMINI_MODEL
+      }.freeze,
+      OPENAI => {
+        label:    "OpenAI",
+        client:   Ai::Providers::OpenAi,
+        api_key:  AppConfig::OPENAI_API_KEY,
+        base_url: AppConfig::OPENAI_BASE_URL,
+        model:    AppConfig::OPENAI_MODEL
+      }.freeze,
+      ANTHROPIC => {
+        label:    "Anthropic",
+        client:   Ai::Providers::Anthropic,
+        api_key:  AppConfig::ANTHROPIC_API_KEY,
+        base_url: AppConfig::ANTHROPIC_BASE_URL,
+        model:    AppConfig::ANTHROPIC_MODEL
+      }.freeze
+    }.freeze
+
+    ALL     = CONFIG.keys.freeze
+    DEFAULT = CONFIG.key?(AppConfig::AI_DEFAULT_PROVIDER) ? AppConfig::AI_DEFAULT_PROVIDER : DEEPSEEK
   end
 
   module Pricing
@@ -20,7 +52,7 @@ module AiConstants
     DECIMAL_PRECISION = 6
     PER_MILLION = 1_000_000
     DEFAULT_CACHE_DISCOUNT_RATIO = 0.5
-    PRICING_REGISTRY_URL = "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json".freeze
+    PRICING_REGISTRY_URL = AppConfig::AI_PRICING_REGISTRY_URL
     SYNC_OPEN_TIMEOUT = 5
     SYNC_READ_TIMEOUT = 10
 
@@ -51,15 +83,16 @@ module AiConstants
     FINISH_REASON = "finish_reason".freeze
     LENGTH        = "length".freeze
     ROLE          = "role".freeze
+    MODEL         = "model".freeze
   end
 
   module ProfileKey
-    CHAT_DEFAULT = "chat_default".freeze
-    SUMMARIZE    = "summarize".freeze
-    TRANSLATE    = "translate".freeze
-    ANALYZE      = "analyze".freeze
+    CHAT      = "chat".freeze
+    SUMMARIZE = "summarize".freeze
+    TRANSLATE = "translate".freeze
+    ANALYZE   = "analyze".freeze
 
-    ALL = [ CHAT_DEFAULT, SUMMARIZE, TRANSLATE, ANALYZE ].freeze
+    ALL = [ CHAT, SUMMARIZE, TRANSLATE, ANALYZE ].freeze
   end
 
   module AnalysisType
@@ -113,5 +146,51 @@ module AiConstants
     HISTORY_MAX_MESSAGES = 20
     TIMEOUT_SECONDS      = 60
     MESSAGE_MAX_CHARS    = 2000
+
+    PROFILES = {
+      ProfileKey::CHAT => {
+        name:                 "Chat".freeze,
+        temperature:          TEMPERATURE,
+        max_output_tokens:    MAX_OUTPUT_TOKENS,
+        context_max_tokens:   CONTEXT_MAX_TOKENS,
+        history_max_messages: HISTORY_MAX_MESSAGES,
+        system_prompt:        nil
+      }.freeze,
+      ProfileKey::SUMMARIZE => {
+        name:                 "Summarize".freeze,
+        temperature:          0.5,
+        max_output_tokens:    500,
+        context_max_tokens:   MAX_OUTPUT_TOKENS,
+        history_max_messages: 1,
+        system_prompt:        "Summarize the following text concisely.".freeze
+      }.freeze,
+      ProfileKey::TRANSLATE => {
+        name:                 "Translate".freeze,
+        temperature:          0.3,
+        max_output_tokens:    1000,
+        context_max_tokens:   MAX_OUTPUT_TOKENS,
+        history_max_messages: 1,
+        system_prompt:        "Translate the following text to %{language}. Return only the translation.".freeze
+      }.freeze,
+      ProfileKey::ANALYZE => {
+        name:                 "Analyze".freeze,
+        temperature:          0.3,
+        max_output_tokens:    500,
+        context_max_tokens:   MAX_OUTPUT_TOKENS,
+        history_max_messages: 1,
+        system_prompt:        "Analyze the following text and provide concise insights.".freeze
+      }.freeze
+    }.freeze
+  end
+
+  module Filter
+    ALL      = "all".freeze
+    ACTIVE   = "active".freeze
+    INACTIVE = "inactive".freeze
+
+    STATUS_ENABLED = {
+      ACTIVE   => true,
+      INACTIVE => false
+    }.freeze
   end
 end

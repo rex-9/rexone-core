@@ -1,8 +1,8 @@
 FactoryBot.define do
   factory :ai_profile, class: "Ai::Profile" do
     initialize_with { Ai::Profile.find_or_initialize_by(key: key) }
-    key { AiConstants::ProfileKey::CHAT_DEFAULT }
-    name { "Default Chat" }
+    key { AiConstants::ProfileKey::CHAT }
+    name { "Chat" }
     enabled { true }
     provider { AiConstants::Provider::DEEPSEEK }
     model { "deepseek-chat" }

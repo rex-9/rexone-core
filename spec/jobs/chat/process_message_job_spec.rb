@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe Chat::ProcessMessageJob, type: :job do
   let(:room) { create(:chat_room, title: "New Conversation") }
   let(:user_message) do
-    profile = create(:ai_profile, key: AiConstants::ProfileKey::CHAT_DEFAULT, temperature: 0.4, max_output_tokens: 500)
+    profile = create(:ai_profile, key: AiConstants::ProfileKey::CHAT, temperature: 0.4, max_output_tokens: 500)
     create(
       :chat_message,
       room: room,

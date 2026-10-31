@@ -210,7 +210,12 @@ Rails.application.routes.draw do
       end
 
       namespace :ai do
-        resources :profiles, only: %i[index show create update]
+        resources :profiles, only: %i[index show create update destroy] do
+          collection do
+            get :read_config, path: "config"
+            post :update_sync_prices, path: "sync_prices"
+          end
+        end
         resources :runs, only: %i[index show]
       end
 

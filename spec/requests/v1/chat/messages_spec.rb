@@ -120,6 +120,16 @@ RSpec.describe "V1 Chat Messages API", type: :request do
 
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it "returns unprocessable_entity when requested AI profile is disabled" do
+      disabled_profile = create(:ai_profile, key: "disabled_chat", enabled: false)
+
+      post "/v1/chat/messages",
+           params: { message: "Hello AI", room_id: room.id, profile_key: disabled_profile.key },
+           headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
   end
 
   describe "GET /v1/chat/messages/:id" do

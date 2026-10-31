@@ -173,14 +173,22 @@ module AppConfig
   NOTIFICATION_DISCARDED_RETENTION_DAYS = env_or.call("NOTIFICATION_DISCARDED_RETENTION_DAYS", "7").to_i
 
   # ----------------------------------------------------------------------------
-  # 🤖 AI Providers (DeepSeek & Gemini)
+  # 🤖 AI Providers (DeepSeek, Gemini, OpenAI & Anthropic)
   # ----------------------------------------------------------------------------
+  AI_DEFAULT_PROVIDER         = env_or.call("AI_DEFAULT_PROVIDER", "deepseek").downcase.freeze
+  AI_PRICING_REGISTRY_URL     = env_or.call("AI_PRICING_REGISTRY_URL", "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json").freeze
   DEEPSEEK_API_KEY            = env_or.call("DEEPSEEK_API_KEY", "")
   DEEPSEEK_BASE_URL           = env_or.call("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-  DEEPSEEK_MODEL              = env_or.call("DEEPSEEK_MODEL", "deepseek-v4-flash")
+  DEEPSEEK_MODEL              = env_or.call("DEEPSEEK_MODEL", "deepseek-chat")
   GEMINI_API_KEY              = env_or.call("GEMINI_API_KEY", "")
   GEMINI_BASE_URL             = env_or.call("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
   GEMINI_MODEL                = env_or.call("GEMINI_MODEL", "gemini-2.5-flash")
+  OPENAI_API_KEY              = env_or.call("OPENAI_API_KEY", "")
+  OPENAI_BASE_URL             = env_or.call("OPENAI_BASE_URL", "https://api.openai.com/v1")
+  OPENAI_MODEL                = env_or.call("OPENAI_MODEL", "gpt-4o-mini")
+  ANTHROPIC_API_KEY           = env_or.call("ANTHROPIC_API_KEY", "")
+  ANTHROPIC_BASE_URL          = env_or.call("ANTHROPIC_BASE_URL", "https://api.anthropic.com/v1")
+  ANTHROPIC_MODEL             = env_or.call("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
 
   # ----------------------------------------------------------------------------
   # 🎙️ Speech Services (Azure & Custom TTS/STT)
