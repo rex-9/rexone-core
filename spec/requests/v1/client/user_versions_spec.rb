@@ -8,7 +8,7 @@ RSpec.describe "V1 User Versions API", type: :request do
   before do
     allow(CacheService).to receive(:read).and_return(token)
     allow(CacheService).to receive(:write)
-    grant_permissions(user, "user_versions", :create)
+    grant_permissions(user, IamConstants::Resource::CLIENT_USER_VERSIONS, :create)
   end
 
   describe "POST /v1/client/versions/user-version" do

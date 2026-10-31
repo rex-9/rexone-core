@@ -94,7 +94,7 @@ RSpec.describe "V1 Versions API", type: :request do
 
     it "does not write a Client::UserVersion even with a valid JWT" do
       user = create(:user)
-      grant_permissions(user, "versions", :read)
+      grant_permissions(user, IamConstants::Resource::CLIENT_VERSIONS, :read)
 
       get "/v1/client/versions/current",
           params: { version: "1.4.0" },
@@ -106,7 +106,7 @@ RSpec.describe "V1 Versions API", type: :request do
 
     it "allows a signed-in user with read_versions" do
       user = create(:user)
-      grant_permissions(user, "versions", :read)
+      grant_permissions(user, IamConstants::Resource::CLIENT_VERSIONS, :read)
 
       get "/v1/client/versions/current",
           params: { version: "1.0.0" },

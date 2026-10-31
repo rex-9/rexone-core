@@ -8,7 +8,7 @@ RSpec.describe "V1 Client Logs API", type: :request do
   before do
     allow(CacheService).to receive(:read).and_return(token)
     allow(CacheService).to receive(:write)
-    grant_permissions(user, "logs", :read, :create, :update, :delete)
+    grant_permissions(user, IamConstants::Resource::CLIENT_LOGS, :read, :create, :update, :delete)
   end
 
   describe "POST /v1/client/logs" do

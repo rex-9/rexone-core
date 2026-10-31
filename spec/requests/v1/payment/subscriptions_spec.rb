@@ -12,7 +12,7 @@ RSpec.describe "V1 Payment Subscriptions API", type: :request do
     allow(CacheService).to receive(:write)
     allow(NotificationService::Center).to receive(:subscription_canceled)
     allow(NotificationService::Center).to receive(:subscription_resumed)
-    grant_permissions(user, "subscriptions", :read, :create, :delete)
+    grant_permissions(user, IamConstants::Resource::PAYMENT_SUBSCRIPTIONS, :read, :create, :delete)
   end
 
   describe "GET /v1/payment/subscriptions" do

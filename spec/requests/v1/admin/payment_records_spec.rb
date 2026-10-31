@@ -11,7 +11,7 @@ RSpec.describe "Admin payment records", type: :request do
   end
 
   describe "purchases" do
-    before { grant_admin_permissions(admin, "purchases", :read) }
+    before { grant_admin_permissions(admin, IamConstants::Resource::PAYMENT_PURCHASES, :read) }
 
     it "lists purchases across users and exposes admin display fields" do
       purchase = create(:payment_purchase)
@@ -36,7 +36,7 @@ RSpec.describe "Admin payment records", type: :request do
   end
 
   describe "subscriptions" do
-    before { grant_admin_permissions(admin, "subscriptions", :read) }
+    before { grant_admin_permissions(admin, IamConstants::Resource::PAYMENT_SUBSCRIPTIONS, :read) }
 
     it "filters subscriptions by status and interval" do
       expected = create(:payment_subscription, status: "active", interval: "month")

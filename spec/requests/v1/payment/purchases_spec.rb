@@ -10,7 +10,7 @@ RSpec.describe "V1 Payment Purchases API", type: :request do
   before do
     allow(CacheService).to receive(:read).and_return(token)
     allow(CacheService).to receive(:write)
-    grant_permissions(user, "purchases", :read)
+    grant_permissions(user, IamConstants::Resource::PAYMENT_PURCHASES, :read)
   end
 
   describe "GET /v1/payment/purchases" do

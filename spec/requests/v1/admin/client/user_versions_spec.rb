@@ -13,7 +13,7 @@ RSpec.describe "V1 Admin User Versions API", type: :request do
     allow(CacheService).to receive(:read).and_return(super_token)
     allow(CacheService).to receive(:read).with("active_session:user:#{admin.id}:web").and_return(token)
     grant_admin_role(admin)
-    grant_admin_permissions(admin, "user_versions", :read)
+    grant_admin_permissions(admin, IamConstants::Resource::CLIENT_USER_VERSIONS, :read)
     grant_super_admin_role(super_admin)
   end
 

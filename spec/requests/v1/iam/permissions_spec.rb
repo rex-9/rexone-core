@@ -10,7 +10,7 @@ RSpec.describe "V1 IAM Permissions API", type: :request do
   before do
     allow(CacheService).to receive(:read).and_return(token)
     allow(CacheService).to receive(:write)
-    grant_permissions(user, "permissions", :read)
+    grant_permissions(user, IamConstants::Resource::IAM_PERMISSIONS, :read)
   end
 
   describe "GET /v1/iam/permissions/current" do

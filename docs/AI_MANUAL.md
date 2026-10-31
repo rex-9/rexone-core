@@ -78,17 +78,18 @@ RexOne natively supports 4 swappable AI providers (`AI_DEFAULT_PROVIDER` default
 
 ### 3.1 Creating an Experimental Profile via Admin Portal
 
-1. Navigate to `/admin/ai/profiles` in the Web Admin Portal.
+1. Navigate to `/admin/ai/profiles` in the Web Admin Portal (use **Sync Prices** at any time to pull the latest upstream model rates from the pricing registry).
 2. Click **Create Profile** (`/admin/ai/profiles/create`).
-3. Fill in the experimental profile parameters:
-   - **Key**: Unique slug, e.g. `chat_gemini_experiment`.
-   - **Provider**: Select `gemini` or `deepseek`.
-   - **Model**: Specify upstream model identifier (e.g. `gemini-2.5-flash` or `deepseek-chat`).
+3. Fill in the profile parameters:
+   - **Key**: Unique slug (e.g. `chat_gemini_experiment`), or click a system preset badge (`chat`, `summarize`, `translate`, `analyze`).
+   - **Provider**: Select `deepseek`, `gemini`, `openai`, or `anthropic` (badge indicates whether the provider's API key is configured).
+   - **Model**: Select a model from the provider dropdown or choose **Custom Model Identifier** to enter any model identifier and its **Input Rate (\$ / 1M)**, **Cached Rate (\$ / 1M)**, and **Output Rate (\$ / 1M)**.
    - **Temperature**: Precision vs. creativity (`0.0` to `2.0`, standard `0.7`).
    - **Max Output Tokens**: Response truncation limit (e.g. `2000`).
    - **Context Max Tokens**: Context window budgeting (e.g. `8000`).
+   - **History Max Messages** & **Timeout (Seconds)**: Conversation history window (`20`) and request timeout (`30`s).
    - **System Prompt**: Specific instructions and personality constraints.
-4. Save the profile.
+4. Save the profile. Custom profiles can be deleted from the table or detail page when no longer needed, while the 4 system presets (`chat`, `summarize`, `translate`, `analyze`) are protected from deletion.
 
 ### 3.2 Swapping Active Models & Adding New Models in Production (Zero Code Changes)
 
@@ -106,14 +107,17 @@ To immediately swap the model or provider, or register a newly released upstream
 ## 📊 4. Monitoring & Telemetry (`Ai::Run`)
 
 1. Open `/admin/ai/runs` in the Web Admin Portal.
-2. Filter by:
+2. Filter or search by:
    - **Status**: `completed`, `failed`, `processing`.
    - **Feature**: `chat`, `summarize`, `translate`, `analyze`.
+   - **Provider**: `deepseek`, `gemini`, `openai`, `anthropic`.
+   - **Model**: Any configured or executed model under the selected provider.
+   - **Search**: Free-text search across `model`, `feature`, `provider`, and `profile_key`.
 3. Click any row to view **Run Details**:
-   - Monotonic Latency (ms).
-   - Token breakdown: Prompt Tokens, Completion Tokens, Total Tokens.
-   - Message Input Count & Total Characters.
-   - Request Metadata (endpoint, user ID, room ID).
+   - Monotonic Latency (`latency_ms`) and USD Cost (`cost`).
+   - Token breakdown: Prompt Tokens, Cached Tokens, Completion Tokens, Total Tokens.
+   - Message Input Count & Total Input/Output Characters.
+   - Request Metadata (endpoint, user ID, room ID, profile key).
    - Complete Error Trace if failed (HTTP status, provider error messages).
 
 ---
@@ -142,7 +146,7 @@ Ai::ToonService.prepare_messages_for_llm
   • Inbound Conversion: Markdown ```json, bare JSON, & embedded JSON -> TOON
   • System Directive: Instructs LLM to output strictly in TOON format
                 ↓ (LLM NEVER EATS JSON)
-Upstream Provider (DeepSeek / Gemini)
+Upstream Provider (DeepSeek / Gemini / OpenAI / Anthropic)
                 ↓ (LLM NEVER OUTPUTS JSON)
 LLM returns completion in TOON format
                 ↓

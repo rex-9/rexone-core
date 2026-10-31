@@ -13,7 +13,7 @@ RSpec.describe "V1 Admin Versions API", type: :request do
     allow(CacheService).to receive(:read).and_return(super_token)
     allow(CacheService).to receive(:read).with("active_session:user:#{admin.id}:web").and_return(token)
     grant_admin_role(admin)
-    grant_admin_permissions(admin, "versions", :read, :create, :update, :delete)
+    grant_admin_permissions(admin, IamConstants::Resource::CLIENT_VERSIONS, :read, :create, :update, :delete)
     grant_super_admin_role(super_admin)
   end
 
@@ -50,7 +50,7 @@ RSpec.describe "V1 Admin Versions API", type: :request do
     it "rejects non-admin users even with read_versions" do
       user = create(:user)
       user_token = jwt_for(user)
-      grant_permissions(user, "versions", :read)
+      grant_permissions(user, IamConstants::Resource::CLIENT_VERSIONS, :read)
       allow(CacheService).to receive(:read).with("active_session:user:#{user.id}:web").and_return(user_token)
 
       get "/v1/admin/client/versions", headers: authorization_headers(user_token)
