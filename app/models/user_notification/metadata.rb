@@ -25,6 +25,18 @@ class UserNotification
     # Recipient user's display name.
     attribute :user_name, :string
 
+    # Event timestamp in ISO8601 format (e.g. for sign-in security alerts).
+    attribute :time, :string
+
+    # Call-to-action button label when dispatched from a Notification template.
+    attribute :cta_text, :string
+
+    # Error description when an async operation fails.
+    attribute :error, :string
+
+    # Generated media asset payload list (e.g. TTS speech synthesis outputs).
+    attribute :assets
+
     # Associated product name if transaction-related.
     attribute :product_name, :string
 

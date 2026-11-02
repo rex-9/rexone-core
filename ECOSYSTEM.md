@@ -1,12 +1,12 @@
-# 🏛️ The RexOne Architecture Foundation: Unified Ecosystem Specification
+# 🏛️ The RexOne Ecosystem
 
-A unified architectural specification and cross-platform contract spanning **RexOne Core** (Rails API), **RexOne Web** (React SPA), and **RexOne Mobile** (Flutter Native).
+A unified architectural specification and cross-platform contract spanning **RexOne Core** (Rails), **RexOne Web** (React), and **RexOne Mobile** (Flutter).
 
 ---
 
 ## 📜 Architectural Baseline
 
-RexOne establishes the **RexOne Architecture Foundation**—a disciplined, production-grade tri-platform standard for modern digital products:
+RexOne establishes a disciplined, production-grade foundation for modern digital products:
 
 - **Identity & IAM**: Passwordless/passcode auth, Google SSO, granular role-based access control.
 - **Commerce & Subscriptions**: Stripe Checkout, recurring billing, coupon redemptions, access entitlement ledger.
@@ -157,7 +157,7 @@ Solid Queue operates under a hybrid concurrency architecture configured in `conf
   - Non-blocking Ruby Fibers (`async`) running on Solid Queue with `config.active_support.isolation_level = :fiber`.
   - Runs up to 50 concurrent fibers on a single event loop across prioritized queues:
     - `payments`: Highest priority. Handles Stripe webhook fulfillment (`Payment::ProcessWebhookJob`) with strict idempotency.
-    - `ai`: Handles chat workflows (`Chat::ProcessMessageJob`), provider streaming (DeepSeek, Gemini via OpenAI-compatible endpoints), text-to-speech jobs (`Speech::ProcessTtsJob`), and daily model price catalog sync (`Ai::SyncModelPricesJob`).
+    - `ai`: Handles chat workflows (`Chat::ProcessMessageJob`), provider streaming (DeepSeek, Gemini via OpenAI-compatible endpoints), text-to-speech jobs (`Speech::ProcessTtsJob`), and daily model price sync (`Ai::SyncModelPricesJob`).
     - `notifications`: Fans out Action Cable broadcasts, OneSignal push notifications, and Brevo transactional emails via `Notification::DispatchJob` and `Notification::DeliverJob`.
     - `default`: General asynchronous operations.
 - **Thread Maintenance Worker**:
@@ -246,8 +246,8 @@ Permissions follow a clean, four-level administrative model:
 - **Speech & Audio**: Streams binary MP3 audio directly from `/v1/speech/tts` without base64 overhead, plays message TTS, and connects live WebSocket audio recognition.
 - **Asset Control Center (`/admin/assets`)**: Live VPS and Garage storage dashboard, multi-file batch uploads with optimistic progress, searchable parent asset picker (`AdminParentAssetSelect`), real-time compression badges, and secondary compression triggers.
 - **Admin AI Control Panel (`/admin/ai`)**: Profiles management (`AdminAiProfileCreatePage`, `AdminAiProfileEditPage`) with provider/model selectors, temperature/token boundaries, and prompt editors; AI execution audit log (`AdminAiRunsPage`, `AdminAiRunDetailPage`) with latency, token usage, and dynamic cost calculation display ($USD).
-- **AI Discovery & SEO/GEO**: Standardized `/llms.txt`, `/llms-full.txt` (llmstxt.org standard), comprehensive crawler rules in `robots.txt`, and Schema.org `SoftwareApplication` rich results in `index.html`.
-- **Admin Portal Governance**: Route guards (`AdminRootRoute`), client-side permission checks (`usePermissions`), confirmation status badges (`confirmed` / `unconfirmed`), and operational KPI navigation.
+- **AI Discovery & SEO/GEO**: SaaS Boilerplate Master Comparison page (`/vs`), standardized `/llms.txt`, `/llms-full.txt` (llmstxt.org standard), comprehensive crawler rules in `robots.txt`, and Schema.org `SoftwareApplication` rich results in `index.html`.
+- **Admin Portal Governance & Settings (`/admin/settings`)**: Route guard (`AdminRootRoute`), client-side permission checks (`usePermissions`), confirmation status badges (`confirmed` / `unconfirmed`), operational KPI navigation, and dedicated Control Center Settings (`AdminSettingsPage`) for administrator session controls, theme switching, localization, and live environment diagnostics.
 
 ---
 
@@ -515,7 +515,7 @@ _Version resolution_: Core maps `app_version` to a matching `Client::Version` re
   - **RED (Rails Error Dashboard)**: Server-side Ruby exceptions and backtraces.
   - **Solid UI**: Background job queue throughput, retry backoffs, recurring cron jobs.
   - **Rails Administrate**: Low-level database table inspection. Super-admin access only for sensitive tables.
-- **Client Admin Panel (React SPA)**:
+- **Client Admin Panel (React)**:
   - Focused strictly on **business operations and end-user governance**:
     - Revenue analytics, subscription metrics, user growth KPIs.
     - RBAC management (users, roles, permissions).
@@ -700,26 +700,26 @@ A unified, tamper-proof protocol across Web and Mobile that preserves user navig
 RexOne includes a built-in, zero-friction rebranding engine executed via a single master command from `rexone-core`:
 
 ```bash
-# Full ecosystem synchronization (Core API, Web SPA, and Mobile Flutter simultaneously):
+# Full ecosystem synchronization (Core, Web, and Mobile simultaneously):
 ./scripts/rebrand.sh brand.config.json
 ```
 
 For the comprehensive guide and operational matrix, see **[docs/REBRANDING.md](docs/REBRANDING.md)**.
 
 #### Deterministic Cross-Repository Parameter Contracts (Law U14):
-1. **RexOne Core (Rails API)**:
+1. **RexOne Core (Rails)**:
    - Synchronizes `config/app_config.rb` default parameters (`RAILS_JWT_SECRET_KEY`, `SMTP_DOMAIN`, `FROM_EMAIL`, `S3_BUCKET`).
    - Updates `docker-compose.yaml` (Production / Coolify) and `docker-compose.dev.yaml` with kebab-case container slugs (`prod-<kebab>-api`, `prod-<kebab>-waka`, `prod-<kebab>-media`, `prod-<kebab>-db`, `<kebab>-garage`).
    - Synchronizes PostgreSQL database names (`<snake>_production`, `<snake>_development`) and Garage S3 bucket names (`<kebab>`).
    - Updates database backup scripts (`backup_db.sh`, `backup_garage.sh`, `dev_garage.sh`, `prod_garage_init.sh`).
    - Updates checked-in `.env.example` templates with matching parameter examples.
-2. **RexOne Web (React SPA)**:
+2. **RexOne Web (React)**:
    - Synchronizes `package.json` package name (`<kebab>-web`) and HTML application titles.
    - Synchronizes branding locales (`src/locales/en.json`, `src/locales/my.json`).
    - Updates public brand assets (`public/brand/logo.png`, `public/favicon.png`) and image alt tokens (`src/assets/index.ts`).
    - Synchronizes `scripts/uat.sh` and `scripts/prod.sh` target API hostnames (`https://api.domain.com`, `https://uat.api.domain.com`).
    - Synchronizes checked-in `.env.example` templates.
-3. **RexOne Mobile (Flutter Client)**:
+3. **RexOne Mobile (Flutter)**:
    - Updates application display names dynamically in Android (`AndroidManifest.xml` via `appName`) and iOS (`Info.plist` via `CFBundleDisplayName`).
    - Synchronizes native application ID and iOS bundle ID (`com.brand.app` and `com.brand.app.uat`).
    - Synchronizes release keystore filenames (`<flat>-upload-keystore.jks`) in `build.gradle.kts`.
@@ -735,11 +735,11 @@ For the comprehensive guide and operational matrix, see **[docs/REBRANDING.md](d
 All semi-structured metadata attributes across the ecosystem adhere to deterministic, typed parameter contracts (Law U19). Raw string literals for dictionary keys, lifecycle statuses, and loose parameters are strictly forbidden. Direct hash subscripting (`record.metadata["key"]`), gambling, or `.dig` chains on ActiveRecord metadata columns are completely eradicated in favor of typed sub-models. All metadata schemas are explicitly published in OpenAPI / Swagger specifications, eliminating untyped object placeholders.
 
 1. **Backend Typed Metadata Architecture (`rexone-core`)**:
-   - Built on [`ApplicationMetadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/application_metadata.rb) (`ActiveModel::Model` + `ActiveModel::Attributes`) and mounted on ActiveRecord models via the unified `has_metadata` macro (`ActiveRecord::Type::Json`).
+   - Built on [`ApplicationMetadata`](app/models/application_metadata.rb) (`ActiveModel::Model` + `ActiveModel::Attributes`) and mounted on ActiveRecord models via the unified `has_metadata` macro (`ActiveRecord::Type::Json`).
    - **Unified Accessor (`record.metadata`)**: `record.metadata` directly returns the strongly-typed `ApplicationMetadata` sub-model instance. Legacy dual accessors (`typed_metadata`) and parent model delegators (`sync_status`, `app_version`, `component`, `action`, `tts_status`, etc.) are completely eradicated; all metadata fields strictly live inside `record.metadata.*`.
    - **Strict Whitelisting & Rogue Key Rejection**: `ApplicationMetadata.from_h` dynamically validates all incoming keys against declared model attributes, rejecting unrecognized rogue keys with validation errors on save.
    - **ActiveJob & Hash Interoperability**: `ApplicationMetadata` provides custom `ActiveJob::Serializers::ObjectSerializer` for seamless background job delivery, along with full hash delegation (`[]`, `[]=`, `key?`, `dig`, `to_h`, `merge`, `symbolize_keys`).
-   - **Format-Discriminated Media Contracts**: Polymorphic media metadata contracts dispatch automatically by format and type (`Asset::VideoMetadata`, `Asset::AudioMetadata`, `Asset::ImageMetadata`, `Asset::SubtitleMetadata`, and general fallback [`Asset::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/metadata.rb)).
+   - **Format-Discriminated Media Contracts**: Polymorphic media metadata contracts dispatch automatically by format and type (`Asset::VideoMetadata`, `Asset::AudioMetadata`, `Asset::ImageMetadata`, `Asset::SubtitleMetadata`, and general fallback [`Asset::Metadata`](app/models/asset/metadata.rb)).
    - Domain sub-models govern all JSONB columns: `Client::Log::Metadata`, `Client::Version::Metadata`, `Feedback::Metadata`, `UserNotification::Metadata`, `Notification::Metadata`, `Notification::InAppData`, `Payment::Coupon::Metadata`, `Payment::Purchase::Metadata`, `Payment::PaymentMethodDetails`, `Ai::Run::Metadata`, `Ai::Profile::Settings`, `Chat::Message::Metadata`, `Chat::Room::Metadata`, `Asset::Metadata`.
    - **Single Source of Truth (SSOT)**: Sub-models declare all typed attributes and introspection (`attribute_names`), completely eliminating redundant duplicate constant dictionaries (`module Metadata`), dual maintenance, and key drift.
    - Structural validations enforce that metadata payloads are valid key-value objects and numerical dimensions (width, height, bitrate, duration) are non-negative integers.

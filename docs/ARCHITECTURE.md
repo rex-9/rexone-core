@@ -20,7 +20,7 @@ RexOne deliberately rejects both modern extremes:
 │                              REXONE ARCHITECTURE FOUNDATION                            │
 ├────────────────────────────┬─────────────────────────────┬─────────────────────────────┤
 │      rexone-core           │         rexone-web          │        rexone_mobile        │
-│  (Ruby on Rails 8 API)     │    (React 19 / Vite SPA)    │    (Flutter 3 / GetX iOS+Android)│
+│  (Ruby on Rails 8 API)     │    (React 19 / Vite Web)    │    (Flutter 3 / GetX iOS+Android)│
 ├────────────────────────────┼─────────────────────────────┼─────────────────────────────┤
 │ • API-First Core Engine    │ • Ambient Scarlet Frontend  │ • Native 60fps Mobile App   │
 │ • PostgreSQL 18 (UUIDs)    │ • DaisyUI 5 / Tailwind v4   │ • Drift SQLite Offline DB   │
@@ -43,7 +43,7 @@ All three repositories are governed by:
 ```mermaid
 flowchart TD
     subgraph Clients ["📱 Public Client Surface"]
-        WebClient["Web Browser\n(React 19 SPA :80)\nrexone.me"]
+        WebClient["Web Browser\n(React 19 Web :80)\nrexone.me"]
         MobileClient["Native Mobile App\n(Flutter 3 iOS/Android)\nDrift SQLite Offline DB"]
     end
 

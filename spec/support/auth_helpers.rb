@@ -24,13 +24,7 @@ module AuthHelpers
   end
 
   def grant_permissions(user, resource, *actions, admin: false)
-    canonical_resource = if IamConstants::Resource::ALL.include?(resource.to_s)
-                           resource.to_s
-    elsif IamConstants::Resource.const_defined?(resource.to_s.upcase)
-                           IamConstants::Resource.const_get(resource.to_s.upcase)
-    else
-                           resource.to_s
-    end
+    canonical_resource = resource.to_s
 
     role_name = admin ? "#{canonical_resource}_admin" : "#{canonical_resource}_#{actions.flatten.join('_')}_role"
     role = Iam::Role.find_or_create_by!(name: role_name)

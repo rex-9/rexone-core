@@ -4,7 +4,7 @@
 
 **Live Demo & Repositories**
 
-- [Live Web Demo](https://rexone.rex9.me) — Production Web SPA preview (`rexone.rex9.me`)
+- [Live Web Demo](https://rexone.rex9.me) — Production Web preview (`rexone.rex9.me`)
 - [rexone-core](https://github.com/rex-9/rexone-core) — Rails 8.1 API and platform engine
 - [rexone-web](https://github.com/rex-9/rexone-web) — React 19 + TypeScript 6 + Vite 8 browser client
 - [rexone-mobile](https://github.com/rex-9/rexone-mobile) — Flutter 3 + Dart mobile client

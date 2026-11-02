@@ -111,7 +111,7 @@ RSpec.describe Ai::ProfileService do
   end
 
   describe ".sync_prices!" do
-    it "syncs upstream pricing catalog" do
+    it "syncs upstream model prices" do
       allow(Ai::PriceSyncService).to receive(:sync!).and_return(12)
 
       expect(described_class.sync_prices!).to eq(12)

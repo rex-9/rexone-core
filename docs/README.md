@@ -12,6 +12,7 @@ This directory serves as the technical documentation manual for **RexOne Core** 
 | **🏛️ System Architecture**               | High-level system topology, domain services, queues, and provider boundaries          | **[`docs/ARCHITECTURE.md`](ARCHITECTURE.md)**             |
 | **🏛️ Foundation Architecture**           | Deep dive into IAM, Devise JWT, Soft Deletion, and JSON:API conventions               | **[`docs/FOUNDATION.md`](FOUNDATION.md)**                 |
 | **🗺️ Visual Walkthrough**                | Screenshot-driven, feature-by-feature tour across all operations                      | **[`docs/VISUAL_WALKTHROUGH.md`](VISUAL_WALKTHROUGH.md)** |
+| **📘 Admin & User Manual**               | Step-by-step operational manual for Administrators and End Users                      | **[`docs/USER_MANUAL.md`](USER_MANUAL.md)**               |
 | **🗄️ Database Schema & Models**          | Complete database schema, tables, UUID indexes, and model associations                | **[`docs/SCHEMA.md`](SCHEMA.md)**                         |
 | **📦 Object Storage (Garage S3)**        | Self-hosted S3-compatible Garage storage setup, buckets, and Cyberduck profile        | **[`docs/GARAGE.md`](GARAGE.md)**                         |
 | **🎬 Media Processing & Streaming**      | Progressive video/audio playback, FFmpeg background compression, and SRT subtitles    | **[`docs/MEDIA_PLAYBACK.md`](MEDIA_PLAYBACK.md)**         |

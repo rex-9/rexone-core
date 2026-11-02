@@ -34,7 +34,7 @@ A centralized registry of public software indexes, curated lists, and developer 
 | **Reddit r/ruby**       | Rails 8 & Solid Queue Showcase             | Ruby & Rails developers                     | `reddit.com/r/ruby`                                                   |
 | **Reddit r/rails**      | Rails 8 & Solid Queue Showcase             | Ruby & Rails developers                     | `reddit.com/r/rails`                                                  |
 | **Reddit r/FlutterDev** | Offline Drift SQLite & Multi-tier Mobile   | Flutter & Dart mobile engineers             | `reddit.com/r/FlutterDev`                                             |
-| **Reddit r/reactjs**    | Decoupled React 19 + Vite SPA Architecture | React & Frontend developers                 | `reddit.com/r/reactjs`                                                |
+| **Reddit r/reactjs**    | Decoupled React 19 + Vite Web Architecture | React & Frontend developers                 | `reddit.com/r/reactjs`                                                |
 
 ---
 

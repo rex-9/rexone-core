@@ -44,4 +44,10 @@ module AuthConstants
     EMAIL  = "email".freeze
     GOOGLE = "google".freeze
   end
+
+  module Google
+    TIMEOUT       = 10
+    TOKENINFO_URL = "https://www.googleapis.com/oauth2/v3/tokeninfo".freeze
+    USERINFO_URL  = "https://www.googleapis.com/oauth2/v1/userinfo".freeze
+  end
 end

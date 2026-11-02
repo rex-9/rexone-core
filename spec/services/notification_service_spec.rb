@@ -199,4 +199,27 @@ RSpec.describe NotificationService::Center do
       end.not_to raise_error
     end
   end
+
+  describe ".sign_in_alert" do
+    let(:user) { create(:user) }
+
+    it "persists a sign-in alert user notification with timestamp metadata when template has in_app_title" do
+      create(
+        :notification,
+        event: NotificationConstants::NotificationType::SIGN_IN_ALERT,
+        in_app_title: "New Sign In",
+        in_app_body: "Signed in as %{user_name} at %{time}",
+        push_title: "New Sign In",
+        push_body: "Signed in at %{time}"
+      )
+
+      expect do
+        described_class.sign_in_alert(user)
+      end.to change(user.user_notifications, :count).by(1)
+
+      notification = user.user_notifications.last
+      expect(notification.metadata.type).to eq(NotificationConstants::NotificationType::SIGN_IN_ALERT)
+      expect(notification.metadata.time).to be_present
+    end
+  end
 end

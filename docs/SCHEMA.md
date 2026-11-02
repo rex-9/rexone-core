@@ -14,7 +14,7 @@ This document MUST be updated synchronously **EVERY TIME** the database schema o
 
 ## 1. Architectural Overview & Global Patterns
 
-All core business models inherit from [`ApplicationRecord`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/application_record.rb):
+All core business models inherit from [`ApplicationRecord`](app/models/application_record.rb):
 
 ```ruby
 class ApplicationRecord < ActiveRecord::Base
@@ -34,7 +34,7 @@ end
    - Methods: `discard`, `undiscard`, `discarded?`, `kept?`.
    - Queries can bypass soft-deletion with `.with_discarded` or inspect soft-deleted records with `.discarded`.
 3. **Auditing (`Auditable` Concern)**:
-   - Tracks the actor who created, updated, discarded, or undiscarded each record via [`Current.auditor`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/current.rb).
+   - Tracks the actor who created, updated, discarded, or undiscarded each record via [`Current.auditor`](app/models/current.rb).
    - Foreign Keys (pointing to `users.id`):
      - `created_by_id`
      - `updated_by_id`
@@ -49,28 +49,28 @@ end
      - Complex domain entitlements (`accesses [user_id, product_id]`, `user_notifications [user_id, operation_id]`) utilize clean standard query indexes with lifecycle uniqueness managed in Rails models.
    - **Zero Raw SQL Partial Indexes**: Raw SQL `WHERE` clauses (e.g. `where: "discarded_at IS NULL"`) in migrations are prohibited.
 5. **Deterministic Strictly-Typed JSONB Metadata Architecture (`ApplicationMetadata` & `has_metadata` - Law U19)**:
-   - Every JSONB metadata column across all ActiveRecord models is backed by a deterministic, typed sub-model inheriting from [`ApplicationMetadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/application_metadata.rb) (`ActiveModel::Model` + `ActiveModel::Attributes`).
+   - Every JSONB metadata column across all ActiveRecord models is backed by a deterministic, typed sub-model inheriting from [`ApplicationMetadata`](app/models/application_metadata.rb) (`ActiveModel::Model` + `ActiveModel::Attributes`).
    - **Unified `has_metadata` Macro**: Models declare their metadata schema via `has_metadata MetadataClass` (or `has_metadata SubModelClass, attribute_name: :custom_attr`). ActiveRecord directly type-casts, validates, and serializes the column via `ActiveRecord::Type::Json`.
    - **Single Unified Accessor (`record.metadata`)**: `record.metadata` directly returns the strongly-typed `ApplicationMetadata` sub-model instance. Legacy dual accessors (`typed_metadata`) and leaking parent model delegator methods (`sync_status`, `sync_error`, `failed_at`, `app_version`, `component`, `action`, `endpoint`, `attempt`, `tts_status`, `width`, `height`, etc.) are completely wiped out. All metadata fields strictly live inside `record.metadata.*`, eliminating parent namespace pollution and database column collisions.
    - **Zero Loose Hash Access**: Direct hash subscripting (`record.metadata["key"]`), gambling, or `.dig` chains on ActiveRecord metadata columns are strictly banned across the codebase.
    - **Strict Whitelisting & Rogue Key Rejection**: `ApplicationMetadata.from_h` dynamically validates all incoming keys against declared model attributes. Any unrecognized/rogue keys trigger ActiveModel validation errors on save via standardized `validate_<noun>_structure` callbacks.
    - **OpenAPI / Swagger Full Transparency**: All metadata properties are explicitly exposed with precise types and constraints in `spec/openapi/v1.rb` and `swagger/v1/swagger.yaml`. Generic untyped `{ type: :object }` and "Arbitrary JSONB metadata" placeholders are strictly prohibited.
    - **ActiveJob & Hash Interoperability**: `ApplicationMetadata` includes custom `ActiveJob::Serializers::ObjectSerializer` for seamless background job delivery, along with full hash-like delegation (`[]`, `[]=`, `key?`, `dig`, `to_h`, `merge`, `slice`, `symbolize_keys`).
-   - **Deterministic Media Metadata Contracts**: Media assets are backed by a unified typed metadata sub-model [`Asset::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/metadata.rb) governing dimensions, durations, codecs, bitrates, audio channels, subtitles, and origin user telemetry.
+   - **Deterministic Media Metadata Contracts**: Media assets are backed by a unified typed metadata sub-model [`Asset::Metadata`](app/models/asset/metadata.rb) governing dimensions, durations, codecs, bitrates, audio channels, subtitles, and origin user telemetry.
    - **Model Ecosystem Mapping**:
-     - `Asset` -> [`Asset::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/metadata.rb)
-     - `Client::Version` -> [`Client::Version::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/client/version/metadata.rb)
-     - `Feedback` -> [`Feedback::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/feedback/metadata.rb)
-     - `UserNotification` -> [`UserNotification::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/user_notification/metadata.rb)
-     - `Notification` -> [`Notification::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/notification/metadata.rb), [`Notification::InAppData`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/notification/in_app_data.rb)
-     - `Payment::Coupon` -> [`Payment::Coupon::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/coupon/metadata.rb)
-     - `Payment::Purchase` -> [`Payment::Purchase::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/purchase/metadata.rb), [`Payment::PaymentMethodDetails`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/payment_method_details.rb)
-     - `Payment::Subscription` -> [`Payment::Subscription::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/subscription/metadata.rb), [`Payment::PaymentMethodDetails`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/payment_method_details.rb)
-     - `Ai::Run` -> [`Ai::Run::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/run/metadata.rb)
-     - `Client::Log` -> [`Client::Log::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/client/log/metadata.rb)
-     - `Ai::Profile` -> [`Ai::Profile::Settings`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/profile/settings.rb)
-     - `Chat::Message` -> [`Chat::Message::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/message/metadata.rb)
-     - `Chat::Room` -> [`Chat::Room::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/room/metadata.rb)
+     - `Asset` -> [`Asset::Metadata`](app/models/asset/metadata.rb)
+     - `Client::Version` -> [`Client::Version::Metadata`](app/models/client/version/metadata.rb)
+     - `Feedback` -> [`Feedback::Metadata`](app/models/feedback/metadata.rb)
+     - `UserNotification` -> [`UserNotification::Metadata`](app/models/user_notification/metadata.rb)
+     - `Notification` -> [`Notification::Metadata`](app/models/notification/metadata.rb), [`Notification::InAppData`](app/models/notification/in_app_data.rb)
+     - `Payment::Coupon` -> [`Payment::Coupon::Metadata`](app/models/payment/coupon/metadata.rb)
+     - `Payment::Purchase` -> [`Payment::Purchase::Metadata`](app/models/payment/purchase/metadata.rb), [`Payment::PaymentMethodDetails`](app/models/payment/payment_method_details.rb)
+     - `Payment::Subscription` -> [`Payment::Subscription::Metadata`](app/models/payment/subscription/metadata.rb), [`Payment::PaymentMethodDetails`](app/models/payment/payment_method_details.rb)
+     - `Ai::Run` -> [`Ai::Run::Metadata`](app/models/ai/run/metadata.rb)
+     - `Client::Log` -> [`Client::Log::Metadata`](app/models/client/log/metadata.rb)
+     - `Ai::Profile` -> [`Ai::Profile::Settings`](app/models/ai/profile/settings.rb)
+     - `Chat::Message` -> [`Chat::Message::Metadata`](app/models/chat/message/metadata.rb)
+     - `Chat::Room` -> [`Chat::Room::Metadata`](app/models/chat/room/metadata.rb)
    - **Zero Sequence/Reordering Collisions**: Multi-column sequence unique indexes on ordering/positional columns are banned to prevent drag-and-drop / re-indexing deadlocks.
    - **Model-Led Business Validation Authority**: Model validations enforce uniqueness across all records (including discarded/recycled records). This ensures administrators are immediately alerted if an entity already exists in the Recycle Bin ("has already been taken"), prompting them to restore it (`undiscard`) or permanently purge it from the bin (`destroy`) before creating a duplicate.
 5. **Scope of this Document**:
@@ -128,7 +128,7 @@ erDiagram
 
 ### 3.1. `users`
 
-- **Model**: [`User`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/user.rb)
+- **Model**: [`User`](app/models/user.rb)
 - **Description**: Core identity table managing authentication (Devise + JWT revocation with JTI), profile, confirmation, and Stripe customer linking.
 
 | Column                   | Type       | Nullable | Default             | Description / Notes                      |
@@ -191,7 +191,7 @@ erDiagram
 
 ### 3.2. `iam_roles`
 
-- **Model**: [`Iam::Role`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/role.rb)
+- **Model**: [`Iam::Role`](app/models/iam/role.rb)
 - **Description**: RBAC roles (e.g. `super_admin`, `admin`, `user`).
 
 | Column              | Type       | Nullable | Default             | Description / Notes                             |
@@ -219,7 +219,7 @@ erDiagram
 
 ### 3.3. `iam_permissions`
 
-- **Model**: [`Iam::Permission`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/permission.rb)
+- **Model**: [`Iam::Permission`](app/models/iam/permission.rb)
 - **Description**: Granular permissions composed of an action (`read`, `create`, `update`, `delete`) and a resource.
 
 | Column              | Type       | Nullable | Default             | Description / Notes                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -252,7 +252,7 @@ erDiagram
 
 ### 3.4. `iam_user_roles`
 
-- **Model**: [`Iam::UserRole`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/user_role.rb)
+- **Model**: [`Iam::UserRole`](app/models/iam/user_role.rb)
 - **Description**: Join table linking Users to Roles (Many-to-Many).
 
 | Column              | Type       | Nullable | Default             | Description / Notes               |
@@ -287,7 +287,7 @@ erDiagram
 
 ### 3.5. `iam_role_permissions`
 
-- **Model**: [`Iam::RolePermission`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/role_permission.rb)
+- **Model**: [`Iam::RolePermission`](app/models/iam/role_permission.rb)
 - **Description**: Join table linking Roles to Permissions (Many-to-Many).
 
 | Column              | Type       | Nullable | Default             | Description / Notes               |
@@ -317,7 +317,7 @@ erDiagram
 
 ### 4.1. `payment_products`
 
-- **Model**: [`Payment::Product`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/product.rb)
+- **Model**: [`Payment::Product`](app/models/payment/product.rb)
 - **Description**: Catalog of purchasable tiers and items across payment providers (Stripe, Google Play, Apple App Store) or free products.
 
 | Column                   | Type       | Nullable | Default             | Description / Notes                                                                                         |
@@ -356,7 +356,7 @@ erDiagram
 
 ### 4.2. `payment_subscriptions`
 
-- **Model**: [`Payment::Subscription`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/subscription.rb)
+- **Model**: [`Payment::Subscription`](app/models/payment/subscription.rb)
 - **Description**: Recurring user subscription instances across payment providers (Stripe, Google Play, Apple App Store).
 
 | Column                          | Type       | Nullable | Default             | Description / Notes                                                        |
@@ -414,7 +414,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 4.3. `payment_purchases`
 
-- **Model**: [`Payment::Purchase`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/purchase.rb)
+- **Model**: [`Payment::Purchase`](app/models/payment/purchase.rb)
 - **Description**: One-time purchases across payment providers (Stripe, Google Play, Apple App Store).
 
 | Column                   | Type       | Nullable | Default                     | Description / Notes                                    |
@@ -465,7 +465,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 4.4. `payment_webhook_events`
 
-- **Model**: [`Payment::WebhookEvent`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/webhook_event.rb)
+- **Model**: [`Payment::WebhookEvent`](app/models/payment/webhook_event.rb)
 - **Description**: Idempotent audit log and processing buffer for incoming webhook payloads across payment providers (Stripe, Google Play, Apple App Store).
 
 | Column                  | Type       | Nullable | Default             | Description / Notes                            |
@@ -503,7 +503,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 4.5. `coupons`
 
-- **Model**: [`Payment::Coupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/coupon.rb)
+- **Model**: [`Payment::Coupon`](app/models/payment/coupon.rb)
 - **Description**: Promotional discount codes and user referral coupons that can be applied during checkout. Supports percentage or fixed-amount discounts, currency restrictions, global and per-user redemption limits, expiration dates, and multi-tenant targeting restrictions (`target_role_ids`, `target_user_ids`, `target_product_ids`).
 
 | Column               | Type       | Nullable | Default             | Description / Notes                                           |
@@ -561,7 +561,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 - **Batch Generation & Asynchronous Stripe Sync**:
   - Batch coupon creation (`POST /v1/admin/payment/coupons/batch`) creates up to 100 coupons per batch (configurable via `AppConfig::PAYMENT_BATCH_COUPON_LIMIT`, default 100).
   - All batch coupons are initially persisted with `active: false` and `metadata.status = "processing"`.
-  - Stripe registration is enqueued asynchronously in slices of 50 via [`Payment::SyncBatchCouponsJob`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/jobs/payment/sync_batch_coupons_job.rb) on queue `:payments`.
+  - Stripe registration is enqueued asynchronously in slices of 50 via [`Payment::SyncBatchCouponsJob`](app/jobs/payment/sync_batch_coupons_job.rb) on queue `:payments`.
   - Successful coupons are set to `active: true` with `metadata.status = "succeeded"`.
   - Coupons that fail registration (or exhaust retries) remain permanently `active: false` with `metadata.status = "failed"` and `metadata.sync_error`.
   - Failed coupons cannot be manually updated to `active: true` (enforced via model validation `validate_failed_status_cannot_be_active`). Admins can inspect the error and hard delete them if appropriate.
@@ -577,7 +577,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 4.6. `user_coupons`
 
-- **Model**: [`Payment::UserCoupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/user_coupon.rb)
+- **Model**: [`Payment::UserCoupon`](app/models/payment/user_coupon.rb)
 - **Description**: Immutable audit ledger recording each coupon redemption associated with a purchase or subscription.
 
 | Column              | Type       | Nullable | Default             | Description / Notes                                        |
@@ -614,7 +614,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 5.1. `accesses`
 
-- **Model**: [`Access`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/access.rb)
+- **Model**: [`Access`](app/models/access.rb)
 - **Description**: Grants a User active entitlement to a Product (subscription-based or permanent).
 
 | Column              | Type       | Nullable | Default             | Description / Notes                           |
@@ -652,7 +652,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 6.1. `chat_rooms`
 
-- **Model**: [`Chat::Room`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/room.rb)
+- **Model**: [`Chat::Room`](app/models/chat/room.rb)
 - **Description**: Flexible conversation thread container supporting 1-on-1 direct user chats, group chats, AI interactions, or multi-user/multi-AI hybrid rooms without rigid type constraints.
 
 | Column              | Type       | Nullable | Default              | Description / Notes                 |
@@ -660,7 +660,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `id`                | `uuid`     |    ❌    | `gen_random_uuid()`  | Primary Key                         |
 | `user_id`           | `uuid`     |    ❌    | —                    | FK to `users.id`                    |
 | `title`             | `string`   |    ✔️    | `"New Conversation"` | Conversation summary / thread title |
-| `metadata`          | `jsonb`    |    ✔️    | `{}`                 | Settings, system context            |
+| `metadata`          | `jsonb`    |    ✔️    | `{}`                 | Settings, system context (`Chat::Room::Metadata`) |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`               | Auditing: Creator                   |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`               | Auditing: Modifier                  |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`               | Auditing: Discarder                 |
@@ -681,7 +681,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 6.2. `chat_messages`
 
-- **Model**: [`Chat::Message`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/message.rb)
+- **Model**: [`Chat::Message`](app/models/chat/message.rb)
 - **Description**: Individual dialogue turns (user prompt or AI assistant response) with metadata and attached assets (e.g. TTS audio).
 
 | Column              | Type       | Nullable | Default             | Description / Notes                                                                                                            |
@@ -691,7 +691,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `ai_profile_id`     | `uuid`     |    ✔️    | `NULL`              | Optional FK to `ai_profiles.id` used for provider/model/prompt controls                                                        |
 | `role`              | `string`   |    ❌    | —                   | Role: `user` or `assistant`                                                                                                    |
 | `content`           | `text`     |    ❌    | —                   | Message text content                                                                                                           |
-| `metadata`          | `jsonb`    |    ✔️    | `{}`                | Store accessor: `ai_status`, `model`, `usage`, `temperature`, `tts_status`, `error`, `split_id`, `chunk_index`, `total_chunks` |
+| `metadata`          | `jsonb`    |    ✔️    | `{}`                | Structured metadata (`Chat::Message::Metadata`: `ai_status`, `model`, `usage`, `temperature`, `tts_status`, `error`, `split_id`, `chunk_index`, `total_chunks`) |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                                              |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                                             |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                                                            |
@@ -719,7 +719,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 6.3. `ai_profiles`
 
-- **Model**: [`Ai::Profile`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/profile.rb)
+- **Model**: [`Ai::Profile`](app/models/ai/profile.rb)
 - **Description**: Server-controlled AI behavior profiles for chat and utility tasks. Clients request a capability/profile key; provider, model, prompt, limits, and timeout stay in Core.
 
 | Column                 | Type       | Nullable | Default             | Description / Notes                        |
@@ -756,7 +756,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 6.4. `ai_runs`
 
-- **Model**: [`Ai::Run`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/run.rb)
+- **Model**: [`Ai::Run`](app/models/ai/run.rb)
 - **Description**: Lightweight AI execution telemetry for feature, profile, latency, token usage, status, and failures. Full prompts/responses remain in chat messages or request context, not duplicated here.
 
 | Column                 | Type       | Nullable | Default             | Description / Notes                    |
@@ -803,13 +803,13 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 6.5. `ai_prices`
 
-- **Model**: [`Ai::Price`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/price.rb)
-- **Description**: Model pricing catalog storing token cost rates (per million tokens) for input, cached input, and output tokens in USD. Synced dynamically from the upstream open pricing registry.
+- **Model**: [`Ai::Price`](app/models/ai/price.rb)
+- **Description**: Model pricing table storing token cost rates (per million tokens) for input, cached input, and output tokens in USD. Synced dynamically from the upstream open pricing registry.
 
 | Column                    | Type       | Nullable | Default             | Description / Notes                                    |
 | :------------------------ | :--------- | :------: | :------------------ | :----------------------------------------------------- |
 | `id`                      | `uuid`     |    ❌    | `gen_random_uuid()` | Primary Key                                            |
-| `provider`                | `string`   |    ❌    | —                   | Provider key (`deepseek`, `google`, `openai`, etc.)    |
+| `provider`                | `string`   |    ❌    | —                   | Provider key (`deepseek`, `gemini`, `openai`, `anthropic`) |
 | `model`                   | `string`   |    ❌    | —                   | Model identifier (`deepseek-chat`, `gpt-4o`, etc.)     |
 | `currency`                | `string`   |    ❌    | `'usd'`             | Pricing currency (standardized to 3-letter lowercase usd) |
 | `input_cost_per_million`  | `decimal`  |    ❌    | `0.0`               | Cost per 1,000,000 uncached input tokens (12,6)        |
@@ -836,7 +836,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 7.1. `assets`
 
-- **Model**: [`Asset`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset.rb)
+- **Model**: [`Asset`](app/models/asset.rb)
 - **Description**: Polymorphic storage tracking for files, images, videos, avatars, and audio with background compression lifecycle.
 
 | Column              | Type       | Nullable | Default             | Description / Notes                                                                             |
@@ -854,7 +854,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `size_bytes`        | `bigint`   |    ✔️    | `NULL`              | File size in bytes                                                                              |
 | `duration_secs`     | `integer`  |    ✔️    | `NULL`              | Video/audio duration in seconds                                                                 |
 | `status`            | `string`   |    ❌    | `"pending"`         | Pipeline status: `pending`, `processing`, `ready`, `optimal`, `failed`                          |
-| `metadata`          | `jsonb`    |    ❌    | `{}`                | Strictly typed metadata sub-model ([`Asset::Metadata`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset/metadata.rb)) |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Strictly typed metadata sub-model ([`Asset::Metadata`](app/models/asset/metadata.rb)) |
 | `assetable_type`    | `string`   |    ✔️    | `NULL`              | Polymorphic owner type (`User`, `Chat::Message`, etc.)                                          |
 | `assetable_id`      | `uuid`     |    ✔️    | `NULL`              | Polymorphic owner ID                                                                            |
 | `parent_asset_id`   | `uuid`     |    ✔️    | `NULL`              | Source asset for a thumbnail or subtitle child (compressible video or audio parent)             |
@@ -900,7 +900,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 8.1. `feedbacks`
 
-- **Model**: [`Feedback`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/feedback.rb)
+- **Model**: [`Feedback`](app/models/feedback.rb)
 - **Description**: In-app feedback reports, ratings, bug tickets, and admin triage tracking. Clients send `app_version`; Core stores nullable `version_id`.
 
 | Column              | Type       | Nullable | Default             | Description / Notes                                                                                                                                |
@@ -919,7 +919,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `os`                | `string`   |    ✔️    | `NULL`              | Operating system                                                                                                                                   |
 | `device`            | `string`   |    ✔️    | `NULL`              | Client hardware                                                                                                                                    |
 | `page`              | `string`   |    ✔️    | `NULL`              | Source page URL or route                                                                                                                           |
-| `metadata`          | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (FeedbackConstants::Metadata: app_version, screen, route, locale, user_agent) |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (`Feedback::Metadata`: `app_version`, `screen`, `route`, `locale`, `user_agent`) |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                                                                  |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                                                                 |
 | `discarded_by_id`   | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                                                                                |
@@ -1001,7 +1001,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 10.1. `notifications`
 
-- **Model**: [`Notification`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/notification.rb)
+- **Model**: [`Notification`](app/models/notification.rb)
 - **Description**: Central multi-channel notification registry managing content, placeholders, counters, and provider template IDs for In-App (Socket), Push Notifications, and Email.
 
 | Column              | Type       | Nullable | Default             | Description / Notes                                        |
@@ -1015,10 +1015,10 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `cta_text`          | `string`   |    ✔️    | `NULL`              | Call-to-action button text for destination link            |
 | `clients`           | `string[]` |    ❌    | `['web', 'mobile']` | Target client platforms (`web`, `mobile`)                  |
 | `admin`             | `boolean`  |    ❌    | `true`              | Indicates if notification is available for admin broadcast |
-| `metadata`          | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (NotificationConstants::Metadata) |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (`Notification::Metadata`)        |
 | `in_app_title`      | `string`   |    ✔️    | `NULL`              | In-app notification title template                         |
 | `in_app_body`       | `text`     |    ✔️    | `NULL`              | In-app notification body template                          |
-| `in_app_data`       | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (NotificationConstants::Metadata) |
+| `in_app_data`       | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (`Notification::InAppData`)       |
 | `push_title`        | `string`   |    ✔️    | `NULL`              | Push notification title template                           |
 | `push_body`         | `text`     |    ✔️    | `NULL`              | Push notification body template                            |
 | `push_template_id`  | `string`   |    ✔️    | `NULL`              | Provider-agnostic push template ID                         |
@@ -1045,7 +1045,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 ### 10.2. `user_notifications`
 
-- **Model**: [`UserNotification`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/user_notification.rb)
+- **Model**: [`UserNotification`](app/models/user_notification.rb)
 - **Description**: Persistent historical inbox store for user in-app notifications dispatched via ActionCable WebSocket. Stores immutable snapshot text rendered at dispatch time.
 
 | Column              | Type       | Nullable | Default             | Description / Notes                                                   |
@@ -1056,7 +1056,11 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `title`             | `string`   |    ❌    | —                   | Immutable rendered title                                              |
 | `message`           | `text`     |    ❌    | —                   | Immutable rendered body message                                       |
 | `link`              | `string`   |    ✔️    | `NULL`              | Deep link target URL or app route                                     |
-| `metadata`          | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (NotificationConstants::Metadata) |
+| `clients`           | `string[]` |    ❌    | `['web', 'mobile']` | Target client platforms (`web`, `mobile`)                             |
+| `metadata`          | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (`UserNotification::Metadata`, including `type`, `time`, `user_name`, `user_email`, `cta_text`, `action`, `target_type`, `target_id`, `icon`, `sound`, `error`, `assets`, `operation_id`, `operation_type`, `operation_status`) |
+| `operation_id`      | `string`   |    ✔️    | `NULL`              | Optional background operation correlation ID                          |
+| `operation_type`    | `string`   |    ✔️    | `NULL`              | Optional background operation type                                    |
+| `operation_status`  | `string`   |    ✔️    | `NULL`              | Optional background operation status                                  |
 | `read_at`           | `datetime` |    ✔️    | `NULL`              | Read status timestamp                                                 |
 | `created_by_id`     | `uuid`     |    ✔️    | `NULL`              | Creator FK (`users.id`)                                               |
 | `updated_by_id`     | `uuid`     |    ✔️    | `NULL`              | Last updater FK (`users.id`)                                          |
@@ -1069,6 +1073,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 **Indexes & Foreign Keys**:
 
+- `index_user_notifications_on_clients` (GIN: `clients`)
 - `index_user_notifications_on_user_id_and_created_at` (`user_id`, `created_at`)
 - `index_user_notifications_on_user_id_and_read_at` (`user_id`, `read_at`)
 - `index_user_notifications_on_user_id_and_operation_id` (`user_id`, `operation_id`) — idempotency scoped uniqueness via model validation (`validates :operation_id, uniqueness: { scope: :user_id }, allow_nil: true`)
@@ -1097,7 +1102,7 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 | `released_at`          | `datetime` |    ✔️    | `NULL`              | Set on first publish if blank; future value = scheduled. UTC.                                                 |
 | `ios_build_number`     | `integer`  |    ✔️    | `NULL`              | Informational iOS `CFBundleVersion`; unique among kept when present. Not used for `must_update`.              |
 | `android_build_number` | `integer`  |    ✔️    | `NULL`              | Informational Android `versionCode`; unique among kept when present. Not used for `must_update`.              |
-| `metadata`             | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (VersionConstants::Metadata: release_notes, min_os_version, force_update) |
+| `metadata`             | `jsonb`    |    ❌    | `{}`                | Validated key-value hash (`Client::Version::Metadata`: `release_notes`, `min_os_version`, `force_update`) |
 | `created_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Creator                                                                                             |
 | `updated_by_id`        | `uuid`     |    ✔️    | `NULL`              | Auditing: Modifier                                                                                            |
 | `discarded_by_id`      | `uuid`     |    ✔️    | `NULL`              | Auditing: Discarder                                                                                           |
@@ -1158,28 +1163,28 @@ Subscription synchronization supports Stripe, Google Play, and Apple App Store. 
 
 | Table Name               | Model                                                                                                           | Domain         | Soft Deletion | Audited | Polymorphic Targets                  |
 | :----------------------- | :-------------------------------------------------------------------------------------------------------------- | :------------- | :-----------: | :-----: | :----------------------------------- |
-| `users`                  | [`User`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/user.rb)                                   | IAM            |      ✔️       |   ✔️    | —                                    |
-| `iam_roles`              | [`Iam::Role`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/role.rb)                          | IAM            |      ✔️       |   ✔️    | —                                    |
-| `iam_permissions`        | [`Iam::Permission`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/permission.rb)              | IAM            |      ✔️       |   ✔️    | —                                    |
-| `iam_user_roles`         | [`Iam::UserRole`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/user_role.rb)                 | IAM            |      ✔️       |   ✔️    | —                                    |
-| `iam_role_permissions`   | [`Iam::RolePermission`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/iam/role_permission.rb)     | IAM            |      ✔️       |   ✔️    | —                                    |
-| `payment_products`       | [`Payment::Product`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/product.rb)            | Billing        |      ✔️       |   ✔️    | `assets` (`assetable`)               |
-| `payment_subscriptions`  | [`Payment::Subscription`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/subscription.rb)  | Billing        |      ✔️       |   ✔️    | —                                    |
-| `payment_purchases`      | [`Payment::Purchase`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/purchase.rb)          | Billing        |      ✔️       |   ✔️    | —                                    |
-| `payment_webhook_events` | [`Payment::WebhookEvent`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/webhook_event.rb) | Billing        |      ✔️       |   ✔️    | —                                    |
-| `coupons`                | [`Payment::Coupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/coupon.rb)              | Billing        |      ✔️       |   ✔️    | —                                    |
-| `user_coupons`           | [`Payment::UserCoupon`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/payment/user_coupon.rb)     | Billing        |      ✔️       |   ✔️    | —                                    |
-| `accesses`               | [`Access`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/access.rb)                               | Access Control |      ✔️       |   ✔️    | —                                    |
-| `chat_rooms`             | [`Chat::Room`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/room.rb)                        | AI / Chat      |      ✔️       |   ✔️    | —                                    |
-| `chat_messages`          | [`Chat::Message`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/chat/message.rb)                  | AI / Chat      |      ✔️       |   ✔️    | `assets` (`assetable`)               |
-| `ai_profiles`            | [`Ai::Profile`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/profile.rb)                      | AI / Chat      |      ✔️       |   ✔️    | —                                    |
-| `ai_runs`                | [`Ai::Run`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/run.rb)                              | AI / Chat      |      ✔️       |   ✔️    | —                                    |
-| `ai_prices`              | [`Ai::Price`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/ai/price.rb)                          | AI / Chat      |      ✔️       |   ✔️    | —                                    |
-| `assets`                 | [`Asset`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/asset.rb)                                 | Media          |      ✔️       |   ✔️    | Belongs to `assetable` (Polymorphic) |
-| `feedbacks`              | [`Feedback`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/feedback.rb)                           | Support        |      ✔️       |   ✔️    | —                                    |
+| `users`                  | [`User`](app/models/user.rb)                                   | IAM            |      ✔️       |   ✔️    | —                                    |
+| `iam_roles`              | [`Iam::Role`](app/models/iam/role.rb)                          | IAM            |      ✔️       |   ✔️    | —                                    |
+| `iam_permissions`        | [`Iam::Permission`](app/models/iam/permission.rb)              | IAM            |      ✔️       |   ✔️    | —                                    |
+| `iam_user_roles`         | [`Iam::UserRole`](app/models/iam/user_role.rb)                 | IAM            |      ✔️       |   ✔️    | —                                    |
+| `iam_role_permissions`   | [`Iam::RolePermission`](app/models/iam/role_permission.rb)     | IAM            |      ✔️       |   ✔️    | —                                    |
+| `payment_products`       | [`Payment::Product`](app/models/payment/product.rb)            | Billing        |      ✔️       |   ✔️    | `assets` (`assetable`)               |
+| `payment_subscriptions`  | [`Payment::Subscription`](app/models/payment/subscription.rb)  | Billing        |      ✔️       |   ✔️    | —                                    |
+| `payment_purchases`      | [`Payment::Purchase`](app/models/payment/purchase.rb)          | Billing        |      ✔️       |   ✔️    | —                                    |
+| `payment_webhook_events` | [`Payment::WebhookEvent`](app/models/payment/webhook_event.rb) | Billing        |      ✔️       |   ✔️    | —                                    |
+| `coupons`                | [`Payment::Coupon`](app/models/payment/coupon.rb)              | Billing        |      ✔️       |   ✔️    | —                                    |
+| `user_coupons`           | [`Payment::UserCoupon`](app/models/payment/user_coupon.rb)     | Billing        |      ✔️       |   ✔️    | —                                    |
+| `accesses`               | [`Access`](app/models/access.rb)                               | Access Control |      ✔️       |   ✔️    | —                                    |
+| `chat_rooms`             | [`Chat::Room`](app/models/chat/room.rb)                        | AI / Chat      |      ✔️       |   ✔️    | —                                    |
+| `chat_messages`          | [`Chat::Message`](app/models/chat/message.rb)                  | AI / Chat      |      ✔️       |   ✔️    | `assets` (`assetable`)               |
+| `ai_profiles`            | [`Ai::Profile`](app/models/ai/profile.rb)                      | AI / Chat      |      ✔️       |   ✔️    | —                                    |
+| `ai_runs`                | [`Ai::Run`](app/models/ai/run.rb)                              | AI / Chat      |      ✔️       |   ✔️    | —                                    |
+| `ai_prices`              | [`Ai::Price`](app/models/ai/price.rb)                          | AI / Chat      |      ✔️       |   ✔️    | —                                    |
+| `assets`                 | [`Asset`](app/models/asset.rb)                                 | Media          |      ✔️       |   ✔️    | Belongs to `assetable` (Polymorphic) |
+| `feedbacks`              | [`Feedback`](app/models/feedback.rb)                           | Support        |      ✔️       |   ✔️    | —                                    |
 | `client_logs`            | [`Client::Log`](app/models/client/log.rb)                                                                       | Diagnostics    |      ✔️       |   ✔️    | —                                    |
-| `notifications`          | [`Notification`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/notification.rb)                   | Notifications  |      ✔️       |   ✔️    | —                                    |
-| `user_notifications`     | [`UserNotification`](file:///Users/rex/Desktop/Dev/rexone/rexone-core/app/models/user_notification.rb)          | Notifications  |      ✔️       |   ✔️    | —                                    |
+| `notifications`          | [`Notification`](app/models/notification.rb)                   | Notifications  |      ✔️       |   ✔️    | —                                    |
+| `user_notifications`     | [`UserNotification`](app/models/user_notification.rb)          | Notifications  |      ✔️       |   ✔️    | —                                    |
 | `client_versions`        | [`Client::Version`](app/models/client/version.rb)                                                               | Versions       |      ✔️       |   ✔️    | —                                    |
 | `client_user_versions`   | [`Client::UserVersion`](app/models/client/user_version.rb)                                                      | Versions       |      ✔️       |   ✔️    | —                                    |
 
