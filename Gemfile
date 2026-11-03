@@ -133,7 +133,7 @@ group :development, :test do
 end
 
 group :development do
-  gem "solargraph", "~> 0.61.0"
+  gem "solargraph", "~> 0.62.0"
 end
 
 gem "discard", "~> 2.0"
