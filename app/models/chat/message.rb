@@ -6,7 +6,6 @@ module Chat
     STATUSES = {
       queued: AiConstants::ChatStatus::QUEUED,
       processing: AiConstants::ChatStatus::PROCESSING,
-      retrying: AiConstants::ChatStatus::RETRYING,
       completed: AiConstants::ChatStatus::COMPLETED,
       failed: AiConstants::ChatStatus::FAILED
     }.freeze

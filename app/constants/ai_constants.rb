@@ -112,12 +112,11 @@ module AiConstants
   module ChatStatus
     QUEUED     = "queued".freeze
     PROCESSING = "processing".freeze
-    RETRYING   = "retrying".freeze
     COMPLETED  = "completed".freeze
     FAILED     = "failed".freeze
 
-    ALL = [ QUEUED, PROCESSING, RETRYING, COMPLETED, FAILED ].freeze
-    PROCESSING_SET = [ QUEUED, PROCESSING, RETRYING ].freeze
+    ALL = [ QUEUED, PROCESSING, COMPLETED, FAILED ].freeze
+    PROCESSING_SET = [ QUEUED, PROCESSING ].freeze
   end
 
   module RunFeature

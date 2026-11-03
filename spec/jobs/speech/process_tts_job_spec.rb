@@ -132,7 +132,7 @@ RSpec.describe Speech::ProcessTtsJob, type: :job do
       described_class.perform_now(message.id)
     end.to have_enqueued_job(described_class).with(message.id)
 
-    expect(message.reload.metadata.tts_status).to eq("retrying")
+    expect(message.reload.metadata.tts_status).to eq("processing")
     expect(message.metadata.tts_error).to eq("temporarily unavailable")
   end
 

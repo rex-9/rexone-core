@@ -34,7 +34,7 @@ class Speech::ProcessTtsJob < ApplicationJob
     update_tts!(message, Chat::Message::STATUSES[:completed], tts_error: nil)
     notify_completed(message)
   rescue SpeechService::Error, StorageService::Error => error
-    update_tts!(message, Chat::Message::STATUSES[:retrying], tts_error: error.message) if message
+    update_tts!(message, Chat::Message::STATUSES[:processing], tts_error: error.message) if message
     raise
   rescue StandardError => error
     mark_as_failed!(message_id, error)

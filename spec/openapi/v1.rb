@@ -828,7 +828,7 @@ module Openapi
         },
         model: { type: :string, nullable: true, description: "Provider model identifier used for the response." },
         tts_status: { type: :string, enum: STATUSES, nullable: true, description: "Async TTS state for assistant messages." },
-        tts_error: { type: :string, nullable: true, description: "Last TTS failure message when tts_status is failed or retrying." }
+        tts_error: { type: :string, nullable: true, description: "Last TTS failure message when tts_status is failed or processing." }
       ),
       coupon_metadata: object(
         status: { type: :string, enum: PaymentConstants::SyncStatus::ALL, nullable: true },

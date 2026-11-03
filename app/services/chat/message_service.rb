@@ -190,7 +190,7 @@ module Chat
         assistant_message = persist_response!(message, response, result)
         notify_completed(message, assistant_message)
       rescue Ai::Providers::Error => error
-        update_status!(message, Chat::Message::STATUSES[:retrying], error: error.message) if message.present?
+        update_status!(message, Chat::Message::STATUSES[:processing], error: error.message) if message.present?
         raise
       rescue StandardError => error
         fail_ai_response!(message_id, error)

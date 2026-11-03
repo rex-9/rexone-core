@@ -92,7 +92,7 @@ RSpec.describe Chat::ProcessMessageJob, type: :job do
     end.to have_enqueued_job(described_class).with(user_message.id)
 
     expect(user_message.reload.metadata).to include(
-      "status" => "retrying",
+      "status" => "processing",
       "error" => "temporarily unavailable"
     )
     expect(room).to be_processing

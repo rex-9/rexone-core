@@ -1692,7 +1692,6 @@ components:
           enum:
             - queued
             - processing
-            - retrying
             - completed
             - failed
         job_id:
@@ -1829,7 +1828,6 @@ components:
           enum:
             - queued
             - processing
-            - retrying
             - completed
             - failed
           description: Processing state; set on queued user messages.
@@ -1868,7 +1866,6 @@ components:
           enum:
             - queued
             - processing
-            - retrying
             - completed
             - failed
           nullable: true
@@ -1876,7 +1873,7 @@ components:
         tts_error:
           type: string
           nullable: true
-          description: Last TTS failure message when tts_status is failed or retrying.
+          description: Last TTS failure message when tts_status is failed or processing.
       required: []
     coupon_metadata:
       type: object
