@@ -98,10 +98,7 @@ RailsErrorDashboard.configure do |config|
 
   # Async Error Logging - ENABLED
   # Errors are logged in background jobs — zero impact on request response time.
-  # Default adapter is :async (Rails built-in, no extra infrastructure needed).
-  # Swap to :sidekiq or :solid_queue when you have a background worker running.
   config.async_logging = true
-  config.async_adapter = :async  # Options: :async (built-in), :sidekiq, :solid_queue
   # To disable: Set config.async_logging = false
 
   # Backtrace size limiting (100 lines is industry standard: Rollbar, Airbrake, Bugsnag)

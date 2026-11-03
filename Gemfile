@@ -59,7 +59,7 @@ gem "sassc-rails", "~> 2.1"
 gem "csv", "~> 3.3"
 
 gem "rails_pulse", "~> 0.5.0"
-gem "rails_error_dashboard", "~> 0.16.2" # Alternatives: rails_error_dashboard, faultline, https://github.com/dkam/splat
+gem "rails_error_dashboard", "~> 0.18.0" # Alternatives: rails_error_dashboard, faultline, https://github.com/dkam/splat
 gem "solid_web_ui", "~> 0.4.0" # Alternatives: mission_control-jobs, solid_observer, solid_queue_monitor
 
 # ============================================================
@@ -95,7 +95,7 @@ gem "rack-attack", "~> 6.8"
 gem "cloudinary", "~> 2.4"
 gem "stripe", "~> 20.0"
 gem "websocket-client-simple", "~> 0.9"
-gem "aws-sdk-s3", "~> 1.235.0" # need only when STORAGE_PROVIDER=garage
+gem "aws-sdk-s3", "~> 1.237.0" # need only when STORAGE_PROVIDER=garage
 
 # ============================================================
 # Utilities
@@ -133,7 +133,7 @@ group :development, :test do
 end
 
 group :development do
-  gem "solargraph", "~> 0.61.0"
+  gem "solargraph", "~> 0.62.0"
 end
 
 gem "discard", "~> 2.0"
