@@ -21,8 +21,8 @@ The human author submitting the pull request is **100% legally and technically a
 
 ### 2. Strict Constitutional Conformance (`LAW.md` & `AGENTS.md`)
 AI-generated code must obey the supreme project laws:
-- **No Alien Syntax (Law U15)**: Reject dense one-liners, unreadable chained ternaries, or esoteric metaprogramming. Prefer clean, idiomatic control flow.
-- **Zero Loose Code & Clean Contracts (Law U14)**: Parameter signatures must be unambiguous. No synonym keys or loose hash options.
+- **No Alien Syntax (Law U13)**: Reject dense one-liners, unreadable chained ternaries, or esoteric metaprogramming. Prefer clean, idiomatic control flow.
+- **Zero Loose Code & Clean Contracts (Law U12)**: Parameter signatures must be unambiguous. No synonym keys or loose hash options.
 - **Universal Provider Isolation (Law C1/W1/M1)**: No vendor-specific SDK imports leaking into business logic or UI controllers.
 
 ### 3. Verification Over Generation (Real Tests Required)

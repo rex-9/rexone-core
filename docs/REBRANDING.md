@@ -130,9 +130,10 @@ Release keystores are encrypted secrets and not committed to git:
    > [!NOTE]
    > Release builds (`flutter build apk --release`, `flutter build appbundle`) strictly enforce keystore validation and will fail fast if credentials are missing, preventing unverified or debug-signed builds from shipping to UAT or Google Play Store.
 
-### 4. Web Landing Module & Custom SEO
+### 4. Web Landing Module, Custom SEO & Ecosystem Lineage
 - **Landing Page (`src/modules/landing`)**: Left completely intact. Since RexOne is a starter framework, developers replace the default landing page with their product-specific marketing interface.
 - **SEO & AI Discovery (`index.html` metadata, `robots.txt`, `sitemap.xml`, `llms.txt`)**: Intentionally left untouched. Product positioning, Open Graph cards, Schema.org entities, and SEO keywords are 100% the developer's responsibility.
+- **Ecosystem Lineage & Attribution**: Derivative products and forks are warmly welcomed. Machine-readable metadata (`llms.txt`, `llms-full.txt`, and Schema.org `isBasedOn` / `creditText` in `index.html`) must preserve the attribution backlink: `"Built on top of the RexOne Ecosystem (https://rexone.rex9.me) by Rex9 (@rex-9)"`. Rebranding scripts configure new product names, logos, and domains while preserving the underlying RexOne ecosystem lineage.
 
 ---
 

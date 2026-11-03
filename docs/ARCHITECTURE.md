@@ -31,7 +31,7 @@ RexOne deliberately rejects both modern extremes:
 ```
 
 All three repositories are governed by:
-- **Constitutional Law (`LAW.md`)**: Non-negotiable architectural boundaries, zero backward-compatibility shims, pure parameter contracts (Law U14), and plain English syntax (Law U15).
+- **Constitutional Law (`LAW.md`)**: Non-negotiable architectural boundaries, zero backward-compatibility shims, pure parameter contracts (Law U12), and plain English syntax (Law U13).
 - **Autonomous Agent Governance (`AGENTS.md`)**: Strict Git safety protocols, `.env` isolation, and mandatory same-turn documentation synchronization (`SCHEMA.md`, `README.md`, `ECOSYSTEM.md`).
 
 ---
@@ -303,7 +303,7 @@ All HTTP endpoints across Core, Web, and Mobile adhere to a deterministic contra
 }
 ```
 
-### 6.2 Standardized Parameter Contracts (Law U14)
+### 6.2 Standardized Parameter Contracts (Law U12)
 - **Zero Loose Code**: No optional parameter ambiguities, duplicate synonym keys (`user_name` vs `name`), or backwards-compatibility shims.
 - **Domain Entity Passing**: Methods and service gateways pass cohesive domain records directly rather than unpacking primitive fields.
 

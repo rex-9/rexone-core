@@ -122,7 +122,7 @@ Discipline-Driven Development establishes that **architectural discipline, an un
 1. **The Vibe-Coding Delusion**: Prompting an AI to generate code without an immutable constitution isn't velocity; it's compounding debt at 100x speed. Speed without discipline is just accelerating toward a brick wall.
 2. **The BaaS Trap**: Serverless "5-minute backends" lure developers in with toys, then slap them with a $5,000/mo cloud hostage bill when they need relational integrity, background queues, or compliance audits. Real software runs self-hosted PostgreSQL, native queues (Solid Queue), and self-hosted S3 (Garage).
 3. **The Full-Stack Monolith Lie**: Stuffing API controllers, database queries, background tasks, and client hydration into a single node runtime creates fragile, unmaintainable monoliths. True engineering enforces client-server separation.
-4. **Deprecation Cowardice & Zombie Code**: Retaining dead code, backwards-compatibility shims, and duplicate parameter aliases is cowardice. Under Constitutional Law U14, if code is replaced, the old code is wiped out completely. No shims. No legacy bloat.
+4. **Deprecation Cowardice & Zombie Code**: Retaining dead code, backwards-compatibility shims, and duplicate parameter aliases is cowardice. Under Constitutional Law U12, if code is replaced, the old code is wiped out completely. No shims. No legacy bloat.
 5. **100% Free & Open-Source (Apache 2.0)**: Unlike commercial boilerplates charging $300–$800 for basic auth or gating features behind "pro licenses", RexOne is 100% free and Apache 2.0 open-source. You own your code, your data, and your infrastructure.
 
 ### 💎 Why Ruby on Rails 8 for the Core? (Instead of a TypeScript/Node Monolith)
@@ -208,7 +208,7 @@ Result: 8 to 11 months of soul-crushing plumbing deleted. You launch in weeks.
 | **Real-Time Delivery**       | ✅ **Native Action Cable**: Persistent WebSockets, auto-reconnect & binary STT/TTS            | ❌ **Broken on Serverless**: Forced into expensive Pusher / Ably tiers ($$$)         | ⚠️ **Supabase Realtime**: Row-level broadcast, high connection pricing tiers      | ⚠️ **External Broker**: Requires Redis/Reverb daemon configuration                | ⚠️ **External Broker**: Requires Pusher/Reverb daemon configuration                |
 | **Object Storage**           | ✅ **Self-Hosted Garage S3**: High-performance local S3, zero egress bills                    | ❌ **Vendor Cloud**: AWS S3 / Cloudflare R2 egress fees                              | ⚠️ **Proprietary Storage**: Vendor-locked BaaS pricing ladders                    | ⚠️ **ActiveStorage**: Tied to third-party cloud S3 bucket bills                   | ⚠️ **Flysystem / S3**: Tied to third-party cloud S3 bucket bills                   |
 | **AI Workflows & Speech**    | ✅ **Durable Queued AI**: Chunked streaming, 16kHz live STT, binary MP3 TTS                   | ⚠️ **Edge Timeouts**: LLM streams crash on cold starts or Vercel limits              | ❌ **Client Leaks**: Client-side API keys or basic Edge Function calls            | ⚠️ **Basic Wrappers**: Simple synchronous chat endpoints                          | ⚠️ **Basic Wrappers**: Simple synchronous chat endpoints                          |
-| **Anti-Vibe Governance**     | ✅ **Constitutional Law (`LAW.md`)**: Laws U14/U15 stop AI tech debt and zombie code          | ❌ **Unguided Vibe-Coding**: Fragile abstractions, dead shims & runaway debt         | ❌ **Scattered Cloud Logic**: Code fragmented across dozens of uncoordinated functions   | ⚠️ **Conventions Only**: No explicit constitutional AI agent rules                | ⚠️ **Conventions Only**: No explicit constitutional AI agent rules                |
+| **Anti-Vibe Governance**     | ✅ **Constitutional Law (`LAW.md`)**: Laws U12/U13 stop AI tech debt and zombie code          | ❌ **Unguided Vibe-Coding**: Fragile abstractions, dead shims & runaway debt         | ❌ **Scattered Cloud Logic**: Code fragmented across dozens of uncoordinated functions   | ⚠️ **Conventions Only**: No explicit constitutional AI agent rules                | ⚠️ **Conventions Only**: No explicit constitutional AI agent rules                |
 | **Cost & Freedom**           | ✅ **100% Free & Open (Apache 2.0)**: Zero paywalls, zero "Pro" upsells, single-server VPS   | ❌ **$169–$299 Paid License**: Single-stack Next.js web MVPs (ShipFast, LaunchFast)   | ❌ **$299–$699 Paid License**: Closed-source seat paywalls (Makerkit, Supastarter) | ❌ **$249–$749 Paid License**: Proprietary paywalls (Jumpstart Pro, Bullet Train)  | ❌ **$99–$795 Paid License**: Commercial starter kit paywalls (Pegasus, Larafast)  |
 
 ### 🥊 RexOne vs The Competition (ShipFast, Makerkit, Supastarter, Jumpstart Pro, SaaS Pegasus, Bullet Train, Larafast)
@@ -242,7 +242,7 @@ Exponential technical debt & token burn before the product even launches
 
 RexOne breaks this cycle decisively:
 
-- **Constitutional Law (`LAW.md`)**: Law U14 enforces _zero loose code, zero backward-compatibility shims, complete wipeout and replacement_. If code deviates from the law, the code is wrong—fix the code. Law U15 enforces human-readable plain English with zero esoteric syntax.
+- **Constitutional Law (`LAW.md`)**: Law U12 enforces _zero loose code, zero backward-compatibility shims, complete wipeout and replacement_. If code deviates from the law, the code is wrong—fix the code. Law U13 enforces human-readable plain English with zero esoteric syntax.
 - **Operational Agent Governance (`AGENTS.md`)**: Strict guidelines for AI coding tools—never read `.env` secrets, never run destructive git operations, and synchronize documentation in the exact same turn as code changes.
 - **AI Turns from an Architect into a Worker**: The architecture has already been decided. AI works cleanly inside it.
 
@@ -438,7 +438,7 @@ For example, queued AI chat orchestrates message chunking, multi-provider execut
 
 The same principle applies to product-specific functionality: the foundation provides the structure, while the product remains free to define its own domain, workflows, and experience.
 
-#### 🛡️ Deterministic Typed Metadata Architecture & Zero Loose Code (Laws U14, U15 & U19)
+#### 🛡️ Deterministic Typed Metadata Architecture & Zero Loose Code (Laws U12, U13 & U15)
 
 Every semi-structured payload stored in JSONB columns (`metadata`, `payment_method_details`, `settings`, `in_app_data`) is strictly governed by:
 - **Unified `has_metadata` Architecture**: Mounted directly on `ApplicationRecord` models (`has_metadata MetadataClass`). Uses `ActiveRecord::Type::Json` to natively cast and serialize the column as a strongly-typed `ApplicationMetadata` sub-model instance.
@@ -449,7 +449,7 @@ Every semi-structured payload stored in JSONB columns (`metadata`, `payment_meth
 - **ActiveJob & Hash Interoperability**: `ApplicationMetadata` provides custom `ActiveJob::Serializers::ObjectSerializer` for transparent background worker payloads alongside full hash delegation (`[]`, `[]=`, `key?`, `dig`, `to_h`, `merge`, `symbolize_keys`).
 - **Single Source of Truth (SSOT)**: Sub-models declare all typed attributes and introspection (`attribute_names`), completely eradicating duplicate string constant dictionaries, dual maintenance, and key drift.
 - **Zero Raw String Literals**: Dictionary keys, status values, and lifecycle steps are frozen symbols/constants.
-- **Centralized Server Design Tokens & Typography**: [`DesignConstants`](app/constants/design_constants.rb) and [`app/assets/stylesheets/tokens.css`](app/assets/stylesheets/tokens.css) serve as the single non-redundant source of truth for brand colors, surfaces, glows, contrast hierarchy (Law U18), and typography across Administrate, Solid Web UI (`app/assets/stylesheets/admin.css`), and transactional emails (`EmailService::TemplateRenderer`).
+- **Centralized Server Design Tokens & Typography**: [`DesignConstants`](app/constants/design_constants.rb) and [`app/assets/stylesheets/tokens.css`](app/assets/stylesheets/tokens.css) serve as the single non-redundant source of truth for brand colors, surfaces, glows, contrast hierarchy, and typography across Administrate, Solid Web UI (`app/assets/stylesheets/admin.css`), and transactional emails (`EmailService::TemplateRenderer`).
 - **OpenAPI / Swagger Transparency**: All metadata properties are explicitly typed and documented in OpenAPI specifications and Swagger UI, eradicating untyped objects and "Arbitrary JSONB" placeholders.
 - **Cross-Platform Contract Parity**: Strongly typed TypeScript interfaces in `rexone-web` and typed Dart key mappings in `rexone_mobile`.
 
