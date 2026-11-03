@@ -6,7 +6,7 @@
 
 - [Live Web Demo](https://rexone.rex9.me) — Production Web preview (`rexone.rex9.me`)
 - [rexone-core](https://github.com/rex-9/rexone-core) — Rails 8.1 API and platform engine
-- [rexone-web](https://github.com/rex-9/rexone-web) — React 19 + TypeScript 6 + Vite 8 browser client
+- [rexone-web](https://github.com/rex-9/rexone-web) — React 19 + TypeScript 7 + Vite 8 browser client
 - [rexone-mobile](https://github.com/rex-9/rexone-mobile) — Flutter 3 + Dart mobile client
 
 RexOne is not three independent projects. It is one product foundation split into clear responsibilities: Core owns identity, authorization, business rules, persistence, providers, background work, and operational truth; Web and Mobile consume the same versioned contracts and real-time events while owning their platform-specific user experience.
@@ -95,7 +95,7 @@ RexOne is a unified API-first foundation spanning Web, Android, and iOS. Both cl
 ```mermaid
 flowchart TB
     subgraph Clients["Client Layer"]
-        Web["RexOne Web<br/>React 19 · TypeScript 6 · Vite 8"]
+        Web["RexOne Web<br/>React 19 · TypeScript 7 · Vite 8"]
         Mobile["RexOne Mobile<br/>Flutter 3 · Dart · GetX"]
     end
 
@@ -1149,8 +1149,8 @@ RexOne treats the three repositories as one ecosystem but tests them in their na
 
 ## Web
 
-- TypeScript build checks.
-- ESLint.
+- TypeScript 7 build checks.
+- Oxlint (Rust) + ESLint (Tailwind CSS v4 canonical classes).
 - Vitest.
 - Playwright end-to-end flows using Page Objects.
 - Real authentication journeys including sign-in, sign-up, passcode recovery, sign-out, and SSO behavior.
