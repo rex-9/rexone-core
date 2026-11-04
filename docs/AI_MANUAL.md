@@ -104,25 +104,72 @@ To immediately swap the model or provider, or register a newly released upstream
 
 ---
 
-## 📊 4. Monitoring & Telemetry (`Ai::Run`)
+## 💰 4. Token Accounting & Cost Calculation Formula (`Ai::CostCalculator`)
+
+All AI token accounting and USD expenditure calculations are executed deterministically in `BigDecimal` by `Ai::CostCalculator` using database-backed rates from `Ai::Price` (`ai_prices` table, scaled per `1,000,000` tokens).
+
+### 4.1 Token Decomposition (Input, Cache Hit, Cache Miss, Output, Total)
+
+Upstream LLM providers report **`prompt_tokens` as the total input tokens** (including both cache-hit and cache-miss input tokens). To avoid double-charging cached tokens, `Ai::CostCalculator` decomposes every run into three mutually exclusive billing buckets:
+
+| Metric | Formula / Clamping Rule | Billing Rate Applied |
+| :--- | :--- | :--- |
+| **Input Tokens (Total Prompt)** | $\text{prompt} = \max(\text{prompt\_tokens}, 0)$ | Split into Cache Hit + Cache Miss below |
+| **Cache Hit Tokens (Discounted Input)** | $\text{cached} = \min(\max(\text{cached\_tokens}, 0), \text{prompt})$ | `cached_cost_per_million` (`$ / 1M`) |
+| **Cache Miss Tokens (Uncached Input)** | $\text{uncached} = \text{prompt} - \text{cached}$ | `input_cost_per_million` (`$ / 1M`) |
+| **Output Tokens (Completion)** | $\text{completion} = \max(\text{completion\_tokens}, 0)$ | `output_cost_per_million` (`$ / 1M`) |
+| **Total Tokens** | $\text{total} = \text{prompt} + \text{completion}$ | Sum of Input + Output tokens |
+
+### 4.2 USD Cost Formula
+
+$$\text{Input Cost (Miss)} = \frac{\text{uncached} \times \text{input\_cost\_per\_million}}{1{,}000{,}000}$$
+
+$$\text{Cached Cost (Hit)} = \frac{\text{cached} \times \text{cached\_cost\_per\_million}}{1{,}000{,}000}$$
+
+$$\text{Output Cost} = \frac{\text{completion} \times \text{output\_cost\_per\_million}}{1{,}000{,}000}$$
+
+$$\text{Total Cost (USD)} = \text{round}_6\left(\text{Input Cost (Miss)} + \text{Cached Cost (Hit)} + \text{Output Cost}\right)$$
+
+- **Divisor**: `AiConstants::Pricing::PER_MILLION = 1_000_000`
+- **Precision**: Rounded to `6` decimal places (`AiConstants::Pricing::DECIMAL_PRECISION = 6`, stored as `decimal(12, 6)` on `ai_runs.cost`).
+- **Default Cache Discount Fallback**: During `Ai::PriceSyncService.sync!`, if the upstream pricing registry provides `cache_read_input_token_cost`, that exact rate is stored in `cached_cost_per_million`. Otherwise, it defaults to **`50%` of the input rate** (`input_rate * 0.5` via `AiConstants::Pricing::DEFAULT_CACHE_DISCOUNT_RATIO`).
+- **Provider Cache-Hit Extraction (`Ai::RunService.extract_cached_tokens`)**: Normalized automatically across providers in priority order:
+  1. `usage.dig("prompt_tokens_details", "cached_tokens")` (OpenAI / DeepSeek)
+  2. `usage["cache_read_input_tokens"]` (Anthropic)
+  3. `usage.dig("usage_metadata", "cached_content_token_count")` (Google Gemini)
+  4. `usage["cached_tokens"]` (Direct / fallback key)
+
+### 4.3 Worked Example (`deepseek-chat`)
+
+Using `deepseek-chat` rates (`Input = $0.14 / 1M`, `Cached = $0.014 / 1M`, `Output = $0.28 / 1M`) for a run with `prompt_tokens = 1,000`, `cached_tokens = 600`, `completion_tokens = 250`:
+
+- **Cache Miss Input (`uncached`)**: $1{,}000 - 600 = 400 \text{ tokens} \implies \frac{400 \times 0.14}{1{,}000{,}000} = \$0.000056$
+- **Cache Hit Input (`cached`)**: $600 \text{ tokens} \implies \frac{600 \times 0.014}{1{,}000{,}000} = \$0.0000084$
+- **Output (`completion`)**: $250 \text{ tokens} \implies \frac{250 \times 0.28}{1{,}000{,}000} = \$0.000070$
+- **Total Cost**: $\text{round}_6(0.000056 + 0.0000084 + 0.000070) = \mathbf{\$0.000134}$
+
+---
+
+## 📊 5. Monitoring & Telemetry (`Ai::Run`)
 
 1. Open `/admin/ai/runs` in the Web Admin Portal.
-2. Filter or search by:
+2. Filter, sort, or search by:
    - **Status**: `completed`, `failed`, `processing`.
    - **Feature**: `chat`, `summarize`, `translate`, `analyze`.
    - **Provider**: `deepseek`, `gemini`, `openai`, `anthropic`.
    - **Model**: Any configured or executed model under the selected provider.
+   - **Sortable Columns**: `Input` (`prompt_tokens` with `HIT`/`MISS` badge and `Hit`/`Miss` token counts), `Output` (`completion_tokens`), `Total` (`total_tokens`), `Cost` (`cost`), `Latency` (`latency_ms`), `Created` (`created_at`), `Feature`, `Provider`, `Model`, and `Status`.
    - **Search**: Free-text search across `model`, `feature`, `provider`, and `profile_key`.
 3. Click any row to view **Run Details**:
    - Monotonic Latency (`latency_ms`) and USD Cost (`cost`).
-   - Token breakdown: Prompt Tokens, Cached Tokens, Completion Tokens, Total Tokens.
+   - Explicit Token Breakdown: Input Tokens (Total), Cache Miss Tokens (Uncached Input), Cache Hit Tokens (Discounted Input), Output Tokens (Completion), and Total Tokens.
    - Message Input Count & Total Input/Output Characters.
    - Request Metadata (endpoint, user ID, room ID, profile key).
    - Complete Error Trace if failed (HTTP status, provider error messages).
 
 ---
 
-## 🛡️ 5. Reliability & Fallback Safeguards
+## 🛡️ 6. Reliability & Fallback Safeguards
 
 1. **Monotonic Timing**: Latency measurements use `Process.clock_gettime(Process::CLOCK_MONOTONIC)` to avoid system clock skew errors.
 2. **Provider Timeout Protection**: Every profile enforces a strict `timeout_seconds` (default 30s). Hanging provider connections are cleanly terminated without locking SolidQueue background workers.
@@ -131,7 +178,7 @@ To immediately swap the model or provider, or register a newly released upstream
 
 ---
 
-## ⚡ 6. Universal Bidirectional TOON Pipeline
+## ⚡ 7. Universal Bidirectional TOON Pipeline
 
 To achieve 30-60% token savings, lower inference latency, and prevent LLM syntax hallucination, RexOne enforces a universal **Zero-JSON LLM Pipeline**:
 

@@ -678,7 +678,7 @@ class V1::Admin::AssetsController < V1::ApplicationController
   end
 
   def filter_params
-    params.permit(:search, :type, :format, :source, :status, :record_scope, :discarded, :limit, :page)
+    params.permit(:search, :type, :format, :source, :status, :record_scope, :assetable_type, :assetable_id, :discarded, :limit, :page)
   end
 
   def search_assets(scope)
@@ -698,6 +698,8 @@ class V1::Admin::AssetsController < V1::ApplicationController
     scope = scope.where(format: filters[:format]) if filters[:format].present?
     scope = scope.where(source: filters[:source]) if filters[:source].present?
     scope = scope.where(status: filters[:status]) if filters[:status].present?
+    scope = scope.where(assetable_type: filters[:assetable_type]) if filters[:assetable_type].present?
+    scope = scope.where(assetable_id: filters[:assetable_id]) if filters[:assetable_id].present?
     filter_asset_record_scope(scope, filters[:record_scope])
   end
 
