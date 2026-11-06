@@ -8,7 +8,7 @@ module MediaService
     # @param input_path [String] path to the source image file
     # @param output_path [String] optional path for the compressed output
     # @return [String] path to the compressed file
-    # @raise [MediaService::CompressionError] if compression fails
+    # @raise [MediaService::Error] if compression fails
     def self.compress(input_path, output_path: nil)
       new(input_path, output_path: output_path).compress
     end
@@ -43,19 +43,19 @@ module MediaService
       @output_path
     rescue Vips::Error => e
       Rails.logger.error("#{LOG_PREFIX} Vips error: #{e.message}")
-      raise CompressionError, "Image compression failed: #{e.message}"
+      raise Error, "Image compression failed: #{e.message}"
     end
 
     private
 
     def validate_input!
-      raise CompressionError, "Input file not found: #{@input_path}" unless File.exist?(@input_path)
-      raise CompressionError, "Input file is empty: #{@input_path}" if File.zero?(@input_path)
+      raise Error, "Input file not found: #{@input_path}" unless File.exist?(@input_path)
+      raise Error, "Input file is empty: #{@input_path}" if File.zero?(@input_path)
     end
 
     def validate_output!
-      raise CompressionError, "Output file not created: #{@output_path}" unless File.exist?(@output_path)
-      raise CompressionError, "Output file is empty: #{@output_path}" if File.zero?(@output_path)
+      raise Error, "Output file not created: #{@output_path}" unless File.exist?(@output_path)
+      raise Error, "Output file is empty: #{@output_path}" if File.zero?(@output_path)
     end
 
     def resize_if_needed(image)

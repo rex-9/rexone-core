@@ -5,21 +5,21 @@ RSpec.describe MediaService::VideoCompressor do
   let(:output_path) { "/tmp/output_video.mp4" }
 
   describe "#compress" do
-    it "raises CompressionError if input file is missing" do
+    it "raises Error if input file is missing" do
       allow(File).to receive(:exist?).with(input_path).and_return(false)
 
       expect do
         described_class.compress(input_path)
-      end.to raise_error(MediaService::CompressionError, /Input file not found/)
+      end.to raise_error(MediaService::Error, /Input file not found/)
     end
 
-    it "raises CompressionError if input file is empty" do
+    it "raises Error if input file is empty" do
       allow(File).to receive(:exist?).with(input_path).and_return(true)
       allow(File).to receive(:zero?).with(input_path).and_return(true)
 
       expect do
         described_class.compress(input_path)
-      end.to raise_error(MediaService::CompressionError, /Input file is empty/)
+      end.to raise_error(MediaService::Error, /Input file is empty/)
     end
 
     it "executes FFmpeg and validates the generated output" do
@@ -55,7 +55,7 @@ RSpec.describe MediaService::VideoCompressor do
       )
     end
 
-    it "raises CompressionError when FFmpeg command fails" do
+    it "raises Error when FFmpeg command fails" do
       allow(File).to receive(:exist?).with(input_path).and_return(true)
       allow(File).to receive(:zero?).with(input_path).and_return(false)
 
@@ -64,7 +64,7 @@ RSpec.describe MediaService::VideoCompressor do
 
       expect do
         described_class.compress(input_path, output_path: output_path)
-      end.to raise_error(MediaService::CompressionError, /FFmpeg exited with status 1/)
+      end.to raise_error(MediaService::Error, /FFmpeg exited with status 1/)
     end
   end
 end

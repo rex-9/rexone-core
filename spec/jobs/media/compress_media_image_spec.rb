@@ -85,7 +85,7 @@ RSpec.describe Media::CompressMediaJob, type: :job do
   end
 
   it "retries without publishing a terminal failure on the first attempt" do
-    allow(MediaService::ImageCompressor).to receive(:compress).and_raise(MediaService::CompressionError, "corrupt image")
+    allow(MediaService::ImageCompressor).to receive(:compress).and_raise(MediaService::Error, "corrupt image")
 
     described_class.perform_now(asset_id: asset.id)
 

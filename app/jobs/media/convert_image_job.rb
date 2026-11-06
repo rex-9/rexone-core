@@ -8,7 +8,7 @@ module Media
       duration: 30.minutes
     )
 
-    retry_on MediaService::ConversionError, StorageService::Error,
+    retry_on MediaService::Error, StorageService::Error,
              wait: :polynomially_longer, attempts: 3 do |job, error|
       job.send(:mark_retry_exhausted!, error)
     end
@@ -28,7 +28,7 @@ module Media
       upload_converted(output_path)
       persist_conversion(output_path)
       enqueue_image_compression
-    rescue MediaService::ConversionError, StorageService::Error
+    rescue MediaService::Error, StorageService::Error
       raise
     rescue StandardError => error
       mark_failed!(error)

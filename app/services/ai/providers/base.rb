@@ -6,8 +6,6 @@ require "uri"
 
 module Ai
   module Providers
-    class Error < StandardError; end
-
     class Base
       def chat(messages:, model: nil, temperature: nil, max_tokens: nil, timeout_seconds: nil)
         uri = chat_uri

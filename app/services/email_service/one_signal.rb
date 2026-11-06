@@ -134,6 +134,4 @@ module EmailService
       html
     end
   end
-
-  class Error < StandardError; end
 end

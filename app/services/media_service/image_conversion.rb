@@ -12,7 +12,7 @@ module MediaService
     # @param input_path [String] path to the source SVG
     # @param output_path [String] optional path for the PNG output
     # @return [String] path to the converted file
-    # @raise [MediaService::ConversionError] if conversion fails
+    # @raise [MediaService::Error] if conversion fails
     def self.encode_png(input_path, output_path: nil)
       output_path ||= begin
         dir = File.dirname(input_path)
@@ -40,25 +40,25 @@ module MediaService
       )
       unless status.success?
         detail = stderr.to_s.last(200).presence || "rsvg-convert failed"
-        raise ConversionError, "Image conversion failed: #{detail}"
+        raise Error, "Image conversion failed: #{detail}"
       end
 
       validate_output!
       @output_path
     rescue Errno::ENOENT
-      raise ConversionError, "Image conversion failed: rsvg-convert is not installed"
+      raise Error, "Image conversion failed: rsvg-convert is not installed"
     end
 
     private
 
     def validate_input!
-      raise ConversionError, "Input file not found: #{@input_path}" unless File.exist?(@input_path)
-      raise ConversionError, "Input file is empty: #{@input_path}" if File.zero?(@input_path)
+      raise Error, "Input file not found: #{@input_path}" unless File.exist?(@input_path)
+      raise Error, "Input file is empty: #{@input_path}" if File.zero?(@input_path)
     end
 
     def validate_output!
-      raise ConversionError, "Output file not created: #{@output_path}" unless File.exist?(@output_path)
-      raise ConversionError, "Output file is empty: #{@output_path}" if File.zero?(@output_path)
+      raise Error, "Output file not created: #{@output_path}" unless File.exist?(@output_path)
+      raise Error, "Output file is empty: #{@output_path}" if File.zero?(@output_path)
     end
   end
 end

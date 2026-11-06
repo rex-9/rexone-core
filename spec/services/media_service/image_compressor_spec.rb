@@ -5,21 +5,21 @@ RSpec.describe MediaService::ImageCompressor do
   let(:output_path) { "/tmp/output_image.png" }
 
   describe "#compress" do
-    it "raises CompressionError if input file is missing" do
+    it "raises Error if input file is missing" do
       allow(File).to receive(:exist?).with(input_path).and_return(false)
 
       expect do
         described_class.compress(input_path)
-      end.to raise_error(MediaService::CompressionError, /Input file not found/)
+      end.to raise_error(MediaService::Error, /Input file not found/)
     end
 
-    it "raises CompressionError if input file is empty" do
+    it "raises Error if input file is empty" do
       allow(File).to receive(:exist?).with(input_path).and_return(true)
       allow(File).to receive(:zero?).with(input_path).and_return(true)
 
       expect do
         described_class.compress(input_path)
-      end.to raise_error(MediaService::CompressionError, /Input file is empty/)
+      end.to raise_error(MediaService::Error, /Input file is empty/)
     end
 
     it "loads image via Vips, resizes if larger than 1080p, and saves compressed" do
@@ -65,14 +65,14 @@ RSpec.describe MediaService::ImageCompressor do
       expect(FileUtils).to have_received(:cp).with(input_path, output_path)
     end
 
-    it "raises CompressionError when Vips encounters an error" do
+    it "raises Error when Vips encounters an error" do
       allow(File).to receive(:exist?).with(input_path).and_return(true)
       allow(File).to receive(:zero?).with(input_path).and_return(false)
       allow(Vips::Image).to receive(:new_from_file).with(input_path).and_raise(Vips::Error, "Unsupported file format")
 
       expect do
         described_class.compress(input_path, output_path: output_path)
-      end.to raise_error(MediaService::CompressionError, /Image compression failed: Unsupported file format/)
+      end.to raise_error(MediaService::Error, /Image compression failed: Unsupported file format/)
     end
   end
 end

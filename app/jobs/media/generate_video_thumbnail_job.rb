@@ -8,7 +8,7 @@ module Media
       duration: 30.minutes
     )
 
-    retry_on MediaService::CompressionError, StorageService::Error,
+    retry_on MediaService::Error, StorageService::Error,
              wait: :polynomially_longer, attempts: 3 do |job, error|
       job.send(:broadcast_retry_exhausted!, error)
     end
@@ -56,7 +56,7 @@ module Media
       end
       restore_status(asset, previous_status)
       broadcast(asset, thumbnail)
-    rescue MediaService::CompressionError, StorageService::Error
+    rescue MediaService::Error, StorageService::Error
       StorageService::Client.delete(result[:storage_key]) if result&.dig(:storage_key) && !thumbnail&.persisted?
       raise
     rescue StandardError

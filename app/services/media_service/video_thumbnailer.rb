@@ -15,7 +15,7 @@ module MediaService
 
       unless status.success? && File.exist?(output_path) && !File.zero?(output_path)
         Rails.logger.error("#{LOG_PREFIX} FFmpeg failed: #{stderr.last(500)}")
-        raise CompressionError, "Video thumbnail generation failed"
+        raise Error, "Video thumbnail generation failed"
       end
 
       output_path

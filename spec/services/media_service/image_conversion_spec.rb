@@ -28,7 +28,7 @@ RSpec.describe MediaService::ImageConversion do
       )
     end
 
-    it "raises ConversionError when rsvg-convert fails" do
+    it "raises Error when rsvg-convert fails" do
       allow(File).to receive(:exist?).with(input_path).and_return(true)
       allow(File).to receive(:zero?).with(input_path).and_return(false)
       status = instance_double(Process::Status, success?: false)
@@ -36,17 +36,17 @@ RSpec.describe MediaService::ImageConversion do
 
       expect do
         described_class.encode_png(input_path, output_path: output_path)
-      end.to raise_error(MediaService::ConversionError, /Image conversion failed: bad svg/)
+      end.to raise_error(MediaService::Error, /Image conversion failed: bad svg/)
     end
 
-    it "raises ConversionError when rsvg-convert is missing" do
+    it "raises Error when rsvg-convert is missing" do
       allow(File).to receive(:exist?).with(input_path).and_return(true)
       allow(File).to receive(:zero?).with(input_path).and_return(false)
       allow(Open3).to receive(:capture3).and_raise(Errno::ENOENT)
 
       expect do
         described_class.encode_png(input_path, output_path: output_path)
-      end.to raise_error(MediaService::ConversionError, /rsvg-convert is not installed/)
+      end.to raise_error(MediaService::Error, /rsvg-convert is not installed/)
     end
   end
 end

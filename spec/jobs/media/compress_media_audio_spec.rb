@@ -120,7 +120,7 @@ RSpec.describe Media::CompressMediaJob, type: :job do
   end
 
   it "retries without publishing a terminal failure on the first attempt" do
-    allow(MediaService::AudioCompressor).to receive(:compress).and_raise(MediaService::CompressionError, "ffmpeg killed")
+    allow(MediaService::AudioCompressor).to receive(:compress).and_raise(MediaService::Error, "ffmpeg killed")
 
     described_class.perform_now(asset_id: asset.id)
 

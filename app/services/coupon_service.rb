@@ -161,5 +161,39 @@ class CouponService
         nil
       end
     end
+
+    def create_batch!(base_attributes:, count:, prefix:)
+      max_batch_limit = AppConfig::PAYMENT_BATCH_COUPON_LIMIT.positive? ? AppConfig::PAYMENT_BATCH_COUPON_LIMIT : PaymentConstants::Batch::MAX_COUPONS
+
+      resolved_count = count.to_i
+      resolved_count = 10 if resolved_count <= 0
+      resolved_count = [ resolved_count, max_batch_limit ].min
+      sanitized_prefix = prefix.to_s.strip.upcase.gsub(/[^A-Z0-9]/, "")
+
+      attributes = base_attributes.dup
+      attributes[:active] = false
+      attributes[:metadata] = (attributes[:metadata] || {}).merge(
+        "status" => PaymentConstants::SyncStatus::PROCESSING
+      )
+
+      created_coupons = []
+      ActiveRecord::Base.transaction do
+        resolved_count.times do
+          code = loop do
+            random_part = SecureRandom.alphanumeric(8).upcase.gsub(/[^A-Z0-9]/, "")
+            candidate = "#{sanitized_prefix}#{random_part}"
+            break candidate unless ::Payment::Coupon.exists?(code: candidate)
+          end
+
+          created_coupons << ::Payment::Coupon.create!(attributes.merge(code: code))
+        end
+      end
+
+      created_coupons.map(&:id).each_slice(50) do |coupon_ids_slice|
+        Payment::SyncBatchCouponsJob.perform_later(coupon_ids_slice)
+      end
+
+      created_coupons
+    end
   end
 end

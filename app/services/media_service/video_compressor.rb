@@ -10,7 +10,7 @@ module MediaService
     # @param input_path [String] path to the source video file
     # @param output_path [String] optional path for the compressed output (defaults to input_path with _compressed suffix)
     # @return [String] path to the compressed file
-    # @raise [MediaService::CompressionError] if FFmpeg fails
+    # @raise [MediaService::Error] if FFmpeg fails
     def self.compress(input_path, output_path: nil)
       new(input_path, output_path: output_path).compress
     end
@@ -30,13 +30,13 @@ module MediaService
     private
 
     def validate_input!
-      raise CompressionError, "Input file not found: #{@input_path}" unless File.exist?(@input_path)
-      raise CompressionError, "Input file is empty: #{@input_path}" if File.zero?(@input_path)
+      raise Error, "Input file not found: #{@input_path}" unless File.exist?(@input_path)
+      raise Error, "Input file is empty: #{@input_path}" if File.zero?(@input_path)
     end
 
     def validate_output!
-      raise CompressionError, "Output file not created: #{@output_path}" unless File.exist?(@output_path)
-      raise CompressionError, "Output file is empty: #{@output_path}" if File.zero?(@output_path)
+      raise Error, "Output file not created: #{@output_path}" unless File.exist?(@output_path)
+      raise Error, "Output file is empty: #{@output_path}" if File.zero?(@output_path)
     end
 
     def run_ffmpeg!
@@ -47,7 +47,7 @@ module MediaService
 
       unless status.success?
         Rails.logger.error("#{LOG_PREFIX} FFmpeg failed (exit #{status.exitstatus}): #{stderr.last(500)}")
-        raise CompressionError, "FFmpeg exited with status #{status.exitstatus}: #{stderr.last(200)}"
+        raise Error, "FFmpeg exited with status #{status.exitstatus}: #{stderr.last(200)}"
       end
 
       Rails.logger.info("#{LOG_PREFIX} Compression complete: #{File.size(@input_path)} -> #{File.size(@output_path)} bytes")

@@ -64,39 +64,16 @@ class V1::Admin::Payment::CouponsController < V1::ApplicationController
 
   # POST /v1/admin/payment/coupons/batch
   def create_batch
-    max_batch_limit = AppConfig::PAYMENT_BATCH_COUPON_LIMIT.positive? ? AppConfig::PAYMENT_BATCH_COUPON_LIMIT : PaymentConstants::Batch::MAX_COUPONS
-
-    count = batch_params[:count].to_i
-    count = 10 if count <= 0
-    count = [ count, max_batch_limit ].min # Configurable cap (default 100)
-    prefix = batch_params[:prefix].to_s.strip.upcase.gsub(/[^A-Z0-9]/, "")
-
     base_attributes = coupon_params.to_h.symbolize_keys
     base_attributes[:created_by_id] = current_user.id
     base_attributes[:updated_by_id] = current_user.id
-    base_attributes[:active] = false
-    base_attributes[:metadata] = (base_attributes[:metadata] || {}).merge(
-      "status" => PaymentConstants::SyncStatus::PROCESSING
-    )
     resolve_target_user_ids!(base_attributes)
 
-    created_coupons = []
-    ActiveRecord::Base.transaction do
-      count.times do
-        code = loop do
-          random_part = SecureRandom.alphanumeric(8).upcase.gsub(/[^A-Z0-9]/, "")
-          candidate = "#{prefix}#{random_part}"
-          break candidate unless ::Payment::Coupon.exists?(code: candidate)
-        end
-
-        attrs = base_attributes.merge(code: code)
-        created_coupons << ::Payment::Coupon.create!(attrs)
-      end
-    end
-
-    created_coupons.map(&:id).each_slice(50) do |coupon_ids_slice|
-      Payment::SyncBatchCouponsJob.perform_later(coupon_ids_slice)
-    end
+    created_coupons = CouponService.create_batch!(
+      base_attributes: base_attributes,
+      count: batch_params[:count],
+      prefix: batch_params[:prefix]
+    )
 
     render_json_response(
       status_code: 201,

@@ -111,6 +111,4 @@ module PushNotiService
       false
     end
   end
-
-  class Error < StandardError; end
 end

@@ -11,7 +11,7 @@ module Media
       duration: 30.minutes
     )
 
-    retry_on MediaService::CompressionError, StorageService::Error,
+    retry_on MediaService::Error, StorageService::Error,
              wait: :polynomially_longer, attempts: 3 do |job, error|
       job.send(:mark_retry_exhausted!, error)
     end
@@ -29,7 +29,7 @@ module Media
       else
         raise ArgumentError, "Unsupported media operation: #{operation}"
       end
-    rescue MediaService::CompressionError, StorageService::Error => e
+    rescue MediaService::Error, StorageService::Error => e
       Rails.logger.warn("#{LOG_PREFIX} Retriable failure for asset #{asset_id}: #{e.message}")
       raise
     rescue StandardError => e
@@ -90,7 +90,7 @@ module Media
       when AssetConstants::AssetFormat::AUDIO then MediaService::AudioCompressor
       when AssetConstants::AssetFormat::VIDEO then MediaService::VideoCompressor
       else
-        raise MediaService::CompressionError, "Unsupported asset format: #{@asset.format}"
+        raise MediaService::Error, "Unsupported asset format: #{@asset.format}"
       end
     end
 

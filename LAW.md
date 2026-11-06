@@ -288,7 +288,8 @@ Service Layer (app/services/)
 
 ### C8. Localization & Message Catalogs (`MessageService::*`)
 
-- User-facing strings and error messages MUST be defined in `config/locales/` (`en.yml`, `es.yml`, `my.yml`) and accessed via `MessageService::*` catalogs.
+- **ISO 639-1 Language Codes vs. ISO 3166-1 Country Codes**: Language/locale identifiers strictly follow **ISO 639-1** two-letter language codes (`en`, `es`, `my`, `vi`), while two-letter country/region codes follow **ISO 3166-1 alpha-2** (`US`, `MM`, `VN` — e.g. regional BCP 47 tags `en_US`, `my_MM`, `vi_VN`). Never confuse country codes (`vn`, `mm`) with language codes (`vi`, `my`).
+- User-facing strings and error messages MUST be defined in `config/locales/` and accessed via `MessageService::*` catalogs.
 - `ApplicationController#switch_locale` automatically inspects `X-Locale` or `Accept-Language` headers and wraps requests in `I18n.with_locale`.
 
 ### C9. 100% Passing RSpec & OpenAPI / Swagger Synchronization
