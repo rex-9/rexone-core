@@ -42,7 +42,7 @@
   --gradient-nav-active: linear-gradient(135deg, rgba(255, 34, 56, 0.22), rgba(204, 17, 37, 0.12));
   --gradient-nav-active-hover: linear-gradient(135deg, rgba(255, 34, 56, 0.28), rgba(204, 17, 37, 0.18));
 
-  /* Typography & Contrast Hierarchy (Law U18: bg primary -> text secondary/light) */
+  /* Typography & Contrast Hierarchy (Law U16: bg primary -> text secondary/light) */
   --color-text: #FFFFFF;
   --color-text-secondary: #E6D9DF;
   --color-text-muted: #C9B8BE;

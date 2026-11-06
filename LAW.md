@@ -48,6 +48,7 @@ This application is built upon the **RexOne Ecosystem** (`rex-9`). These are imm
   - [U13. Human-Readable Code, Plain English \& Zero Alien Syntax](#u13-human-readable-code-plain-english--zero-alien-syntax)
   - [U14. Zero-JSON LLM Pipeline Law: LLM Never Eats JSON, LLM Never Spits JSON](#u14-zero-json-llm-pipeline-law-llm-never-eats-json-llm-never-spits-json)
   - [U15. Deterministic Metadata Transparency & Anti-Gambling Law](#u15-deterministic-metadata-transparency--anti-gambling-law)
+  - [U16. Universal Design System Synchronization & Tri-Repo Parity Law](#u16-universal-design-system-synchronization--tri-repo-parity-law)
 - [⚙️ Part I: RexOne Core Architectural Laws (Backend / Rails API)](#️-part-i-rexone-core-architectural-laws-backend--rails-api)
   - [C1. Strict 3-Tier MCS Architecture (Model, Controller, Service)](#c1-strict-3-tier-mcs-architecture-model-controller-service)
   - [C2. Standardized JSON:API Envelope](#c2-standardized-jsonapi-envelope)
@@ -193,6 +194,20 @@ The following foundational principles apply universally across all three reposit
 - **Provider Gateway Boundary**:
   - Domain metadata classes encapsulate internal domain contracts and lifecycle tracking.
   - External provider payloads (e.g. Stripe, OpenAI, Google Play, Apple App Store) must be deterministically mapped, filtered, and stripped of internal metadata keys before dispatch. Provider concerns must never pollute domain metadata schemas.
+
+### U16. Universal Design System Synchronization & Tri-Repo Parity Law
+
+- **Tri-Repository Design System Single Source of Truth**: The Design System is a unified, ecosystem-wide contract spanning all three repositories:
+  - **RexOne Core (`rexone-core`)**: `DesignConstants` (`app/constants/design_constants.rb`), `app/assets/stylesheets/tokens.css`, `app/assets/stylesheets/admin.css`, and transactional email layouts (`app/views/layouts/mailer.html.erb`, `app/views/user_mailer/`).
+  - **RexOne Web (`rexone-web`)**: `src/design/elements/`, `src/design/constants/`, `src/design/styles/`, `src/design/components/`, and `src/design/pages/`.
+  - **RexOne Mobile (`rexone_mobile`)**: `lib/design/elements/`, `lib/design/constants/`, `lib/design/components/`, and `lib/design/extensions/`.
+- **100% Token & Aesthetic Parity Across All 3 Repositories**:
+  - Brand palette (`primary`, `primaryLight`, `primaryDark`, `secondary`, `accent`), semantic status tokens (`success`, `warning`, `error`, `info`), Day & Night theme surfaces (`background`, `surface`, `card`, `border`, `divider`), typography font stacks, spacing scales, border radii, and elevation/glow shadows MUST remain in **100% deterministic synchronization** across Core, Web, and Mobile.
+  - Any addition, modification, or rebranding of a design token, color hex, font family, or theme contract in one repository MUST be propagated synchronously across all three repositories in lockstep. Visual or token drift between Core dashboards/emails, Web client, and Mobile client is strictly forbidden.
+- **Universal Contrast Hierarchy (`bg secondary ➔ text primary`, `text secondary ➔ bg primary`)**:
+  - Every surface, button, badge, chip, card, and mailer/dashboard template across all three repositories MUST enforce high-contrast optical legibility under both Day (Light) and Night (Dark) themes: secondary backgrounds strictly resolve foreground text and icons to primary dark tones, and primary backgrounds strictly resolve foreground text and icons to secondary light or on-primary contrast.
+- **Cross-Platform Component & Variant Parity**:
+  - Reusable UI primitives (`Button` $\leftrightarrow$ `AppButton`, `Badge` $\leftrightarrow$ `AppBadge`, `Card` $\leftrightarrow$ `AppCard`, `Dialog`/`ConfirmDialog` $\leftrightarrow$ `AppDialog`, `TextInput` $\leftrightarrow$ `AppInputField`, `Dropdown` $\leftrightarrow$ `AppDropdown`, `Toggle` $\leftrightarrow$ `AppToggle`, `Toast` $\leftrightarrow$ `AppSnackbar`, `LoadingOverlay` $\leftrightarrow$ `AppLoading`) MUST maintain semantic variant parity and zero ad-hoc inline overrides outside the Design System.
 
 ---
 
@@ -462,7 +477,7 @@ Transport Layer   (lib/services/api.service.dart)
 | **Architectural Pattern** | 3-Tier MCS (`models`, `controllers`, `services`)    | 4-Tier MVCS (`models`, `views`, `controllers`, `services`) | 4-Tier GetX MVCS (`GetView`, `GetxController`, `GetxService`) |
 | **State Management**      | Database transactions, Redis, Solid Queue           | Jotai atoms (`AtomService.getAtom()`)                      | GetX reactive (`.obs`, `GetStorage`)                          |
 | **Async Loading**         | ActiveJob (`SolidQueue`) background queues          | Universal `LoadingContext` (`useLoading()`)                | `ApiService` with loading overlay                             |
-| **Design System**         | N/A (Headless JSON API)                             | `src/design/` (Zero components outside)                    | `lib/design/` (Tokens, `Design.space.*`)                      |
+| **Design System (Law U16)** | `DesignConstants` & `tokens.css` (Admin & Mailers)  | `src/design/` (Zero components outside)                    | `lib/design/` (Tokens, `Design.*`, `App*` widgets)            |
 | **Media & Storage**       | Centralized `assets` table, `storage_key`           | `src/assets/index.ts`, `iconsLib`, `Asset`                 | Distributed `assets` link, semantic widgets                   |
 | **Pagination**            | `pagy, records = pagy(collection)` via `PagyHelper` | `parsePagyList<T>` via `api.service.ts`                    | `parsePagyList<T>` via `ApiService`                           |
 | **Lifecycle Deletion**    | `discard` (soft) & `undiscard` (restore)            | `handleDiscard` (active), `handleDestroy` (bin)            | `AppDialog.confirm` discard / recycle bin                     |

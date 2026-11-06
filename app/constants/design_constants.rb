@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # app/constants/design_constants.rb
-# Centralized Design System Tokens & Typography for RexOne Core (Law U14 & Law U18)
+# Centralized Design System Tokens & Typography for RexOne Core (Law U12 & Law U16)
 module DesignConstants
   module Brand
     NAME                  = "RexOne"
@@ -43,7 +43,7 @@ module DesignConstants
     GLOW             = "rgba(255, 34, 56, 0.40)"
     GLOW_SUBTLE      = "rgba(255, 34, 56, 0.15)"
 
-    # Typography & Contrast Hierarchy (Law U18: bg primary -> text secondary/light)
+    # Typography & Contrast Hierarchy (Law U16: bg primary -> text secondary/light)
     TEXT_PRIMARY     = "#FFFFFF"
     TEXT_SECONDARY   = "#E6D9DF"
     TEXT_MUTED       = "#C9B8BE"
