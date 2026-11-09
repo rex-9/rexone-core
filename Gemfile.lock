@@ -553,7 +553,7 @@ GEM
     shellany (0.0.1)
     shoulda-matchers (8.0.1)
       activesupport (>= 7.2)
-    solargraph (0.62.0)
+    solargraph (0.62.1)
       ast (~> 2.4.3)
       backport (~> 1.2)
       benchmark (~> 0.4)
@@ -602,7 +602,7 @@ GEM
       solid_cache (>= 1.0)
       solid_queue (>= 1.0)
       view_component (>= 3.0)
-    sorbet-runtime (0.6.13616)
+    sorbet-runtime (0.6.13646)
     sord (7.1.0)
       commander (~> 5.0)
       parlour (~> 9.1)
@@ -723,7 +723,7 @@ DEPENDENCIES
   ruby-vips (~> 2.3)
   sassc-rails (~> 2.1)
   shoulda-matchers (~> 8.0)
-  solargraph (~> 0.62.0)
+  solargraph (~> 0.62.1)
   solid_cable
   solid_cache
   solid_queue
@@ -946,12 +946,12 @@ CHECKSUMS
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   shellany (0.0.1) sha256=0e127a9132698766d7e752e82cdac8250b6adbd09e6c0a7fbbb6f61964fedee7
   shoulda-matchers (8.0.1) sha256=5dbb46e5765b9da225111b085e0819e8c8a121ff94bba430a153eb1ea2c60288
-  solargraph (0.62.0) sha256=f3dc5894bd6d0429e13881c52e95c972749ace8c64e36c081614bb1207fb1b50
+  solargraph (0.62.1) sha256=c48525b3ba7ec2f5d34cae3e85aa080f3313b80e1daa544a1fb32ee66ee23976
   solid_cable (4.1.0) sha256=828e3d509207b82b4f05f4e9c85f696994710679b52d511aa7f97ebd212d3226
   solid_cache (1.0.10) sha256=bc05a2fb3ac78a6f43cbb5946679cf9db67dd30d22939ededc385cb93e120d41
   solid_queue (1.7.0) sha256=6566b70b801d1c317c81bba7bcdd5677c019afac584a30374b4164002ca356d3
   solid_web_ui (0.4.0) sha256=57d3058a0f2ef364ec1b3f03778a02a62711b5424c9e73d6e468be3885b44820
-  sorbet-runtime (0.6.13616) sha256=b376f7dc34c930480c02b549309607f71980fb83a3a9113fcd42e54b7cb45783
+  sorbet-runtime (0.6.13646) sha256=e184701e60ec8463c0ef35eab6af6cd057dcb69d8cf7a3f12fed76bbc0b93ef4
   sord (7.1.0) sha256=e02fd59294da520e50cea80a07fb9bc93db709c552d055871379ae8d8e87601f
   sprockets (4.4.1) sha256=fbd665edad0916de5c7abefef0fc616866a60c5e48ce2846f39ac3fc5df9e184
   sprockets-rails (3.5.2) sha256=a9e88e6ce9f8c912d349aa5401509165ec42326baf9e942a85de4b76dbc4119e
