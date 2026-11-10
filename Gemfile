@@ -117,7 +117,7 @@ group :development, :test do
   # Linting and code style compliance
   gem "rubocop-rails-omakase", require: false
   # Behavior-driven development testing framework
-  gem "rspec-rails", "~> 8.0"
+  gem "rspec-rails", "~> 8.1"
   # Test fixture replacement for generating test data
   gem "factory_bot_rails", "~> 6.5"
   # One-liner testing helpers for Rails functionality
